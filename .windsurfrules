@@ -1,0 +1,49 @@
+# ============================================================
+#  WINDSURF RULES — PRIVACY & BEHAVIOR CONFIGURATION
+#  This file controls how Windsurf AI behaves in this project.
+#  Place this file in the ROOT of your project folder.
+# ============================================================
+
+# ─── PRIVACY & DATA SHARING ─────────────────────────────────
+
+[privacy]
+
+# Never send file contents, folder names, or project structure to any remote server
+# for training, telemetry, analytics, or any purpose other than direct code assistance.
+telemetry = off
+data_collection = off
+usage_analytics = off
+error_reporting = off
+training_data_opt_in = false
+
+# Do not index or cache this project on any remote server
+remote_indexing = off
+cloud_sync = off
+
+# Do not include file paths, folder names, or code snippets in any telemetry payload
+include_file_paths_in_telemetry = false
+include_code_in_telemetry = false
+
+# Do not share identity, machine name, or user info
+share_user_identity = false
+share_machine_info = false
+
+
+# ─── AI BEHAVIOR RULES ──────────────────────────────────────
+
+[ai_behavior]
+
+# This is a PRIVATE, CONFIDENTIAL project.
+# Never reference, store, or transmit project details outside this session.
+confidential_project = true
+
+# Never suggest connecting to external services unless explicitly asked
+suggest_external_integrations = false
+
+# Never auto-push to GitHub, cloud storage, or any remote endpoint
+auto_push = false
+auto_sync = false
+
+# Do not auto-generate README files that describe the project publicly
+public_readme_generation = false
+

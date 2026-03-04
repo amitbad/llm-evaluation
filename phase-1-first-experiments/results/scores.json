@@ -1,0 +1,212 @@
+{
+    "text_generation": {
+        "deepseek-r1:7b": {
+            "run_1": {
+                "coherence": 5,
+                "creativity": 3,
+                "fluency": 5
+            },
+            "run_2": {
+                "coherence": 3,
+                "creativity": 4,
+                "fluency": 5
+            },
+            "run_3": {
+                "coherence": 4,
+                "creativity": 2,
+                "fluency": 5
+            }
+        },
+        "mistral": {
+            "run_1": {
+                "coherence": 5,
+                "creativity": 3,
+                "fluency": 5
+            },
+            "run_2": {
+                "coherence": 5,
+                "creativity": 2,
+                "fluency": 5
+            },
+            "run_3": {
+                "coherence": 5,
+                "creativity": 1,
+                "fluency": 5
+            }
+        },
+        "llama3.1:8b": {
+            "run_1": {
+                "coherence": 5,
+                "creativity": 4,
+                "fluency": 5
+            },
+            "run_2": {
+                "coherence": 5,
+                "creativity": 2,
+                "fluency": 5
+            },
+            "run_3": {
+                "coherence": 5,
+                "creativity": 5,
+                "fluency": 5
+            }
+        },
+        "gemma2:9b": {
+            "run_1": {
+                "coherence": 5,
+                "creativity": 3,
+                "fluency": 5
+            },
+            "run_2": {
+                "coherence": 5,
+                "creativity": 4,
+                "fluency": 5
+            },
+            "run_3": {
+                "coherence": 5,
+                "creativity": 2,
+                "fluency": 5
+            }
+        }
+    },
+    "question_answering": {
+        "deepseek-r1:7b": {
+            "run_1": {
+                "accuracy": 4,
+                "completeness": 4,
+                "relevance": 5
+            },
+            "run_2": {
+                "accuracy": 4,
+                "completeness": 5,
+                "relevance": 5
+            },
+            "run_3": {
+                "accuracy": 5,
+                "completeness": 5,
+                "relevance": 5
+            }
+        },
+        "mistral": {
+            "run_1": {
+                "accuracy": 5,
+                "completeness": 4,
+                "relevance": 5
+            },
+            "run_2": {
+                "accuracy": 5,
+                "completeness": 5,
+                "relevance": 5
+            },
+            "run_3": {
+                "accuracy": 5,
+                "completeness": 5,
+                "relevance": 5
+            }
+        },
+        "llama3.1:8b": {
+            "run_1": {
+                "accuracy": 5,
+                "completeness": 5,
+                "relevance": 5
+            },
+            "run_2": {
+                "accuracy": 5,
+                "completeness": 4,
+                "relevance": 5
+            },
+            "run_3": {
+                "accuracy": 5,
+                "completeness": 5,
+                "relevance": 5
+            }
+        },
+        "gemma2:9b": {
+            "run_1": {
+                "accuracy": 5,
+                "completeness": 4,
+                "relevance": 5
+            },
+            "run_2": {
+                "accuracy": 5,
+                "completeness": 5,
+                "relevance": 5
+            },
+            "run_3": {
+                "accuracy": 5,
+                "completeness": 4,
+                "relevance": 5
+            }
+        }
+    },
+    "summarization": {
+        "deepseek-r1:7b": {
+            "run_1": {
+                "completeness": 2,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_2": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_3": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            }
+        },
+        "mistral": {
+            "run_1": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_2": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_3": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            }
+        },
+        "llama3.1:8b": {
+            "run_1": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_2": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_3": {
+                "completeness": 4,
+                "conciseness": 5,
+                "accuracy": 5
+            }
+        },
+        "gemma2:9b": {
+            "run_1": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_2": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            },
+            "run_3": {
+                "completeness": 3,
+                "conciseness": 5,
+                "accuracy": 5
+            }
+        }
+    }
+}

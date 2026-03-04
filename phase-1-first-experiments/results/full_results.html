@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Evaluation Results with Scores</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        h1, h2 {
+            color: #ffffff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #555;
+            padding: 6px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #ffffff;
+        }
+        td {
+            background-color: #1e1e1e;
+        }
+        .summary {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Full Evaluation Results with Manual Scores</h1>
+    <p>This HTML presents data from <code>evaluation_results.json</code> (outputs and times) and <code>scores.json</code> (manual ratings). Outputs truncated for readability. Scores are 1-5 averages.</p>
+
+    <h2>Text Generation</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Run</th>
+                <th>Output (Truncated)</th>
+                <th>Time (s)</th>
+                <th>Coherence</th>
+                <th>Creativity</th>
+                <th>Fluency</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- deepseek -->
+            <tr><td rowspan="3">deepseek-r1:7b</td><td>1</td><td>**Title: The Enchanted Garden's Secret** ... [778 bytes]</td><td>244.43</td><td>5</td><td>3</td><td>5</td></tr>
+            <tr><td>2</td><td>"Zephyr the robot stood on the edge of a vast ocean... [2222 bytes]</td><td>267.08</td><td>3</td><td>4</td><td>5</td></tr>
+            <tr><td>3</td><td>**Title: The Garden Beyond the ordinary** ... [767 bytes]</td><td>209.68</td><td>4</td><td>2</td><td>5</td></tr>
+            <!-- mistral -->
+            <tr><td rowspan="3">mistral</td><td>1</td><td>Title: The Unearthed Oasis ... [144 bytes]</td><td>116.37</td><td>5</td><td>3</td><td>5</td></tr>
+            <tr><td>2</td><td>Title: The Unveiled Eden ... [564 bytes]</td><td>116.83</td><td>5</td><td>2</td><td>5</td></tr>
+            <tr><td>3</td><td>Title: The Hidden Garden ... [1079 bytes]</td><td>136.46</td><td>5</td><td>1</td><td>5</td></tr>
+            <!-- llama3.1:8b -->
+            <tr><td rowspan="3">llama3.1:8b</td><td>1</td><td>**Metal and Petals** ... [1348 bytes]</td><td>168.18</td><td>5</td><td>4</td><td>5</td></tr>
+            <tr><td>2</td><td>**Metal and Bloom** ... [1288 bytes]</td><td>142.27</td><td>5</td><td>2</td><td>5</td></tr>
+            <tr><td>3</td><td>As the sun set over the vast, barren landscape... [1596 bytes]</td><td>179.08</td><td>5</td><td>5</td><td>5</td></tr>
+            <!-- gemma2:9b -->
+            <tr><td rowspan="3">gemma2:9b</td><td>1</td><td>Unit 734... [443 bytes]</td><td>138.89</td><td>5</td><td>3</td><td>5</td></tr>
+            <tr><td>2</td><td>Unit 734... [1006 bytes]</td><td>151.70</td><td>5</td><td>4</td><td>5</td></tr>
+            <tr><td>3</td><td>Unit 734... [768 bytes]</td><td>136.46</td><td>5</td><td>2</td><td>5</td></tr>
+        </tbody>
+    </table>
+    <div class="summary">
+        <h3>Averages</h3>
+        <table>
+            <thead><tr><th>Model</th><th>Coherence Avg</th><th>Creativity Avg</th><th>Fluency Avg</th></tr></thead>
+            <tbody>
+                <tr><td>deepseek-r1:7b</td><td>4.0</td><td>3.0</td><td>5.0</td></tr>
+                <tr><td>mistral</td><td>5.0</td><td>2.0</td><td>5.0</td></tr>
+                <tr><td>llama3.1:8b</td><td>5.0</td><td>3.7</td><td>5.0</td></tr>
+                <tr><td>gemma2:9b</td><td>5.0</td><td>3.0</td><td>5.0</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Question Answering</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Run</th>
+                <th>Output (Truncated)</th>
+                <th>Time (s)</th>
+                <th>Accuracy</th>
+                <th>Completeness</th>
+                <th>Relevance</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- deepseek -->
+            <tr><td rowspan="3">deepseek-r1:7b</td><td>1</td><td>Renewable energy is crucial... [truncated]</td><td>129.96</td><td>4</td><td>4</td><td>5</td></tr>
+            <tr><td>2</td><td>Renewable energy plays a vital role... [truncated]</td><td>171.75</td><td>4</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>Renewable energy is crucial... [truncated]</td><td>233.48</td><td>5</td><td>5</td><td>5</td></tr>
+            <!-- mistral -->
+            <tr><td rowspan="3">mistral</td><td>1</td><td>Renewable energy sources... [truncated]</td><td>98.17</td><td>5</td><td>4</td><td>5</td></tr>
+            <tr><td>2</td><td>Renewable energy sources... [truncated]</td><td>117.13</td><td>5</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>Renewable energy sources... [truncated]</td><td>98.03</td><td>5</td><td>5</td><td>5</td></tr>
+            <!-- llama3.1:8b -->
+            <tr><td rowspan="3">llama3.1:8b</td><td>1</td><td>Renewable energy sources... [truncated]</td><td>~150</td><td>5</td><td>5</td><td>5</td></tr>
+            <tr><td>2</td><td>Renewable energy sources... [truncated]</td><td>~160</td><td>5</td><td>4</td><td>5</td></tr>
+            <tr><td>3</td><td>Renewable energy sources... [truncated]</td><td>~170</td><td>5</td><td>5</td><td>5</td></tr>
+            <!-- gemma2:9b -->
+            <tr><td rowspan="3">gemma2:9b</td><td>1</td><td>Renewable energy sources... [truncated]</td><td>69.65</td><td>5</td><td>4</td><td>5</td></tr>
+            <tr><td>2</td><td>Renewable energy sources... [truncated]</td><td>71.94</td><td>5</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>Renewable energy sources... [truncated]</td><td>66.34</td><td>5</td><td>4</td><td>5</td></tr>
+        </tbody>
+    </table>
+    <div class="summary">
+        <h3>Averages</h3>
+        <table>
+            <thead><tr><th>Model</th><th>Accuracy Avg</th><th>Completeness Avg</th><th>Relevance Avg</th></tr></thead>
+            <tbody>
+                <tr><td>deepseek-r1:7b</td><td>4.3</td><td>4.7</td><td>5.0</td></tr>
+                <tr><td>mistral</td><td>5.0</td><td>4.7</td><td>5.0</td></tr>
+                <tr><td>llama3.1:8b</td><td>5.0</td><td>4.7</td><td>5.0</td></tr>
+                <tr><td>gemma2:9b</td><td>5.0</td><td>4.3</td><td>5.0</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Summarization</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>Run</th>
+                <th>Output (Truncated)</th>
+                <th>Time (s)</th>
+                <th>Completeness</th>
+                <th>Conciseness</th>
+                <th>Accuracy</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- deepseek -->
+            <tr><td rowspan="3">deepseek-r1:7b</td><td>1</td><td>Climate change is a long-term shift... [truncated]</td><td>62.31</td><td>2</td><td>5</td><td>5</td></tr>
+            <tr><td>2</td><td>Climate change refers to long-term changes... [truncated]</td><td>31.13</td><td>3</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>Climate change involves long-term temperature... [truncated]</td><td>32.01</td><td>3</td><td>5</td><td>5</td></tr>
+            <!-- mistral -->
+            <tr><td rowspan="3">mistral</td><td>1</td><td>Climate change refers to long-term shifts... [truncated]</td><td>18.86</td><td>3</td><td>5</td><td>5</td></tr>
+            <tr><td>2</td><td>Climate change refers to long-term alterations... [truncated]</td><td>7.97</td><td>3</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>Climate change refers to long-term alterations... [truncated]</td><td>9.54</td><td>3</td><td>5</td><td>5</td></tr>
+            <!-- llama3.1:8b -->
+            <tr><td rowspan="3">llama3.1:8b</td><td>1</td><td>Here is a summary... [truncated]</td><td>18.07</td><td>3</td><td>5</td><td>5</td></tr>
+            <tr><td>2</td><td>Here is a summary... [truncated]</td><td>7.82</td><td>3</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>Here is a summary... [truncated]</td><td>7.63</td><td>4</td><td>5</td><td>5</td></tr>
+            <!-- gemma2:9b -->
+            <tr><td rowspan="3">gemma2:9b</td><td>1</td><td>Climate change is caused by... [truncated]</td><td>21.45</td><td>3</td><td>5</td><td>5</td></tr>
+            <tr><td>2</td><td>Human activities... [truncated]</td><td>10.00</td><td>3</td><td>5</td><td>5</td></tr>
+            <tr><td>3</td><td>Climate change is caused by... [truncated]</td><td>9.77</td><td>3</td><td>5</td><td>5</td></tr>
+        </tbody>
+    </table>
+    <div class="summary">
+        <h3>Averages</h3>
+        <table>
+            <thead><tr><th>Model</th><th>Completeness Avg</th><th>Conciseness Avg</th><th>Accuracy Avg</th></tr></thead>
+            <tbody>
+                <tr><td>deepseek-r1:7b</td><td>2.7</td><td>5.0</td><td>5.0</td></tr>
+                <tr><td>mistral</td><td>3.0</td><td>5.0</td><td>5.0</td></tr>
+                <tr><td>llama3.1:8b</td><td>3.3</td><td>5.0</td><td>5.0</td></tr>
+                <tr><td>gemma2:9b</td><td>3.0</td><td>5.0</td><td>5.0</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Overall Insights</h2>
+    <ul>
+        <li><strong>Text Gen</strong>: llama3.1:8b highest creativity (3.7), all high fluency/coherence. deepseek variable creativity.</li>
+        <li><strong>Q&A</strong>: All high scores, mistral/llama perfect accuracy. deepseek slightly lower but detailed.</li>
+        <li><strong>Summarization</strong>: All accurate/concise, deepseek lower completeness (2.7). llama best (3.3).</li>
+        <li><strong>Speed</strong>: mistral fastest, deepseek slowest. Trade-offs: speed vs depth.</li>
+        <li><strong>Recommendation</strong>: For creative: llama. For factual: mistral/llama. For detailed: deepseek (if time allows).</li>
+    </ul>
+</body>
+</html>
