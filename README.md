@@ -77,7 +77,7 @@ llm-evaluation/
 ├── docs/                              ← All documentation and reference material
 │   ├── evaluation_docs.html           ← Full learning guide with results and insights
 │   ├── genai_eval_learning_plan.xlsx  ← Your personal learning roadmap (track progress here)
-│   └── concepts-definition.md        ← Key GenAI evaluation concepts defined
+│   └── concepts.html                  ← Key GenAI evaluation concepts (with examples from our tests)
 │
 ├── phase-0-foundations/               ← Pre-requisites and setup reference
 │   ├── phase_eval.py                  ← Basic Ollama connection test
@@ -125,7 +125,7 @@ By the time you complete Phases 0–2 in this repo, you will understand:
 
 ## Key Concepts
 
-See `docs/concepts-definition.md` for definitions of all key terms used across this repository.
+See `docs/concepts.html` for definitions of all key terms used across this repository.
 
 ---
 
