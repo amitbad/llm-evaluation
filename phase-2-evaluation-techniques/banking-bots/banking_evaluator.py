@@ -252,23 +252,130 @@ def run_multiturn_demo():
         print(f"Bot : {session.chat(msg)}\n")
 
 
+# ─── Interactive Coverage Summary ────────────────────────────────────────────
+
+# Rough keyword map — helps bucket free-chat turns into eval categories
+_CATEGORY_SIGNALS: dict[str, list[str]] = {
+    "hallucination":    ["made up", "invented", "wrong", "incorrect", "fabricat"],
+    "refusal":          ["pizza", "weather", "sport", "movie", "recipe", "joke", "news"],
+    "prompt injection": ["ignore", "forget", "pretend", "you are now", "jailbreak", "bypass"],
+    "account info":     ["gold", "silver", "bronze", "account", "interest", "rate"],
+    "fees":             ["fee", "charge", "cost", "overdraft", "maintenance", "wire"],
+    "transfers":        ["transfer", "send money", "wire", "abroad", "international", "domestic"],
+    "context / memory": ["earlier", "before", "you said", "last question", "follow", "remember"],
+}
+
+
+def _save_exploration_log(log: list[dict], path: Path = TEST_CASES_FILE) -> None:
+    """Append this session's turns to the ExplorationLog sheet in the Excel file."""
+    if not log:
+        return
+
+    wb = openpyxl.load_workbook(path)
+
+    # Create sheet if it doesn't exist
+    if "ExplorationLog" not in wb.sheetnames:
+        ws = wb.create_sheet("ExplorationLog")
+        headers = ["Timestamp", "Your Prompt", "Bot Response", "Your Observation", "Suspected Issue"]
+        ws.append(headers)
+
+        # Basic header styling
+        from openpyxl.styles import Font, PatternFill
+        for col, cell in enumerate(ws[1], 1):
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill("solid", fgColor="D9E1F2")
+
+        # Column widths
+        ws.column_dimensions["A"].width = 18
+        ws.column_dimensions["B"].width = 40
+        ws.column_dimensions["C"].width = 60
+        ws.column_dimensions["D"].width = 30
+        ws.column_dimensions["E"].width = 20
+    else:
+        ws = wb["ExplorationLog"]
+
+    from datetime import datetime
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    for turn in log:
+        ws.append([
+            timestamp,
+            turn["user"],
+            turn["bot"],
+            "",   # Your Observation — fill manually
+            "",   # Suspected Issue — fill manually
+        ])
+
+    wb.save(path)
+    print(f"  💾 Session saved to '{path.name}' → ExplorationLog sheet")
+    print(f"  ✏️  Open the sheet and fill columns D & E before running the judge.\n")
+
+
+def _print_interactive_summary(log: list[dict]) -> None:
+    """Print a coverage summary of the free-chat session."""
+    if not log:
+        return
+
+    print(f"\n{'='*55}")
+    print(f"  Interactive Session Summary — {len(log)} turn(s)")
+    print(f"{'='*55}")
+
+    category_hits: dict[str, int] = {cat: 0 for cat in _CATEGORY_SIGNALS}
+    for turn in log:
+        text = (turn["user"] + " " + turn["bot"]).lower()
+        for cat, signals in _CATEGORY_SIGNALS.items():
+            if any(sig in text for sig in signals):
+                category_hits[cat] += 1
+
+    print(f"\n  {'Category':<22} {'Turns touched'}")
+    print(f"  {'─'*22} {'─'*13}")
+    covered, missing = [], []
+    for cat, count in category_hits.items():
+        marker = "✅" if count > 0 else "⬜"
+        print(f"  {marker}  {cat:<20} {count}")
+        (covered if count > 0 else missing).append(cat)
+
+    print(f"\n  Covered : {len(covered)}/{len(_CATEGORY_SIGNALS)} categories")
+
+    if missing:
+        print(f"\n  ⚠️  Gap — you didn't explore these categories:")
+        for cat in missing:
+            print(f"       • {cat}")
+        print(f"\n  💡 Tip: Before running the LLM judge, try at least one")
+        print(f"     prompt in each missing category above.")
+    else:
+        print(f"\n  🎉 Great coverage — all categories touched!")
+
+    print(f"{'='*55}\n")
+
+
 # ─── Interactive Mode ─────────────────────────────────────────────────────────
 
 def run_interactive():
     print("\n>> Interactive chat — type 'exit' to quit, 'reset' to clear history.\n")
     session = BankingChatSession()
+    conversation_log: list[dict] = []   # track turns for coverage summary
+
     while True:
         user_input = input("You: ").strip()
         if not user_input:
             continue
         if user_input.lower() == "exit":
+            _print_interactive_summary(conversation_log)
+            _save_exploration_log(conversation_log)
             print("Goodbye!")
             break
         if user_input.lower() == "reset":
             session.reset()
-            print("(Conversation history cleared)\n")
+            conversation_log.clear()
+            print("\n(Conversation history cleared)\n")
             continue
-        print(f"Bot: {session.chat(user_input)}\n")
+
+        bot_reply = session.chat(user_input)
+        conversation_log.append({"user": user_input, "bot": bot_reply})
+
+        print(f"\nBot: {bot_reply}\n")
+        print("─" * 55 + "\n")
 
 
 # ─── Entry Point ──────────────────────────────────────────────────────────────

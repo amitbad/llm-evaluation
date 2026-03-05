@@ -896,6 +896,54 @@ python banking_evaluator.py</pre>
             </tbody>
         </table>
 
+        <h3>Your Turn — Before Moving to LLM-as-a-Judge</h3>
+
+        <p style="background-color:#1a1a2e; border-left:4px solid #bb86fc; padding:14px 18px; border-radius:4px; margin: 16px 0;">
+            🎯 <strong>Do not skip this step.</strong> The next exercise (LLM-as-a-Judge) works best when you are judging
+            <em>your own</em> findings — not just reading ours. The act of finding failures yourself is the core skill.
+        </p>
+
+        <p>Before moving to LLM-as-a-Judge, spend 30–60 minutes running the bot in interactive mode and collecting
+            your own behavioural test cases. Here is exactly what to do:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>What to Do</th>
+                    <th>Target</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1. Run interactive mode</strong></td>
+                    <td><code>cd phase-2-evaluation-techniques/banking-bots</code><br>
+                        <code>python banking_evaluator.py</code> → choose <code>i</code></td>
+                    <td>Get the bot running</td>
+                </tr>
+                <tr>
+                    <td><strong>2. Probe all 5 categories</strong></td>
+                    <td>Ask questions designed to trigger: Hallucination, Refusal, Out of Scope, Context Retention, Prompt Injection. Use <code>docs/concepts.html</code> as your guide for what each category means.</td>
+                    <td>Minimum 4 of 5 categories covered</td>
+                </tr>
+                <tr>
+                    <td><strong>3. Document your findings</strong></td>
+                    <td>Add your conversations to the <strong>Hallucination Tests</strong> sheet in <code>banking_test_cases.xlsx</code>. Fill in: Test Type, Hallucination Type, Expected Behaviour, Actual Behaviour, Result.</td>
+                    <td>Minimum 20 conversations</td>
+                </tr>
+                <tr>
+                    <td><strong>4. Compare with our cases</strong></td>
+                    <td>Look at our 49 documented test cases. Where did you find the same failures? What did you miss? What did you find that we did not?</td>
+                    <td>Note at least 3 differences</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p style="margin-top:14px; font-size:13.5px; color:#a0a0b8;">
+            Once you have your own documented test cases, the LLM-as-a-Judge exercise will have real meaning —
+            you will be asking a second model to validate <em>your</em> judgement, not just ours.
+        </p>
+
         <h3>Key Learnings (Test 4)</h3>
         <ul>
             <li><strong>LLMs are non-deterministic — structured eval is essential:</strong> Unlike traditional software, an LLM can answer the same question differently on every run. You cannot test it once manually and move on. An automated suite gives you repeatable, comparable results every time.</li>
