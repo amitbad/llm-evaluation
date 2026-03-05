@@ -45,6 +45,12 @@ models/
 *.log
 logs/
 
+
+# ── Temp scripts ─────────────────────────────────────────────────────
+print_folders_struct.py
+others/
+CONTEXT.md
+
 # ── Test output artifacts (regenerated each run) ─────────────────────────────
 # Note: results/ folders are intentionally tracked as reference outputs
 # Only exclude if they get too large

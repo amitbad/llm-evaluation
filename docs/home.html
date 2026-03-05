@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0f; --surface:#141417; --surface2:#1c1c21; --border:#2a2a32; --accent:#7c6af7; --accent2:#f7a06a; --danger:#f76a6a; --success:#6af7a0; --text:#e8e8f0; --muted:#7a7a90; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); padding: 48px 56px; max-width:100%; }
+  .hero-label { font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:14px; }
+  h1 { font-size:40px; font-weight:800; line-height:1.1; margin-bottom:14px; background:linear-gradient(135deg,var(--text) 40%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .subtitle { color:var(--muted); font-size:15px; line-height:1.7; max-width:680px; margin-bottom:52px; }
+  .section-label { font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:40px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 22px; cursor:pointer; transition:border-color 0.15s; text-decoration:none; display:block; }
+  .card:hover { border-color:var(--accent); }
+  .card-phase { font-size:9px; font-family:'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .card-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .card-desc { font-size:12.5px; color:var(--muted); line-height:1.6; }
+  .card-tag { display:inline-block; margin-top:10px; font-size:9px; font-family:'JetBrains Mono',monospace; padding:2px 8px; border-radius:20px; font-weight:600; }
+  .tag-p1 { background:#1a2a3d; color:#6ab4f7; }
+  .tag-p2 { background:#1e1a3d; color:var(--accent); }
+  .tag-ref { background:#2a2a1a; color:var(--accent2); }
+  .phase-table { width:100%; border-collapse:collapse; margin-bottom:40px; }
+  .phase-table th { background:var(--surface2); color:var(--muted); font-size:11px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; padding:10px 14px; text-align:left; border:1px solid var(--border); font-weight:600; }
+  .phase-table td { padding:12px 14px; border:1px solid var(--border); font-size:13.5px; color:var(--text); vertical-align:top; background:var(--surface); }
+  .status-done { color:var(--success); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
+  .status-inprogress { color:var(--accent2); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
+  .status-todo { color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .tip { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:16px 20px; font-size:13.5px; line-height:1.7; color:var(--text); margin-bottom:40px; }
+  .tip strong { color:var(--accent2); }
+</style>
+</head>
+<body>
+  <div class="hero-label">LLM Evaluation · Learning Repository</div>
+  <h1>Your Evaluation<br>Learning Journey</h1>
+  <p class="subtitle">A hands-on guide for QA Engineers and Test Architects moving into GenAI evaluation. Every concept is taught through a real exercise — you build it, run it, and understand why it behaves the way it does.</p>
+
+  <div class="tip">
+    <strong>How to use this documentation:</strong> Use the left sidebar to navigate between tests. Each test page documents what was built, what was run, the actual results, and the key learnings. Read <strong>Concepts Reference</strong> whenever a term is unfamiliar.
+  </div>
+
+  <div class="section-label">Quick Navigation</div>
+  <div class="cards">
+    <a class="card" href="#" onclick="parent.load('concepts.html')">
+      <div class="card-phase">Reference</div>
+      <div class="card-title">💡 Concepts Reference</div>
+      <div class="card-desc">Definitions of all key terms — hallucination types, eval methods, metrics. Open this whenever something is unclear.</div>
+      <span class="card-tag tag-ref">always open</span>
+    </a>
+    <a class="card" href="#" onclick="parent.load('test1.html')">
+      <div class="card-phase">Phase 1</div>
+      <div class="card-title">🧪 Test 1 — Basic Test</div>
+      <div class="card-desc">Single prompt across 4 models. Compare output, style and speed. First hands-on experiment.</div>
+      <span class="card-tag tag-p1">Phase 1</span>
+    </a>
+    <a class="card" href="#" onclick="parent.load('test2.html')">
+      <div class="card-phase">Phase 1</div>
+      <div class="card-title">📊 Test 2 — Full Evaluations</div>
+      <div class="card-desc">3 use cases × 4 models × 3 runs. Manual scoring. Consistency analysis across runs.</div>
+      <span class="card-tag tag-p1">Phase 1</span>
+    </a>
+    <a class="card" href="#" onclick="parent.load('test3.html')">
+      <div class="card-phase">Phase 2</div>
+      <div class="card-title">📐 Test 3 — BLEU & ROUGE</div>
+      <div class="card-desc">First automated metrics. Moves from manual scoring to math-based evaluation.</div>
+      <span class="card-tag tag-p2">Phase 2</span>
+    </a>
+    <a class="card" href="#" onclick="parent.load('test4.html')">
+      <div class="card-phase">Phase 2</div>
+      <div class="card-title">🏦 Test 4 — Deterministic Eval</div>
+      <div class="card-desc">Banking chatbot with 49 behavioural test cases. Hallucination, refusal, prompt injection.</div>
+      <span class="card-tag tag-p2">Phase 2</span>
+    </a>
+    <a class="card" href="#" onclick="parent.load('test5.html')">
+      <div class="card-phase">Phase 2</div>
+      <div class="card-title">⚖️ Test 5 — LLM-as-a-Judge</div>
+      <div class="card-desc">Using Mistral to challenge your verdicts. The 3-layer evaluation pipeline explained.</div>
+      <span class="card-tag tag-p2">Phase 2</span>
+    </a>
+  </div>
+
+  <div class="section-label">Learning Plan Status</div>
+  <table class="phase-table">
+    <thead>
+      <tr><th>Phase</th><th>Topic</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Phase 0</strong></td><td>Pre-requisites — Python, LLM concepts, Ollama setup</td><td><span class="status-done">✓ DONE</span></td></tr>
+      <tr><td><strong>Phase 1</strong></td><td>First Experiments — calling models, comparing outputs</td><td><span class="status-done">✓ DONE</span></td></tr>
+      <tr><td><strong>Phase 2</strong></td><td>Evaluation Techniques — metrics, deterministic eval, behavioural testing, LLM-as-a-Judge</td><td><span class="status-inprogress">▶ IN PROGRESS</span></td></tr>
+      <tr><td><strong>Phase 3</strong></td><td>What You Are Evaluating — RAG, agents, tokenisation</td><td><span class="status-todo">○ TO DO</span></td></tr>
+      <tr><td><strong>Phase 4</strong></td><td>Frameworks & Tools — RAGAS, DeepEval, LangSmith</td><td><span class="status-todo">○ TO DO</span></td></tr>
+      <tr><td><strong>Phase 5</strong></td><td>Production Eval — regression, A/B, red teaming, CI/CD</td><td><span class="status-todo">○ TO DO</span></td></tr>
+      <tr><td><strong>Phase 6</strong></td><td>Specialisation — RAG eval, safety, red teaming</td><td><span class="status-todo">○ TO DO</span></td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

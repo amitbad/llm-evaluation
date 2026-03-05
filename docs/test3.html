@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test 3 — BLEU & ROUGE</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0f; --surface:#141417; --surface2:#1c1c21; --border:#2a2a32; --accent:#7c6af7; --accent2:#f7a06a; --danger:#f76a6a; --success:#6af7a0; --text:#e8e8f0; --muted:#7a7a90; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); padding: 48px 56px; max-width:100%; line-height:1.6; }
+  .phase-badge { display:inline-block; font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:36px; font-weight:800; line-height:1.1; margin-bottom:10px; background:linear-gradient(135deg,var(--text) 40%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7; max-width:680px; }
+  h2 { font-size:20px; font-weight:700; color:var(--text); margin:40px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  h3 { font-size:16px; font-weight:700; color:var(--accent); margin:28px 0 10px; }
+  p { margin-bottom:14px; font-size:14px; color:#c0c0d8; line-height:1.75; }
+  code { background:var(--surface2); padding:2px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent2); }
+  pre { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent2); margin:14px 0; overflow-x:auto; }
+  ul { padding-left:20px; margin-bottom:14px; }
+  li { margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7; }
+  li strong { color:var(--text); }
+  table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13px; }
+  th { background:var(--surface2); color:var(--muted); font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; padding:10px 13px; text-align:left; border:1px solid var(--border); font-weight:600; }
+  td { padding:11px 13px; border:1px solid var(--border); color:var(--text); vertical-align:top; background:var(--surface); font-size:13px; line-height:1.6; }
+  tr:hover td { background:var(--surface2); }
+  .info-box { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:var(--text); }
+  .warn-box { background:#1a1a10; border:1px solid #3a3a20; border-left:3px solid var(--accent2); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#c8c890; }
+  .file-tag { background:#2a2a1a; border:1px solid var(--border); border-radius:6px; padding:7px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--accent2); margin-bottom:20px; display:inline-block; }
+  footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg); } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head><body>
+  <div class="phase-badge">Phase 2 — Evaluation Techniques</div>
+  <h1>Test 3: Automated Metrics</h1>
+  <p class="subtitle">First automated evaluation. Moving from manual scoring to math-based metrics — BLEU and ROUGE — to compare model outputs against a reference answer.</p>
+  <div class="file-tag">📁 phase-2-evaluation-techniques/test3_bleu_score_evaluation.py</div>
+
+  <h2>What We Tested</h2>
+  <p>A summarisation task on a sample AI text. All 4 models summarised the same passage. We then measured how closely each summary matched a reference summary using two automated metrics.</p>
+
+  <h2>What BLEU and ROUGE Mean (Simply)</h2>
+  <table>
+    <thead><tr><th>Metric</th><th>What It Measures</th><th>Think of It As</th></tr></thead>
+    <tbody>
+      <tr><td><strong>BLEU</strong></td><td>How many exact word phrases from the model output match the reference</td><td>Word-for-word overlap — like checking if the model used the same phrases</td></tr>
+      <tr><td><strong>ROUGE-1</strong></td><td>Single word overlap between output and reference</td><td>Did the model use the same words at all?</td></tr>
+      <tr><td><strong>ROUGE-2</strong></td><td>Two-word phrase overlap</td><td>Did the model use the same two-word combinations?</td></tr>
+      <tr><td><strong>ROUGE-L</strong></td><td>Longest matching sequence of words in order</td><td>Did the model follow a similar sentence structure?</td></tr>
+    </tbody>
+  </table>
+  <div class="warn-box">Higher scores mean closer to the reference — but closer is not always better. A model can be factually correct in completely different words and score low. These metrics measure similarity, not quality.</div>
+
+  <h2>Results</h2>
+  <table>
+    <thead><tr><th>Model</th><th>Time (s)</th><th>BLEU</th><th>ROUGE-1</th><th>ROUGE-2</th><th>ROUGE-L</th></tr></thead>
+    <tbody>
+      <tr><td>deepseek-r1:7b</td><td>84.78</td><td>24.61</td><td>0.6667</td><td>0.3429</td><td>0.6111</td></tr>
+      <tr><td>mistral</td><td>19.11</td><td>15.75</td><td>0.5641</td><td>0.3158</td><td>0.5385</td></tr>
+      <tr><td>llama3.1:8b</td><td>25.50</td><td>11.05</td><td>0.5111</td><td>0.2273</td><td>0.4222</td></tr>
+      <tr><td>gemma2:9b</td><td>37.82</td><td>9.86</td><td>0.3953</td><td>0.1429</td><td>0.2326</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Key Learnings</h2>
+  <ul>
+    <li><strong>deepseek scored highest but was slowest.</strong> Best similarity to reference (BLEU 24.61, ROUGE-1 0.67), but took 85 seconds. There is a trade-off between quality and speed.</li>
+    <li><strong>llama scored lower because it added a preamble.</strong> It started with "Here is a summary of the text in 2-3 sentences:" — those words are not in the reference, which pulls the score down even though the actual summary was accurate. This reveals a limitation of these metrics.</li>
+    <li><strong>gemma scored lowest despite a reasonable summary.</strong> It added "Let me know if you'd like me to elaborate" at the end — again, not in the reference. The metric penalises additions, not just errors.</li>
+    <li><strong>These metrics cannot evaluate meaning.</strong> A model could say "AI enables machines to think" and another could say "Artificial intelligence allows computers to perform intelligent tasks" — similar meaning, low overlap score. That is why we move to semantic evaluation next.</li>
+    <li><strong>Automated metrics remove human bias.</strong> Manual scoring depends on who is reading. BLEU and ROUGE give the same number every time for the same inputs — fully repeatable and comparable across runs.</li>
+  </ul>
+
+  <h3>What This Evaluation is Called</h3>
+  <p>BLEU (Bilingual Evaluation Understudy) and ROUGE (Recall-Oriented Understudy for Gisting Evaluation) are <strong>reference-based automated metrics</strong>. They come from the field of machine translation and text summarisation research. They are fast, cheap, and objective — but they measure surface similarity, not semantic correctness.</p>
+
+  <footer>Test 3 · Phase 2 · llm-evaluation</footer>
+</body></html>

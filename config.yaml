@@ -1,0 +1,15 @@
+shared:
+  OLLAMA_URL: "http://localhost:11434/api/generate"
+
+phase2:
+  BOT_MODEL: "llama3.1:8b"
+  EXCEL_FILE: "banking_test_cases.xlsx"
+  TEST_SHEET: "Banking Bot Tests"
+
+phase2_llm_as_a_judge:
+  JUDGE_MODEL: "mistral"
+  RESULTS_SHEET: "JudgeResults"
+  OLLAMA_URL: "http://localhost:11434/api/generate"
+  BOT_MODEL: "llama3.1:8b"
+  EXCEL_FILE: "banking_bot_test_results.xlsx"
+  TEST_SHEET: "Banking Bot Tests"

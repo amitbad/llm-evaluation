@@ -1,0 +1,74 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test 2 — Full Evaluations</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0f; --surface:#141417; --surface2:#1c1c21; --border:#2a2a32; --accent:#7c6af7; --accent2:#f7a06a; --danger:#f76a6a; --success:#6af7a0; --text:#e8e8f0; --muted:#7a7a90; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); padding: 48px 56px; max-width:100%; line-height:1.6; }
+  .phase-badge { display:inline-block; font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:36px; font-weight:800; line-height:1.1; margin-bottom:10px; background:linear-gradient(135deg,var(--text) 40%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7; max-width:680px; }
+  h2 { font-size:20px; font-weight:700; color:var(--text); margin:40px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  h3 { font-size:16px; font-weight:700; color:var(--accent); margin:28px 0 10px; }
+  p { margin-bottom:14px; font-size:14px; color:#c0c0d8; line-height:1.75; }
+  code { background:var(--surface2); padding:2px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent2); }
+  pre { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent2); margin:14px 0; overflow-x:auto; }
+  ul { padding-left:20px; margin-bottom:14px; }
+  li { margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7; }
+  li strong { color:var(--text); }
+  table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13px; }
+  th { background:var(--surface2); color:var(--muted); font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; padding:10px 13px; text-align:left; border:1px solid var(--border); font-weight:600; }
+  td { padding:11px 13px; border:1px solid var(--border); color:var(--text); vertical-align:top; background:var(--surface); font-size:13px; line-height:1.6; }
+  tr:hover td { background:var(--surface2); }
+  .info-box { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:var(--text); }
+  .warn-box { background:#1a1a10; border:1px solid #3a3a20; border-left:3px solid var(--accent2); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#c8c890; }
+  .file-tag { background:#2a2a1a; border:1px solid var(--border); border-radius:6px; padding:7px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--accent2); margin-bottom:20px; display:inline-block; }
+  footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg); } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head><body>
+  <div class="phase-badge">Phase 1 — First Experiments</div>
+  <h1>Test 2: Full Evaluations</h1>
+  <p class="subtitle">3 use cases × 4 models × 3 runs each. Collected outputs and times in JSON, then manually scored on quality metrics.</p>
+  <div class="file-tag">📁 phase-1-first-experiments/test2_full_evaluations.py &nbsp;|&nbsp; test2_score_evaluations.py</div>
+
+  <h2>What We Did</h2>
+  <p>Ran three different types of tasks on all 4 models, 3 times each — to see how consistent they are and how quality varies across task types. Then manually scored each output on a 1–5 scale for coherence, accuracy, and other qualities.</p>
+
+  <h2>Speed (Times in Seconds)</h2>
+  <table>
+    <thead><tr><th>Model</th><th>Text Generation</th><th>Q&A</th><th>Summarisation</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>deepseek-r1:7b</td><td>209–267s</td><td>130–233s</td><td>~200–250s</td><td>Slowest — reasoning focused</td></tr>
+      <tr><td>mistral</td><td>116–136s</td><td>98–117s</td><td>~100–120s</td><td>Fastest across all tasks</td></tr>
+      <tr><td>llama3.1:8b</td><td>142–179s</td><td>~150–180s</td><td>~140–170s</td><td>Mid-range</td></tr>
+      <tr><td>gemma2:9b</td><td>136–151s</td><td>~130–160s</td><td>~130–150s</td><td>Mid-range</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Output Quality by Task Type</h2>
+  <table>
+    <thead><tr><th>Task</th><th>What We Observed</th><th>Learning</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Text Generation</strong></td><td>All 4 models wrote coherent robot-garden stories, but plots and themes differed every run.</td><td>Creative tasks produce varied outputs — the model has freedom to imagine, so results are not consistent run to run.</td></tr>
+      <tr><td><strong>Q&A</strong></td><td>Answers to factual questions were nearly identical across all 3 runs per model.</td><td>Factual tasks are reliable. When there is a correct answer, models converge on it consistently.</td></tr>
+      <tr><td><strong>Summarisation</strong></td><td>Accurate summaries with only small wording differences across runs. deepseek most thorough, mistral most concise.</td><td>Condensation tasks are consistent — models handle structured knowledge well.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Consistency Finding</h2>
+  <div class="warn-box">
+    <strong>Key insight:</strong> The type of task determines how consistent results are. Creative tasks vary a lot — that is expected and by design. Factual and structured tasks are reliable. This is important when designing your own test cases: do not judge a creative task for inconsistency, and do not accept inconsistency in a factual task.
+  </div>
+
+  <h2>Key Learnings</h2>
+  <ul>
+    <li><strong>All 4 models ran without crashing.</strong> Basic stability confirmed across task types — a good starting baseline.</li>
+    <li><strong>Mistral is the fastest, deepseek the most thorough.</strong> Choose a model based on what matters more for your use case — speed or depth.</li>
+    <li><strong>Manual scoring gives you a number, but numbers need context.</strong> A score of 4/5 for coherence means nothing without knowing what 4 looks like versus 3. This is why structured criteria matter in evaluation.</li>
+    <li><strong>Three runs reveal variance, one run hides it.</strong> If you only run a test once, you cannot tell if the result was typical or an outlier. Run at least 3 times for anything you care about.</li>
+  </ul>
+
+  <p><a href="../phase-1-first-experiments/results/full_results.html" style="color:var(--accent);">View Full Evaluation Results with Scores →</a></p>
+
+  <footer>Test 2 · Phase 1 · llm-evaluation</footer>
+</body></html>

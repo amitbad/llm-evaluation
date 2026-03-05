@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test 1 — Basic Test</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0f; --surface:#141417; --surface2:#1c1c21; --border:#2a2a32; --accent:#7c6af7; --accent2:#f7a06a; --danger:#f76a6a; --success:#6af7a0; --text:#e8e8f0; --muted:#7a7a90; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); padding: 48px 56px; max-width:100%; line-height:1.6; }
+  .phase-badge { display:inline-block; font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:36px; font-weight:800; line-height:1.1; margin-bottom:10px; background:linear-gradient(135deg,var(--text) 40%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7; max-width:680px; }
+  h2 { font-size:20px; font-weight:700; color:var(--text); margin:40px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  h3 { font-size:16px; font-weight:700; color:var(--accent); margin:28px 0 10px; }
+  p { margin-bottom:14px; font-size:14px; color:#c0c0d8; line-height:1.75; }
+  code { background:var(--surface2); padding:2px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent2); }
+  pre { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent2); margin:14px 0; overflow-x:auto; }
+  ul { padding-left:20px; margin-bottom:14px; }
+  li { margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7; }
+  li strong { color:var(--text); }
+  table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13px; }
+  th { background:var(--surface2); color:var(--muted); font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; padding:10px 13px; text-align:left; border:1px solid var(--border); font-weight:600; }
+  td { padding:11px 13px; border:1px solid var(--border); color:var(--text); vertical-align:top; background:var(--surface); font-size:13px; line-height:1.6; }
+  tr:hover td { background:var(--surface2); }
+  .info-box { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:var(--text); }
+  .warn-box { background:#1a1a10; border:1px solid #3a3a20; border-left:3px solid var(--accent2); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#c8c890; }
+  .file-tag { background:#2a2a1a; border:1px solid var(--border); border-radius:6px; padding:7px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--accent2); margin-bottom:20px; display:inline-block; }
+  footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg); } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head><body>
+  <div class="phase-badge">Phase 1 — First Experiments</div>
+  <h1>Test 1: Basic Test</h1>
+  <p class="subtitle">Single prompt across 4 models to check basic functionality, response quality and speed.</p>
+  <div class="file-tag">📁 phase-1-first-experiments/test1_basic_test.py</div>
+
+  <h2>What We Tested</h2>
+  <p>A simple joke prompt sent to all 4 models. Goal: see if models respond at all, how fast they are, and whether responses differ in style.</p>
+  <div class="info-box">Prompt used: <strong>"Tell me a short joke."</strong></div>
+
+  <h2>Model Comparison</h2>
+  <table>
+    <thead><tr><th></th><th>deepseek-r1:7b</th><th>mistral</th><th>llama3.1:8b</th><th>gemma2:9b</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Output</strong></td><td>Certainly! Here's a short joke for you:<br><br>Why don't scientists trust atoms? Because they make up everything!</td><td>Of course! Here's one for you:<br><br>Why don't scientists trust atoms?<br><br>Because they make up everything!</td><td>Here's one:<br><br>What do you call a fake noodle?<br><br>An impasta.<br><br>Hope that made you smile! Do you want to hear another one?</td><td>Why don't scientists trust atoms?<br><br>Because they make up everything! 😄</td></tr>
+      <tr><td><strong>Time</strong></td><td>54.13s</td><td>11.63s</td><td>19.39s</td><td>20.49s</td></tr>
+      <tr><td><strong>Note</strong></td><td>Slowest — reasoning-focused model</td><td>Fastest response</td><td>Different joke — more creative</td><td>Added emoji for casual tone</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Key Learnings</h2>
+  <ul>
+    <li><strong>Three models gave the same joke.</strong> deepseek, mistral and gemma all answered with the "atoms make up everything" joke — suggesting overlap in training data. llama chose a different one entirely.</li>
+    <li><strong>Style differs even when content is the same.</strong> deepseek added a polite intro ("Certainly!"), gemma added an emoji, llama added a chatty follow-up question. Same task, different personalities.</li>
+    <li><strong>Speed varies a lot.</strong> Mistral answered in 11 seconds. deepseek took 54 seconds — nearly 5x slower. For a production system, this matters. Slower does not always mean better.</li>
+    <li><strong>This is the simplest possible evaluation.</strong> One prompt, four outputs, one human reading the results. Everything from here builds on making this process more systematic and scalable.</li>
+  </ul>
+
+  <footer>Test 1 · Phase 1 · llm-evaluation</footer>
+</body></html>
