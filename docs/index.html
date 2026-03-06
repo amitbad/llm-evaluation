@@ -41,10 +41,11 @@
   nav a.open .chevron { transform:rotate(180deg); }
 
   /* Concepts sub-nav */
-  .concepts-sub { display:none; padding-left:14px; }
+  .concepts-sub { display:none; padding-left:0; margin:4px 8px 6px; background:#0f0f12; border-radius:8px; border:1px solid var(--border); overflow:hidden; }
   .concepts-sub.open { display:block; }
-  .sub-label { font-size:8px; font-family:'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:7px 8px 2px; display:block; }
-  .concepts-sub a { font-size:11.5px; font-weight:500; }
+  .sub-label { font-size:8px; font-family:'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:8px 12px 2px; display:block; }
+  .concepts-sub a { font-size:11.5px; font-weight:500; padding:6px 12px; border-radius:0; margin-bottom:0; }
+  .concepts-sub a:hover { background:#1a1a20; }
 
   .nav-footer { margin-top:auto; padding:14px 18px; border-top:1px solid var(--border); font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--muted); }
 
@@ -84,6 +85,10 @@
       <span class="sub-label">Semantic Evaluation</span>
       <a href="#" onclick="return goAnchor('concepts.html','semantic-similarity')">🔵 Semantic Similarity</a>
       <a href="#" onclick="return goAnchor('concepts.html','sentence-embeddings')">📐 Sentence Embeddings</a>
+
+      <a href="#" onclick="return goAnchor('concepts.html','groundedness')">🎯 Groundedness Scoring</a>
+      <a href="#" onclick="return goAnchor('concepts.html','reference-contamination')">☠️ Reference Contamination</a>
+      <a href="#" onclick="return goAnchor('concepts.html','evaluation-rubric')">📏 Evaluation Rubric Design</a>
       <span class="sub-label">Speed Metrics</span>
       <a href="#" onclick="return goAnchor('concepts.html','ttft')">⚡ TTFT</a>
       <a href="#" onclick="return goAnchor('concepts.html','tpot')">⏱ TPOT</a>
@@ -96,6 +101,7 @@
   </div>
 
   <div class="nav-section">
+    <div class="nav-label" style="font-size:10px; color:var(--accent2); letter-spacing:1px; padding-bottom:6px; border-bottom:1px solid var(--border); margin-bottom:6px;">Experiments</div>
     <div class="nav-label">Phase 1 — First Experiments</div>
     <a href="#" onclick="return go('test1.html','nav-t1')" id="nav-t1">🧪 Test 1 — Basic Test <span class="tag tag-p1">P1</span></a>
     <a href="#" onclick="return go('test2.html','nav-t2')" id="nav-t2">📊 Test 2 — Full Evaluations <span class="tag tag-p1">P1</span></a>

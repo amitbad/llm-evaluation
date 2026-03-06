@@ -532,6 +532,7 @@
     <div class="nav-section">
       <div class="nav-section-label">Groundedness</div>
       <a href="#groundedness">🎯 Groundedness Scoring</a>
+      <a href="#reference-contamination">☠️ Reference Contamination</a>
       <a href="#evaluation-rubric">📏 Evaluation Rubric Design</a>
     </div>
 
@@ -1306,9 +1307,79 @@
         </div>
       </div>
 
-      <p class="detail">Groundedness uses the <strong>LLM-as-a-Judge</strong> pattern — a judge model reads the source, the question, and the bot response, then decides whether each claim is traceable. The judge returns a score (1 = Ungrounded, 2 = Partial, 3 = Grounded) and a reason.</p>
+      <p class="detail">Groundedness uses the <strong>LLM-as-a-Judge</strong> pattern — a judge model reads the source, the question, and the bot response, then decides whether each claim is traceable. The judge returns a score and verdict:</p>
+
+      <table style="width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:13px;">
+        <thead>
+          <tr>
+            <th style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">Verdict</th>
+            <th style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">Score</th>
+            <th style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#4ade80;">✓ Grounded</strong></td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#4ade80;">3</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Every claim in the response can be traced directly to the source material</td>
+          </tr>
+          <tr>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#fbbf24;">~ Partial</strong></td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#fbbf24;">2</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Mostly grounded, but contains minor additions or inferences not in the source</td>
+          </tr>
+          <tr>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#f87171;">✗ Ungrounded</strong></td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#f87171;">1</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Contains invented facts, hallucinations, or information not present in the source</td>
+          </tr>
+        </tbody>
+      </table>
 
       <div class="why-matters">In RAG systems — where the bot is given retrieved documents and must answer from them — groundedness is the primary safety check. The three core RAG eval metrics (context relevance, answer faithfulness, answer relevance) are all forms of groundedness evaluation. Understanding groundedness here is the foundation for evaluating RAG systems in Phase 3.</div>
+    </div>
+
+    <!-- Reference Contamination -->
+    <div class="concept" id="reference-contamination">
+      <div class="concept-header">
+        <div class="concept-icon icon-hall">☠️</div>
+        <div>
+          <div class="concept-title">Reference Contamination</div>
+          <div class="concept-subtitle">Groundedness Evaluation · Test 7</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        When the <strong>expected answer itself contains hallucinated or unverified information</strong> — not derived from the actual source material. Every evaluation method then measures agreement between two hallucinations and produces high scores with complete false confidence.
+      </div>
+
+      <p class="detail">This is one of the most dangerous silent failures in LLM evaluation. It is invisible in the results — scores look good, verdicts look clean. But the entire evaluation is built on a contaminated foundation. The bot hallucinated. The expected answer hallucinated the same plausible details. They agreed. Every metric rewarded it.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">REFERENCE CONTAMINATION — discovered in Test 7</div>
+        <div class="example-content">
+          <span class="u">System prompt says:</span> Direct patients to the helpline for appointment information. Nothing about cancellation policy, fees, or notice periods.<br><br>
+          <span class="u">Expected answer (written during test case design):</span><br>
+          <span class="b">"Please cancel at least 24 hours in advance to avoid a cancellation fee of $25. You can cancel via the patient portal, by phone, or by email."</span><br><br>
+          <span class="b">Problem: 24-hour notice, $25 fee, portal/phone/email — none of this is in the system prompt. The expected answer was hallucinated.</span><br><br>
+          <span class="u">Bot response:</span><br>
+          <span class="b">"Please contact our scheduling department at least 24 hours in advance. You may be subject to a fee if you cancel with less than 24 hours notice."</span><br><br>
+          <span class="b">The bot also hallucinated — but it matched the expected answer. Semantic similarity scored high. Groundedness judge saw it as Partial rather than Ungrounded. Both were wrong. Neither was caught.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-good">CORRECT expected answer — derived from source only</div>
+        <div class="example-content">
+          <span class="g">System prompt says nothing about cancellation policy.</span><br>
+          <span class="g">Correct expected answer: "I don't have specific information about our cancellation policy. Please call our helpline or visit the front desk for details."</span><br><br>
+          <span class="g">This forces the bot to either stay grounded (admit it doesn't know) or hallucinate (invent a policy). Now the evaluation can actually detect the failure.</span>
+        </div>
+      </div>
+
+      <p class="detail">Reference contamination most commonly happens when expected answers are generated by an LLM rather than written from the source material directly. The LLM fills in plausible details — fees, timeframes, contact methods — that sound correct but have no basis in the source. When the bot does the same thing, both agree and the evaluation passes silently.</p>
+
+      <div class="why-matters">Expected answers must be derived strictly from the source material — the system prompt, the document, the knowledge base. If the source does not mention it, the expected answer must not mention it either. A contaminated reference does not just affect one test case — it undermines the entire evaluation suite. Every high score built on a contaminated reference is meaningless.</div>
     </div>
 
     <!-- Evaluation Rubric Design -->
@@ -1352,7 +1423,7 @@
     </div>
 
     <footer>
-      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 7
+      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 7 (Reference Contamination added)
     </footer>
 
   </main>
