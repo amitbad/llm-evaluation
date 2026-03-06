@@ -2,7 +2,49 @@
 
 A hands-on, structured learning journey for evaluating Large Language Models (LLMs) and GenAI systems.
 
-Built for **Test Engineers** transitioning into GenAI evaluation — no data science background required.
+Built for **anyone who needs to test and evaluate LLM-based systems** — QA Engineers, Test Engineers, developers, or anyone at any stage of building or validating a GenAI product. No data science background required. — no data science background required.
+
+---
+
+## Who This Is For
+
+This repository is especially useful for QA and test professionals, but relevant to anyone involved in evaluating LLM systems.
+
+You do not need a data science background. You do not need to understand the mathematics behind neural networks. What you need — and almost certainly already have — is the instinct to find failure modes, design test cases, question results, and think in coverage. That is the most valuable skill in GenAI evaluation, and it is not taught in any AI course.
+
+**This is for:** QA professionals who have been told their team is moving to GenAI and want to understand what evaluation actually means in practice — built, run, and understood, not just read about.
+
+**This is not for:** Data scientists looking for ML tooling. Developers building LLM products. Researchers benchmarking models at scale.
+
+---
+
+## What This Repository Is Not
+
+- **Not a framework** — you are not installing a tool and calling its API. You build the evaluation logic yourself so you understand what frameworks do under the hood.
+- **Not an academic course** — no mathematics, no statistics theory, no research papers required before you start.
+- **Not a tutorial series** — no presenter walking through pre-filled notebook outputs. You run real scripts against real models and read real results.
+- **Not model-specific** — nothing here is tied to a single provider. The same techniques apply whether you use Ollama, GPT-4o, Claude, or Gemini.
+- **Not a replacement for frameworks** — Phase 4 onward introduces RAGAS, DeepEval, and LangSmith. This repository teaches you the concepts first so those frameworks make sense when you reach them.
+
+---
+
+## The Gap This Fills
+
+Search for LLM evaluation resources and you will find academic papers full of mathematics, framework documentation that assumes prior knowledge, YouTube tutorials that call an API and declare success, and AI courses designed for data scientists.
+
+None of them are built for QA engineers. None of them say: your testing instincts are the asset — here is how to apply them to a non-deterministic system.
+
+This repository fills that gap. It covers the same evaluation techniques used by teams at AI companies — deterministic eval, LLM-as-a-Judge, semantic similarity, groundedness scoring, temperature sensitivity, RAG evaluation — taught through the lens of test design, coverage thinking, and failure analysis. The language is QA language. The framing is QA framing.
+
+**What makes this different from everything else out there:**
+- **Single place** — foundations through production eval in one structured journey, in order, with progression
+- **QA framing throughout** — test cases, pass/fail rules, categories, coverage, evidence. Language you already speak.
+- **Hands-on with real results** — scripts you run yourself, not pre-filled notebook outputs
+- **Results documented with learning** — not just the score, but what it means and why it matters in production
+- **No maths barrier** — every concept explained through examples, not equations
+- **Honest about non-determinism** — tells you not to match numbers, focus on understanding what your results mean
+- **Progression** — each test builds on the one before, concepts introduced when needed not dumped upfront
+- **Free to start** — zero cost using local Ollama models, scalable to paid providers when ready
 
 ---
 
