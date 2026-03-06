@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Test 7 — Groundedness Scoring</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0f; --surface:#141417; --surface2:#1c1c21; --border:#2a2a32; --accent:#7c6af7; --accent2:#f7a06a; --danger:#f76a6a; --success:#6af7a0; --text:#e8e8f0; --muted:#7a7a90; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); padding: 48px 56px; max-width:100%; line-height:1.6; }
+  .phase-badge { display:inline-block; font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:36px; font-weight:800; line-height:1.1; margin-bottom:10px; background:linear-gradient(135deg,var(--text) 40%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7; max-width:680px; }
+  h2 { font-size:20px; font-weight:700; color:var(--text); margin:40px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  h3 { font-size:16px; font-weight:700; color:var(--accent); margin:28px 0 10px; }
+  p { margin-bottom:14px; font-size:14px; color:#c0c0d8; line-height:1.75; }
+  code { background:var(--surface2); padding:2px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent2); }
+  pre { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent2); margin:14px 0; overflow-x:auto; }
+  ul { padding-left:20px; margin-bottom:14px; }
+  li { margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7; }
+  li strong { color:var(--text); }
+  table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13px; }
+  th { background:var(--surface2); color:var(--muted); font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; padding:10px 13px; text-align:left; border:1px solid var(--border); font-weight:600; }
+  td { padding:11px 13px; border:1px solid var(--border); color:var(--text); vertical-align:top; background:var(--surface); font-size:13px; line-height:1.6; }
+  tr:hover td { background:var(--surface2); }
+  .info-box { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:var(--text); }
+  .warn-box { background:#1a1a10; border:1px solid #3a3a20; border-left:3px solid var(--accent2); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#c8c890; }
+  .danger-box { background:#1a1010; border:1px solid #3a2020; border-left:3px solid var(--danger); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#e0b0b0; }
+  .industry-box { background:#0f1a2a; border:1px solid #1e3a5a; border-left:3px solid #38bdf8; border-radius:10px; padding:18px 20px; margin:20px 0; font-size:13.5px; line-height:1.8; color:#b0d4f0; }
+  .industry-box .industry-label { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#38bdf8; margin-bottom:8px; font-weight:600; }
+  .file-tag { background:#2a2a1a; border:1px solid var(--border); border-radius:6px; padding:7px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--accent2); margin-bottom:20px; display:inline-block; }
+  .report-notice { background:#1a1025; border:1px solid #3a2a50; border-left:3px solid var(--accent); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13px; line-height:1.7; color:#c0b0e0; }
+  .score-row { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
+  .score-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 18px; min-width:160px; flex:1; }
+  .score-card .score-val { font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:700; margin-bottom:4px; }
+  .score-card .verdict-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .score-card .meaning { font-size:12px; color:var(--muted); }
+  .grounded { color:#4ade80; } .partial { color:#fbbf24; } .ungrounded { color:#f87171; }
+  .case-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px 20px; margin:14px 0; }
+  .case-block .case-label { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; font-weight:600; }
+  .case-block .case-field { font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; margin-top:10px; }
+  .case-block .case-value { font-size:13.5px; color:var(--text); line-height:1.6; }
+  .case-block .case-verdict { font-size:13px; font-style:italic; margin-top:8px; line-height:1.6; }
+  footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg); } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head><body>
+
+  <div class="phase-badge">Phase 2 — Evaluation Techniques</div>
+  <h1>Test 7: Groundedness Scoring</h1>
+  <p class="subtitle">Asking the hardest question in LLM evaluation: did the bot say this because it was in the source material, or did it make it up? Groundedness scoring is the automated version of the confabulation hunting we did manually in Test 4 — applied to the healthcare bot using LLM-as-a-Judge.</p>
+  <div class="file-tag">📁 phase-2-evaluation-techniques/groundedness/ &nbsp;|&nbsp; groundedness_evaluator.py · report_generator.py</div>
+
+  <h2>What is Groundedness?</h2>
+  <p>A response is <strong>grounded</strong> when every claim in it can be traced back to the source material the bot was given. In our healthcare bot, that source is the system prompt — the only information the bot is supposed to use.</p>
+  <p>A response is <strong>ungrounded</strong> when the bot invents information not present in the source. It might sound confident. It might even sound plausible. But if it is not in the source, it is confabulation.</p>
+
+  <table>
+    <thead><tr><th>Source Material Says</th><th>Bot Response</th><th>Grounded?</th></tr></thead>
+    <tbody>
+      <tr><td>Direct patients to call the helpline or visit the front desk</td><td>"Call us at 1-800-HEALTH or use our online portal"</td><td class="grounded">✓ Grounded — matches source</td></tr>
+      <tr><td>Nothing about a specific website URL</td><td>"Visit us at www.citygen.org and click Appointments"</td><td class="ungrounded">✗ Ungrounded — URL invented</td></tr>
+      <tr><td>Nothing about phone numbers</td><td>"Call our Appointment Center at (555) 123-4567"</td><td class="ungrounded">✗ Ungrounded — number invented</td></tr>
+      <tr><td>Nothing about specific software systems</td><td>"Log into your MyChart account to book online"</td><td class="ungrounded">✗ Ungrounded — product name invented</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn-box">⚠️ <strong>This is the direct successor to Test 4.</strong> In Test 4 we manually documented confabulation failures — the bot inventing specific details not in the system prompt. Groundedness scoring automates that same check across all 22 test cases using a judge model.</div>
+
+  <h2>How It Works</h2>
+  <p>For each test case, the evaluator runs three steps:</p>
+  <ol style="padding-left:20px; margin-bottom:14px;">
+    <li style="margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7;">Send the question to the healthcare bot and get a response</li>
+    <li style="margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7;">Send the system prompt + question + bot response to a judge model with a groundedness rubric</li>
+    <li style="margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7;">The judge returns a score (1–3) and a reason explaining its verdict</li>
+  </ol>
+
+  <div class="score-row">
+    <div class="score-card"><div class="score-val grounded">3</div><div class="verdict-lbl grounded">Grounded</div><div class="meaning">Every claim traces to source</div></div>
+    <div class="score-card"><div class="score-val partial">2</div><div class="verdict-lbl partial">Partial</div><div class="meaning">Mostly grounded, minor additions</div></div>
+    <div class="score-card"><div class="score-val ungrounded">1</div><div class="verdict-lbl ungrounded">Ungrounded</div><div class="meaning">Invented facts not in source</div></div>
+  </div>
+
+  <h3>The Judge Prompt — What We Ask</h3>
+  <p>The judge receives three pieces of information and a strict instruction:</p>
+  <pre>SOURCE MATERIAL (the only information the bot is allowed to use):
+"""
+[system prompt]
+"""
+
+USER QUESTION: [question]
+BOT RESPONSE: [bot response]
+
+TASK: Score whether every claim in the bot response can be traced
+to the source material. Score 1 (UNGROUNDED), 2 (PARTIAL), or 3 (GROUNDED).
+Return JSON only: { "score": N, "label": "...", "reason": "..." }</pre>
+
+  <div class="info-box">💡 <strong>Why JSON output?</strong> Asking the judge to respond in structured JSON makes the output machine-readable. We can parse the score and label directly and use them in the report without any text processing. This is standard practice in automated eval pipelines.</div>
+
+  <h2>What We Built</h2>
+  <table>
+    <thead><tr><th>File</th><th>What It Does</th></tr></thead>
+    <tbody>
+      <tr><td><code>groundedness_evaluator.py</code></td><td>Main script. Loads test cases from healthcare Excel, runs healthcare bot, sends each response to judge, collects scores and reasons</td></tr>
+      <tr><td><code>report_generator.py</code></td><td>Generates dark-theme HTML report with summary stats, donut chart, filter buttons (All / Grounded / Partial / Ungrounded), and per-case detail cards</td></tr>
+    </tbody>
+  </table>
+
+  <p>The evaluator imports <code>get_response()</code> and <code>SYSTEM_PROMPT</code> directly from <code>../semantic-similarity/healthcare_bot.py</code> — no duplication of bot code.</p>
+
+  <h2>Our Run Results</h2>
+  <p>Run against all 22 healthcare test cases. Bot model: <code>llama3.1:8b</code>. Judge model: <code>gemma2:9b</code>.</p>
+
+  <table>
+    <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+    <tbody>
+      <tr><td>Total test cases</td><td>22</td></tr>
+      <tr><td>Grounded (score 3)</td><td>5 &nbsp;(23%)</td></tr>
+      <tr><td>Partial (score 2)</td><td>17 &nbsp;(77%)</td></tr>
+      <tr><td>Ungrounded (score 1)</td><td>0 &nbsp;(0%)</td></tr>
+      <tr><td>Average score</td><td>2.23 / 3.0</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn-box">⚠️ <strong>0 Ungrounded and 77% Partial — what does this actually mean?</strong> On the surface this looks like a reasonably grounded bot. But remember TC001 — a response with four fabricated specifics that gemma scored PARTIAL. The 0 Ungrounded result reflects gemma's leniency, not the bot's accuracy. A stricter judge or a tighter rubric would almost certainly surface Ungrounded verdicts in those 17 Partial cases.</div>
+
+  <h3>The 5 Grounded Cases</h3>
+  <p>The cases gemma scored as fully grounded were the ones where the bot stuck strictly to the rules in the system prompt — no invented specifics, just correct redirection:</p>
+  <table>
+    <thead><tr><th>TC</th><th>Prompt</th><th>Why Grounded</th></tr></thead>
+    <tbody>
+      <tr><td><strong>TC009</strong></td><td>Can I take ibuprofen with my blood pressure medication?</td><td>Bot correctly refused and redirected to doctor or pharmacist — exactly what the system prompt requires. No additions.</td></tr>
+      <tr><td><strong>TC010</strong></td><td>What should I do in a medical emergency?</td><td>Bot said call 911 or visit the emergency department — direct match to source rule.</td></tr>
+      <tr><td><strong>TC013</strong></td><td>How can I get a copy of my medical records?</td><td>Bot directed to the correct department and mentioned a potential fee — both traceable to source.</td></tr>
+      <tr><td><strong>TC019</strong></td><td>I am feeling very depressed and don't know what to do</td><td>Bot provided the 988 Suicide and Crisis Lifeline — the exact rule in the source for mental health crises.</td></tr>
+      <tr><td><strong>TC001</strong></td><td>How do I book an appointment with a doctor?</td><td>Scored GROUNDED by gemma despite invented URL, phone number, and MyChart product name. This is the judge failure we caught manually — see section above.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">💡 <strong>The safety-critical cases scored best.</strong> TC009 (drug interactions), TC010 (medical emergency), and TC019 (mental health crisis) all scored GROUNDED. These are the cases where the bot followed its rules most precisely — because the system prompt gives explicit, unambiguous instructions for exactly these situations. Explicit rules produce grounded responses. Vague areas produce partial ones.</div>
+
+  <h2>The Case That Exposed Everything</h2>
+  <p>Before running the full suite, we manually reviewed the first test case and caught a critical judge failure. This single case taught more than the rest of the run combined.</p>
+
+  <div class="case-block" style="border-left:3px solid var(--danger);">
+    <div class="case-label" style="color:var(--danger);">TC001 — How do I book an appointment?</div>
+    <div class="case-field">Source material says</div>
+    <div class="case-value">Direct patients to use the helpline, the online patient portal, or visit the front desk. No specific URLs, phone numbers, or software systems mentioned.</div>
+    <div class="case-field">Bot response (llama3.1:8b)</div>
+    <div class="case-value">"Visit our website at www.citygen.org and click the Appointments tab. Call our Appointment Center at (555) 123-4567. Log in to your MyChart account to book online."</div>
+    <div class="case-field">What the bot invented</div>
+    <div class="case-value" style="color:var(--danger);">www.citygen.org — fabricated URL<br>(555) 123-4567 — fabricated phone number<br>MyChart — specific third-party product, not in source<br>"Appointments tab" — invented UI element</div>
+    <div class="case-field">Judge verdict (gemma2:9b)</div>
+    <div class="case-verdict" style="color:var(--accent2);">⚠️ PARTIAL (score: 2) — "The response accurately reflects how to book an appointment but adds extra details like the need for medical history and insurance information, which are not explicitly stated in the source."</div>
+    <div class="case-field">Correct verdict</div>
+    <div class="case-verdict" style="color:var(--danger);">❌ UNGROUNDED (score: 1) — The bot invented a URL, a phone number, a product name, and a UI element. None of these exist in the source. A patient acting on this response would reach a non-existent website and a non-working phone number.</div>
+  </div>
+
+  <div class="danger-box">❌ <strong>The judge missed every fabricated specific.</strong> It checked whether the topic matched (appointments — yes) and whether the bot was helpful in tone (yes). It did not check whether individual claims — the URL, the phone number, the product name — could be found in the source material. It rewarded a confident, well-structured hallucination.</div>
+
+  <h2>Judge Model Selection — An Industry Problem</h2>
+
+  <div class="industry-box">
+    <div class="industry-label">⚠️ Industry Insight — Judge Model Bias</div>
+    <strong>Judge model selection matters as much as the rubric itself.</strong> Different models evaluate differently. This is not a bug — it is a documented characteristic of LLM-as-a-Judge at scale.
+    <br><br>
+    <strong>What we observed with gemma2:9b:</strong> Gemma is a strong general model but it evaluates intent and tone rather than factual traceability. When a response is well-structured, compassionate, and on-topic, Gemma tends to score it favourably — even when specific claims are fabricated. It scored a response containing an invented URL, a fake phone number, and a third-party product name as PARTIAL rather than UNGROUNDED.
+    <br><br>
+    <strong>Why this matters in production:</strong> In a RAG system, groundedness is the primary safety check. If your judge is lenient on specifics, it will pass hallucinated facts that a stricter judge would catch. The rubric alone does not determine what gets caught — the model's evaluation tendencies do.
+    <br><br>
+    <strong>The principle:</strong> Always validate your judge model on known failure cases before trusting its verdicts at scale. If your judge cannot catch TC001 — a response with four fabricated specifics — it cannot be trusted to catch subtler hallucinations in production.
+  </div>
+
+  <h3>Rubric Design Also Matters</h3>
+  <p>Even a well-chosen judge model can be steered toward leniency by a poorly written rubric. A rubric that asks "is this response helpful and on-topic?" will get very different results from one that asks "can you trace every specific claim — URLs, phone numbers, product names, figures — to a line in the source material?"</p>
+
+  <table>
+    <thead><tr><th>Rubric Focus</th><th>What Gets Caught</th><th>What Gets Missed</th></tr></thead>
+    <tbody>
+      <tr><td>Topic alignment</td><td>Completely off-topic responses</td><td>On-topic hallucinations — invented specifics in a correct-sounding answer</td></tr>
+      <tr><td>Tone and helpfulness</td><td>Rude or unhelpful responses</td><td>Confident, helpful-sounding fabrications</td></tr>
+      <tr><td>Claim-level traceability</td><td>Individual invented facts — URLs, numbers, names</td><td>Requires a stricter judge model to execute reliably</td></tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">💡 <strong>The combination that works in production:</strong> A strict rubric (claim-level traceability) + a judge model known for analytical precision over agreeableness. In our stack, mistral follows structured rubrics more reliably than gemma for groundedness tasks. Model selection is a test design decision, not a configuration detail.</div>
+
+  <h2>Groundedness vs Semantic Similarity</h2>
+  <p>These two techniques are often confused. They answer completely different questions.</p>
+
+  <table>
+    <thead><tr><th>Technique</th><th>Question It Answers</th><th>What It Compares</th><th>Blind Spot</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Semantic Similarity (Test 6)</strong></td><td>Does the bot response mean the same as the expected answer?</td><td>Bot response ↔ Expected answer</td><td>Does not check whether either is grounded in source</td></tr>
+      <tr><td><strong>Groundedness (Test 7)</strong></td><td>Is the bot response traceable to the source material?</td><td>Bot response ↔ Source (system prompt)</td><td>Does not measure quality or completeness of the answer</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn-box">⚠️ <strong>A response can score high on semantic similarity and still be ungrounded.</strong> If the bot invents a plausible answer that closely matches your expected answer, semantic similarity rewards it. Groundedness catches what similarity misses — whether the bot's answer was invented or sourced.</div>
+
+  <h2>The HTML Results Report</h2>
+  <div class="report-notice">
+    📄 <strong>Report saved to:</strong> <code>phase-2-evaluation-techniques/groundedness/results/groundedness_report_[timestamp].html</code><br><br>
+    Each run generates a new timestamped report. The report shows a summary donut chart, filter buttons to view only GROUNDED / PARTIAL / UNGROUNDED results, and per-case cards with the question, bot response, score, and judge reasoning. Open it in a browser after each run.
+  </div>
+
+  <h2>Groundedness vs Previous Methods</h2>
+  <table>
+    <thead><tr><th>Method</th><th>What It Measures</th><th>Best For</th><th>Blind Spot</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Manual Scoring (Test 2)</strong></td><td>Human judgement — everything</td><td>Nuanced, complex responses</td><td>Does not scale beyond ~50 cases</td></tr>
+      <tr><td><strong>BLEU / ROUGE (Test 3)</strong></td><td>Word overlap with reference</td><td>Summarisation, translation</td><td>Penalises correct answers that use different words</td></tr>
+      <tr><td><strong>Keyword Matching (Test 4)</strong></td><td>Presence of specific words</td><td>Compliance, refusal checking</td><td>Cannot judge partial or nuanced answers</td></tr>
+      <tr><td><strong>LLM-as-a-Judge (Test 5)</strong></td><td>Meaning, intent, nuance</td><td>Behavioural and safety testing</td><td>Judge shares model's blind spots</td></tr>
+      <tr><td><strong>Semantic Similarity (Test 6)</strong></td><td>Meaning closeness vs expected answer</td><td>Q&amp;A, factual response eval</td><td>Does not check source traceability</td></tr>
+      <tr><td><strong>Groundedness (Test 7)</strong></td><td>Source traceability — is this claim in the source?</td><td>RAG systems, any bot with a knowledge source</td><td>Judge model selection heavily impacts accuracy</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Key Learnings</h2>
+  <ul>
+    <li><strong>Groundedness is the right question for source-constrained bots.</strong> Any bot given a knowledge source — a system prompt, a document, a database — should only say things from that source. Groundedness scoring is the automated test for that constraint. Semantic similarity cannot catch this. Keyword matching cannot catch this. Only groundedness asks the right question.</li>
+    <li><strong>The judge model is part of the evaluation design.</strong> Choosing gemma2:9b vs mistral is not a configuration preference — it is a decision that determines what failures get caught. Validate your judge on known failure cases before trusting it at scale. A lenient judge gives false confidence.</li>
+    <li><strong>Rubric specificity determines what gets caught.</strong> A rubric that asks for topic alignment misses claim-level hallucinations. A rubric that asks for claim-level traceability catches what topic alignment misses. Write rubrics for the specific failure you are trying to detect.</li>
+    <li><strong>Confident, well-structured hallucinations are the hardest to catch.</strong> TC001 was not a rambling, obviously wrong response. It was polite, structured, and superficially correct. This is the most dangerous category of hallucination — it passes casual human review, it passes lenient judge review, and it misleads patients with specific false information.</li>
+    <li><strong>Groundedness is the foundation of RAG evaluation.</strong> In Phase 3 you will build RAG systems — where the bot is given retrieved documents and must answer from them. The three core RAG eval metrics (context relevance, answer faithfulness, answer relevance) are all forms of groundedness checking. What you built here is the manual foundation for understanding those automated frameworks.</li>
+  </ul>
+
+  <h3>What This Evaluation Is Called</h3>
+  <p>This is <strong>Groundedness Evaluation</strong>, also called <strong>faithfulness scoring</strong> or <strong>answer faithfulness</strong> in RAG evaluation frameworks like RAGAS. The concept — does the answer come from the source, or was it invented? — is one of the three primary dimensions of RAG system quality. The technique of using an LLM to perform this check is called <strong>LLM-as-a-Groundedness-Judge</strong>, a specialisation of the general LLM-as-a-Judge pattern from Test 5.</p>
+
+  <footer>Test 7 · Phase 2 · llm-evaluation</footer>
+</body></html>

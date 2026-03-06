@@ -2,7 +2,7 @@
 
 A hands-on, structured learning journey for evaluating Large Language Models (LLMs) and GenAI systems.
 
-Built for **QA Architects and Test Engineers** transitioning into GenAI evaluation — no data science background required.
+Built for **Test Engineers** transitioning into GenAI evaluation — no data science background required.
 
 ---
 
@@ -30,8 +30,6 @@ All are free, open-source, and run on your own machine. No OpenAI, no Anthropic,
 
 ## Prerequisites
 
-Before starting, make sure you have:
-
 | Requirement | Why | How to Get It |
 |-------------|-----|---------------|
 | Python 3.10+ | All scripts are Python | python.org |
@@ -44,38 +42,27 @@ Before starting, make sure you have:
 
 ## Setup — First Time Only
 
-**1. Clone the repository**
 ```bash
+# 1. Clone the repository
 git clone <repo-url>
 cd llm-evaluation
-```
 
-**2. Create a virtual environment**
-```bash
+# 2. Create and activate virtual environment
 python3 -m venv venv
-```
+source venv/bin/activate        # Mac / Linux
+# venv\Scripts\activate         # Windows
 
-**3. Activate it**
-```bash
-# Mac / Linux
-source venv/bin/activate
-
-# Windows
-venv\Scripts\activate
-```
-
-**4. Install all dependencies**
-```bash
+# 3. Install dependencies
 pip install -r requirements.txt
 ```
 
-You only need to do this once. After that, just activate the venv each time you start a new terminal session (`source venv/bin/activate`).
+After the first setup, just activate the venv at the start of each session: `source venv/bin/activate`
 
 ---
 
 ## Configuration
 
-All shared settings live in `config.yml` at the project root. You should not need to change anything here unless you want to swap models or point to a different Excel file.
+All settings live in `config.yaml` at the project root.
 
 ```yaml
 shared:
@@ -92,27 +79,34 @@ phase2_llm_as_a_judge:
   RESULTS_SHEET: "JudgeResults"
   EXCEL_FILE: "banking_bot_test_results.xlsx"
   TEST_SHEET: "Banking Bot Tests"
-```
 
-Each script loads only its own section. `shared` acts as defaults — section values override shared where they overlap.
+phase2_semantic_similarity:
+  BOT_MODEL: "llama3.1:8b"
+  EXCEL_FILE: "healthcare_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+
+phase2_groundedness:
+  BOT_MODEL: "llama3.1:8b"
+  JUDGE_MODEL: "gemma2:9b"
+  EXCEL_FILE: "healthcare_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+```
 
 ---
 
 ## How Long Will This Take?
 
-This is a **self-paced plan across 7 phases**. Estimated effort per phase:
-
 | Phase | Topic | Effort |
 |-------|-------|--------|
 | Phase 0 | Pre-requisites — Python, LLM concepts, Ollama setup | 1–2 days |
 | Phase 1 | First Experiments — calling models, comparing outputs | 2–3 days |
-| Phase 2 | Evaluation Techniques — metrics, deterministic eval, behavioural testing, LLM-as-a-Judge | 3–5 days |
+| Phase 2 | Evaluation Techniques — metrics, deterministic eval, behavioural testing, LLM-as-a-Judge, semantic similarity | 4–6 days |
 | Phase 3 | What You Are Evaluating — RAG, agents, tokenisation | 3–4 days |
 | Phase 4 | Frameworks & Tools — RAGAS, DeepEval, LangSmith | 3–5 days |
 | Phase 5 | Production Eval — regression, A/B, red teaming, CI/CD | 4–6 days |
 | Phase 6 | Specialisation — RAG eval, safety, red teaming | 5–7 days |
 
-**Total: approximately 3–5 weeks** depending on your pace. Phases 0–2 are fully covered in this repo with working code and documentation.
+**Total: approximately 3–5 weeks** depending on your pace.
 
 ---
 
@@ -121,101 +115,107 @@ This is a **self-paced plan across 7 phases**. Estimated effort per phase:
 ```
 llm-evaluation/
 │
-├── README.md                              ← You are here
-├── requirements.txt                       ← Python dependencies (install with pip install -r requirements.txt)
-├── config.yml                             ← Shared config for all scripts — models, file names, sheet names
-├── print_folders_struct.py                ← Run this to print the project structure in terminal
+├── README.md
+├── requirements.txt                       ← pip install -r requirements.txt
+├── config.yaml                            ← all models, file names, sheet names
 │
-├── docs/                                  ← All documentation and reference material
-│   ├── index.html                         ← OPEN THIS in browser — main navigation hub
-│   ├── home.html                          ← Landing page with phase overview
-│   ├── test1.html                         ← Test 1 results and learnings
-│   ├── test2.html                         ← Test 2 results and learnings
-│   ├── test3.html                         ← Test 3 results and learnings
-│   ├── test4.html                         ← Test 4 results and learnings
-│   ├── test5.html                         ← Test 5 results and learnings
-│   ├── concepts.html                      ← Key GenAI evaluation concepts with examples
-│   ├── evaluation_docs.html               ← Original single-file reference (kept, do not delete)
-│   └── genai_eval_learning_plan.xlsx      ← Your personal learning roadmap (track progress here)
+├── docs/                                  ← all documentation
+│   ├── index.html                         ← OPEN THIS — main navigation hub
+│   ├── home.html                          ← phase overview and status
+│   ├── test1.html – test6.html            ← one file per test, results and learnings
+│   ├── concepts.html                      ← key GenAI eval concepts with examples
+│   └── genai_eval_learning_plan.xlsx      ← 7-phase learning roadmap, track progress here
 │
-├── phase-0-foundations/                   ← Pre-requisites and setup reference
-│   ├── phase_eval.py                      ← Basic Ollama connection test
-│   └── read_squad.py                      ← Dataset reading reference
+├── phase-0-foundations/
+│   ├── phase_eval.py                      ← basic Ollama connection test
+│   └── read_squad.py
 │
-├── phase-1-first-experiments/             ← Phase 1: First hands-on experiments
-│   ├── test1_basic_test.py                ← Single prompt across 4 models — compare output and speed
-│   ├── test2_full_evaluations.py          ← 3 use cases x 4 models x 3 runs, collect results
-│   ├── test2_score_evaluations.py         ← Manual scoring of outputs (coherence, accuracy etc.)
-│   └── results/                           ← Generated output files
-│       ├── evaluation_results.json
-│       ├── full_results.html
-│       └── scores.json
+├── phase-1-first-experiments/
+│   ├── test1_basic_test.py                ← single prompt across 4 models
+│   ├── test2_full_evaluations.py          ← 3 use cases x 4 models x 3 runs
+│   ├── test2_score_evaluations.py         ← manual scoring of outputs
+│   └── results/
 │
-└── phase-2-evaluation-techniques/         ← Phase 2: Systematic evaluation methods
+└── phase-2-evaluation-techniques/
     ├── test3_bleu_score_evaluation.py     ← BLEU and ROUGE automated metrics
-    ├── banking-bots/                      ← Domain-restricted chatbot + behavioural eval suite
-    │   ├── bot.py                         ← Banking chatbot (system prompt, single + multi-turn)
-    │   ├── banking_evaluator.py           ← Evaluation runner (modes: auto, multi-turn, interactive)
-    │   └── banking_test_cases.xlsx        ← 49 behavioural test cases across 5 categories
-    └── llm-as-a-judge/                    ← LLM-as-a-Judge evaluator (Phase 2 extension)
-        ├── llm_judge_evaluator.py         ← Runs bot → judge → compares to your verdict
-        ├── banking_bot_test_results.xlsx  ← Test results with your verdict column (fill col H first)
-        └── results/                       ← Generated JudgeResults saved here after each run
+    ├── banking-bots/                      ← banking chatbot + behavioural eval
+    │   ├── bot.py                         ← banking chatbot (llama3.1:8b)
+    │   ├── banking_evaluator.py           ← evaluator (modes: auto, multi-turn, interactive)
+    │   └── banking_test_cases.xlsx        ← 49 behavioural test cases
+    ├── llm-as-a-judge/                    ← LLM-as-a-Judge pipeline
+    │   ├── llm_judge_evaluator.py         ← bot → human verdict → judge → compare
+    │   ├── banking_bot_test_results.xlsx  ← fill col H before running
+    │   └── results/
+    └── semantic-similarity/               ← semantic similarity evaluation
+        ├── healthcare_bot.py              ← City General Hospital chatbot (llama3.1:8b)
+        ├── healthcare_test_cases.xlsx     ← 22 QA-format test cases (input only)
+        ├── test6_semantic_similarity.py   ← runs eval, scores with cosine similarity
+        ├── report_generator.py            ← generates dark-theme HTML report
+        └── results/                       ← HTML report saved here after each run
+    └── groundedness/                      ← groundedness scoring evaluation
+        ├── groundedness_evaluator.py      ← imports healthcare bot, runs judge scoring
+        ├── report_generator.py            ← generates dark-theme HTML report
+        └── results/                       ← HTML report saved here after each run (not committed)
 ```
 
 ---
 
 ## Where to Start
 
-1. Complete setup above (venv + pip install)
-2. Open `docs/index.html` in your browser — it is your guided walkthrough with full navigation.
-   - Tip: serve locally for best results: `cd docs && python3 -m http.server 8000` then open `http://localhost:8000`
-3. Open `docs/genai_eval_learning_plan.xlsx` — track your progress as you go.
-4. Run experiments in order — Phase 0 → Phase 1 → Phase 2.
+1. Complete setup above
+2. Open `docs/index.html` via local server:
+   ```bash
+   cd docs && python3 -m http.server 8000
+   ```
+   Then open `http://localhost:8000` in your browser
+3. Open `docs/genai_eval_learning_plan.xlsx` — track your progress as you go
+4. Run experiments in order — Phase 0 → Phase 1 → Phase 2
 
 ---
 
 ## What You Will Learn
 
-By the time you complete Phases 0–2 in this repo, you will understand:
+By completing Phases 0–2 you will understand:
 
 - Why LLMs need structured evaluation — they are non-deterministic, unlike traditional software
-- How to design test cases for a chatbot (functional, hallucination, refusal, context retention, prompt injection)
-- The difference between deterministic eval (keyword matching) and semantic eval (meaning-based scoring)
-- What hallucination types exist — confabulation, false grounding, context fabrication, financial confabulation
+- How to design test cases for a chatbot in QA format — functional, behavioural, safety categories
+- The difference between keyword matching, BLEU/ROUGE, LLM-as-a-Judge, and semantic similarity
+- What hallucination types exist — confabulation, false grounding, context fabrication
 - Why prompt injection is a model-level weakness, not a prompt problem
+- How to use sentence embeddings and cosine similarity to evaluate meaning — not just words
 - How LLM-as-a-Judge works — and why your human verdict must come before the judge's
-- How to interpret disagreements between your judgement and the judge's
+- When a score alone is not enough — high-stakes cases require reading the actual response
 
 ---
 
-## Key Concepts
+## Evaluation Methods Covered
 
-See `docs/concepts.html` for definitions of all key terms used across this repository.
+| Test | Method | What It Measures |
+|------|--------|-----------------|
+| Test 2 | Manual Scoring | Human judgement — coherence, accuracy, consistency |
+| Test 3 | BLEU / ROUGE | Word overlap with a reference answer |
+| Test 4 | Keyword Matching | Deterministic pass/fail on must-contain / must-not-contain rules |
+| Test 5 | LLM-as-a-Judge | Meaning, intent, nuance — judge challenges your verdict |
+| Test 6 | Semantic Similarity | Cosine similarity of sentence embeddings — meaning, not words |
+| Test 7 | Groundedness Scoring | Source traceability — did the bot say this from source, or invent it? |
 
 ---
 
-## Learning Plan
+## Models Used
 
-The full 7-phase learning roadmap is in `docs/genai_eval_learning_plan.xlsx`.
-Open it, update the Status column as you progress, and use it to track what to study next.
-
----
-
-## Models Tested
-
-| Model | Size | Notes |
-|-------|------|-------|
-| llama3.1:8b | 8B params | Primary banking bot — evaluated across all phases |
-| mistral | 7B params | Used as LLM judge in Phase 2 LLM-as-a-Judge |
-| deepseek-r1:7b | 7B params | Reasoning-focused, slowest but most detailed |
-| gemma2:9b | 9B params | Google model, mid-range speed and quality |
+| Model | Size | Role |
+|-------|------|------|
+| llama3.1:8b | 8B | Primary bot — banking and healthcare chatbot |
+| mistral | 7B | Judge model in LLM-as-a-Judge |
+| deepseek-r1:7b | 7B | Reasoning-focused, comparison in Phase 1 |
+| gemma2:9b | 9B | Google model, comparison in Phase 1 |
 
 ---
 
 ## Notes for Learners
 
-- **Fill in your verdict before running the judge.** In `llm-as-a-judge`, always fill col H (Result) with your own Pass/Fail/Partial before running `llm_judge_evaluator.py`. The disagreements only have learning value if your verdict came first.
-- **Do not focus on which run mode is used** (`a`, `m`, `i` in the evaluator). Focus on the test categories and what they reveal about model behaviour.
-- **Responses vary model to model** — the outputs in `evaluation_docs.html` are specific to `llama3.1:8b`. Your results will differ. That is expected and part of the learning.
-- **You do not need to be a data scientist or AI engineer** to follow this. QA and testing instincts are the most valuable skill here.
+- **Excel is input only (from Test 6 onwards).** For semantic similarity and future tests, Excel stores test cases only. Results go to the HTML report. Earlier tests (Test 4, Test 5) do write results back to Excel — that is intentional for those exercises.
+- **Read the HTML report, not the Excel.** After running any evaluator, open the generated HTML report in your browser. It shows Expected vs Bot Response side by side with colour-coded verdicts.
+- **Fill your verdict before running the judge.** In `llm-as-a-judge`, always fill col H (Result) with your own Pass/Fail/Partial before running `llm_judge_evaluator.py`. The disagreements only have learning value if your verdict came first.
+- **A score is not the final word.** In high-stakes domains like healthcare, always read the actual response for safety-critical cases — a lower score that provides a crisis helpline is better than a higher score that misses it.
+- **You do not need to be a data scientist.** QA and testing instincts are the most valuable skill here. Threshold decisions, test case design, and reading results are all QA work.

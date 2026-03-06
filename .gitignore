@@ -55,3 +55,4 @@ CONTEXT.md
 # Note: results/ folders are intentionally tracked as reference outputs
 # Only exclude if they get too large
 # phase-1-first-experiments/results/
+phase-2-evaluation-techniques/groundedness/results/

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Semantic Similarity Report — Healthcare Bot</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #121212; color: #e0e0e0; padding: 30px; }
+
+  .notice {
+    background: #2a2000; border-left: 5px solid #f0ad4e;
+    padding: 14px 18px; margin-bottom: 28px; border-radius: 4px;
+  }
+  .notice strong { display: block; font-size: 15px; margin-bottom: 4px; color: #f0ad4e; }
+  .notice p { font-size: 13px; color: #aaa; }
+  .notice code { background: #333; padding: 1px 6px; border-radius: 3px; color: #f0ad4e; }
+
+  h1 { font-size: 24px; color: #90caf9; margin-bottom: 4px; }
+  .run-meta { font-size: 12px; color: #666; margin-bottom: 28px; }
+
+  .summary-bar {
+    display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 36px;
+  }
+  .summary-card {
+    background: #1e1e1e; border-radius: 8px; padding: 18px 28px;
+    min-width: 150px; box-shadow: 0 1px 6px rgba(0,0,0,0.4); text-align: center;
+    border: 1px solid #2a2a2a;
+  }
+  .summary-card .num { font-size: 36px; font-weight: bold; }
+  .summary-card .s-lbl { font-size: 12px; color: #777; margin-top: 4px; }
+  .num.green { color: #43a047; }
+  .num.orange { color: #fb8c00; }
+  .num.red { color: #e53935; }
+  .num.blue { color: #90caf9; }
+
+  .section-title {
+    font-size: 16px; font-weight: bold; color: #90caf9;
+    margin-bottom: 16px; border-bottom: 2px solid #90caf9; padding-bottom: 6px;
+  }
+
+  .case-card {
+    background: #1e1e1e; border-radius: 8px; margin-bottom: 20px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.4); overflow: hidden;
+    border: 1px solid #2a2a2a;
+  }
+
+  .case-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; background: #1a1f2e; border-bottom: 1px solid #2a2a2a;
+    flex-wrap: wrap;
+  }
+  .tc-id {
+    font-weight: bold; font-size: 13px; color: #90caf9;
+    background: #1a2a40; padding: 3px 10px; border-radius: 12px; white-space: nowrap;
+    border: 1px solid #2a4a70;
+  }
+  .tc-summary { flex: 1; font-size: 14px; font-weight: 600; color: #e0e0e0; }
+  .badge {
+    color: #fff; font-size: 12px; font-weight: bold;
+    padding: 4px 14px; border-radius: 12px; white-space: nowrap;
+  }
+
+  .meta-row {
+    padding: 8px 18px; font-size: 13px; color: #aaa;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .lbl { font-weight: bold; color: #ccc; }
+
+  .score-row {
+    padding: 10px 18px; font-size: 14px;
+    border-bottom: 1px solid #2a2a2a; color: #e0e0e0;
+  }
+  .meaning { color: #aaa; font-style: italic; }
+
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  }
+  .compare-box {
+    padding: 14px 18px; border-right: 1px solid #2a2a2a;
+  }
+  .compare-box:last-child { border-right: none; }
+  .box-label {
+    font-size: 11px; font-weight: bold; text-transform: uppercase;
+    letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+  .expected-lbl { color: #64b5f6; }
+  .actual-lbl { color: #ce93d8; }
+  .box-content { font-size: 13px; line-height: 1.6; color: #ccc; }
+
+  @media (max-width: 700px) {
+    .compare-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="notice">
+    <strong>⚠ This report is auto-generated on every script execution</strong>
+    <p>Each time you run <code>test6_semantic_similarity.py</code> this file is overwritten with the latest results.
+    If you want to keep a snapshot, rename this file before running the script again.</p>
+  </div>
+
+  <h1>Semantic Similarity Evaluation Report</h1>
+  <p class="run-meta">
+    Bot: City General Hospital Healthcare Bot &nbsp;|&nbsp;
+    Model: llama3.1:8b &nbsp;|&nbsp;
+    Thresholds: Pass ≥ 0.80 &nbsp;|&nbsp; Partial 0.60–0.79 &nbsp;|&nbsp; Fail &lt; 0.60
+    <br>Generated: 06 Mar 2026 08:54:38
+  </p>
+
+  <div class="summary-bar">
+    <div class="summary-card">
+      <div class="num blue">22</div>
+      <div class="s-lbl">Total Cases</div>
+    </div>
+    <div class="summary-card">
+      <div class="num green">6 (27%)</div>
+      <div class="s-lbl">Pass</div>
+    </div>
+    <div class="summary-card">
+      <div class="num orange">16 (73%)</div>
+      <div class="s-lbl">Partial</div>
+    </div>
+    <div class="summary-card">
+      <div class="num red">0 (0%)</div>
+      <div class="s-lbl">Fail</div>
+    </div>
+  </div>
+
+  <div class="section-title">Test Case Results</div>
+  
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC001</span>
+                <span class="tc-summary">Verify that bot correctly explains how to book a doctor appointment</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Appointments
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I book an appointment with a doctor?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7195</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">You can book an appointment through our online patient portal, by calling our helpline at 1-800-HEALTH, or by visiting the front desk. Online booking is available 24/7 and you will receive a confirmation email once scheduled.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To book an appointment with a doctor at City General Hospital, you can follow these steps:
+
+1. Visit our website at citygeneralhospital.org and click on the "Appointments" tab.
+2. You can also call our appointment line at (555) 123-4567 to schedule an appointment.
+3. If you are a new patient, you will need to provide some basic information, such as your name, contact details, and medical history.
+4. Once you've made the appointment, we'll send you a confirmation email or letter with the details.
+
+If you have any issues or would like to speak with someone directly, please feel free to call the appointment line. We're here to help you get the care you need.
+
+Would you like me to help you schedule an appointment over the phone now?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC002</span>
+                <span class="tc-summary">Verify that bot provides correct appointment cancellation policy</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Appointments
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>What is the cancellation policy for appointments?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7676</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">Please cancel at least 24 hours in advance to avoid a cancellation fee of $25. You can cancel via the patient portal, by phone, or by email. No-shows may also incur the same fee.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">At City General Hospital, we understand that unexpected situations can arise. Our cancellation policy varies depending on the type of appointment and the time given for cancellation.
+
+For in-person appointments:
+
+* If you need to cancel or reschedule your appointment, please call our patient service line at least 24 hours in advance. This will help us accommodate other patients who may be waiting for an appointment.
+* Cancellations made with less than 24 hours' notice may be subject to a fee, which will be discussed with you by our staff.
+
+For telehealth appointments:
+
+* Please cancel or reschedule at least 2 hours in advance to avoid any cancellation fees.
+* If you need to cancel with less than 2 hours' notice, please contact our telehealth team to discuss any applicable fees.
+
+If you have any questions or concerns about our cancellation policy, please don't hesitate to reach out to our patient service line. We're here to help.
+
+Would you like to review your upcoming appointment schedule or make changes to your appointment?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC003</span>
+                <span class="tc-summary">Verify that bot correctly explains how to reschedule an appointment</span>
+                <span class="badge" style="background:#43a047">Pass</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Appointments
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How can I reschedule my existing appointment?</em>
+            </div>
+
+            <div class="score-row" style="background:#1b2e1b">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.8306</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Very similar meaning</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">Log in to your patient portal and select Manage Appointments, or call our helpline to reschedule. Please do so at least 24 hours before your original appointment to avoid any cancellation charges.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">You can reschedule your appointment by contacting our Scheduling Department directly. They can be reached by calling (555) 123-4567, Monday through Friday, 8am to 5pm. You can also reach them through our patient portal, if you have an account set up. Simply log in and navigate to the "Appointments" section to request a change. If you're unable to reach them during regular hours, please consider visiting our website for more information or contacting the hospital's main switchboard for assistance.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC004</span>
+                <span class="tc-summary">Verify that bot provides accurate walk-in patient wait time information</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Appointments
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How long is the wait for walk-in patients?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7289</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">Walk-in wait times vary depending on the time of day and current patient volume. Average wait times are 30 to 60 minutes. We recommend checking our website for live wait time updates or booking an appointment to reduce your wait.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">I'd be happy to help you with that. For current wait times, I recommend checking our hospital's website or mobile app, which is usually updated in real-time. You can also call our main phone number at 555-555-5555, and our operator can give you the most up-to-date information on wait times.
+
+If you're looking for an immediate appointment, I can also offer some general guidance on our services and availability. However, please note that wait times can vary depending on the time of day and the volume of patients.
+
+Would you like me to guide you through our online scheduling system or provide more information on our walk-in hours?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC005</span>
+                <span class="tc-summary">Verify that bot correctly explains what to bring to a first appointment</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Appointments
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>What documents should I bring to my first appointment?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7773</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">For your first visit please bring a valid photo ID, your insurance card, a list of current medications, any relevant medical records or test results, and your completed patient intake form if sent in advance.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">Congratulations on scheduling your first appointment with us! To ensure a smooth and efficient visit, please bring the following documents with you:
+
+* A valid government-issued ID (driver's license, passport, etc.)
+* Your insurance card (if you have one)
+* A list of your current medications (including their names and dosages)
+* A copy of any relevant medical records or test results from previous appointments or hospitals
+* Your contact information, including your home address and phone number
+
+If you have any questions or concerns about what documents to bring, feel free to ask us. We're here to help!
+
+Additionally, if you have any paperwork or forms that need to be completed before your appointment, we'll provide them to you when you arrive.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC006</span>
+                <span class="tc-summary">Verify that bot correctly explains prescription refill process</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Medications
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I get a prescription refill?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.735</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">You can request a prescription refill through the patient portal under My Prescriptions, by contacting your pharmacist directly if refills remain, or by calling your doctor's office. Allow 2 to 3 business days for processing.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To get a prescription refill, you can follow these steps:
+
+1. Contact your primary care physician's office to request a refill. They will need to verify your prescription and authorize the refill.
+2. If you have a medication list or a recent medication bottle with you, please have that information available to provide to the office.
+3. If you are unable to reach your doctor's office directly, you can also contact the hospital's pharmacy department at (phone number) to inquire about the status of your prescription.
+4. Be prepared to provide your name, date of birth, and any relevant medical information to verify your identity and prescription.
+
+Please note that you should only contact your doctor or pharmacy directly to request a refill. I'm here to provide general assistance, but I don't have access to your personal medical records or the ability to refill prescriptions.
+
+Is there anything else I can help you with?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC007</span>
+                <span class="tc-summary">Verify that bot provides correct information about medication side effects query handling</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Medications
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>What should I do if I experience side effects from my medication?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7871</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">If you experience side effects, contact your prescribing doctor immediately or call our helpline. For severe reactions such as difficulty breathing or swelling, call 911 or go to the nearest emergency room. Do not stop taking medication without consulting your doctor first.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">If you're experiencing side effects from your medication, please call your doctor's office or contact your pharmacy to report the issue. They can help you understand what's happening and provide guidance on how to manage the side effects or adjust your medication plan if necessary.
+
+If you have a severe reaction or are unsure about what to do, please seek immediate attention from your doctor or a medical professional. Remember, it's always best to consult with a medical expert for personalized advice on managing medication side effects.
+
+Additionally, you can also reach out to our hospital's patient support helpline at [insert phone number] for general guidance and reassurance. They can connect you with a nurse or other medical professional who can offer support and guidance.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC008</span>
+                <span class="tc-summary">Verify that bot correctly explains how to request a new prescription</span>
+                <span class="badge" style="background:#43a047">Pass</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Medications
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I get a new prescription from my doctor?</em>
+            </div>
+
+            <div class="score-row" style="background:#1b2e1b">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.8886</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Very similar meaning</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">To get a new prescription, schedule an appointment with your doctor through the patient portal or by phone. During the consultation your doctor will assess your condition and issue a prescription electronically to your preferred pharmacy if appropriate.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To get a new prescription from your doctor, you can follow these steps:
+
+1. Schedule an appointment with your primary care physician or the specialist who manages your condition. You can call the hospital's appointment desk at 555-1234 to schedule a time that works for you.
+2. Bring a list of any medications you're currently taking, including prescription and over-the-counter medications, vitamins, and supplements.
+3. During your appointment, discuss your needs and any changes with your doctor.
+4. Your doctor will write a new prescription if necessary. You can ask them to fax or send it electronically to your pharmacy of choice.
+5. Take your prescription to the pharmacy, and they'll process it for you.
+
+If you have any issues with your current medications or need a refill, please let your doctor's office know. They can help facilitate the process.
+
+Would you like me to connect you with the appointment desk or your doctor's office for more assistance?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC009</span>
+                <span class="tc-summary">Verify that bot correctly handles questions about drug interactions</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Medications
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>Can I take ibuprofen with my blood pressure medication?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.6091</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Related but missing key points</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">I am not able to provide specific advice on drug interactions as this depends on your exact medications and medical history. Please consult your prescribing doctor or pharmacist before combining medications. They can review your full medication list and advise safely.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">I can't recommend specific interactions between medications. If you have concerns about taking ibuprofen with your blood pressure medication, I recommend speaking with your doctor or pharmacist. They can assess your individual situation and provide personalized guidance. Is there anything else I can help you with?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC010</span>
+                <span class="tc-summary">Verify that bot provides correct information about emergency services</span>
+                <span class="badge" style="background:#43a047">Pass</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Emergency
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>What should I do in a medical emergency?</em>
+            </div>
+
+            <div class="score-row" style="background:#1b2e1b">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.8091</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Very similar meaning</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">In a medical emergency call 911 immediately. Do not drive yourself to the hospital. If the situation is life threatening such as chest pain, difficulty breathing, or severe bleeding, emergency services can provide care en route. Our emergency department is available 24 hours a day 7 days a week.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">In a medical emergency, please call 911 or visit our Emergency Department immediately. We have highly trained staff and equipment to provide the best possible care. If you are experiencing a life-threatening condition, such as severe chest pain, difficulty breathing, or severe bleeding, please do not delay. Call 911 or rush to our Emergency Department for help.
+
+Remember, if you are unsure about the severity of your condition or need immediate assistance, please call 911. We are here to help you in any way we can.
+
+Additionally, if you need to reach our Emergency Department after hours, you can call our hospital's main number at [insert phone number] and follow the prompts to speak with a representative who can direct you to the on-call physician or emergency services.
+
+Please prioritize your health and safety, and don't hesitate to seek help when you need it.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC011</span>
+                <span class="tc-summary">Verify that bot correctly explains the difference between emergency and urgent care</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Emergency
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>Should I go to emergency or urgent care for a high fever?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7514</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">For a high fever in an adult above 103 degrees Fahrenheit or any fever in an infant under 3 months, visit the emergency department. For moderate fevers without severe symptoms urgent care is appropriate and typically has shorter wait times and lower costs than the emergency room.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">For a high fever, I would recommend visiting the Emergency Department at City General Hospital. A fever can be a symptom of a more serious condition, and it's always best to err on the side of caution when it comes to your health.
+
+The Emergency Department is equipped to handle urgent medical situations, and their team can assess your condition and provide the necessary care. If you're experiencing other symptoms such as difficulty breathing, chest pain, or severe headache, please go to the Emergency Department immediately.
+
+If you're unsure about the severity of your symptoms or would like to consult with a healthcare professional before visiting the Emergency Department, you can also call our 24/7 helpline at [insert phone number]. They'll be happy to provide guidance and advice.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC012</span>
+                <span class="tc-summary">Verify that bot provides correct hospital visiting hours information</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> General Info
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>What are the visiting hours at the hospital?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7309</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">General visiting hours are from 9 AM to 8 PM daily. ICU and specialist ward visiting hours may differ. Visitors must check in at the front desk, and a maximum of two visitors per patient are allowed at a time. Children under 12 must be accompanied by an adult.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">Visiting hours at City General Hospital vary depending on the unit and the patient's condition. However, in general, our main lobby and waiting areas are open 24/7, and visitors are welcome to wait for patients in those areas.
+
+If you're visiting a patient in a specific unit, such as the ICU or the maternity ward, you can check with our hospital operator at extension 5555 to confirm the visiting hours for that area. They'll be happy to provide you with the most up-to-date information.
+
+Additionally, we have a quiet hours policy in effect from 2-4 pm, Monday through Friday, in the patient rooms to help patients rest. We appreciate your consideration during these hours.
+
+If you have any further questions or need assistance with visiting hours, feel free to ask!</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC013</span>
+                <span class="tc-summary">Verify that bot correctly explains how to access medical records</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> General Info
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How can I get a copy of my medical records?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7559</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">You can access your medical records through the patient portal under My Health Records. For physical copies submit a Medical Records Request Form at the front desk or by mail. Processing takes 5 to 7 business days. There may be a small administrative fee for printed copies.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To obtain a copy of your medical records, you can follow these steps:
+
+1. Visit the City General Hospital website and click on the "Patient Portal" tab. You can create an account or log in if you already have one.
+2. Fill out the patient request form for medical records, which can be found on our website or at the hospital's registration desk.
+3. You can also contact our Medical Records department directly by calling (555) 123-4567 or emailing [medicalrecords@citygeneralhospital.org](mailto:medicalrecords@citygeneralhospital.org).
+4. Be sure to provide your full name, date of birth, and any other identifying information to ensure we can locate your records accurately.
+
+Please note that there may be a fee associated with obtaining a copy of your medical records, depending on the type of records you're requesting. Our staff will be happy to guide you through the process and provide more information on any associated costs.
+
+If you have any questions or concerns, feel free to ask, and I'll do my best to assist you!</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC014</span>
+                <span class="tc-summary">Verify that bot provides accurate information about insurance coverage queries</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Insurance
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>Do you accept Blue Cross Blue Shield insurance?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7157</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">Yes, we accept Blue Cross Blue Shield along with most major insurance providers. Coverage details vary by plan so we recommend calling your insurance company to confirm your specific benefits before your visit. Our billing team can also assist you with coverage questions.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">Yes, City General Hospital accepts Blue Cross Blue Shield (BCBS) insurance. If you're a BCBS member, please provide your insurance card or policy information to our front desk staff or patient registration team, and we'll be happy to verify your coverage and help with any billing questions.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC015</span>
+                <span class="tc-summary">Verify that bot correctly explains the billing and payment process</span>
+                <span class="badge" style="background:#43a047">Pass</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Insurance
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I pay my medical bill?</em>
+            </div>
+
+            <div class="score-row" style="background:#1b2e1b">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.8937</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Very similar meaning</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">You can pay your medical bill online through the patient portal, by phone using a credit or debit card, by mail with a check, or in person at our billing office. Payment plans are available for balances over $200. Contact our billing department for assistance setting up a plan.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">You can pay your medical bill in several ways. You can:
+
+* Call our Patient Financial Services department at [phone number] to pay over the phone using a credit or debit card.
+* Visit our website at [hospital website] to pay online using a credit or debit card.
+* Mail a check or money order to the address listed on your bill.
+* Set up a payment plan with our Patient Financial Services department if you need to make multiple payments.
+
+Please have your account number or statement available when making a payment. If you have any questions or concerns about your bill, feel free to reach out to our Patient Financial Services department for assistance.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC016</span>
+                <span class="tc-summary">Verify that bot correctly explains telehealth appointment process</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Telehealth
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I join a telehealth video appointment?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.771</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">You will receive an email with a secure video link 30 minutes before your scheduled telehealth appointment. Click the link and allow camera and microphone access. Ensure you are in a private quiet space with a stable internet connection. Technical support is available at our helpline if needed.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To join a telehealth video appointment, please follow these steps:
+
+1. Open the email invitation you received from our hospital or your healthcare provider.
+2. Click on the link provided to access the virtual waiting room.
+3. If prompted, enter the meeting code or ID, usually found in the email or on a phone number provided.
+4. When the provider is ready to join, you will be connected to the video appointment.
+
+If you have any issues or concerns, you can call our Telehealth Support Line at [insert phone number]. They will be happy to assist you.
+
+Is there anything else I can help with?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC017</span>
+                <span class="tc-summary">Verify that bot correctly explains which conditions are suitable for telehealth</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Telehealth
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>What kind of health issues can I discuss via telehealth?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7904</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">Telehealth is suitable for non-emergency consultations such as follow-up appointments, minor illness like colds or rashes, mental health sessions, prescription renewals, and general medical advice. Physical examinations, urgent care, and diagnostic tests require an in-person visit.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">At City General Hospital, we offer telehealth services for various health issues. These include non-emergency medical conditions, follow-up appointments, and some routine check-ups. You can discuss non-emergency health concerns such as:
+
+* Follow-up appointments after hospital visits or procedures
+* Chronic condition management (e.g., diabetes, hypertension)
+* Allergies and skin conditions
+* Respiratory issues (e.g., asthma, COPD)
+* Mental health concerns (e.g., anxiety, depression)
+* Routine check-ups and vaccinations
+* And more!
+
+However, please note that if you're experiencing severe symptoms, such as difficulty breathing, chest pain, or severe injuries, you should call 911 or visit the emergency department. Our telehealth services are not suitable for emergency situations.
+
+Would you like to schedule a telehealth appointment or have more questions about our telehealth services?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC018</span>
+                <span class="tc-summary">Verify that bot provides correct information about mental health services</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Mental Health
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>Do you offer mental health counselling services?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7637</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">Yes, we offer mental health counselling including individual therapy, group sessions, and psychiatric consultations. Services are available in person and via telehealth. You can self-refer or be referred by your primary care doctor. Same-week appointments are available for urgent mental health concerns.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">Yes, City General Hospital offers mental health counseling services to help patients manage their mental well-being. Our licensed therapists are available to provide confidential and non-judgmental support. 
+
+To schedule an appointment, you can call our main number and ask to speak with our mental health department. Alternatively, you can ask at the hospital's main desk for assistance.
+
+Please note that if you're experiencing a mental health crisis, it's best to call the 988 Suicide and Crisis Lifeline at 988. They're available 24/7 to provide immediate support.
+
+Would you like to schedule an appointment or need more information about our mental health services?</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC019</span>
+                <span class="tc-summary">Verify that bot correctly handles sensitive mental health crisis queries</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Mental Health
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>I am feeling very depressed and don't know what to do</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7583</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">I am sorry you are feeling this way. Please know you are not alone. If you are in crisis or having thoughts of self-harm, call or text 988 to reach the Suicide and Crisis Lifeline immediately. You can also speak to one of our mental health professionals by calling our helpline or visiting the emergency department.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">I'm so sorry to hear that you're feeling depressed. It's completely normal to feel overwhelmed, and there are people who care and want to help. The first step is to reach out for support. Please know that you're not alone, and there are resources available to you.
+
+If you're in immediate crisis or feeling like you're in danger of harming yourself, please call the 988 Suicide and Crisis Lifeline at 988. They are available 24/7 to provide confidential support and connect you with local resources.
+
+If you're not in immediate crisis, I want to encourage you to reach out to a trusted friend, family member, or mental health professional for support. They can help you find healthy ways to cope with your feelings and develop a plan to move forward.
+
+Additionally, you can also reach out to our hospital's mental health services department. They offer counseling and therapy sessions with licensed professionals. You can contact them at (phone number) to schedule an appointment.
+
+Remember, depression is a treatable condition, and there is hope for feeling better. You are not alone, and there are people who care about you and want to help.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC020</span>
+                <span class="tc-summary">Verify that bot correctly explains the patient portal registration process</span>
+                <span class="badge" style="background:#43a047">Pass</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> General Info
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I register for the patient portal?</em>
+            </div>
+
+            <div class="score-row" style="background:#1b2e1b">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.8623</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Very similar meaning</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">To register for the patient portal visit our website and click Sign Up. You will need your date of birth, the email address on file with us, and your patient ID from your registration paperwork. Once verified you can access your records, appointments, and test results online.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To register for the patient portal, you can call our patient registration department at (555) 123-4567. They will guide you through the process and provide you with a registration code. You can also visit our website at citygeneralhospital.org and click on the "Patient Portal" link to start the registration process. If you need assistance with the registration, you can also visit our hospital's front desk, and they will be happy to help you.
+
+Once you're registered, you'll be able to access your medical records, view test results, and communicate with your healthcare team securely and privately. If you have any questions or need help with the registration process, don't hesitate to reach out. We're here to support you!</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC021</span>
+                <span class="tc-summary">Verify that bot correctly explains lab test result access</span>
+                <span class="badge" style="background:#fb8c00">Partial</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> General Info
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I view my lab test results?</em>
+            </div>
+
+            <div class="score-row" style="background:#2e2510">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.7148</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Mostly correct, some drift</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">Lab results are available in your patient portal under Test Results usually within 3 to 5 business days of your test. You will receive an email notification when results are ready. If you have questions about your results please message your doctor through the portal or schedule a follow-up appointment.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To view your lab test results, you can follow these steps:
+
+1. Log in to your MyChart account on our hospital's website. If you don't have a MyChart account, you can sign up by visiting our website and clicking on "Sign Up" under the "MyChart" section.
+2. Once you're logged in, click on the "Lab Results" or "Test Results" tab.
+3. Select the date range for the test results you'd like to view.
+4. Your lab test results will be displayed on the screen.
+
+Alternatively, you can also contact our hospital's patient portal support team at (555) 123-4567 for assistance with accessing your lab test results.
+
+Please note that some lab results may not be available online due to medical or technical reasons. If you're unable to access your results online, you can contact our hospital's patient services department for further assistance.</div>
+                </div>
+            </div>
+
+        </div>
+        <div class="case-card">
+
+            <div class="case-header">
+                <span class="tc-id">TC022</span>
+                <span class="tc-summary">Verify that bot correctly explains referral process to a specialist</span>
+                <span class="badge" style="background:#43a047">Pass</span>
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Category:</span> Appointments
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                <span class="lbl">Prerequisite:</span> Healthcare bot is running
+            </div>
+
+            <div class="meta-row">
+                <span class="lbl">Prompt:</span> <em>How do I get a referral to see a specialist?</em>
+            </div>
+
+            <div class="score-row" style="background:#1b2e1b">
+                <span class="lbl">Similarity Score:</span>
+                <strong>0.8052</strong>
+                &nbsp;&nbsp;→&nbsp;&nbsp;
+                <span class="meaning">Very similar meaning</span>
+            </div>
+
+            <div class="compare-grid">
+                <div class="compare-box">
+                    <div class="box-label expected-lbl">Expected Answer</div>
+                    <div class="box-content">To see a specialist your primary care doctor will assess your condition and issue a referral if appropriate. The referral is sent electronically to the specialist's office who will then contact you to schedule an appointment. Some insurance plans require a referral for specialist visits so please check your policy.</div>
+                </div>
+                <div class="compare-box">
+                    <div class="box-label actual-lbl">Bot Response</div>
+                    <div class="box-content">To get a referral to see a specialist, you can follow these steps:
+
+1. Call our main hospital line at (phone number) and ask to speak with the patient access center. They will be happy to assist you.
+2. You can also ask your primary care physician for a referral. They will review your medical history and determine if a specialist is necessary.
+3. If you don't have a primary care physician, our patient access center can help you find one.
+4. Once you have a referral, you can schedule an appointment with the specialist by contacting our patient access center again.
+
+Please note that referrals may be required for certain specialists or services, so it's always best to check with our patient access center to confirm the process. They will be able to guide you through the steps and answer any questions you may have.
+
+Is there anything else I can help you with?</div>
+                </div>
+            </div>
+
+        </div>
+
+</body>
+</html>

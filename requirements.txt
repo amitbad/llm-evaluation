@@ -3,3 +3,4 @@ sacrebleu
 rouge-score
 openpyxl
 pyyaml
+sentence-transformers

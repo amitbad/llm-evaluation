@@ -13,3 +13,14 @@ phase2_llm_as_a_judge:
   BOT_MODEL: "llama3.1:8b"
   EXCEL_FILE: "banking_bot_test_results.xlsx"
   TEST_SHEET: "Banking Bot Tests"
+
+phase2_semantic_similarity:
+  BOT_MODEL: "llama3.1:8b"
+  EXCEL_FILE: "healthcare_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+
+phase2_groundedness:
+  BOT_MODEL: "llama3.1:8b"
+  JUDGE_MODEL: "gemma2:9b"
+  EXCEL_FILE: "healthcare_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"

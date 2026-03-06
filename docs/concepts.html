@@ -524,6 +524,18 @@
     </div>
 
     <div class="nav-section">
+      <div class="nav-section-label">Semantic Evaluation</div>
+      <a href="#semantic-similarity">🔵 Semantic Similarity</a>
+      <a href="#sentence-embeddings">📐 Sentence Embeddings</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Groundedness</div>
+      <a href="#groundedness">🎯 Groundedness Scoring</a>
+      <a href="#evaluation-rubric">📏 Evaluation Rubric Design</a>
+    </div>
+
+    <div class="nav-section">
       <div class="nav-section-label">Evaluation Thinking</div>
       <a href="#test-case-design">🎯 Test Case Design</a>
       <a href="#evidence-documentation">📋 Evidence Documentation</a>
@@ -960,6 +972,100 @@
     <!-- ════════════════════════════════════════════════════════════════════════ -->
     <div class="section-divider">
       <div class="section-divider-line"></div>
+      <div class="section-divider-label">Semantic Evaluation</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <!-- Semantic Similarity -->
+    <div class="concept" id="semantic-similarity">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🔵</div>
+        <div>
+          <div class="concept-title">Semantic Similarity</div>
+          <div class="concept-subtitle">Semantic Evaluation · Test 6</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        A way to measure whether two pieces of text <strong>mean the same thing</strong> — even when they use completely different words. Instead of counting word overlap like BLEU, semantic similarity compares meaning.
+      </div>
+
+      <p class="detail">BLEU and ROUGE compare words. Semantic similarity compares meaning. It converts both texts into numerical representations (embeddings) and measures how close those representations are. A score of 1.0 means identical meaning. A score near 0 means unrelated meaning.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">EXAMPLE — why BLEU fails here</div>
+        <div class="example-content">
+          <span class="u">Expected:</span> That service is completely free of charge<br>
+          <span class="u">Bot said:</span> We do not charge any fees for that service<br><br>
+          <span class="b">BLEU score: very low — almost no word overlap</span><br>
+          <span class="g">Semantic score: ~0.87 — nearly identical meaning</span><br><br>
+          <span class="g">The bot was correct. BLEU would have marked it as a failure.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-eg">SCORE THRESHOLDS — our Test 6 settings</div>
+        <div class="example-content">
+          <span class="g">0.90 – 1.0  →  Pass    →  Nearly identical meaning</span><br>
+          <span class="g">0.80 – 0.89 →  Pass    →  Very similar meaning</span><br>
+          <span class="u">0.70 – 0.79 →  Partial →  Mostly correct, some drift</span><br>
+          <span class="u">0.60 – 0.69 →  Partial →  Related but missing key points</span><br>
+          <span class="b">Below 0.60  →  Fail    →  Different meaning</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Thresholds are not fixed facts — they are QA decisions. Where you draw the pass/fail line depends on how much variation the domain tolerates. Healthcare might need a stricter threshold than a general information bot. The score is input to that decision, not the decision itself.</div>
+    </div>
+
+    <!-- Sentence Embeddings -->
+    <div class="concept" id="sentence-embeddings">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">📐</div>
+        <div>
+          <div class="concept-title">Sentence Embeddings</div>
+          <div class="concept-subtitle">Semantic Evaluation · Core Mechanism</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        A way of converting text into a list of numbers — a <strong>coordinate in meaning-space</strong>. Text that means similar things gets coordinates that are close together. Text that means different things gets coordinates far apart.
+      </div>
+
+      <p class="detail">The model we use — <code>all-MiniLM-L6-v2</code> from sentence-transformers — was trained on millions of sentence pairs specifically to place similar-meaning text close together in this space. It does not understand language like a human — it learned statistical patterns of which sentences tend to appear together in similar contexts.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">ANALOGY — coordinates in meaning-space</div>
+        <div class="example-content">
+          <span class="g">Think of a map. Cities that are close together are nearby on the map.</span><br>
+          <span class="g">Embeddings work the same way but for meaning.</span><br><br>
+          <span class="u">"Cancel your appointment 24 hours in advance"</span><br>
+          <span class="u">"Give 24 hours notice before cancelling"</span><br>
+          <span class="g">→ These two sentences would land very close on the meaning map</span><br><br>
+          <span class="u">"Cancel your appointment 24 hours in advance"</span><br>
+          <span class="u">"The hospital cafeteria closes at 8pm"</span><br>
+          <span class="b">→ These two sentences would land far apart</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-eg">HOW COSINE SIMILARITY WORKS</div>
+        <div class="example-content">
+          <span class="g">Two embeddings are compared using cosine similarity —</span><br>
+          <span class="g">a mathematical measure of the angle between two vectors.</span><br><br>
+          <span class="g">Score = 1.0  →  pointing in exactly the same direction (same meaning)</span><br>
+          <span class="g">Score = 0.0  →  pointing at 90 degrees (unrelated meaning)</span><br>
+          <span class="b">Score = -1.0 →  pointing in opposite directions (opposite meaning)</span><br><br>
+          <span class="u">In practice scores between -1 and 0 are rare for natural language.</span><br>
+          <span class="u">Most sentence pairs score between 0.3 and 1.0.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Understanding embeddings here is the foundation for understanding RAG (Retrieval-Augmented Generation) in Phase 3. RAG uses the same embedding comparison to find relevant documents — it embeds the user's question and searches for document chunks with similar embeddings. The mechanism is identical to what we built in Test 6.</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
       <div class="section-divider-label">Evaluation Thinking</div>
       <div class="section-divider-line"></div>
     </div>
@@ -1164,8 +1270,89 @@
         Form your verdict first. Always.</div>
     </div>
 
+    <!-- Groundedness Scoring -->
+    <div class="concept" id="groundedness">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🎯</div>
+        <div>
+          <div class="concept-title">Groundedness Scoring</div>
+          <div class="concept-subtitle">Groundedness Evaluation · Test 7</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Checking whether a bot's response can be <strong>traced back to the source material</strong> it was given — or whether the bot invented information not present in the source.
+      </div>
+
+      <p class="detail">A bot given a system prompt, a document, or a set of retrieved facts is constrained to that source. Groundedness scoring checks that constraint. Every specific claim in the response — phone numbers, URLs, product names, policy details — must exist in the source. If it does not, the response is ungrounded regardless of how plausible or well-structured it sounds.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">UNGROUNDED — invented specifics</div>
+        <div class="example-content">
+          <span class="u">Source says:</span> Direct patients to call the helpline or use the patient portal<br><br>
+          <span class="b">Bot says:</span> "Visit www.citygen.org and call us at (555) 123-4567. Log in to MyChart to book online."<br><br>
+          <span class="b">What was invented:</span> The URL, the phone number, the MyChart product name — none in source<br>
+          <span class="b">Why dangerous:</span> Patient calls a non-working number. Patient visits a non-existent site.<br>
+          <span class="b">Why hard to catch:</span> The response is polite, structured, and on-topic. Lenient judges reward it.
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-good">GROUNDED — only source material used</div>
+        <div class="example-content">
+          <span class="g">Source says:</span> Direct patients to the helpline, patient portal, or front desk<br><br>
+          <span class="g">Bot says:</span> "You can book an appointment by calling our helpline, using the online patient portal, or visiting the front desk."<br><br>
+          <span class="g">Every claim traces to source. Nothing invented. Score: 3 — GROUNDED.</span>
+        </div>
+      </div>
+
+      <p class="detail">Groundedness uses the <strong>LLM-as-a-Judge</strong> pattern — a judge model reads the source, the question, and the bot response, then decides whether each claim is traceable. The judge returns a score (1 = Ungrounded, 2 = Partial, 3 = Grounded) and a reason.</p>
+
+      <div class="why-matters">In RAG systems — where the bot is given retrieved documents and must answer from them — groundedness is the primary safety check. The three core RAG eval metrics (context relevance, answer faithfulness, answer relevance) are all forms of groundedness evaluation. Understanding groundedness here is the foundation for evaluating RAG systems in Phase 3.</div>
+    </div>
+
+    <!-- Evaluation Rubric Design -->
+    <div class="concept" id="evaluation-rubric">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">📏</div>
+        <div>
+          <div class="concept-title">Evaluation Rubric Design</div>
+          <div class="concept-subtitle">Evaluation Thinking · Test 7</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        The set of instructions and criteria given to a judge model that determines <strong>what it looks for</strong> when scoring a response. The rubric shapes what gets caught — and what gets missed.
+      </div>
+
+      <p class="detail">A rubric is not just a score scale. It is a contract with the judge: here is what good looks like, here is what bad looks like, here is what you must check. Two rubrics on the same judge model can produce dramatically different verdicts on the same response. Rubric design is as important as judge model selection.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">WEAK rubric — topic alignment only</div>
+        <div class="example-content">
+          <span class="b">Instruction: "Score whether the bot response is helpful and relevant to the question."</span><br><br>
+          <span class="b">Result: Rewards confident, well-structured hallucinations that are on-topic.</span><br>
+          <span class="b">Misses: Invented URLs, fake phone numbers, fabricated product names.</span><br>
+          <span class="b">TC001 scored PARTIAL under this rubric — 4 fabricated specifics missed.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-good">STRONG rubric — claim-level traceability</div>
+        <div class="example-content">
+          <span class="g">Instruction: "For each specific claim in the response — names, numbers, URLs, products, policies — verify it can be found in the source material. If any specific claim is not traceable to the source, score it UNGROUNDED."</span><br><br>
+          <span class="g">Result: Catches individual fabricated specifics even in polite, structured responses.</span><br>
+          <span class="g">TC001 would score UNGROUNDED — 4 fabricated specifics caught.</span>
+        </div>
+      </div>
+
+      <p class="detail">Rubric design also interacts with judge model selection. A strict rubric instructs the judge what to look for — but the judge model must be capable of following it consistently. A lenient model may acknowledge the rubric and still miss specifics. A stricter model follows claim-level instructions more reliably.</p>
+
+      <div class="why-matters">In production evaluation pipelines, rubric design is iterated just like test case design. You run the judge, review verdicts you disagree with, identify what the rubric failed to catch, and tighten the instruction. A rubric is never final — it evolves as you discover new failure patterns.</div>
+    </div>
+
     <footer>
-      docs/concepts.html · LLM Evaluation Learning Repository · Updated 2026
+      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 7
     </footer>
 
   </main>
