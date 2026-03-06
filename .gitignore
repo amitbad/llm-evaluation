@@ -21,7 +21,7 @@ ENV/
 
 # ── Environment variables / secrets ──────────────────────────────────────────
 .env
-.env.*
+.env.prod
 *.key
 secrets.json
 

@@ -1,4 +1,3 @@
-ollama
 sacrebleu
 rouge-score
 openpyxl

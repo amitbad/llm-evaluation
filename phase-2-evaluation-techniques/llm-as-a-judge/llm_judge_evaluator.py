@@ -31,6 +31,7 @@ import requests
 import json
 import yaml
 import openpyxl
+import sys
 from openpyxl.styles import PatternFill, Font, Alignment
 from openpyxl.utils import get_column_letter
 from datetime import datetime
@@ -67,12 +68,20 @@ def load_config(section: str) -> dict:
 
 cfg = load_config("phase2_llm_as_a_judge")
 
-OLLAMA_URL    = cfg["OLLAMA_URL"]
+sys.path.insert(0, PROJECT_ROOT)
+from model_client import call_model
+
 BOT_MODEL     = cfg["BOT_MODEL"]
 JUDGE_MODEL   = cfg["JUDGE_MODEL"]
 EXCEL_FILE    = cfg["EXCEL_FILE"]
 TEST_SHEET    = cfg["TEST_SHEET"]
 RESULTS_SHEET = cfg["RESULTS_SHEET"]
+
+_BOT_PROVIDER   = cfg.get("BOT_PROVIDER",   cfg.get("PROVIDER", "ollama"))
+_JUDGE_PROVIDER = cfg.get("JUDGE_PROVIDER", cfg.get("PROVIDER", "ollama"))
+_OLLAMA_URL     = cfg.get("OLLAMA_URL", "http://localhost:11434/api/generate")
+_BOT_API_KEY    = cfg.get("OPENAI_API_KEY", cfg.get("ANTHROPIC_API_KEY", cfg.get("GEMINI_API_KEY", "")))
+_JUDGE_API_KEY  = cfg.get("JUDGE_OPENAI_API_KEY", cfg.get("JUDGE_ANTHROPIC_API_KEY", cfg.get("JUDGE_GEMINI_API_KEY", _BOT_API_KEY)))
 
 # ── Column indices (0-based) — confirmed from your file ───────────────────────
 COL_ID          = 0   # A
@@ -110,18 +119,10 @@ You should decline to answer questions unrelated to banking.
 # ── Utilities ─────────────────────────────────────────────────────────────────
 
 def call_ollama(prompt: str, system: str = "", model: str = BOT_MODEL) -> str:
-    payload = {"model": model, "prompt": prompt, "stream": False}
-    if system:
-        payload["system"] = system
-    try:
-        resp = requests.post(OLLAMA_URL, json=payload, timeout=60)
-        resp.raise_for_status()
-        return resp.json().get("response", "").strip()
-    except requests.exceptions.ConnectionError:
-        print("\n❌  Cannot connect to Ollama. Is it running? Try: ollama serve")
-        sys.exit(1)
-    except Exception as e:
-        return f"[ERROR: {e}]"
+    # Route to correct provider depending on whether this is a bot or judge call
+    if model == JUDGE_MODEL:
+        return call_model(model, prompt, system, _JUDGE_PROVIDER, _OLLAMA_URL, _JUDGE_API_KEY)
+    return call_model(model, prompt, system, _BOT_PROVIDER, _OLLAMA_URL, _BOT_API_KEY)
 
 
 def judge_response(test_prompt: str, bot_response: str, expected_behaviour: str) -> dict:

@@ -1,16 +1,23 @@
 import os
-import requests
+import sys
 import yaml
 
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 CONFIG_FILE  = os.path.join(PROJECT_ROOT, "config.yaml")
 
+sys.path.insert(0, PROJECT_ROOT)
+from model_client import call_model
+
 with open(CONFIG_FILE, "r") as f:
     config = yaml.safe_load(f)
 
-OLLAMA_URL = config["shared"]["OLLAMA_URL"]
-BOT_MODEL  = config["phase2_semantic_similarity"]["BOT_MODEL"]
+BOT_MODEL   = config["phase2_semantic_similarity"]["BOT_MODEL"]
+_PROVIDER   = config["phase2_semantic_similarity"].get("BOT_PROVIDER", config["shared"].get("PROVIDER", "ollama"))
+_OLLAMA_URL = config["shared"].get("OLLAMA_URL", "http://localhost:11434/api/generate")
+_API_KEY    = config["phase2_semantic_similarity"].get("OPENAI_API_KEY",
+              config["phase2_semantic_similarity"].get("ANTHROPIC_API_KEY",
+              config["phase2_semantic_similarity"].get("GEMINI_API_KEY", "")))
 
 SYSTEM_PROMPT = """You are a helpful virtual assistant for City General Hospital.
 You assist patients with information about appointments, medications, insurance, emergency guidance, telehealth, mental health services, and general hospital information.
@@ -26,15 +33,7 @@ Rules you must follow:
 """
 
 def get_response(user_prompt: str) -> str:
-    payload = {
-        "model": BOT_MODEL,
-        "system": SYSTEM_PROMPT,
-        "prompt": user_prompt,
-        "stream": False
-    }
-    response = requests.post(OLLAMA_URL, json=payload)
-    response.raise_for_status()
-    return response.json().get("response", "").strip()
+    return call_model(BOT_MODEL, user_prompt, SYSTEM_PROMPT, _PROVIDER, _OLLAMA_URL, _API_KEY)
 
 
 if __name__ == "__main__":

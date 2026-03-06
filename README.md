@@ -16,15 +16,24 @@ The goal is to develop practical skills in evaluating LLM-based systems — the 
 
 ## Do You Need Paid APIs?
 
-**No.** Everything in this repository runs locally using [Ollama](https://ollama.ai).
+**No — but you can use them if you want.**
 
-Models used:
+By default everything runs locally using [Ollama](https://ollama.ai) — free, no account needed.
+
+If you want stronger models as a bot or judge (GPT-4o, Claude, Gemini), the repository supports paid providers out of the box. You switch provider with one line in `config.yaml`. See the **Configuration** section below.
+
+**Models used in this repository's experiments (Ollama):**
 - `llama3.1:8b`
 - `mistral`
 - `deepseek-r1:7b`
 - `gemma2:9b`
 
-All are free, open-source, and run on your own machine. No OpenAI, no Anthropic, no cloud costs.
+These are the models used in this repository. You can use any model available in Ollama — run `ollama list` to see what you have, or `ollama pull <model>` to download a new one.
+
+**Supported paid providers (optional):**
+- OpenAI — e.g. `gpt-4o`, `gpt-4o-mini`
+- Anthropic — e.g. `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`
+- Google Gemini — e.g. `gemini-1.5-pro`, `gemini-1.5-flash`
 
 ---
 
@@ -54,6 +63,11 @@ source venv/bin/activate        # Mac / Linux
 
 # 3. Install dependencies
 pip install -r requirements.txt
+
+# 4. (Optional) Set up API keys for paid providers
+cp .env.example .env            # copy sample file
+# edit .env and fill in your keys, then:
+source .env                     # Mac / Linux
 ```
 
 After the first setup, just activate the venv at the start of each session: `source venv/bin/activate`
@@ -64,33 +78,82 @@ After the first setup, just activate the venv at the start of each session: `sou
 
 All settings live in `config.yaml` at the project root.
 
+Each script section supports `BOT_PROVIDER` and `JUDGE_PROVIDER` independently — bot and judge can use completely different providers and models. Free local bot with paid judge, paid bot with local judge, both paid, both local — any combination works. You decide per script.
+
 ```yaml
 shared:
   OLLAMA_URL: "http://localhost:11434/api/generate"
+  PROVIDER: "ollama"          # default fallback for single-model scripts
 
 phase2:
-  BOT_MODEL: "llama3.1:8b"
-  EXCEL_FILE: "banking_test_cases.xlsx"
+  BOT_MODEL: "llama3.1:8b"       # choose any model you have available
+  BOT_PROVIDER: "ollama"          # ollama | openai | anthropic | gemini
   TEST_SHEET: "Banking Bot Tests"
 
 phase2_llm_as_a_judge:
-  JUDGE_MODEL: "mistral"
   BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
+  JUDGE_MODEL: "gpt-4o-mini"     # ← paid judge, free bot
+  JUDGE_PROVIDER: "openai"
+  JUDGE_OPENAI_API_KEY: ""       # leave blank to use .env / environment variable
   RESULTS_SHEET: "JudgeResults"
   EXCEL_FILE: "banking_bot_test_results.xlsx"
   TEST_SHEET: "Banking Bot Tests"
 
 phase2_semantic_similarity:
   BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
   EXCEL_FILE: "healthcare_test_cases.xlsx"
   TEST_SHEET: "Test Cases"
 
 phase2_groundedness:
   BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
   JUDGE_MODEL: "gemma2:9b"
+  JUDGE_PROVIDER: "ollama"
   EXCEL_FILE: "healthcare_test_cases.xlsx"
   TEST_SHEET: "Test Cases"
 ```
+
+### Switching to a Paid Provider
+
+Two lines in config.yaml — nothing else changes. These are just examples — use any model name from your chosen provider:
+
+```yaml
+JUDGE_MODEL: "claude-3-5-haiku-20241022"   # example — use any Anthropic model
+JUDGE_PROVIDER: "anthropic"
+```
+
+### API Keys
+
+API keys are never hardcoded. They are read in this order — first found wins:
+
+1. Key set directly in the config.yaml section (e.g. `JUDGE_OPENAI_API_KEY: "sk-..."`)
+2. Environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`)
+
+**Recommended approach — use a `.env` file:**
+
+```bash
+# 1. Copy the sample file
+cp .env.example .env
+
+# 2. Fill in your keys in .env
+# 3. Load them into your terminal session
+source .env          # Mac / Linux
+```
+
+`.env` is in `.gitignore` — it will never be committed. See `.env.example` at the project root for the full template.
+
+| Config key name | Environment variable | Provider |
+|---|---|---|
+| `OPENAI_API_KEY` | `OPENAI_API_KEY` | OpenAI (bot) |
+| `JUDGE_OPENAI_API_KEY` | `OPENAI_API_KEY` | OpenAI (judge) |
+| `ANTHROPIC_API_KEY` | `ANTHROPIC_API_KEY` | Anthropic (bot) |
+| `JUDGE_ANTHROPIC_API_KEY` | `ANTHROPIC_API_KEY` | Anthropic (judge) |
+| `GEMINI_API_KEY` | `GEMINI_API_KEY` | Gemini (bot) |
+| `JUDGE_GEMINI_API_KEY` | `GEMINI_API_KEY` | Gemini (judge) |
+
+> **Note:** `.env.example` contains only three variables — one per provider (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`). The `JUDGE_` prefixed names in the table above only exist in `config.yaml` and are for the rare case where bot and judge need different keys for the same provider. For most users, setting one key per provider in `.env` is sufficient for both bot and judge.
 
 ---
 
@@ -117,12 +180,14 @@ llm-evaluation/
 │
 ├── README.md
 ├── requirements.txt                       ← pip install -r requirements.txt
-├── config.yaml                            ← all models, file names, sheet names
+├── config.yaml                            ← all models, providers, file names, sheet names
+├── model_client.py                        ← universal model caller — ollama, openai, anthropic, gemini
+├── .env.example                           ← copy to .env and fill in API keys for paid providers
 │
 ├── docs/                                  ← all documentation
 │   ├── index.html                         ← OPEN THIS — main navigation hub
 │   ├── home.html                          ← phase overview and status
-│   ├── test1.html – test6.html            ← one file per test, results and learnings
+│   ├── test1.html – test7.html            ← one file per test, results and learnings
 │   ├── concepts.html                      ← key GenAI eval concepts with examples
 │   └── genai_eval_learning_plan.xlsx      ← 7-phase learning roadmap, track progress here
 │
@@ -163,11 +228,11 @@ llm-evaluation/
 ## Where to Start
 
 1. Complete setup above
-2. Open `docs/index.html` via local server:
+2. Open the documentation in your browser:
    ```bash
    cd docs && python3 -m http.server 8000
    ```
-   Then open `http://localhost:8000` in your browser
+   Then open **http://localhost:8000** in your browser. This is your main learning hub — read every test page in order as you work through the phases.
 3. Open `docs/genai_eval_learning_plan.xlsx` — track your progress as you go
 4. Run experiments in order — Phase 0 → Phase 1 → Phase 2
 
@@ -185,6 +250,8 @@ By completing Phases 0–2 you will understand:
 - How to use sentence embeddings and cosine similarity to evaluate meaning — not just words
 - How LLM-as-a-Judge works — and why your human verdict must come before the judge's
 - When a score alone is not enough — high-stakes cases require reading the actual response
+- How to evaluate whether a bot response is grounded in its source material — or invented
+- How to switch between local and paid model providers with a one-line config change
 
 ---
 
@@ -203,12 +270,26 @@ By completing Phases 0–2 you will understand:
 
 ## Models Used
 
-| Model | Size | Role |
-|-------|------|------|
-| llama3.1:8b | 8B | Primary bot — banking and healthcare chatbot |
-| mistral | 7B | Judge model in LLM-as-a-Judge |
-| deepseek-r1:7b | 7B | Reasoning-focused, comparison in Phase 1 |
-| gemma2:9b | 9B | Google model, comparison in Phase 1 |
+**Default (local, free via Ollama):**
+
+| Model | Size |
+|-------|------|
+| llama3.1:8b | 8B |
+| mistral | 7B |
+| deepseek-r1:7b | 7B |
+| gemma2:9b | 9B |
+
+These are the models used in this repository. You are not limited to these — any model available in Ollama works. Change `BOT_MODEL` or `JUDGE_MODEL` in `config.yaml` to use a different one.
+
+**Supported paid providers (optional):**
+
+| Provider | Example Models | Key Config |
+|----------|---------------|------------|
+| OpenAI | e.g. gpt-4o, gpt-4o-mini | `BOT_PROVIDER: "openai"` |
+| Anthropic | e.g. claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022 | `BOT_PROVIDER: "anthropic"` |
+| Google Gemini | e.g. gemini-1.5-pro, gemini-1.5-flash | `BOT_PROVIDER: "gemini"` |
+
+Bot and judge can use different providers — any combination works.
 
 ---
 
@@ -219,3 +300,4 @@ By completing Phases 0–2 you will understand:
 - **Fill your verdict before running the judge.** In `llm-as-a-judge`, always fill col H (Result) with your own Pass/Fail/Partial before running `llm_judge_evaluator.py`. The disagreements only have learning value if your verdict came first.
 - **A score is not the final word.** In high-stakes domains like healthcare, always read the actual response for safety-critical cases — a lower score that provides a crisis helpline is better than a higher score that misses it.
 - **You do not need to be a data scientist.** QA and testing instincts are the most valuable skill here. Threshold decisions, test case design, and reading results are all QA work.
+- **Never commit `.env`.** It is in `.gitignore` by default. API keys in `.env` stay local. If you add a key directly to `config.yaml` instead, make sure `config.yaml` is also gitignored or the key field is left blank before committing.

@@ -43,27 +43,27 @@ with open(CONFIG_FILE, "r") as f:
     config = yaml.safe_load(f)
 
 cfg          = config["phase2_groundedness"]
-OLLAMA_URL   = config["shared"]["OLLAMA_URL"]
 BOT_MODEL    = cfg["BOT_MODEL"]
 JUDGE_MODEL  = cfg["JUDGE_MODEL"]
 EXCEL_FILE   = cfg["EXCEL_FILE"]
 TEST_SHEET   = cfg["TEST_SHEET"]
 
-EXCEL_PATH   = os.path.join(SEMANTIC_DIR, EXCEL_FILE)
+_BOT_PROVIDER   = cfg.get("BOT_PROVIDER",   config["shared"].get("PROVIDER", "ollama"))
+_JUDGE_PROVIDER = cfg.get("JUDGE_PROVIDER", config["shared"].get("PROVIDER", "ollama"))
+_OLLAMA_URL     = config["shared"].get("OLLAMA_URL", "http://localhost:11434/api/generate")
+_BOT_API_KEY    = cfg.get("OPENAI_API_KEY", cfg.get("ANTHROPIC_API_KEY", cfg.get("GEMINI_API_KEY", "")))
+_JUDGE_API_KEY  = cfg.get("JUDGE_OPENAI_API_KEY", cfg.get("JUDGE_ANTHROPIC_API_KEY", cfg.get("JUDGE_GEMINI_API_KEY", _BOT_API_KEY)))
 
-# ── Ollama call ────────────────────────────────────────────────────────────────
+sys.path.insert(0, PROJECT_ROOT)
+from model_client import call_model
+
+EXCEL_PATH = os.path.join(SEMANTIC_DIR, EXCEL_FILE)
+
+# ── Model calls ────────────────────────────────────────────────────────────────
 def call_ollama(model: str, prompt: str) -> str:
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "stream": False
-    }
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
-        response.raise_for_status()
-        return response.json().get("response", "").strip()
-    except Exception as e:
-        return f"ERROR: {e}"
+    if model == JUDGE_MODEL:
+        return call_model(model, prompt, "", _JUDGE_PROVIDER, _OLLAMA_URL, _JUDGE_API_KEY)
+    return call_model(model, prompt, "", _BOT_PROVIDER, _OLLAMA_URL, _BOT_API_KEY)
 
 # ── Judge prompt ───────────────────────────────────────────────────────────────
 def build_judge_prompt(system_prompt: str, question: str, bot_response: str) -> str:

@@ -23,12 +23,6 @@
   .tag-p1 { background:#1a2a3d; color:#6ab4f7; }
   .tag-p2 { background:#1e1a3d; color:var(--accent); }
   .tag-ref { background:#2a2a1a; color:var(--accent2); }
-  .phase-table { width:100%; border-collapse:collapse; margin-bottom:40px; }
-  .phase-table th { background:var(--surface2); color:var(--muted); font-size:11px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; padding:10px 14px; text-align:left; border:1px solid var(--border); font-weight:600; }
-  .phase-table td { padding:12px 14px; border:1px solid var(--border); font-size:13.5px; color:var(--text); vertical-align:top; background:var(--surface); }
-  .status-done { color:var(--success); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
-  .status-inprogress { color:var(--accent2); font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; }
-  .status-todo { color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px; }
   .tip { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:16px 20px; font-size:13.5px; line-height:1.7; color:var(--text); margin-bottom:40px; }
   .tip strong { color:var(--accent2); }
 </style>
@@ -40,6 +34,10 @@
 
   <div class="tip">
     <strong>How to use this documentation:</strong> Use the left sidebar to navigate between tests. Each test page documents what was built, what was run, the actual results, and the key learnings. Read <strong>Concepts Reference</strong> whenever a term is unfamiliar.
+  </div>
+
+  <div class="tip">
+    <strong>Model providers:</strong> All scripts run on local models via Ollama by default — free, no account needed. To use a paid model (OpenAI, Anthropic, Gemini) as bot or judge, change <code>BOT_PROVIDER</code> or <code>JUDGE_PROVIDER</code> in <code>config.yaml</code>. Bot and judge can use different providers. See <code>.env.example</code> for API key setup.
   </div>
 
   <div class="section-label">Quick Navigation</div>
@@ -80,22 +78,20 @@
       <div class="card-desc">Using Mistral to challenge your verdicts. The 3-layer evaluation pipeline explained.</div>
       <span class="card-tag tag-p2">Phase 2</span>
     </a>
+    <a class="card" href="#" onclick="parent.load('test6.html')">
+      <div class="card-phase">Phase 2</div>
+      <div class="card-title">🔵 Test 6 — Semantic Similarity</div>
+      <div class="card-desc">Sentence embeddings and cosine similarity. Evaluating meaning, not just word overlap.</div>
+      <span class="card-tag tag-p2">Phase 2</span>
+    </a>
+    <a class="card" href="#" onclick="parent.load('test7.html')">
+      <div class="card-phase">Phase 2</div>
+      <div class="card-title">🎯 Test 7 — Groundedness Scoring</div>
+      <div class="card-desc">Did the bot say this from its source, or invent it? LLM-as-a-Judge for source traceability.</div>
+      <span class="card-tag tag-p2">Phase 2</span>
+    </a>
   </div>
 
-  <div class="section-label">Learning Plan Status</div>
-  <table class="phase-table">
-    <thead>
-      <tr><th>Phase</th><th>Topic</th><th>Status</th></tr>
-    </thead>
-    <tbody>
-      <tr><td><strong>Phase 0</strong></td><td>Pre-requisites — Python, LLM concepts, Ollama setup</td><td><span class="status-done">✓ DONE</span></td></tr>
-      <tr><td><strong>Phase 1</strong></td><td>First Experiments — calling models, comparing outputs</td><td><span class="status-done">✓ DONE</span></td></tr>
-      <tr><td><strong>Phase 2</strong></td><td>Evaluation Techniques — metrics, deterministic eval, behavioural testing, LLM-as-a-Judge</td><td><span class="status-inprogress">▶ IN PROGRESS</span></td></tr>
-      <tr><td><strong>Phase 3</strong></td><td>What You Are Evaluating — RAG, agents, tokenisation</td><td><span class="status-todo">○ TO DO</span></td></tr>
-      <tr><td><strong>Phase 4</strong></td><td>Frameworks & Tools — RAGAS, DeepEval, LangSmith</td><td><span class="status-todo">○ TO DO</span></td></tr>
-      <tr><td><strong>Phase 5</strong></td><td>Production Eval — regression, A/B, red teaming, CI/CD</td><td><span class="status-todo">○ TO DO</span></td></tr>
-      <tr><td><strong>Phase 6</strong></td><td>Specialisation — RAG eval, safety, red teaming</td><td><span class="status-todo">○ TO DO</span></td></tr>
-    </tbody>
-  </table>
+
 </body>
 </html>

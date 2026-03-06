@@ -1,26 +1,68 @@
+# ─────────────────────────────────────────────────────────────────
+# config.yaml — updated sections
+# Replace your existing shared, phase2_llm_as_a_judge and
+# phase2_groundedness sections with these.
+# ─────────────────────────────────────────────────────────────────
+
 shared:
   OLLAMA_URL: "http://localhost:11434/api/generate"
+  PROVIDER: "ollama"          # default fallback for single-model scripts
 
 phase2:
   BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"      # override shared.PROVIDER for this script
   EXCEL_FILE: "banking_test_cases.xlsx"
   TEST_SHEET: "Banking Bot Tests"
 
 phase2_llm_as_a_judge:
-  JUDGE_MODEL: "mistral"
-  RESULTS_SHEET: "JudgeResults"
-  OLLAMA_URL: "http://localhost:11434/api/generate"
   BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
+  JUDGE_MODEL: "gpt-4o-mini"
+  JUDGE_PROVIDER: "openai"
+  JUDGE_OPENAI_API_KEY: "sk-..."   # leave blank to use OPENAI_API_KEY env var
+  RESULTS_SHEET: "JudgeResults"
   EXCEL_FILE: "banking_bot_test_results.xlsx"
   TEST_SHEET: "Banking Bot Tests"
 
 phase2_semantic_similarity:
   BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
   EXCEL_FILE: "healthcare_test_cases.xlsx"
   TEST_SHEET: "Test Cases"
 
 phase2_groundedness:
   BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
   JUDGE_MODEL: "gemma2:9b"
+  JUDGE_PROVIDER: "ollama"
+  # To use a paid judge instead, change the two lines above e.g.:
+  # JUDGE_MODEL: "claude-3-5-haiku-20241022"
+  # JUDGE_PROVIDER: "anthropic"
+  # JUDGE_ANTHROPIC_API_KEY: "sk-ant-..."
   EXCEL_FILE: "healthcare_test_cases.xlsx"
   TEST_SHEET: "Test Cases"
+
+# ─────────────────────────────────────────────────────────────────
+# API KEY REFERENCE
+# ─────────────────────────────────────────────────────────────────
+# Keys can go in the section above OR as environment variables.
+# config.yaml key wins if both are set.
+#
+# config.yaml key names:
+#   OPENAI_API_KEY        — for BOT  (openai provider)
+#   JUDGE_OPENAI_API_KEY  — for JUDGE (openai provider)
+#   ANTHROPIC_API_KEY     — for BOT  (anthropic provider)
+#   JUDGE_ANTHROPIC_API_KEY — for JUDGE (anthropic provider)
+#   GEMINI_API_KEY        — for BOT  (gemini provider)
+#   JUDGE_GEMINI_API_KEY  — for JUDGE (gemini provider)
+#
+# Environment variable names (same names, no JUDGE_ prefix needed):
+#   export OPENAI_API_KEY=sk-...
+#   export ANTHROPIC_API_KEY=sk-ant-...
+#   export GEMINI_API_KEY=...
+#
+# Model name examples:
+#   openai:    gpt-4o, gpt-4o-mini
+#   anthropic: claude-3-5-sonnet-20241022, claude-3-5-haiku-20241022
+#   gemini:    gemini-1.5-pro, gemini-1.5-flash
+#   ollama:    llama3.1:8b, mistral, gemma2:9b, deepseek-r1:7b
