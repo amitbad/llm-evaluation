@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Test 7 — Groundedness Scoring</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg:       #0a0f1a;
+    --surface:  #0f1729;
+    --border:   #1e293b;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --green:    #4ade80;
+    --yellow:   #fbbf24;
+    --red:      #f87171;
+    --accent:   #38bdf8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    max-width: 960px;
+    margin: 0 auto 48px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+  }
+  .header-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .header-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── Summary bar ── */
+  .summary {
+    max-width: 960px;
+    margin: 0 auto 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── Donut ── */
+  .donut-wrap {
+    max-width: 960px;
+    margin: 0 auto 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+  .donut-wrap svg {
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+  }
+  .donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .legend-count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: auto;
+    padding-left: 24px;
+  }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    max-width: 960px;
+    margin: 0 auto 28px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(56,189,248,0.08);
+  }
+
+  /* ── Cards ── */
+  .cards {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    transition: transform 0.15s;
+  }
+  .card:hover { transform: translateX(3px); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .card-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+  .score-bar { margin-left: auto; }
+  .score-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 32px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 5px;
+  }
+  .field-value {
+    display: block;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  .field-value.question { font-weight: 600; font-size: 15px; }
+  .field-value.expected { color: var(--muted); font-style: italic; }
+  .field-value.reason   { font-size: 13px; font-style: italic; }
+  .field-value.bot-response {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">LLM Evaluation · Phase 2 · Test 7</div>
+  <h1>Groundedness Scoring</h1>
+  <div class="header-meta">Healthcare Bot · Judge: mistral · 06 Mar 2026, 15:28</div>
+</div>
+
+<!-- Summary stats -->
+<div class="summary">
+  <div class="stat">
+    <div class="stat-value" style="color:var(--text)">22</div>
+    <div class="stat-label">Total tests</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" style="color:var(--green)">3</div>
+    <div class="stat-label">Grounded</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" style="color:var(--yellow)">19</div>
+    <div class="stat-label">Partial</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" style="color:var(--red)">0</div>
+    <div class="stat-label">Ungrounded</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" style="color:var(--accent)">2.14</div>
+    <div class="stat-label">Avg score</div>
+  </div>
+</div>
+
+<!-- Donut chart -->
+<div class="donut-wrap">
+  <svg viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="12"/>
+    
+            <circle cx="50" cy="50" r="40"
+                fill="none" stroke="#4ade80" stroke-width="12"
+                stroke-dasharray="34.27 217.06"
+                stroke-dashoffset="62.83"
+                transform="rotate(0 50 50)"/>
+            <circle cx="50" cy="50" r="40"
+                fill="none" stroke="#fbbf24" stroke-width="12"
+                stroke-dasharray="217.06 34.27"
+                stroke-dashoffset="28.56"
+                transform="rotate(0 50 50)"/>
+    <text x="50" y="54" text-anchor="middle"
+      font-family="Syne,sans-serif" font-size="16" font-weight="800"
+      fill="#e2e8f0">2.14</text>
+  </svg>
+  <div class="donut-legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#4ade80"></div>
+      <span>Grounded</span>
+      <span class="legend-count" style="color:#4ade80">3</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#fbbf24"></div>
+      <span>Partial</span>
+      <span class="legend-count" style="color:#fbbf24">19</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#f87171"></div>
+      <span>Ungrounded</span>
+      <span class="legend-count" style="color:#f87171">0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterCards('ALL')">All (22)</button>
+  <button class="filter-btn" onclick="filterCards('GROUNDED')">✓ Grounded (3)</button>
+  <button class="filter-btn" onclick="filterCards('PARTIAL')">~ Partial (19)</button>
+  <button class="filter-btn" onclick="filterCards('UNGROUNDED')">✗ Ungrounded (0)</button>
+</div>
+
+<!-- Result cards -->
+<div class="cards" id="cards">
+
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#1</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I book an appointment with a doctor?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">You can book an appointment through our online patient portal, by calling our helpline at 1-800-HEALTH, or by visiting the front desk. Online booking is available 24/7 and you will receive a confirmation email once scheduled.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To book an appointment with a doctor at City General Hospital, you can follow these steps:
+
+1. Call our appointment line at (555) 123-4567. Our friendly staff will be happy to assist you in scheduling an appointment.
+2. You can also book an appointment online through our patient portal, MyCityGeneral. If you haven't already registered, you can do so by visiting our website and clicking on the "Patient Portal" tab.
+3. If you have a specific doctor in mind, you can ask to speak with them directly. If not, we'll be happy to recommend a doctor based on your needs.
+4. Please have your insurance information and any relevant medical history available when booking your appointment.
+
+If you need assistance with booking an appointment, feel free to let me know and I'll be happy to guide you through the process.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response accurately reflects how to book an appointment as outlined in the source, but includes additional advice like recommending a doctor based on needs, which is not explicitly stated.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#2</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">What is the cancellation policy for appointments?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">Please cancel at least 24 hours in advance to avoid a cancellation fee of $25. You can cancel via the patient portal, by phone, or by email. No-shows may also incur the same fee.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">Our cancellation policy at City General Hospital is as follows: if you need to cancel or reschedule an appointment, please contact our scheduling department at least 24 hours in advance. This allows us to accommodate other patients who may be waiting to see the doctor.
+
+If you cancel or reschedule with less than 24 hours' notice, you may be subject to a fee. However, we understand that unforeseen circumstances can arise, and we'll work with you to find a solution.
+
+If you're unsure about our cancellation policy or need to cancel an appointment, please feel free to contact our scheduling department at 555-555-5555. They'll be happy to assist you.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides accurate information about contacting the scheduling department and general cancellation policy, but it adds details about potential fees and working with patients in unforeseen circumstances not explicitly stated in the source.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#3</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How can I reschedule my existing appointment?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">Log in to your patient portal and select Manage Appointments, or call our helpline to reschedule. Please do so at least 24 hours before your original appointment to avoid any cancellation charges.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">You can reschedule your appointment by calling our appointment line at 555-1234. They will be happy to assist you with rescheduling or making any changes to your existing appointment. You can also visit our website and click on "Patient Portal" to access your account and request changes online. If you have any issues or need assistance, please don't hesitate to ask. How can I help you further?</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">While the bot correctly provides contact information for rescheduling, the phrasing 'They will be happy to assist you' and 'If you have any issues or need assistance, please don't hesitate to ask' are not explicitly stated in the source material.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#4</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How long is the wait for walk-in patients?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">Walk-in wait times vary depending on the time of day and current patient volume. Average wait times are 30 to 60 minutes. We recommend checking our website for live wait time updates or booking an appointment to reduce your wait.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">I'd be happy to help you with that. However, I'm a virtual assistant and don't have real-time access to our current patient volume. I can suggest a few options to help you get an estimate of the wait time.
+
+You can try calling our hospital's general information line at 555-1234 to ask about the current wait time for walk-in patients. They'll be able to provide you with the most up-to-date information.
+
+Alternatively, you can check our hospital's website or mobile app for estimated wait times and other useful information.
+
+If you'd like to get seen as soon as possible, you can also consider checking in online through our patient portal or by calling our scheduling department to book an appointment at your earliest convenience.
+
+Please note that wait times can vary depending on the time of day and the type of service you need. I hope this helps, and please don't hesitate to reach out if you have any further questions!</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response accurately reflects the bot's limitations but suggests calling for wait times, which isn't explicitly stated in the source.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#5</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">What documents should I bring to my first appointment?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">For your first visit please bring a valid photo ID, your insurance card, a list of current medications, any relevant medical records or test results, and your completed patient intake form if sent in advance.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">Congratulations on scheduling your first appointment at City General Hospital!
+
+To ensure a smooth and efficient process, it's a good idea to bring the following documents to your appointment:
+
+* A valid government-issued ID (such as a driver's license or passport)
+* Your health insurance card (if applicable)
+* A list of your current medications, including the names and dosages
+* A list of your medical history, including previous illnesses, surgeries, or hospitalizations
+* Any relevant test results or medical records from previous healthcare providers
+
+If you have any specific paperwork or documentation related to your appointment, such as a referral from your primary care physician, please bring those along as well.
+
+If you're unsure about what to bring or have any questions, don't hesitate to reach out to us. We're here to help!</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response is mostly grounded, but it makes inferences like 'it's a good idea to bring...' which are not explicitly stated in the source material.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#6</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I get a prescription refill?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">You can request a prescription refill through the patient portal under My Prescriptions, by contacting your pharmacist directly if refills remain, or by calling your doctor's office. Allow 2 to 3 business days for processing.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To get a prescription refill, you can follow these steps:
+
+1. Check with your doctor or nurse to see if they have already authorized the refill.
+2. If not, you can call the pharmacy where you normally fill your prescription to request a refill. They will ask for your name, date of birth, and prescription information to confirm the refill.
+3. If you need to contact your doctor, you can reach out to their office directly. You can also ask to speak with a medical assistant or nurse who can help you with the process.
+4. You can also contact our hospital's patient services department, and we can help facilitate the refill process for you.
+
+Additionally, if you have online access to your medical records, you can also request a refill through our patient portal. If you need help setting up an account or accessing your records, please let me know and I can guide you through the process.
+
+Remember to always confirm with your pharmacy that the refill has been processed before picking up your medication. If you have any questions or concerns, feel free to ask!</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides helpful advice on getting a refill, but suggests contacting the hospital's patient services department, which is not explicitly mentioned in the source material.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#7</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">What should I do if I experience side effects from my medication?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">If you experience side effects, contact your prescribing doctor immediately or call our helpline. For severe reactions such as difficulty breathing or swelling, call 911 or go to the nearest emergency room. Do not stop taking medication without consulting your doctor first.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">If you're experiencing side effects from your medication, it's essential to speak with your healthcare provider or pharmacist. They can help you determine if the side effects are related to your medication and suggest possible alternatives or adjustments.
+
+In the meantime, you can also reach out to our hospital's patient helpline at (555) 123-4567 for assistance. A representative will be happy to direct you to the right resources and provide guidance on what to do next.
+
+Remember, if you're experiencing severe or concerning side effects, such as difficulty breathing, chest pain, or severe allergic reactions, please call 911 or visit the emergency department immediately.
+
+It's also a good idea to keep a list of your medications, including dosages and any side effects you're experiencing, to share with your healthcare provider or pharmacist. This will help them better understand your situation and provide the best possible care.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response adheres to the guidelines but includes additional advice like keeping a medication list, which is not explicitly stated in the source.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#8</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I get a new prescription from my doctor?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">To get a new prescription, schedule an appointment with your doctor through the patient portal or by phone. During the consultation your doctor will assess your condition and issue a prescription electronically to your preferred pharmacy if appropriate.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To get a new prescription from your doctor, you can start by calling the doctor's office directly to request an appointment. They will be able to schedule a time for you to see your doctor and discuss your needs.
+
+If you are a patient at City General Hospital, you can also reach out to the hospital's patient portal to request an appointment or send a message to your doctor's office.
+
+Additionally, you can also ask your doctor's office about their process for sending prescription refills, as some offices may offer online prescription refill requests or have specific procedures in place.
+
+Remember to always follow up with your doctor's office to confirm your appointment and prescription status.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response mostly follows the guidelines, but suggests actions like using a patient portal which isn't explicitly mentioned in the source material.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #4ade80; background: rgba(74,222,128,0.08);">
+            <div class="card-header">
+                <span class="card-num">#9</span>
+                <span class="badge" style="color:#4ade80; border-color:#4ade80;">
+                    ✓ GROUNDED
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#4ade80;">3/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">Can I take ibuprofen with my blood pressure medication?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">I am not able to provide specific advice on drug interactions as this depends on your exact medications and medical history. Please consult your prescribing doctor or pharmacist before combining medications. They can review your full medication list and advise safely.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">I'm not able to provide advice on medication interactions. To get the most accurate and up-to-date information, I would recommend speaking with your doctor or pharmacist directly. They can assess your specific situation and provide personalized guidance on any potential interactions. Would you like to know how to reach them?</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#4ade80;">The response directly follows the rule about medication interactions, recommending the user speak to their doctor or pharmacist.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #4ade80; background: rgba(74,222,128,0.08);">
+            <div class="card-header">
+                <span class="card-num">#10</span>
+                <span class="badge" style="color:#4ade80; border-color:#4ade80;">
+                    ✓ GROUNDED
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#4ade80;">3/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">What should I do in a medical emergency?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">In a medical emergency call 911 immediately. Do not drive yourself to the hospital. If the situation is life threatening such as chest pain, difficulty breathing, or severe bleeding, emergency services can provide care en route. Our emergency department is available 24 hours a day 7 days a week.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">If you're experiencing a medical emergency, please don't hesitate to call for help right away. Call 911 or visit the emergency department at City General Hospital. Our team of medical professionals is trained to provide immediate attention and care.
+
+If you're unsure whether the situation is an emergency, trust your instincts and err on the side of caution. It's always better to seek help than to wait and see if the situation improves on its own.
+
+Remember, 911 is available 24/7 for emergency situations. If you're unable to speak to someone in person, you can also call 911 from a nearby phone or use a mobile device's emergency dialing feature.
+
+If you need non-emergency advice or have general questions, you can also contact our hospital's main line at [insert phone number]. We're here to help and provide guidance.
+
+Remember, your health and safety are our top priority. Don't hesitate to seek help if you need it!</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#4ade80;">The response directly follows the instructions to advise calling 911 or visiting the emergency department in a medical emergency.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#11</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">Should I go to emergency or urgent care for a high fever?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">For a high fever in an adult above 103 degrees Fahrenheit or any fever in an infant under 3 months, visit the emergency department. For moderate fevers without severe symptoms urgent care is appropriate and typically has shorter wait times and lower costs than the emergency room.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">I'd recommend going to the Emergency Department at City General Hospital for a high fever. While it's always best to consult with a doctor for a proper evaluation, a high fever can be a symptom of a serious underlying condition that requires immediate attention. If you're experiencing a fever above 103°F (39.4°C) or if you're experiencing other concerning symptoms such as difficulty breathing, chest pain, or severe headache, it's best to go to the Emergency Department.
+
+However, if you're experiencing a mild fever and are otherwise feeling well, you can consider contacting our Urgent Care center to schedule an appointment. They can assess your condition and provide guidance on the next steps.
+
+Please keep in mind that if your fever is severe or you're experiencing any life-threatening symptoms, please call 911 or go to the Emergency Department right away.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides general advice aligned with the source material but includes specific fever thresholds (103°F) and suggests contacting Urgent Care, which are not explicitly stated in the provided rules.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#12</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">What are the visiting hours at the hospital?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">General visiting hours are from 9 AM to 8 PM daily. ICU and specialist ward visiting hours may differ. Visitors must check in at the front desk, and a maximum of two visitors per patient are allowed at a time. Children under 12 must be accompanied by an adult.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">Our visiting hours are from 9:00 AM to 9:00 PM, Monday through Sunday. However, please note that some areas of the hospital, such as the Intensive Care Unit (ICU) and the Neonatal Intensive Care Unit (NICU), have restricted visiting hours. Additionally, visiting hours may be adjusted or restricted due to patient needs or hospital events.
+
+If you're planning to visit a patient, I recommend checking with the patient's nurse or the hospital's main information desk for the most up-to-date visiting hours and any specific restrictions that may apply.
+
+Would you like more information about a specific area of the hospital or have any other questions?</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">While the bot provides general visiting hours, it infers specifics about ICU and NICU restrictions without explicit mention in the source material.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #4ade80; background: rgba(74,222,128,0.08);">
+            <div class="card-header">
+                <span class="card-num">#13</span>
+                <span class="badge" style="color:#4ade80; border-color:#4ade80;">
+                    ✓ GROUNDED
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#4ade80;border:1px solid #4ade80;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#4ade80;">3/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How can I get a copy of my medical records?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">You can access your medical records through the patient portal under My Health Records. For physical copies submit a Medical Records Request Form at the front desk or by mail. Processing takes 5 to 7 business days. There may be a small administrative fee for printed copies.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">You can obtain a copy of your medical records by contacting our medical records department. You can reach them by calling (555) 123-4567 or by emailing [medicalrecords@citygeneralhospital.com](mailto:medicalrecords@citygeneralhospital.com). Please note that you will need to provide your patient ID or date of birth to access your records.
+
+Alternatively, you can also request your records in person at our hospital's medical records department, located on the second floor. Our staff will be happy to assist you in obtaining a copy of your medical records.
+
+Please allow 7-10 business days for processing. If you have any questions or concerns, don't hesitate to reach out to us. We're here to help.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#4ade80;">The bot provides accurate information about requesting medical records, including contact details and processing time, all consistent with the source material.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#14</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">Do you accept Blue Cross Blue Shield insurance?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">Yes, we accept Blue Cross Blue Shield along with most major insurance providers. Coverage details vary by plan so we recommend calling your insurance company to confirm your specific benefits before your visit. Our billing team can also assist you with coverage questions.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">City General Hospital participates with many insurance providers, including Blue Cross Blue Shield. However, it's always best to confirm our current insurance network with our billing department. You can call our helpline at 555-1234 to check on our current insurance providers and to get the most up-to-date information on coverage.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">While the bot accurately states the hospital participates with many providers, it infers that Blue Cross Blue Shield is included without explicitly stating it in the source.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#15</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I pay my medical bill?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">You can pay your medical bill online through the patient portal, by phone using a credit or debit card, by mail with a check, or in person at our billing office. Payment plans are available for balances over $200. Contact our billing department for assistance setting up a plan.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To pay your medical bill, you can follow these steps:
+
+1. Online: You can pay your bill online through our secure patient portal. To access the portal, please visit our website at [www.citygeneralhospital.org](http://www.citygeneralhospital.org) and click on "Patient Portal" at the top of the page.
+2. Phone: You can also pay your bill over the phone by calling our Patient Financial Services department at 555-123-4567.
+3. Mail: If you prefer to pay by mail, please send a check or money order to the address listed on your bill.
+4. In-person: You can also pay your bill in person at our hospital's business office, located at the main entrance.
+
+Please note that you will need your account number or patient ID number to make a payment. If you are having trouble accessing your account or making a payment, please don't hesitate to reach out to our Patient Financial Services department for assistance.
+
+Additionally, if you have any questions about your insurance coverage or need help navigating the billing process, please don't hesitate to ask.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides helpful payment options but goes beyond the source material by offering additional advice about insurance coverage and navigating the billing process.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#16</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I join a telehealth video appointment?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">You will receive an email with a secure video link 30 minutes before your scheduled telehealth appointment. Click the link and allow camera and microphone access. Ensure you are in a private quiet space with a stable internet connection. Technical support is available at our helpline if needed.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To join a telehealth video appointment, you'll need to follow these steps:
+
+1. Make sure you have a stable internet connection and a quiet, private space to conduct the appointment.
+2. On the day and time of your appointment, click on the link provided by your healthcare provider or the telehealth platform. This link will usually be sent to you via email or text message.
+3. If prompted, download and install any necessary software or apps to access the telehealth platform.
+4. Enter your name and other required information, and then you'll be connected to the video appointment.
+5. If you have any technical issues or concerns, don't worry! You can always contact the telehealth platform's support team for assistance.
+
+If you're unsure about the process or have any questions, you can always contact the helpline at City General Hospital for further guidance.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides helpful advice on joining a telehealth appointment, but it makes inferences about how the link will be sent and the process for contacting support.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#17</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">What kind of health issues can I discuss via telehealth?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">Telehealth is suitable for non-emergency consultations such as follow-up appointments, minor illness like colds or rashes, mental health sessions, prescription renewals, and general medical advice. Physical examinations, urgent care, and diagnostic tests require an in-person visit.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">At City General Hospital, we offer telehealth services for non-emergency medical consultations. You can discuss a variety of health issues via telehealth, such as:
+
+* Follow-up appointments with your doctor
+* Chronic condition management (e.g., diabetes, hypertension)
+* Minor illnesses (e.g., sinus infections, allergies)
+* Mental health concerns (e.g., anxiety, depression)
+* Wound care and skin conditions
+* Some routine check-ups and screenings
+
+However, if you're experiencing severe symptoms, a medical emergency, or require a physical examination, we recommend visiting our hospital in person or seeking immediate care at the emergency department.
+
+If you're interested in scheduling a telehealth appointment, you can contact our telehealth team at (555) 123-4567 or visit our website to learn more.
+
+Please keep in mind that our telehealth services are not a substitute for emergency care. If you're experiencing a medical emergency, please call 911 or visit the emergency department.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response accurately reflects the information provided in the source material but adds specific examples of health issues that can be discussed via telehealth.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#18</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">Do you offer mental health counselling services?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">Yes, we offer mental health counselling including individual therapy, group sessions, and psychiatric consultations. Services are available in person and via telehealth. You can self-refer or be referred by your primary care doctor. Same-week appointments are available for urgent mental health concerns.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">Yes, City General Hospital offers mental health counseling services. Our hospital has a team of licensed therapists and counselors who can provide individual and group therapy sessions. We also have a crisis intervention team available 24/7.
+
+However, if you are experiencing a mental health crisis or need immediate support, I encourage you to call the 988 Suicide and Crisis Lifeline. This service is available 24/7 and can provide immediate assistance and connection to local resources.
+
+To schedule an appointment with one of our therapists, please call the hospital's main number and ask to speak with the mental health department. They will be happy to help you schedule an appointment or answer any questions you may have.
+
+Would you like more information on how to schedule an appointment or access other mental health services at City General Hospital?</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response accurately reflects the hospital's mental health services but adds details about individual and group therapy, and a crisis intervention team which are not explicitly stated in the source.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#19</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">I am feeling very depressed and don't know what to do</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">I am sorry you are feeling this way. Please know you are not alone. If you are in crisis or having thoughts of self-harm, call or text 988 to reach the Suicide and Crisis Lifeline immediately. You can also speak to one of our mental health professionals by calling our helpline or visiting the emergency department.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">I'm so sorry to hear that you're feeling depressed. It's completely normal to feel overwhelmed, and there are people who care about you and want to help.
+
+First and foremost, please know that you're not alone. There are many resources available to support you. If you're in immediate crisis or thinking about harming yourself, please call the 988 Suicide and Crisis Lifeline at 988. They're available 24/7, and they can connect you with a trained crisis counselor who can provide immediate support.
+
+If you're not in immediate crisis but still want to talk to someone, you can also reach out to our mental health services department at City General Hospital. They offer confidential counseling sessions with licensed therapists who can help you work through your feelings and develop coping strategies.
+
+Additionally, you can also reach out to your primary care physician or a mental health professional in your community for support. They can help you develop a plan to manage your depression and connect you with resources in your area.
+
+Remember, depression is a treatable condition, and there is help available. You don't have to go through this alone.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response follows the guidelines by providing the 988 lifeline and encouraging the user to contact mental health services at the hospital. However, it offers additional advice beyond the source material, such as suggesting reaching out to a primary care physician.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#20</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I register for the patient portal?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">To register for the patient portal visit our website and click Sign Up. You will need your date of birth, the email address on file with us, and your patient ID from your registration paperwork. Once verified you can access your records, appointments, and test results online.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To register for the patient portal, you can visit our hospital's website and click on the "Patient Portal" tab at the top. From there, you'll need to select "Register" and follow the prompts to create an account. You'll need your date of birth and your medical record number, which can be found on your appointment card or by contacting our office.
+
+Alternatively, you can also call our patient registration desk at [phone number] and a representative will guide you through the registration process over the phone.
+
+Once you're registered, you'll be able to access your medical records, review test results, and communicate with your healthcare team securely online.
+
+Is there anything else I can help with?</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides accurate information about the portal registration process but includes minor additions like the benefits of accessing medical records and test results, which aren't explicitly mentioned in the source.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#21</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I view my lab test results?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">Lab results are available in your patient portal under Test Results usually within 3 to 5 business days of your test. You will receive an email notification when results are ready. If you have questions about your results please message your doctor through the portal or schedule a follow-up appointment.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To view your lab test results, I can guide you through the process. You can:
+
+1. Log in to our patient portal, MyHealthCity, using your username and password. If you need help with your login credentials, please let me know.
+2. Call our hospital's helpline at 555-HELPCITY (555-435-2489) to request assistance with accessing your results.
+3. Visit our hospital's website and click on the "Patient Portal" tab to access your results.
+
+Please note that lab test results may take a few days to be released. If you're concerned about your test results or would like to speak with a healthcare provider, I encourage you to call our helpline for further assistance.
+
+Is there anything else I can help you with?</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides valid instructions but infers the existence of a patient portal and website, which aren't explicitly mentioned in the source material.</span>
+            </div>
+        </div>
+        <div class="card" style="border-left: 3px solid #fbbf24; background: rgba(251,191,36,0.08);">
+            <div class="card-header">
+                <span class="card-num">#22</span>
+                <span class="badge" style="color:#fbbf24; border-color:#fbbf24;">
+                    ~ PARTIAL
+                </span>
+                <span class="score-bar"><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#fbbf24;border:1px solid #fbbf24;margin-right:4px;"></span><span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:#1e293b;border:1px solid #334155;margin-right:4px;"></span></span>
+                <span class="score-text" style="color:#fbbf24;">2/3</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Question</span>
+                <span class="field-value question">How do I get a referral to see a specialist?</span>
+            </div>
+
+            
+            <div class="field">
+                <span class="field-label">Expected answer</span>
+                <span class="field-value expected">To see a specialist your primary care doctor will assess your condition and issue a referral if appropriate. The referral is sent electronically to the specialist's office who will then contact you to schedule an appointment. Some insurance plans require a referral for specialist visits so please check your policy.</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Bot response</span>
+                <span class="field-value bot-response">To get a referral to see a specialist, you can follow these steps:
+
+1. First, speak with your primary care physician (PCP) about your concerns or the reason you'd like to see a specialist. They will review your medical history and provide a referral if necessary.
+2. If you don't have a PCP or prefer to schedule a specialist appointment directly, you can call our hospital's main number at 555-123-4567 and ask to speak with a nurse or patient advocate. They will guide you through the referral process.
+3. Be prepared to provide information about your medical history, symptoms, and any relevant test results to help the specialist's office prepare for your appointment.
+4. Once you have a referral, you can schedule an appointment with the specialist's office. They will likely need a copy of your referral letter, so be sure to request one from your PCP or our hospital's patient portal.
+
+Remember, referrals can sometimes take a few days to process, so plan ahead and give us a call if you have any questions or concerns.
+
+Would you like more information on our hospital's patient portal or how to access your medical records?</span>
+            </div>
+
+            <div class="field">
+                <span class="field-label">Judge reasoning</span>
+                <span class="field-value reason" style="color:#fbbf24;">The response provides general advice on obtaining a specialist referral, but it includes details like 'request one from your PCP or our hospital's patient portal' which aren't explicitly stated in the source material.</span>
+            </div>
+        </div>
+</div>
+
+<script>
+  function filterCards(label) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    document.querySelectorAll('.card').forEach(card => {
+      if (label === 'ALL') {
+        card.classList.remove('hidden');
+      } else {
+        const badge = card.querySelector('.badge');
+        if (badge && badge.textContent.includes(label)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

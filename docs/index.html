@@ -37,6 +37,7 @@
   .tag-p1 { background:#1a2a3d; color:#6ab4f7; }
   .tag-p2 { background:#1e1a3d; color:var(--accent); }
   .tag-ref { background:#2a2a1a; color:var(--accent2); }
+  .tag-p3 { background:#1a2a2a; color:#34d399; }
   .chevron { font-size:10px; transition:transform 0.2s; flex-shrink:0; margin-left:4px; }
   nav a.open .chevron { transform:rotate(180deg); }
 
@@ -86,9 +87,14 @@
       <a href="#" onclick="return goAnchor('concepts.html','semantic-similarity')">🔵 Semantic Similarity</a>
       <a href="#" onclick="return goAnchor('concepts.html','sentence-embeddings')">📐 Sentence Embeddings</a>
 
+      <span class="sub-label">Groundedness Evaluation</span>
       <a href="#" onclick="return goAnchor('concepts.html','groundedness')">🎯 Groundedness Scoring</a>
       <a href="#" onclick="return goAnchor('concepts.html','reference-contamination')">☠️ Reference Contamination</a>
       <a href="#" onclick="return goAnchor('concepts.html','evaluation-rubric')">📏 Evaluation Rubric Design</a>
+      <a href="#" onclick="return goAnchor('concepts.html','answer-faithfulness')">🔬 Answer Faithfulness</a>
+      <span class="sub-label">Model Configuration</span>
+      <a href="#" onclick="return goAnchor('concepts.html','temperature')">🌡️ Temperature</a>
+      <a href="#" onclick="return goAnchor('concepts.html','non-determinism')">🎲 Non-Determinism</a>
       <span class="sub-label">Speed Metrics</span>
       <a href="#" onclick="return goAnchor('concepts.html','ttft')">⚡ TTFT</a>
       <a href="#" onclick="return goAnchor('concepts.html','tpot')">⏱ TPOT</a>
@@ -114,6 +120,11 @@
     <a href="#" onclick="return go('test5.html','nav-t5')" id="nav-t5">⚖️ Test 5 — LLM-as-a-Judge <span class="tag tag-p2">P2</span></a>
     <a href="#" onclick="return go('test6.html','nav-t6')" id="nav-t6">🔵 Test 6 — Semantic Similarity <span class="tag tag-p2">P2</span></a>
     <a href="#" onclick="return go('test7.html','nav-t7')" id="nav-t7">🎯 Test 7 — Groundedness Scoring <span class="tag tag-p2">P2</span></a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Phase 3 — What You Are Evaluating</div>
+    <a href="#" onclick="return go('test8.html','nav-t8')" id="nav-t8">🌡️ Test 8 — Temperature Sensitivity <span class="tag tag-p3">P3</span></a>
   </div>
 
   <div class="nav-footer">docs/ · llm-evaluation</div>

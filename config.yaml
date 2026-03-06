@@ -42,6 +42,19 @@ phase2_groundedness:
   EXCEL_FILE: "healthcare_test_cases.xlsx"
   TEST_SHEET: "Test Cases"
 
+phase3_temperature:
+  BOT_MODEL: "deepseek-r1:7b"
+  BOT_PROVIDER: "ollama"
+  EXCEL_FILE: "banking_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  TEMPERATURES: [0.0, 0.5, 1.0, 1.5]
+
+  # To use a paid provider instead — two lines only:
+  # BOT_MODEL: "gpt-4o-mini"
+  # BOT_PROVIDER: "openai"
+  # OPENAI_API_KEY: ""   # leave blank to use OPENAI_API_KEY env var
+
+
 # ─────────────────────────────────────────────────────────────────
 # API KEY REFERENCE
 # ─────────────────────────────────────────────────────────────────

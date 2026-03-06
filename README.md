@@ -6,6 +6,18 @@ Built for **Test Engineers** transitioning into GenAI evaluation — no data sci
 
 ---
 
+## Before You Start — Read This
+
+This is a big topic. Take your time with it.
+
+There is no shortcut through LLM evaluation. Each phase builds on the one before. If you rush, the later exercises will feel confusing — not because they are hard, but because the foundations were skipped. The learners who get the most from this repository are the ones who slow down, run every exercise themselves, and read the results before moving on.
+
+**Do not try to match numbers.** You will run these experiments and get different outputs than the ones documented here. That is expected and intentional — LLMs are non-deterministic. Your 4% interest rate answer might be phrased differently from the example. Your pass rate at temperature 1.0 might be 12/15 instead of 13/15. This is not a bug. It is the subject matter. The goal is to understand *why* outputs vary and *how* to evaluate them — not to reproduce identical results.
+
+**You are expected to think, not follow.** This repository is designed to make you an educated evaluator, not a pipeline operator. When a test fails, ask why. When results are surprising, investigate. When a concept is unclear, check the Concepts Reference before moving on. Black-box testing instincts — "it passed, move on" — do not transfer to GenAI evaluation. Understanding the failure is the work.
+
+---
+
 ## What This Repository Is
 
 This is not a framework. It is a **learning-by-doing repository** where every concept is taught through a real exercise. You build something, run it, observe the output, and understand why it behaves the way it does.
@@ -21,6 +33,10 @@ The goal is to develop practical skills in evaluating LLM-based systems — the 
 By default everything runs locally using [Ollama](https://ollama.ai) — free, no account needed.
 
 If you want stronger models as a bot or judge (GPT-4o, Claude, Gemini), the repository supports paid providers out of the box. You switch provider with one line in `config.yaml`. See the **Configuration** section below.
+
+**Why this repository uses Ollama by default:** The experiments documented here were run on local Ollama models to keep costs at zero across hundreds of iterations during development. You are free — and encouraged — to use paid APIs. A premium model like GPT-4o or Claude will produce noticeably better results in exercises like LLM-as-a-Judge and Groundedness Scoring. The tradeoffs are cost vs quality, and you decide per script.
+
+**Your results will differ from the documented ones — and that is fine.** A premium model may pass more tests, produce higher scores, or refuse more robustly than a local 8B model. This is not a discrepancy — it is the point. The goal is to understand the evaluation technique, not to reproduce a specific number. Use whatever model you have access to, run the exercise, and focus on what the output is telling you.
 
 **Models used in this repository's experiments (Ollama):**
 - `llama3.1:8b`
@@ -295,6 +311,10 @@ Bot and judge can use different providers — any combination works.
 
 ## Notes for Learners
 
+- **Take your time.** This is not a small topic. Each phase is designed to be absorbed, not completed. If something feels unclear, slow down — do not push forward hoping it will make sense later.
+- **Do not try to match results.** LLMs are non-deterministic. Your outputs will differ from the documented ones even on identical prompts. That is expected. Focus on understanding the technique and what the results are telling you — not on reproducing specific numbers.
+- **You are here to understand, not to execute.** When a test fails, ask why. When a score surprises you, read the actual response. Black-box testing instincts — "it passed, move on" — do not apply here. The failure is often the most valuable part.
+- **Premium models will give different results.** If you use GPT-4o or Claude instead of a local Ollama model, you will see higher pass rates, better groundedness scores, and more consistent refusals. That is not a problem with the documented experiments — it is expected. Use whatever model you have and understand what it tells you about that model.
 - **Excel is input only (from Test 6 onwards).** For semantic similarity and future tests, Excel stores test cases only. Results go to the HTML report. Earlier tests (Test 4, Test 5) do write results back to Excel — that is intentional for those exercises.
 - **Read the HTML report, not the Excel.** After running any evaluator, open the generated HTML report in your browser. It shows Expected vs Bot Response side by side with colour-coded verdicts.
 - **Fill your verdict before running the judge.** In `llm-as-a-judge`, always fill col H (Result) with your own Pass/Fail/Partial before running `llm_judge_evaluator.py`. The disagreements only have learning value if your verdict came first.

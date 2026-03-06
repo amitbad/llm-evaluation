@@ -534,6 +534,7 @@
       <a href="#groundedness">🎯 Groundedness Scoring</a>
       <a href="#reference-contamination">☠️ Reference Contamination</a>
       <a href="#evaluation-rubric">📏 Evaluation Rubric Design</a>
+      <a href="#answer-faithfulness">🔬 Answer Faithfulness</a>
     </div>
 
     <div class="nav-section">
@@ -542,6 +543,12 @@
       <a href="#evidence-documentation">📋 Evidence Documentation</a>
       <a href="#coverage-thinking">🗺 Coverage Thinking</a>
       <a href="#evaluation-validity">⚖️ Evaluation Validity</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Model Configuration</div>
+      <a href="#temperature">🌡️ Temperature</a>
+      <a href="#non-determinism">🎲 Non-Determinism</a>
     </div>
   </nav>
 
@@ -1422,13 +1429,144 @@
       <div class="why-matters">In production evaluation pipelines, rubric design is iterated just like test case design. You run the judge, review verdicts you disagree with, identify what the rubric failed to catch, and tighten the instruction. A rubric is never final — it evolves as you discover new failure patterns.</div>
     </div>
 
+    <!-- Answer Faithfulness -->
+    <div class="concept" id="answer-faithfulness">
+      <div class="concept-header">
+        <div class="concept-icon icon-sem">🔬</div>
+        <div>
+          <div class="concept-title">Answer Faithfulness</div>
+          <div class="concept-subtitle">Groundedness Evaluation · Industry Term · RAGAS</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        The industry-standard term for what groundedness scoring measures — <strong>does every claim in the bot's answer stay faithful to its source context?</strong> If the bot says something not found in the source, it is unfaithful. Used in RAGAS and across RAG evaluation frameworks.
+      </div>
+
+      <p class="detail">Answer faithfulness evaluates at the individual claim level — not the response as a whole. A response can be mostly faithful but contain one invented phone number, one fabricated URL, or one made-up policy detail. That single unfaithful claim makes the entire response unreliable in high-stakes domains like healthcare or finance.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">UNFAITHFUL response — TC13 from Test 7</div>
+        <div class="example-content">
+          <span class="b">Question: "How can I get a copy of my medical records?"</span><br><br>
+          <span class="b">Source (system prompt): Direct patients to the medical records department. No phone number, no email, no floor number, no processing time.</span><br><br>
+          <span class="b">Bot invented: (555) 123-4567 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="523f37363b31333e2037313d20362112313b262b35373c3720333e3a3d21223b26333e7c313d3f">[email&#160;protected]</a> · "second floor" · "7-10 business days"</span><br><br>
+          <span class="b">Judge verdict: GROUNDED. Reason: "contact details and processing time are consistent with source material."</span><br><br>
+          <span class="b">Why it failed: gemma evaluated topic relevance, not faithfulness. None of those specifics exist in the source. Every claim was fabricated. Answer faithfulness = 0.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-good">FAITHFUL response — what it should have said</div>
+        <div class="example-content">
+          <span class="g">"To obtain a copy of your medical records, please contact our medical records department. They will guide you through the process."</span><br><br>
+          <span class="g">No invented contact details. No fabricated timelines. Only what the source authorises. This is a faithful response — lower confidence, but fully traceable.</span>
+        </div>
+      </div>
+
+      <p class="detail">Answer faithfulness is different from answer correctness. A response can be factually correct in the real world but still unfaithful — if the information came from the model's training data rather than the provided source. In RAG evaluation, faithfulness to the retrieved context is the only thing that matters, regardless of whether the invented detail happens to be true.</p>
+
+      <div class="why-matters">Answer faithfulness is one of the three core metrics in RAG evaluation frameworks — alongside context relevance (did retrieval return the right documents?) and answer relevance (did the answer actually address the question?). Groundedness scoring in Test 7 is a hand-built version of answer faithfulness evaluation. When you reach Phase 4, you will see how these same concepts are measured at scale using dedicated frameworks.</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">Model Configuration</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <!-- Temperature -->
+    <div class="concept" id="temperature">
+      <div class="concept-header">
+        <div class="concept-icon icon-sem">🌡️</div>
+        <div>
+          <div class="concept-title">Temperature</div>
+          <div class="concept-subtitle">Model Configuration · Test 8</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Temperature controls how the model picks the next word. <strong>Low temperature = predictable, consistent, deterministic. High temperature = creative, varied, less reliable for structured tasks.</strong>
+      </div>
+
+      <p class="detail">Every time a model generates the next word, it calculates a probability score for every word in its vocabulary — ranked from most to least likely. Temperature controls how far down that ranked list the model is willing to reach.</p>
+
+      <p class="detail">At temperature 0.0 it always picks rank #1 — the single most probable word. The same input will produce the same output every time. At temperature 1.5 it may pick rank #4 or #5. Those lower-ranked words are less expected, which is why responses become more varied and less predictable.</p>
+
+      <div class="example-block">
+        <div class="example-label" style="background:#1a2a1a;color:#4ade80;border-color:#2a4a2a">Temperature spectrum</div>
+        <div class="example-content">
+          <span class="g"><strong>0.0</strong> — Fully deterministic. Always picks the most probable word. Same input = same output every run.</span><br><br>
+          <span class="g"><strong>0.5</strong> — Slightly relaxed. Minor wording variation between runs. Still highly reliable.</span><br><br>
+          <span style="color:#fbbf24"><strong>1.0</strong> — Default for most models. Raw probability distribution used as-is. Noticeable variation between runs.</span><br><br>
+          <span class="b"><strong>1.5</strong> — Loosely bound. Less probable words become meaningfully likely. Creative but unreliable for constrained tasks.</span>
+        </div>
+      </div>
+
+      <p class="detail">In Test 8, we ran the full 15-case banking bot test suite at all four temperatures. The pass rate was identical across all settings — 13/15 at every temperature. This is itself a finding: llama3.1:8b has deeply embedded refusal training that temperature cannot disrupt, and factual recall (interest rates, fees) is anchored strongly enough that even high temperature does not introduce errors.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">Common misconception</div>
+        <div class="example-content">
+          <span class="b">"Temperature 0.0 gives the best answers."</span><br><br>
+          <span class="b">Not necessarily. Temperature 0.0 gives the most predictable answers. For factual Q&A and banking bots that is exactly what you want. For tasks that need variety — generating multiple options, creative writing, brainstorming — 0.0 will produce the same output every time regardless of how many times you ask.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Production banking and healthcare bots typically run at 0.0–0.3. Not because high temperature always produces worse answers, but because predictability is a compliance and auditability property. If a bot can give two different answers to the same question depending on temperature, that is a risk in regulated industries — regardless of whether both answers happen to be correct.</div>
+    </div>
+
+    <!-- Non-Determinism -->
+    <div class="concept" id="non-determinism">
+      <div class="concept-header">
+        <div class="concept-icon icon-sem">🎲</div>
+        <div>
+          <div class="concept-title">Non-Determinism</div>
+          <div class="concept-subtitle">Model Configuration · Core Concept · Test 2 · Test 8</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Non-determinism means <strong>the same input can produce different outputs on different runs</strong>. Unlike traditional software where the same input always produces the same output, LLMs are probabilistic by design. This is one of the most fundamental differences between LLM evaluation and traditional QA.
+      </div>
+
+      <p class="detail">In traditional software testing, if a function returns a wrong value you have a bug — fix it and it stays fixed. In LLM evaluation, a test can pass on one run and fail on the next with no code change at all. The model itself is the source of variation.</p>
+
+      <p class="detail">Temperature is the most direct cause of non-determinism, but not the only one. Even at temperature 0.0, minor differences in hardware floating-point precision, batching, or model loading can produce slightly different outputs. For practical evaluation purposes, temperature 0.0 is treated as deterministic — but it is worth knowing that absolute determinism is not guaranteed across different machines or model versions.</p>
+
+      <div class="example-block">
+        <div class="example-label" style="background:#1a1a2a;color:#a78bfa;border-color:#2a2a4a">What non-determinism looks like in practice</div>
+        <div class="example-content">
+          <span class="g"><strong>Run 1:</strong> "The Gold Account offers a 4% annual interest rate." ✅ PASS</span><br><br>
+          <span class="g"><strong>Run 2:</strong> "Gold Account holders enjoy a competitive 4% annual interest rate, making it our best option for savers." ✅ PASS</span><br><br>
+          <span class="b"><strong>Run 3:</strong> "Our Gold Account is designed for customers seeking growth, with rates reviewed annually." ❌ FAIL — missing keyword: 4%</span><br><br>
+          <span style="color:#7a7a90">Same prompt. Same model. Same system prompt. Different results. The third run drifted from the expected answer not because anything changed — but because the model picked a different path through its probability distribution.</span>
+        </div>
+      </div>
+
+      <p class="detail">This is why evaluation runs use multiple passes in research contexts — running the same test once and declaring a pass or fail is not statistically reliable. In Test 2, we ran each use case three times specifically to observe this. In Test 8, we observed the opposite: some models are stable enough that temperature barely affects their outputs on structured tasks.</p>
+
+      <div class="example-block">
+        <div class="example-label label-good">How to handle non-determinism in evaluation</div>
+        <div class="example-content">
+          <span class="g">1. Run tests multiple times and track pass rate across runs, not just a single pass/fail.</span><br><br>
+          <span class="g">2. Set temperature to 0.0 for evaluation runs where consistency matters — this minimises but does not eliminate variation.</span><br><br>
+          <span class="g">3. When a test fails unexpectedly, re-run before investigating — it may have been a one-off variation, not a real regression.</span><br><br>
+          <span class="g">4. Design must-contain keywords broadly enough to accept valid paraphrases of the expected answer — not so narrow that correct responses fail due to wording variation.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Non-determinism is why LLM evaluation is a discipline, not just a checklist. A single test run tells you what happened once. An evaluation suite run multiple times at different temperatures tells you how reliable the system is. The goal is not a binary pass/fail — it is a confidence level. This is the core shift in thinking from traditional QA to GenAI evaluation.</div>
+    </div>
+
     <footer>
-      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 7 (Reference Contamination added)
+      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 8 (Temperature, Non-Determinism added)
     </footer>
 
   </main>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     // Highlight active nav link on scroll
     const sections = document.querySelectorAll('.concept');
     const links = document.querySelectorAll('nav a');
@@ -1438,19 +1576,4 @@
         if (entry.isIntersecting) {
           links.forEach(l => l.classList.remove('active'));
           const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
-          if (active) active.classList.add('active');
-        }
-      });
-    }, { threshold: 0.5 });
-
-    sections.forEach(s => observer.observe(s));
-  </script>
-
-  <script>
-    if (window.self !== window.top) {
-      document.body.classList.add("in-frame");
-    }
-  </script>
-</body>
-
-</html>
+          if (active) active.classList.add('a
