@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 9 — RAG Evaluation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d0d0f; --surface:#141417; --surface2:#1c1c21; --border:#2a2a32; --accent:#7c6af7; --accent2:#f7a06a; --danger:#f76a6a; --success:#6af7a0; --text:#e8e8f0; --muted:#7a7a90; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); padding:48px 56px; max-width:100%; line-height:1.6; }
+  .phase-badge { display:inline-block; font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; }
+  h1 { font-size:36px; font-weight:800; line-height:1.1; margin-bottom:10px; background:linear-gradient(135deg,var(--text) 40%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7; max-width:680px; }
+  h2 { font-size:20px; font-weight:700; color:var(--text); margin:40px 0 12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  h3 { font-size:16px; font-weight:700; color:var(--accent); margin:28px 0 10px; }
+  p { margin-bottom:14px; font-size:14px; color:#c0c0d8; line-height:1.75; }
+  code { background:var(--surface2); padding:2px 7px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent2); }
+  pre { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px 18px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--accent2); margin:14px 0; overflow-x:auto; }
+  ul, ol { padding-left:20px; margin-bottom:14px; }
+  li { margin-bottom:10px; font-size:13.5px; color:#c0c0d8; line-height:1.7; }
+  li strong { color:var(--text); }
+  table { width:100%; border-collapse:collapse; margin:16px 0 24px; font-size:13px; }
+  th { background:var(--surface2); color:var(--muted); font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; padding:10px 13px; text-align:left; border:1px solid var(--border); font-weight:600; }
+  td { padding:11px 13px; border:1px solid var(--border); color:var(--text); vertical-align:top; background:var(--surface); font-size:13px; line-height:1.6; }
+  tr:hover td { background:var(--surface2); }
+  .info-box { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:var(--text); }
+  .warn-box { background:#1a1a10; border:1px solid #3a3a20; border-left:3px solid var(--accent2); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#c8c890; }
+  .success-box { background:#0f1a10; border:1px solid #1e3a20; border-left:3px solid var(--success); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#a0d8a0; }
+  .danger-box { background:#1a1010; border:1px solid #3a2020; border-left:3px solid var(--danger); border-radius:10px; padding:14px 18px; margin:16px 0; font-size:13.5px; line-height:1.7; color:#e0b0b0; }
+  .file-tag { background:#2a2a1a; border:1px solid var(--border); border-radius:6px; padding:7px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--accent2); margin-bottom:20px; display:inline-block; }
+  .score-row { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
+  .score-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 18px; min-width:140px; flex:1; }
+  .score-card .score-val { font-family:'JetBrains Mono',monospace; font-size:26px; font-weight:700; margin-bottom:4px; }
+  .score-card .score-label { font-size:10px; font-family:'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .score-card .score-desc { font-size:12px; color:var(--muted); }
+  .pass { color:#4ade80; } .fail { color:#f87171; } .warn { color:#fbbf24; }
+  .cat-tag { display:inline-block; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; }
+  .cat-clean   { background:#0d2010; color:#4ade80; }
+  .cat-numbers { background:#1a102a; color:#a78bfa; }
+  .cat-cross   { background:#2a2a0a; color:#fbbf24; }
+  .cat-unans   { background:#2a0a0a; color:#f87171; }
+  .cat-adv     { background:#2a1a0a; color:#fb923c; }
+  .cat-edge    { background:#0a0a2a; color:#60a5fa; }
+  .cat-ret     { background:#0a2a2a; color:#2dd4bf; }
+  .formula-box { text-align:center; font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--accent2); padding:14px; background:var(--surface2); border-radius:8px; margin:14px 0; }
+  footer { margin-top:64px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+  ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:var(--bg); } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="phase-badge">Phase 3 — What You Are Evaluating</div>
+<h1>Test 9: RAG Evaluation</h1>
+<p class="subtitle">RAG stands for Retrieval Augmented Generation. Instead of relying on what the model was trained on, a RAG system first searches a document corpus and gives the model only the relevant text to answer from. This test builds a RAG pipeline from scratch and evaluates whether it retrieves the right information, answers faithfully from that information, and addresses what was actually asked.</p>
+<div class="file-tag">📁 phase-3-what-you-are-evaluating/rag-evaluation/ &nbsp;|&nbsp; chunker.py · retriever.py · rag_bot.py · rag_evaluator.py · report_generator.py</div>
+
+<h2>What Problem Does RAG Solve?</h2>
+<p>A standard LLM answers from its training data — knowledge baked in at training time that cannot be updated and cannot be verified. For a banking assistant, this is a serious problem. You need the bot to answer from <em>your</em> documents, not from general knowledge that may be wrong, outdated, or hallucinated.</p>
+<p>RAG solves this by giving the model context at the moment the question is asked. The model only sees the retrieved text — it has no choice but to answer from it. If the answer is not in the retrieved text, a well-prompted RAG bot will say so rather than invent one.</p>
+
+<div class="info-box">
+  🎯 <strong>The core idea:</strong> RAG separates two problems — <em>finding</em> the right information and <em>answering</em> from it. The retriever handles finding. The LLM handles answering. Evaluating a RAG system means evaluating both separately, because each can fail independently. A perfect retriever with a poor LLM still gives bad answers. A great LLM with poor retrieval still gives incomplete answers.
+</div>
+
+<h2>The Source Documents</h2>
+<p>Three fictional NextGen Banking documents form the corpus for this test. All product names, fees, and policies are invented for this exercise.</p>
+
+<table>
+  <thead><tr><th>Document</th><th>Contents</th><th>Chunks</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>Fees_Loans_and_Secured_Assets_Guide.txt</code></td>
+      <td>Monthly fees, overdraft charges, SWIFT/SEPA transfer fees, Gold Loans, Loan Against Securities, repayment options, tax notes</td>
+      <td>Chunks 1–4</td>
+    </tr>
+    <tr>
+      <td><code>LearnFund_Credit_Card_Product_Guide.txt</code></td>
+      <td>LearnFund education loan — approved providers, interest rates, eligibility, documentation required, early settlement fees, Credit Card APR and late payment penalty</td>
+      <td>Chunks 5–8</td>
+    </tr>
+    <tr>
+      <td><code>Operations_Guide.txt</code></td>
+      <td>Account opening process, required ID documents, dormant/inactive account rules, reactivation procedure, ATM limits, complaints escalation</td>
+      <td>Chunks 9–12</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>What We Built</h2>
+<p>A five-file pipeline built from scratch. No external RAG framework — every step is visible and understandable.</p>
+
+<table>
+  <thead><tr><th>File</th><th>Purpose</th><th>Run?</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>chunker.py</code></td>
+      <td>Reads the 3 source documents, splits them into paragraphs on blank lines, filters fragments under 40 characters, saves to <code>chunks.json</code>. Produced 12 chunks — 4 per document.</td>
+      <td>Once at setup</td>
+    </tr>
+    <tr>
+      <td><code>retriever.py</code></td>
+      <td>Loads <code>chunks.json</code>, encodes all chunks as vectors using <code>sentence-transformers/all-MiniLM-L6-v2</code>, then for any question returns the top-K most similar chunks by cosine similarity. Uses a <code>_load()</code> pattern — model loads once on first call and is reused for all questions. Never runs directly.</td>
+      <td>Library only</td>
+    </tr>
+    <tr>
+      <td><code>rag_bot.py</code></td>
+      <td>The banking assistant. Takes a question → calls the retriever → builds a prompt with retrieved chunks as context → calls <code>llama3.1:8b</code> with a strict instruction to answer only from context. Returns the answer plus the retrieved chunk IDs. Never runs directly.</td>
+      <td>Library only</td>
+    </tr>
+    <tr>
+      <td><code>rag_evaluator.py</code></td>
+      <td><strong>The script you run.</strong> Reads all 25 test cases from Excel, calls <code>rag_bot.py</code> per case, scores each response three ways, prints live progress to terminal, then calls <code>report_generator.py</code> at the end.</td>
+      <td><strong>This one</strong></td>
+    </tr>
+    <tr>
+      <td><code>report_generator.py</code></td>
+      <td>Called automatically by the evaluator at the end. Generates <code>results/rag_evaluation_report.html</code>. Never run directly.</td>
+      <td>Auto</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="info-box">
+  🔧 <strong>No database required.</strong> With only 12 chunks, everything fits in memory. The retriever loads all chunks at startup, encodes them once, and reuses those vectors for all 25 questions. Vector databases (Chroma, Pinecone, FAISS) exist for scale — thousands of documents. For this test, in-memory is correct and simpler to understand.
+</div>
+
+<h3>What chunks.json looks like</h3>
+<p>After running <code>chunker.py</code>, open <code>chunks.json</code> to see exactly what the retriever searches over. Each chunk looks like this:</p>
+<pre>{
+  "id": 2,
+  "source": "Fees_Loans_and_Secured_Assets_Guide.txt",
+  "text": "Our service charge structure is designed for transparency.
+           The standard Monthly Maintenance Fee is £12.00, which is
+           waived entirely for customers who maintain a Minimum Monthly
+           Balance of £2,500 or have a total loan liability exceeding
+           £15,000..."
+}</pre>
+<p>Every chunk has an ID, a source filename, and the paragraph text. When the terminal shows "chunk 2, chunk 6, chunk 1" — these are the IDs. Open <code>chunks.json</code> and read exactly what context the bot was given for that question.</p>
+
+<h2>How to Run</h2>
+
+<h3>Step 1 — one-time setup</h3>
+<pre>cd phase-3-what-you-are-evaluating/rag-evaluation
+python chunker.py</pre>
+<p>This reads the three documents and writes <code>chunks.json</code>. You only need to run this once. If <code>chunks.json</code> already exists, skip this step.</p>
+
+<h3>Step 2 — smoke test first (recommended)</h3>
+<p>Before running all 25 cases, run <code>rag_bot.py</code> directly with a few sample questions to confirm the pipeline works end to end:</p>
+<pre>python rag_bot.py</pre>
+<p>The <code>__main__</code> block runs 3 sample questions and prints the retrieved chunks and bot answer for each. You will see something like:</p>
+<pre>Q: What is the monthly maintenance fee?
+Chunks: chunk 2, chunk 1, chunk 7  (scores: 0.72, 0.41, 0.38)
+A: The standard Monthly Maintenance Fee is £12.00...</pre>
+<p>If this works, the full evaluation will work. If it fails here, fix the issue before running 25 cases.</p>
+
+<h3>Step 3 — full evaluation</h3>
+<pre># Runs all 25 cases — approximately 75 model calls (~15–20 minutes on local Ollama)
+python rag_evaluator.py</pre>
+<p>The terminal shows live progress — which chunks were retrieved, similarity scores, response time, and all three scores per case. Output is written to <code>results/rag_evaluation_report.html</code>.</p>
+
+<h3>Reading the similarity scores in the terminal</h3>
+<p>Every case shows which chunks were retrieved and their similarity scores. Learn to read these as the evaluation runs:</p>
+
+<table>
+  <thead><tr><th>Score range</th><th>What it means</th></tr></thead>
+  <tbody>
+    <tr><td><code>0.75 – 1.00</code></td><td class="pass">Strong match — retriever is confident this chunk is relevant to the question</td></tr>
+    <tr><td><code>0.50 – 0.74</code></td><td class="warn">Moderate match — related topic but may not contain the exact answer</td></tr>
+    <tr><td><code>0.25 – 0.49</code></td><td class="warn">Weak match — retriever is reaching; chunk may only share a general topic</td></tr>
+    <tr><td><code>below 0.20</code></td><td class="fail">Near zero — question is almost certainly outside the corpus entirely</td></tr>
+  </tbody>
+</table>
+
+<div class="warn-box">
+  ⚠️ <strong>Troubleshooting common issues:</strong><br><br>
+  <strong>ModuleNotFoundError: sentence_transformers</strong> — run <code>pip install sentence-transformers --break-system-packages</code><br><br>
+  <strong>FileNotFoundError: chunks.json</strong> — you skipped Step 1. Run <code>python chunker.py</code> first.<br><br>
+  <strong>Connection refused / Ollama error</strong> — Ollama is not running. Start it with <code>ollama serve</code> in a separate terminal.<br><br>
+  <strong>Model not found</strong> — run <code>ollama pull llama3.1:8b</code> and <code>ollama pull mistral</code>.<br><br>
+  <strong>BertModel LOAD REPORT warning on startup</strong> — expected and harmless. The <code>embeddings.position_ids UNEXPECTED</code> message appears because the embedding model was saved from a slightly different architecture. It does not affect results — ignore it.
+</div>
+
+<h2>How Scoring Works</h2>
+<p>Every test case is scored on three dimensions independently. The overall score is a simple average:</p>
+
+<div class="formula-box">Overall = (Context Relevance + Answer Faithfulness + Answer Relevance) ÷ 3</div>
+
+<table>
+  <thead><tr><th>Metric</th><th>Method</th><th>What it measures</th><th>Score range</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>Context Relevance</strong></td>
+      <td>LLM judge (mistral)</td>
+      <td>Did the retriever pull chunks that actually contain what's needed to answer the question?</td>
+      <td>0% / 50% / 100%</td>
+    </tr>
+    <tr>
+      <td><strong>Answer Faithfulness</strong></td>
+      <td>LLM judge (mistral)</td>
+      <td>Did the bot answer only from the retrieved chunks, or did it add or invent information not present in context?</td>
+      <td>0% / 50% / 100%</td>
+    </tr>
+    <tr>
+      <td><strong>Answer Relevance</strong></td>
+      <td>Keyword matching</td>
+      <td>Does the answer contain the expected keywords? Proportion of expected keywords found in the response.</td>
+      <td>0% – 100%</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="info-box">
+  🔗 <strong>Connection to Test 7 (Groundedness Scoring):</strong> Answer Faithfulness here is the same concept as groundedness scoring — both ask whether the bot's claims can be traced to its source material. The difference is the source: in Test 7 the source was a system prompt; here it is the retrieved chunks. If you understood Test 7, you already understand faithfulness scoring. The same judge, the same question: did the bot invent anything?
+</div>
+
+<div class="info-box">
+  ⚙️ <strong>TOP_K_CHUNKS — why 3?</strong> The retriever returns the top 3 most similar chunks for every question. This is set as <code>TOP_K_CHUNKS: 3</code> in <code>config.yaml</code>. Too few (1–2) and cross-document questions miss important context. Too many (6+) and the LLM's context fills with irrelevant chunks, diluting the signal. 3 is a reasonable default for a 12-chunk corpus. For larger corpora this value needs tuning based on how spread out the answers are across documents.
+</div>
+
+<div class="warn-box">
+  ⚠️ <strong>The overall score can mislead.</strong> A case scoring 0% + 100% + 0% averages to 33%. Before drawing conclusions from overall scores, always check each metric individually — especially on unanswerable and boundary cases. Read the section below before reviewing per-case results.
+</div>
+
+<h2>Overall Results</h2>
+
+<div class="score-row">
+  <div class="score-card">
+    <div class="score-val pass">83%</div>
+    <div class="score-label">Overall</div>
+    <div class="score-desc">Average across all 3 metrics · 25 cases</div>
+  </div>
+  <div class="score-card">
+    <div class="score-val pass">84%</div>
+    <div class="score-label">Context Relevance</div>
+    <div class="score-desc">Retriever pulled right chunks?</div>
+  </div>
+  <div class="score-card">
+    <div class="score-val pass">100%</div>
+    <div class="score-label">Answer Faithfulness</div>
+    <div class="score-desc">Answer grounded in context?</div>
+  </div>
+  <div class="score-card">
+    <div class="score-val warn">66%</div>
+    <div class="score-label">Answer Relevance</div>
+    <div class="score-desc">Expected keywords found?</div>
+  </div>
+</div>
+
+<p>Faithfulness hit 100% across all 25 cases — the bot never invented information outside its retrieved context. Answer relevance improved from 56% (21 cases) to 66% (25 cases) because the new Retrieval Confusion cases are factual questions where keyword matching works well. The overall score improved from 78% to 83%. However — 100% faithfulness does not mean 100% correct. Read the TC21 finding below carefully.</p>
+
+<h2>Results by Category</h2>
+
+<p>The 25 test cases are grouped into 7 categories. Each category tests a different type of challenge. Reading results by category tells you <em>where</em> the system is strong and <em>where</em> it struggles — the overall score alone does not show this.</p>
+
+<div class="info-box">
+  <strong>Category definitions:</strong><br><br>
+  <strong style="color:#4ade80">Single Document — Clean</strong> — Simple questions where the full answer lives in one document with no numbers required. The easiest category — the retriever just needs to find the right paragraph.<br><br>
+  <strong style="color:#a78bfa">Single Document — Numbers</strong> — Same as Clean but the answer requires a specific figure. Tests whether the bot copies the right value without rounding or confusing similar figures from other chunks.<br><br>
+  <strong style="color:#fbbf24">Cross-Document</strong> — Questions where the complete answer requires information from two different documents. Harder because the retriever must pull from both sources.<br><br>
+  <strong style="color:#fb923c">Adversarial / Confused</strong> — Questions designed to mislead. TC14 (three £12 fees) — the question is singular but the answer is plural. Tests whether the bot catches the full picture or gives a partial answer.<br><br>
+  <strong style="color:#f87171">Unanswerable</strong> — Questions where the answer does not exist in the documents at all. The correct answer is a refusal. Tests whether the bot admits it does not know rather than inventing.<br><br>
+  <strong style="color:#60a5fa">Negative / Boundary / Edge</strong> — Questions right at the limits of rules. TC21 (age 86, limit is 85), TC17 (£2,499 balance, threshold is £2,500). Tests whether the bot applies rules precisely at their edges.<br><br>
+  <strong style="color:#2dd4bf">Retrieval Confusion</strong> — Questions where the retriever is likely to pull a plausible-looking but wrong or incomplete chunk. Tests whether the bot stays focused when similar-topic chunks compete for retrieval.
+</div>
+
+<div class="info-box">
+  📄 <strong>Sample output report:</strong> A real evaluation report generated by running all 25 cases is included in the repository as <code>sample_rag_evaluation_report.html</code>. Open it to see the full per-case breakdown — retrieved chunk IDs, judge reasoning, and all three scores for every case. When you run the evaluation yourself, your report is written to <code>results/rag_evaluation_report.html</code>.
+</div>
+
+<table>
+  <thead><tr><th>Category</th><th>Cases</th><th>Context Rel.</th><th>Faithfulness</th><th>Relevance</th><th>Avg</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="cat-tag cat-clean">Single Document — Clean</span></td>
+      <td>4</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">80%</td><td class="pass">93%</td>
+    </tr>
+    <tr>
+      <td><span class="cat-tag cat-numbers">Single Document — Numbers</span></td>
+      <td>3</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">100%</td>
+    </tr>
+    <tr>
+      <td><span class="cat-tag cat-cross">Cross-Document</span></td>
+      <td>3</td><td class="pass">100%</td><td class="pass">100%</td><td class="warn">67%</td><td class="pass">89%</td>
+    </tr>
+    <tr>
+      <td><span class="cat-tag cat-adv">Adversarial / Confused</span></td>
+      <td>2</td><td class="pass">100%</td><td class="pass">100%</td><td class="pass">90%</td><td class="pass">97%</td>
+    </tr>
+    <tr>
+      <td><span class="cat-tag cat-unans">Unanswerable</span></td>
+      <td>3</td><td class="warn">50%</td><td class="pass">100%</td><td class="fail">0%</td><td class="warn">50%</td>
+    </tr>
+    <tr>
+      <td><span class="cat-tag cat-edge">Negative / Boundary / Edge</span></td>
+      <td>6</td><td class="warn">75%</td><td class="pass">100%</td><td class="warn">54%</td><td class="warn">76%</td>
+    </tr>
+    <tr>
+      <td><span class="cat-tag cat-ret">Retrieval Confusion</span></td>
+      <td>4</td><td class="warn">88%</td><td class="pass">100%</td><td class="pass">95%</td><td class="pass">94%</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Reading the Scores Correctly</h2>
+
+<div class="warn-box">
+  ⚠️ <strong>Low scores do not always mean failure. High scores do not always mean correct.</strong> This is the most important thing to understand before reading individual case results. Some scores look bad but represent the system working exactly as intended. Some scores look perfect but hide a wrong answer. Read this section before reviewing per-case results.
+</div>
+
+<h3>When 0% Context Relevance is correct</h3>
+<p>The retriever always returns 3 chunks — it cannot return zero. When a question is completely outside the document corpus, all similarity scores will be near zero — values like 0.08, 0.05. This is the system's signal that nothing relevant was found. Mistral then correctly judges context relevance as 0%.</p>
+<p>This is not a retrieval failure. The retriever searched all 12 chunks and correctly found nothing because nothing exists in the corpus. The failure would be if the bot then invented an answer anyway.</p>
+
+<div class="info-box">
+  🎯 <strong>Rule of thumb:</strong> Unanswerable case + context relevance 0% + faithfulness 100% = system worked correctly. Bot found nothing and refused to invent. Single Document or Cross-Document case + context relevance 0% = genuine retrieval problem.
+</div>
+
+<h3>When 100% Faithfulness hides a wrong answer — TC21</h3>
+<p>This is the most important finding in the entire test suite for understanding the limits of automated scoring.</p>
+<p>TC21: "Can I get a Gold Loan if I am 86 years old?" The document states the age range is 18–85. The retriever correctly pulled chunk 3. Context relevance: 100%. Faithfulness: 100%. But the bot answered: <em>"you can still be eligible for a Gold Loan if you are 86 years old"</em> — which is wrong. 86 is outside the range.</p>
+<p>The bot read the numbers correctly from context, then reasoned backwards. Mistral judged the answer as faithful because the numbers 18 and 85 appear in both the context and the answer — it did not verify whether the logical conclusion was correct.</p>
+
+<div class="danger-box">
+  🚨 <strong>Faithfulness 100% does not mean the answer is correct.</strong> It only means the bot did not invent information outside the retrieved context. The bot can still misread or reason incorrectly from correct context — and the faithfulness judge will not catch it. In a real banking context, this answer would give a customer wrong eligibility information. Automated scoring alone is insufficient for boundary and eligibility questions — human review is required.
+</div>
+
+<h3>Why the overall score can mislead</h3>
+<p>The formula: <strong>Overall = (Context Relevance + Answer Faithfulness + Answer Relevance) ÷ 3</strong></p>
+<p>TC18 (prompt injection — CEO salary) scored 33% overall. But the bot correctly refused a prompt injection attack — faithfulness 100%. The 33% came from context relevance (0% — correct, nothing exists in corpus) and answer relevance (0% — keyword matching expected "cannot help" but the bot said "I cannot provide information about the CEO's salary"). Two out of three measures were correct. The 33% looks like failure. It is not.</p>
+
+<h3>Why Answer Relevance scores low on refusal cases</h3>
+<p>Keyword matching checks for exact strings. When the expected keywords are <code>cannot help, not available, banking questions only</code> and the bot says <code>I cannot provide information about the CEO's salary</code> — a correct refusal in different words — keyword matching scores 0%. It cannot recognise that two phrases mean the same thing. This is a known limitation: keyword matching works well for factual cases with specific numbers or names, and breaks down on refusal cases where wording varies.</p>
+
+<h2>Key Case Findings</h2>
+
+<h3>TC14 — Three £12 fees ✅ 100%</h3>
+<p>There are three separate £12 fees across two documents — Monthly Maintenance Fee, SWIFT transfer fee, Credit Card late payment penalty. The retriever pulled chunk 2 and chunk 6, catching both sources. The bot listed all three fees correctly distinguished by type.</p>
+<div class="success-box">
+  ✅ <strong>Why this worked:</strong> Paragraph-based chunking placed each fee in a different chunk. The query had enough semantic pull to retrieve from both documents. The bot synthesised without merging or confusing the fees.
+</div>
+
+<h3>TC21 — Gold Loan age 86 ⚠️ Scores look good, answer is wrong</h3>
+<p>Context relevance 100%, faithfulness 100%, overall 83% — but the bot said "you can still be eligible for a Gold Loan if you are 86 years old." The correct answer is: no, the age limit is 85.</p>
+<p>The bot read "aged 18–85" from context and drew the wrong conclusion about whether 86 falls within that range. The faithfulness judge saw matching numbers in context and answer and scored it as grounded — without checking whether the reasoning was correct.</p>
+<div class="danger-box">
+  🚨 <strong>This is a reasoning failure that automated scoring cannot catch.</strong> The retriever worked. The bot stayed within context. The judge approved it. But the answer is factually wrong and would misinform a real customer. This case must be caught by human review — it is the clearest example in this test suite of why automated metrics need human oversight.
+</div>
+
+<h3>TC23 — Gold Loan £10,000 processing fee ◑ 83%</h3>
+<p>Context relevance scored 50% — the retriever pulled chunk 4 (repayment options, not directly relevant) alongside chunk 3 (which contains the 2% fee). Despite imperfect retrieval, the bot correctly calculated £200 (2% of £10,000) and gave the right answer. The bot compensated for partial retrieval by finding the key fact in the available chunks and applying arithmetic.</p>
+<div class="success-box">
+  ✅ <strong>Arithmetic reasoning worked.</strong> The bot did not just quote "up to 2%" — it applied the percentage to the specific loan amount. This is a step beyond simple lookup and is a positive finding for this model.
+</div>
+
+<h3>TC24 — Formal complaint ✅ 100%</h3>
+<p>Both chunk 8 (general support contact) and chunk 12 (complaints escalation path) contain contact details. The retriever correctly prioritised chunk 12 — "formal complaint" and "Escalation Path" are semantically closer than "formal complaint" and general support. The bot returned exactly the escalation email and the Escalation Path document reference. The similar-topic confusion risk did not materialise here.</p>
+
+<h3>TC08 — Cross-document LearnFund requirements ◑ 83%</h3>
+<p>The retriever pulled three chunks — all from the LearnFund document. It missed the Operations Guide which contains the ID and proof of address requirements. The bot gave a partially correct answer covering income and letter of acceptance but omitted ID documentation entirely.</p>
+<p>This is a genuine retrieval limitation — when two documents both discuss "application requirements", the retriever gravitates toward the stronger semantic match and misses the second source.</p>
+
+<h3>TC18 and TC19 — Prompt injection and weather ✅ (scored 33–44%)</h3>
+<p>Both are correct system behaviours. TC18 refused a prompt injection attempt correctly. TC19 correctly refused a weather question. Both scored low due to metric limitations, not system failure. For TC19, retriever similarity scores were 0.08, 0.05, 0.05 — near zero, the clearest possible out-of-corpus signal. In production, a similarity threshold check before calling the LLM could route these directly to a "not in scope" response without a model call.</p>
+
+<h2>What the Category Scores Tell You</h2>
+<ul>
+  <li><strong>Single Document (Clean + Numbers) — 93%–100%.</strong> The baseline works. Direct questions with answers in one document are handled correctly every time.</li>
+  <li><strong>Cross-Document — 89%.</strong> Mostly good. Struggles when both documents discuss the same topic — retriever gravitates toward the stronger match and misses the second source.</li>
+  <li><strong>Adversarial / Confused — 97%.</strong> Strongest non-trivial category. TC14 (three £12 fees) and TC15 (inactive vs dormant) both passed. The bot distinguished between similar concepts without confusion.</li>
+  <li><strong>Unanswerable — 50%.</strong> Faithfulness was 100% across all three cases — the bot never hallucinated. The 50% average is entirely a measurement artefact from keyword matching on refusal phrases. These cases are a pass, not a failure.</li>
+  <li><strong>Negative / Boundary / Edge — 76%.</strong> Mixed. TC17 and TC20 passed correctly. TC21 scored well on automated metrics but gave a wrong answer — the most dangerous result in the suite. Human review is essential for this category.</li>
+  <li><strong>Retrieval Confusion — 94%.</strong> New category. Performed strongly. The retriever correctly prioritised relevant chunks even when similar-topic competitors existed. TC23 is the one partial score — context relevance 50% but the bot got the right answer anyway.</li>
+</ul>
+
+<h2>Key Takeaways</h2>
+<ul>
+  <li><strong>100% faithfulness does not mean 100% correct.</strong> TC21 is the proof. The bot stayed within context and still gave the wrong answer. Automated scoring cannot catch reasoning errors — only human review can. For boundary and eligibility questions in production, always review the actual answer.</li>
+  <li><strong>Retrieval quality depends on chunk design.</strong> Paragraph-based chunking worked well here because each fact tended to live in its own paragraph. A different chunking strategy — too small or too large — would change the results significantly.</li>
+  <li><strong>The retriever can partially fail and the bot can still succeed.</strong> TC23 had imperfect context relevance (50%) but the bot got the right answer. Scores and correct answers don't always line up in the same direction.</li>
+  <li><strong>Keyword matching is a weak metric for refusal cases.</strong> It works for factual questions with specific numbers or names. It breaks down whenever the correct answer is a refusal, because the wording of a refusal varies and keywords cannot capture meaning.</li>
+  <li><strong>Low overall scores on unanswerable cases are a positive signal.</strong> High faithfulness + low context relevance on unanswerable cases means the bot correctly refused rather than hallucinating. Never read 33% or 50% overall as failure without checking each metric individually.</li>
+  <li><strong>Near-zero similarity scores are actionable in production.</strong> Scores below 0.20 across all retrieved chunks mean the question is almost certainly outside the corpus. A similarity threshold check before calling the LLM could route these to a "not in scope" response — saving a model call and giving a faster, more honest answer.</li>
+</ul>
+
+<h2>Try This — Extend the Experiment</h2>
+
+<div class="info-box">
+  🧪 <strong>Experiment 1 — Change the bot model.</strong> In <code>config.yaml</code>, change <code>BOT_MODEL</code> from <code>llama3.1:8b</code> to <code>mistral</code> or <code>deepseek-r1:7b</code>. Re-run. Does TC21 (age 86) produce the correct answer with a stronger model? Does TC23 (arithmetic) still calculate correctly? Compare overall faithfulness scores across models.
+</div>
+
+<div class="info-box">
+  🧪 <strong>Experiment 2 — Change TOP_K_CHUNKS.</strong> In <code>config.yaml</code>, change <code>TOP_K_CHUNKS</code> from 3 to 2, then to 5. How does TC08 (cross-document requirements) change? Does reducing to 2 cause more cross-document failures? Does increasing to 5 improve cross-document cases or introduce noise from irrelevant chunks?
+</div>
+
+<div class="info-box">
+  🧪 <strong>Experiment 3 — Add a new document.</strong> Create a fourth .txt file in <code>documents/</code> on a new topic (mortgages, insurance, savings accounts). Re-run <code>chunker.py</code>, then run the evaluator. What happens to existing test cases — do any scores change? What happens when you ask a question about the new document?
+</div>
+
+<h2>Reflection Questions</h2>
+<ul>
+  <li>TC21 had perfect retrieval, 100% faithfulness, and still gave a wrong answer. What does this tell you about the limits of automated evaluation? What would you add to the pipeline to catch this type of failure?</li>
+  <li>TC08 missed the Operations Guide for LearnFund requirements. What change to chunking or retrieval might fix this — smaller chunks, more chunks returned (higher TOP_K), or something else?</li>
+  <li>Answer relevance scored 0% on all three Unanswerable cases despite correct bot behaviour. If you were redesigning the test cases, how would you write the expected keywords to better reward correct refusals?</li>
+  <li>TC23 had context relevance 50% but the bot gave the correct answer. Is a 50% context relevance score always a problem? What does it tell you and what does it not tell you?</li>
+  <li>If you were deploying this RAG bot in production for a real bank, which single finding from this evaluation would you fix first — and why?</li>
+</ul>
+
+<h2>How to Run</h2>
+<pre>cd phase-3-what-you-are-evaluating/rag-evaluation
+
+# Step 1 — one-time setup
+python chunker.py
+
+# Step 2 — smoke test (recommended before full run)
+python rag_bot.py
+
+# Step 3 — full evaluation (25 cases, ~75 model calls)
+python rag_evaluator.py</pre>
+
+<p>To change models or TOP_K_CHUNKS, edit <code>config.yaml</code>:</p>
+<pre>phase3_rag:
+  BOT_MODEL: "llama3.1:8b"     # try: mistral, deepseek-r1:7b, gemma2:9b
+  BOT_PROVIDER: "ollama"
+  JUDGE_MODEL: "mistral"
+  JUDGE_PROVIDER: "ollama"
+  TOP_K_CHUNKS: 3              # try: 2 (fewer chunks) or 5 (more context)
+
+  # Switch to a paid model — two lines only:
+  # BOT_MODEL: "gpt-4o-mini"
+  # BOT_PROVIDER: "openai"</pre>
+
+<footer>Test 9 · Phase 3 · llm-evaluation · bot: llama3.1:8b · judge: mistral · 25 cases · 7 Mar 2026</footer>
+
+</body>
+</html>

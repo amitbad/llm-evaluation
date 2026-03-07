@@ -54,6 +54,15 @@ phase3_temperature:
   # BOT_PROVIDER: "openai"
   # OPENAI_API_KEY: ""   # leave blank to use OPENAI_API_KEY env var
 
+phase3_rag:
+  BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
+  JUDGE_MODEL: "mistral"
+  JUDGE_PROVIDER: "ollama"
+  EXCEL_FILE: "rag_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  DOCUMENTS_DIR: "documents"
+  TOP_K_CHUNKS: 3
 
 # ─────────────────────────────────────────────────────────────────
 # API KEY REFERENCE

@@ -550,6 +550,18 @@
       <a href="#temperature">🌡️ Temperature</a>
       <a href="#non-determinism">🎲 Non-Determinism</a>
     </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">RAG Evaluation</div>
+      <a href="#chunking">✂️ Chunking</a>
+      <a href="#vector-search">🔎 Vector Search</a>
+      <a href="#context-relevance">📥 Context Relevance</a>
+      <a href="#rag-answer-faithfulness">🔒 Answer Faithfulness</a>
+      <a href="#answer-relevance">🎯 Answer Relevance</a>
+      <a href="#retrieval-vs-reasoning">⚔️ Retrieval vs Reasoning</a>
+      <a href="#similarity-thresholds">📊 Similarity Thresholds</a>
+      <a href="#top-k-chunks">🔢 TOP_K_CHUNKS</a>
+    </div>
   </nav>
 
   <!-- ── Main Content ────────────────────────────────────────────────────────── -->
@@ -1560,8 +1572,353 @@
       <div class="why-matters">Non-determinism is why LLM evaluation is a discipline, not just a checklist. A single test run tells you what happened once. An evaluation suite run multiple times at different temperatures tells you how reliable the system is. The goal is not a binary pass/fail — it is a confidence level. This is the core shift in thinking from traditional QA to GenAI evaluation.</div>
     </div>
 
+    <!-- ════════════════════════════════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">RAG Evaluation</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <p style="color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7;">
+      RAG — Retrieval Augmented Generation — is a pattern where the bot searches a document corpus first and answers only from what it retrieves. Evaluating a RAG system means evaluating three things separately: did it find the right information, did it answer from that information, and did it address what was actually asked.
+    </p>
+
+    <!-- Chunking -->
+    <div class="concept" id="chunking">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">✂️</div>
+        <div>
+          <div class="concept-title">Chunking</div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Pipeline Step 1</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Splitting source documents into <strong>smaller retrievable pieces</strong> before storing them. The retriever searches over chunks, not whole documents — so how you split determines what can be found.
+      </div>
+
+      <p class="detail">A document containing 10 facts cannot be retrieved "partly" — if you store the whole document as one unit, every search either retrieves all 10 facts or none of them. Chunking solves this by splitting the document into pieces so the retriever can return only the relevant section. The size and strategy of the split affects everything downstream.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">CHUNKING STRATEGIES</div>
+        <div class="example-content">
+          <span class="g">Paragraph-based — split on blank lines. Each paragraph is one chunk.</span><br>
+          <span class="g">Used in Test 9: 3 documents → 12 chunks (4 per document).</span><br><br>
+          <span class="u">Fixed-size — split every N tokens regardless of content. Simple but can cut sentences mid-thought.</span><br><br>
+          <span class="b">Sentence-based — split on full stops. Very granular. May lose context that spans multiple sentences.</span><br><br>
+          <span style="color:var(--muted)">Semantic chunking — use embeddings to find natural topic boundaries. Most accurate, most complex.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-bad">BAD chunk — too large</div>
+        <div class="example-content">
+          <span class="b">Chunk contains: account types, fees, interest rates, eligibility, and contact information — all in one block.</span><br>
+          <span class="b">Result: Retriever pulls this chunk for any question. Bot always has too much irrelevant context.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-good">GOOD chunk — focused</div>
+        <div class="example-content">
+          <span class="g">Chunk contains: only the fee schedule paragraph.</span><br>
+          <span class="g">Result: Retriever pulls this chunk only for fee-related questions. Context is clean and specific.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">In Test 9, TC14 (three £12 fees) succeeded because paragraph chunking placed each fee in its own chunk — the retriever could pull precisely the right two chunks from two different documents. Chunking is the foundation of everything else in a RAG pipeline. Poor chunking produces poor retrieval regardless of how good the embedding model or LLM is.</div>
+    </div>
+
+    <!-- Vector Search -->
+    <div class="concept" id="vector-search">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🔎</div>
+        <div>
+          <div class="concept-title">Vector Search / Retrieval</div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Pipeline Step 2</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Finding the most relevant chunks by <strong>comparing meaning, not keywords</strong>. The question and every chunk are converted into number vectors. The chunks with the most similar vectors to the question are returned.
+      </div>
+
+      <p class="detail">This is the same mechanism as sentence embeddings (see above) — but applied to retrieval rather than evaluation. Every chunk is encoded into a vector at setup time. When a question arrives, it is encoded into a vector too. Cosine similarity measures how close the question vector is to each chunk vector. The top-K closest chunks are returned as context for the LLM.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">SIMILARITY SCORES — what they mean</div>
+        <div class="example-content">
+          <span class="g">Score ~0.85 — strong match. Question and chunk are clearly about the same topic.</span><br>
+          <span class="u">Score ~0.55 — moderate match. Related but not specifically about the question.</span><br>
+          <span class="b">Score ~0.08 — near zero. The question has almost nothing in common with this chunk.</span><br><br>
+          <span style="color:var(--muted)">TC19 (weather question) returned scores of 0.08, 0.05, 0.05.</span><br>
+          <span style="color:var(--muted)">Near-zero scores mean the question is outside the corpus entirely.</span><br>
+          <span class="g">In production, a similarity threshold check could route these directly to a "not in scope" response before calling the LLM at all.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-eg">RETRIEVER ALWAYS RETURNS SOMETHING</div>
+        <div class="example-content">
+          <span class="u">The retriever returns the top-K most similar chunks regardless of score.</span><br>
+          <span class="u">Even if all scores are near zero, it still returns 3 chunks.</span><br><br>
+          <span class="b">This is not a failure — it is expected behaviour.</span><br>
+          <span class="g">The similarity scores tell you how relevant those chunks are.</span><br>
+          <span class="g">Low scores on all chunks = question is outside the corpus.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Vector search is why RAG can find relevant information even when the question uses completely different words than the document. A question asking "what are the charges?" can retrieve a chunk about "fees and penalties" because their embeddings are close in meaning-space — even though the words are different. This is the core advantage over keyword search.</div>
+    </div>
+
+    <!-- Context Relevance -->
+    <div class="concept" id="context-relevance">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">📥</div>
+        <div>
+          <div class="concept-title">Context Relevance</div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Metric 1 of 3</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Did the retriever return chunks that <strong>actually contain what is needed to answer the question</strong>? Context relevance scores the quality of retrieval — not the quality of the answer.
+      </div>
+
+      <p class="detail">Context relevance is scored by a judge model. It reads the question and the retrieved chunks, then asks: is the information needed to answer this question present in these chunks? A score of 100% means the chunks fully contain the answer. 50% means partial — some relevant information but not all. 0% means the chunks are irrelevant to the question.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">THE KEY INSIGHT — when 0% is correct</div>
+        <div class="example-content">
+          <span class="u">Question: "What is the CEO salary at NextGen?"</span><br>
+          <span class="b">Context Relevance: 0%</span><br><br>
+          <span class="g">This is not a failure. The documents contain no CEO salary information.</span><br>
+          <span class="g">The retriever searched all 12 chunks and correctly found nothing.</span><br>
+          <span class="g">A 0% score here means retrieval worked — there was nothing to find.</span><br><br>
+          <span class="u">Compare to: "What is the interest rate on a Gold account?"</span><br>
+          <span class="b">Context Relevance: 0%</span><br>
+          <span class="b">This IS a failure — the answer exists in the corpus. Retrieval missed it.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-eg">HOW TO READ CONTEXT RELEVANCE BY CATEGORY</div>
+        <div class="example-content">
+          <span class="g">Single Document / Cross-Document case + 0% context relevance = retrieval failure</span><br>
+          <span class="g">Unanswerable / Off-topic case + 0% context relevance = correct behaviour</span><br><br>
+          <span class="u">Always check the test category before interpreting a 0% context relevance score.</span><br>
+          <span class="u">The number alone does not tell you which situation you are in.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Context relevance is the first check in a RAG evaluation pipeline. If retrieval fails, the bot cannot answer correctly — even if the LLM itself is perfectly capable. A high faithfulness score combined with a low context relevance score on answerable questions means the bot is staying grounded in irrelevant chunks, which is a retrieval architecture problem, not a model problem.</div>
+    </div>
+
+    <!-- RAG Answer Faithfulness -->
+    <div class="concept" id="rag-answer-faithfulness">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🔒</div>
+        <div>
+          <div class="concept-title">Answer Faithfulness <span style="font-size:12px; color:var(--muted); font-weight:400;">(RAG)</span></div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Metric 2 of 3</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Did the bot answer <strong>only from the retrieved chunks</strong> — or did it add, invent, or import information from outside the context? Faithfulness scores whether the answer stays inside what was retrieved.
+      </div>
+
+      <p class="detail">Answer faithfulness in a RAG context is the same principle as groundedness scoring (Test 7) — but applied specifically to retrieved chunks rather than a system prompt. The judge reads the retrieved chunks and the bot's answer, then checks: is every claim in the answer present in the chunks? Information correct in the real world but not in the retrieved chunks still counts as unfaithful.</p>
+
+      <div class="example-block">
+        <div class="example-label label-good">FAITHFUL — answers only from context</div>
+        <div class="example-content">
+          <span class="u">Retrieved chunk: "Gold Loans are available to citizens aged 18 to 85."</span><br><br>
+          <span class="g">Bot: "Gold Loans are available to applicants between the ages of 18 and 85."</span><br>
+          <span class="g">Faithfulness: 100% — every word traces to the chunk.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-bad">UNFAITHFUL — failed to use retrieved context</div>
+        <div class="example-content">
+          <span class="u">Retrieved chunk: "Gold Loans are available to citizens aged 18 to 85."</span><br>
+          <span class="u">Question: "Can I get a Gold Loan if I am 86?"</span><br><br>
+          <span class="b">Bot: "The information is not available in our documentation."</span><br>
+          <span class="b">Faithfulness: 0% — the answer was present in the chunk but the bot did not use it.</span><br><br>
+          <span style="color:var(--muted)">This is TC21 from Test 9 — a reasoning failure, not a retrieval failure.</span><br>
+          <span style="color:var(--muted)">The retriever did its job. The bot found the context and still could not apply the rule.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">In Test 9, answer faithfulness scored 95% across 21 cases — the strongest of the three metrics. The system prompt instruction to answer only from context was effective. High faithfulness is the most important property for a banking or regulated-domain assistant — it means the bot is not inventing information, even when retrieval returns nothing useful.</div>
+    </div>
+
+    <!-- Answer Relevance -->
+    <div class="concept" id="answer-relevance">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🎯</div>
+        <div>
+          <div class="concept-title">Answer Relevance</div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Metric 3 of 3</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Did the answer actually <strong>address what was asked</strong>? Answer relevance checks whether the response covers the expected content — regardless of whether it was grounded or faithful.
+      </div>
+
+      <p class="detail">Answer relevance is the third RAG metric alongside context relevance and answer faithfulness. It asks: even if retrieval worked and the bot stayed grounded — did the answer actually say the right things? In Test 9 it is measured by keyword matching: the proportion of expected keywords found in the answer.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">KEYWORD MATCHING — how it works</div>
+        <div class="example-content">
+          <span class="u">Expected keywords: ["dormant", "Form D-1", "fresh KYC", "reactivation"]</span><br>
+          <span class="u">Bot answer: "Your account is dormant. Please visit the branch to reactivate it."</span><br><br>
+          <span class="g">Found: dormant ✓, reactivation ✓</span><br>
+          <span class="b">Missing: Form D-1 ✗, fresh KYC ✗</span><br>
+          <span class="u">Answer Relevance: 50% — half the expected keywords present.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-bad">WHERE KEYWORD MATCHING BREAKS DOWN</div>
+        <div class="example-content">
+          <span class="u">Expected keywords: ["cannot help", "not available", "banking questions only"]</span><br>
+          <span class="u">Bot answer: "I cannot provide information about the CEO's salary."</span><br><br>
+          <span class="b">Found: 0 keywords</span><br>
+          <span class="b">Answer Relevance: 0%</span><br><br>
+          <span class="b">But the bot gave a correct refusal. It said exactly the right thing in different words.</span><br>
+          <span class="b">Keyword matching cannot tell the difference between a correct refusal and a wrong answer — it only checks for exact strings.</span><br><br>
+          <span style="color:var(--muted)">This is TC18 from Test 9 — prompt injection, correctly refused, scored 0%.</span>
+        </div>
+      </div>
+
+      <p class="detail">Answer relevance via keyword matching is a useful metric for factual questions where the expected answer contains specific numbers, names, or terms. It becomes unreliable on refusal cases, unanswerable questions, and edge cases where the correct answer varies in wording. For those categories, an LLM judge produces more accurate relevance scores than keyword matching.</p>
+
+      <div class="why-matters">In Test 9, answer relevance scored 56% overall — significantly lower than context relevance (83%) and faithfulness (95%). Most of that gap comes from refusal and unanswerable cases where the bot answered correctly but not with the expected keywords. Understanding the limitation of keyword-based relevance scoring is essential before reading any RAG evaluation report — a low relevance score does not always mean the answer was wrong.</div>
+    </div>
+
+
+    <!-- Retrieval Failure vs Reasoning Failure -->
+    <div class="concept" id="retrieval-vs-reasoning">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">⚔️</div>
+        <div>
+          <div class="concept-title">Retrieval Failure vs Reasoning Failure</div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Critical Distinction</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Two very different problems that produce <strong>identical-looking low scores</strong>. Retrieval failure means the wrong chunks were returned. Reasoning failure means the right chunks were returned but the bot drew the wrong conclusion from them. They require completely different fixes.
+      </div>
+
+      <p class="detail">This is the most important distinction in RAG evaluation. When a case scores poorly, your first question must be: did the retriever fail, or did the bot fail? The answer determines everything about what you fix next. A retrieval failure is fixed by changing chunking strategy, adjusting TOP_K_CHUNKS, or improving the embedding model. A reasoning failure is fixed by changing the system prompt or using a stronger LLM. Applying the wrong fix wastes time and changes nothing.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">RETRIEVAL FAILURE — TC08</div>
+        <div class="example-content">
+          <span class="u">Question:</span> What do I need to apply for a LearnFund loan?<br>
+          <span class="b">Retriever pulled: chunk 7, chunk 5, chunk 6 — all from LearnFund document</span><br>
+          <span class="b">Missed: Operations Guide chunks containing ID and proof of address requirements</span><br><br>
+          <span class="b">Fix: improve retrieval — increase TOP_K_CHUNKS, improve chunking, or add a cross-document retrieval strategy</span><br>
+          <span class="g">The bot cannot give a complete answer because it was never given the complete context.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-bad">REASONING FAILURE — TC21</div>
+        <div class="example-content">
+          <span class="u">Question:</span> Can I get a Gold Loan if I am 86 years old?<br>
+          <span class="g">Retriever pulled: chunk 3 — correctly contains "aged 18-85"</span><br>
+          <span class="b">Bot answered: "you can still be eligible if you are 86 years old"</span><br><br>
+          <span class="b">Fix: improve the system prompt — instruct the bot to explicitly apply rules to the specific scenario. Or use a stronger model with better logical reasoning.</span><br>
+          <span class="g">The bot had everything it needed. It reasoned backwards from the correct information.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">When a RAG case fails, never assume it is a retrieval problem — always check what chunks were actually retrieved. If the right chunks were there and the answer is still wrong, the problem is the LLM's reasoning, not the retrieval. Changing chunking strategy to fix a reasoning failure will have zero effect.</div>
+    </div>
+
+    <!-- Similarity Score Thresholds -->
+    <div class="concept" id="similarity-thresholds">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">📊</div>
+        <div>
+          <div class="concept-title">Similarity Score Thresholds</div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Retrieval Signal</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        The cosine similarity score the retriever assigns to each chunk tells you <strong>how confident the retriever is</strong> that the chunk is relevant. Learning to read these scores in the terminal output is one of the most practical skills from Test 9.
+      </div>
+
+      <p class="detail">The retriever always returns TOP_K chunks regardless of score. Even if all similarity scores are near zero, it still returns 3 chunks — it has no way to say "I found nothing." The similarity scores are the only signal you have about whether the retrieval was meaningful or not. Reading them during evaluation lets you diagnose retrieval problems in real time.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">SCORE RANGES — what they mean in practice</div>
+        <div class="example-content">
+          <span class="g">0.75 – 1.00  →  Strong match. Retriever is confident. Chunk very likely contains the answer.</span><br>
+          <span class="g">0.50 – 0.74  →  Moderate match. Related topic. May contain the answer or just the same domain.</span><br>
+          <span style="color:#fbbf24">0.25 – 0.49  →  Weak match. Retriever is reaching. Chunk shares general topic but may miss the specific answer.</span><br>
+          <span class="b">below 0.20   →  Near zero. Question is almost certainly outside the corpus entirely.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-eg">REAL EXAMPLES from Test 9</div>
+        <div class="example-content">
+          <span class="g">TC14 "What is the £12 fee?" → chunk 2: 0.71, chunk 6: 0.58 → strong retrieval, both chunks relevant</span><br><br>
+          <span class="b">TC19 "Weather in London?" → chunk 10: 0.08, chunk 2: 0.05, chunk 1: 0.05 → near zero, clearly out of domain</span><br><br>
+          <span style="color:#fbbf24">TC23 "Max processing fee on £10,000 loan?" → chunk 4: 0.61, chunk 3: 0.58 → moderate, chunk 4 is partially irrelevant but chunk 3 contains the answer</span>
+        </div>
+      </div>
+
+      <div class="why-matters">In production, near-zero similarity scores across all retrieved chunks (below 0.20) are an actionable signal. You can add a threshold check before calling the LLM — if all scores are below 0.20, return a "not in scope" response immediately without a model call. This saves cost, improves response time, and gives users a cleaner answer than a confused refusal from the LLM.</div>
+    </div>
+
+    <!-- TOP_K_CHUNKS -->
+    <div class="concept" id="top-k-chunks">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🔢</div>
+        <div>
+          <div class="concept-title">TOP_K_CHUNKS</div>
+          <div class="concept-subtitle">RAG Evaluation · Test 9 · Configuration</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        The number of chunks the retriever returns for every question. Set in <code>config.yaml</code> as <code>TOP_K_CHUNKS</code>. <strong>Too low and cross-document answers are missed. Too high and irrelevant context dilutes the answer.</strong>
+      </div>
+
+      <p class="detail">Every RAG system has a retrieval budget — how much context the LLM receives per question. TOP_K_CHUNKS is the most direct control over that budget. The right value depends on how spread out the answers are across your document corpus. For a small corpus like Test 9 (12 chunks), 3 is appropriate. For a production corpus with hundreds of documents, you may need 5–10 — but more chunks also means more noise if the retriever's matches are imperfect.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">WHAT CHANGES AS YOU ADJUST TOP_K</div>
+        <div class="example-content">
+          <span class="b">TOP_K = 1 → Fast, minimal context. Single-document simple questions pass. Cross-document questions almost always fail — the second document's chunk is never retrieved.</span><br><br>
+          <span class="g">TOP_K = 3 → Balanced. Works well for this corpus. Cross-document questions can pass if the retriever pulls from both documents in its top 3.</span><br><br>
+          <span style="color:#fbbf24">TOP_K = 6 → More context. Cross-document coverage improves but the LLM now sees chunks that may be weakly related. May confuse answers if irrelevant chunks are included.</span><br><br>
+          <span style="color:#fbbf24">TOP_K = 12 → All chunks every time. Maximum context. Cross-document always covered. But LLM now reads the entire corpus for every question — expensive, slow, and prone to losing focus on the relevant parts.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-eg">TC08 — how TOP_K affects the result</div>
+        <div class="example-content">
+          <span class="b">TOP_K = 3 → Retriever returned chunk 7, 5, 6 — all LearnFund. Missed Operations Guide. Partial answer.</span><br>
+          <span class="g">TOP_K = 5 → Likely to also retrieve chunk 10 (Operations Guide, account opening) — adding the ID and proof of address requirements. Complete answer.</span><br><br>
+          <span style="color:var(--muted)">Try this: change TOP_K_CHUNKS to 5 in config.yaml and re-run. Does TC08 score improve?</span>
+        </div>
+      </div>
+
+      <div class="why-matters">TOP_K_CHUNKS is one of the simplest levers in a RAG pipeline. Before rewriting chunking strategy or switching embedding models, try adjusting TOP_K — it is a one-line config change that can fix cross-document retrieval failures. Always test the impact with an evaluation run, not just intuition.</div>
+    </div>
+
     <footer>
-      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 8 (Temperature, Non-Determinism added)
+      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 9 (Chunking, Vector Search, Context Relevance, Answer Faithfulness, Answer Relevance added)
     </footer>
 
   </main>

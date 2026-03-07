@@ -1,214 +1,399 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LLM Evaluation — Learning Docs</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:#0d0d0f; --surface:#141417; --surface2:#1c1c21; --border:#2a2a32;
-    --accent:#7c6af7; --accent2:#f7a06a; --text:#e8e8f0; --muted:#7a7a90;
-    --nav-w:260px;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height:100%; overflow:hidden; }
-  body { font-family:'Syne',sans-serif; background:var(--bg); color:var(--text); display:flex; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Evaluation — Learning Docs</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141417;
+      --surface2: #1c1c21;
+      --border: #2a2a32;
+      --accent: #7c6af7;
+      --accent2: #f7a06a;
+      --text: #e8e8f0;
+      --muted: #7a7a90;
+      --nav-w: 260px;
+    }
 
-  /* ── Sidebar ── */
-  nav {
-    width:var(--nav-w); min-width:var(--nav-w); height:100vh;
-    background:var(--surface); border-right:1px solid var(--border);
-    display:flex; flex-direction:column; overflow-y:auto; flex-shrink:0;
-  }
-  .nav-header { padding:20px 18px 16px; border-bottom:1px solid var(--border); flex-shrink:0; }
-  .nav-logo { font-size:9px; font-family:'JetBrains Mono',monospace; color:var(--accent); letter-spacing:3px; text-transform:uppercase; margin-bottom:4px; }
-  .nav-title { font-size:14px; font-weight:700; line-height:1.3; }
-  .nav-section { padding:12px 10px 4px; }
-  .nav-label { font-size:9px; font-family:'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:0 8px; margin-bottom:4px; }
-  nav a {
-    display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:6px;
-    text-decoration:none; color:var(--muted); font-size:12.5px; font-weight:600;
-    transition:all 0.15s; margin-bottom:1px; cursor:pointer; white-space:nowrap;
-  }
-  nav a:hover { background:var(--surface2); color:var(--text); }
-  nav a.active { background:var(--surface2); color:var(--accent); }
-  .tag { margin-left:auto; flex-shrink:0; font-size:8px; font-family:'JetBrains Mono',monospace; padding:2px 5px; border-radius:20px; font-weight:600; }
-  .tag-p1 { background:#1a2a3d; color:#6ab4f7; }
-  .tag-p2 { background:#1e1a3d; color:var(--accent); }
-  .tag-ref { background:#2a2a1a; color:var(--accent2); }
-  .tag-p3 { background:#1a2a2a; color:#34d399; }
-  .chevron { font-size:10px; transition:transform 0.2s; flex-shrink:0; margin-left:4px; }
-  nav a.open .chevron { transform:rotate(180deg); }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  /* Concepts sub-nav */
-  .concepts-sub { display:none; padding-left:0; margin:4px 8px 6px; background:#0f0f12; border-radius:8px; border:1px solid var(--border); overflow:hidden; }
-  .concepts-sub.open { display:block; }
-  .sub-label { font-size:8px; font-family:'JetBrains Mono',monospace; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:8px 12px 2px; display:block; }
-  .concepts-sub a { font-size:11.5px; font-weight:500; padding:6px 12px; border-radius:0; margin-bottom:0; }
-  .concepts-sub a:hover { background:#1a1a20; }
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
 
-  .nav-footer { margin-top:auto; padding:14px 18px; border-top:1px solid var(--border); font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--muted); }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+    }
 
-  /* ── Content area ── */
-  .content { flex:1; height:100vh; min-width:0; position:relative; }
-  #content-frame {
-    position:absolute; top:0; left:0; width:100%; height:100%;
-    border:none; background:var(--bg);
-  }
-</style>
+    /* ── Sidebar ── */
+    nav {
+      width: var(--nav-w);
+      min-width: var(--nav-w);
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .nav-header {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .nav-logo {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .nav-title {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .nav-section {
+      padding: 12px 10px 4px;
+    }
+
+    .nav-label {
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 8px;
+      margin-bottom: 4px;
+    }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.15s;
+      margin-bottom: 1px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    nav a:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    nav a.active {
+      background: var(--surface2);
+      color: var(--accent);
+    }
+
+    .tag {
+      margin-left: auto;
+      flex-shrink: 0;
+      font-size: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 2px 5px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .tag-p1 {
+      background: #1a2a3d;
+      color: #6ab4f7;
+    }
+
+    .tag-p2 {
+      background: #1e1a3d;
+      color: var(--accent);
+    }
+
+    .tag-ref {
+      background: #2a2a1a;
+      color: var(--accent2);
+    }
+
+    .tag-p3 {
+      background: #1a2a2a;
+      color: #34d399;
+    }
+
+    .chevron {
+      font-size: 10px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+
+    nav a.open .chevron {
+      transform: rotate(180deg);
+    }
+
+    /* Concepts sub-nav */
+    .concepts-sub {
+      display: none;
+      padding-left: 0;
+      margin: 4px 8px 6px;
+      background: #0f0f12;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .concepts-sub.open {
+      display: block;
+    }
+
+    .sub-label {
+      font-size: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 8px 12px 2px;
+      display: block;
+    }
+
+    .concepts-sub a {
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 0;
+      margin-bottom: 0;
+    }
+
+    .concepts-sub a:hover {
+      background: #1a1a20;
+    }
+
+    .nav-footer {
+      margin-top: auto;
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+    }
+
+    /* ── Content area ── */
+    .content {
+      flex: 1;
+      height: 100vh;
+      min-width: 0;
+      position: relative;
+    }
+
+    #content-frame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: var(--bg);
+    }
+  </style>
 </head>
+
 <body>
 
-<nav>
-  <div class="nav-header">
-    <div class="nav-logo">GenAI Eval</div>
-    <div class="nav-title">Learning Documentation</div>
-  </div>
-
-  <div class="nav-section">
-    <div class="nav-label">Start Here</div>
-    <a href="#" onclick="return go('home.html','nav-home')" id="nav-home" class="active">🏠 Home</a>
-    <a href="#" onclick="return toggleConcepts()" id="nav-concepts">
-      💡 Concepts Reference <span class="tag tag-ref">ref</span><span class="chevron">▾</span>
-    </a>
-    <div class="concepts-sub" id="concepts-sub">
-      <span class="sub-label">Behavioural Testing</span>
-      <a href="#" onclick="return goAnchor('concepts.html','hallucination')">🌀 Hallucination</a>
-      <a href="#" onclick="return goAnchor('concepts.html','refusal')">🚫 Refusal</a>
-      <a href="#" onclick="return goAnchor('concepts.html','context-retention')">🧠 Context Retention</a>
-      <a href="#" onclick="return goAnchor('concepts.html','prompt-injection')">💉 Prompt Injection</a>
-      <span class="sub-label">Hallucination Sub-types</span>
-      <a href="#" onclick="return goAnchor('concepts.html','confabulation')">🔴 Confabulation</a>
-      <a href="#" onclick="return goAnchor('concepts.html','false-grounding')">🟠 False Grounding</a>
-      <a href="#" onclick="return goAnchor('concepts.html','context-fabrication')">🟡 Context Fabrication</a>
-      <a href="#" onclick="return goAnchor('concepts.html','financial-confabulation')">☠️ Financial Confabulation</a>
-      <span class="sub-label">Semantic Evaluation</span>
-      <a href="#" onclick="return goAnchor('concepts.html','semantic-similarity')">🔵 Semantic Similarity</a>
-      <a href="#" onclick="return goAnchor('concepts.html','sentence-embeddings')">📐 Sentence Embeddings</a>
-
-      <span class="sub-label">Groundedness Evaluation</span>
-      <a href="#" onclick="return goAnchor('concepts.html','groundedness')">🎯 Groundedness Scoring</a>
-      <a href="#" onclick="return goAnchor('concepts.html','reference-contamination')">☠️ Reference Contamination</a>
-      <a href="#" onclick="return goAnchor('concepts.html','evaluation-rubric')">📏 Evaluation Rubric Design</a>
-      <a href="#" onclick="return goAnchor('concepts.html','answer-faithfulness')">🔬 Answer Faithfulness</a>
-      <span class="sub-label">Model Configuration</span>
-      <a href="#" onclick="return goAnchor('concepts.html','temperature')">🌡️ Temperature</a>
-      <a href="#" onclick="return goAnchor('concepts.html','non-determinism')">🎲 Non-Determinism</a>
-      <span class="sub-label">Speed Metrics</span>
-      <a href="#" onclick="return goAnchor('concepts.html','ttft')">⚡ TTFT</a>
-      <a href="#" onclick="return goAnchor('concepts.html','tpot')">⏱ TPOT</a>
-      <span class="sub-label">Evaluation Thinking</span>
-      <a href="#" onclick="return goAnchor('concepts.html','test-case-design')">🎯 Test Case Design</a>
-      <a href="#" onclick="return goAnchor('concepts.html','evidence-documentation')">📋 Evidence Documentation</a>
-      <a href="#" onclick="return goAnchor('concepts.html','coverage-thinking')">🗺 Coverage Thinking</a>
-      <a href="#" onclick="return goAnchor('concepts.html','evaluation-validity')">⚖️ Evaluation Validity</a>
+  <nav>
+    <div class="nav-header">
+      <div class="nav-logo">GenAI Eval</div>
+      <div class="nav-title">Learning Documentation</div>
     </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Start Here</div>
+      <a href="#" onclick="return go('home.html','nav-home')" id="nav-home" class="active">🏠 Home</a>
+      <a href="#" onclick="return toggleConcepts()" id="nav-concepts">
+        💡 Concepts Reference <span class="tag tag-ref">ref</span><span class="chevron">▾</span>
+      </a>
+      <div class="concepts-sub" id="concepts-sub">
+        <span class="sub-label">Behavioural Testing</span>
+        <a href="#" onclick="return goAnchor('concepts.html','hallucination')">🌀 Hallucination</a>
+        <a href="#" onclick="return goAnchor('concepts.html','refusal')">🚫 Refusal</a>
+        <a href="#" onclick="return goAnchor('concepts.html','context-retention')">🧠 Context Retention</a>
+        <a href="#" onclick="return goAnchor('concepts.html','prompt-injection')">💉 Prompt Injection</a>
+        <span class="sub-label">Hallucination Sub-types</span>
+        <a href="#" onclick="return goAnchor('concepts.html','confabulation')">🔴 Confabulation</a>
+        <a href="#" onclick="return goAnchor('concepts.html','false-grounding')">🟠 False Grounding</a>
+        <a href="#" onclick="return goAnchor('concepts.html','context-fabrication')">🟡 Context Fabrication</a>
+        <a href="#" onclick="return goAnchor('concepts.html','financial-confabulation')">☠️ Financial Confabulation</a>
+        <span class="sub-label">Semantic Evaluation</span>
+        <a href="#" onclick="return goAnchor('concepts.html','semantic-similarity')">🔵 Semantic Similarity</a>
+        <a href="#" onclick="return goAnchor('concepts.html','sentence-embeddings')">📐 Sentence Embeddings</a>
+
+        <span class="sub-label">Groundedness Evaluation</span>
+        <a href="#" onclick="return goAnchor('concepts.html','groundedness')">🎯 Groundedness Scoring</a>
+        <a href="#" onclick="return goAnchor('concepts.html','reference-contamination')">☠️ Reference Contamination</a>
+        <a href="#" onclick="return goAnchor('concepts.html','evaluation-rubric')">📏 Evaluation Rubric Design</a>
+        <a href="#" onclick="return goAnchor('concepts.html','answer-faithfulness')">🔬 Answer Faithfulness</a>
+        <span class="sub-label">Model Configuration</span>
+        <a href="#" onclick="return goAnchor('concepts.html','temperature')">🌡️ Temperature</a>
+        <a href="#" onclick="return goAnchor('concepts.html','non-determinism')">🎲 Non-Determinism</a>
+        <span class="sub-label">RAG Evaluation</span>
+        <a href="#" onclick="return goAnchor('concepts.html','chunking')">✂️ Chunking</a>
+        <a href="#" onclick="return goAnchor('concepts.html','vector-search')">🔎 Vector Search</a>
+        <a href="#" onclick="return goAnchor('concepts.html','context-relevance')">📥 Context Relevance</a>
+        <a href="#" onclick="return goAnchor('concepts.html','rag-answer-faithfulness')">🔒 Answer Faithfulness</a>
+        <a href="#" onclick="return goAnchor('concepts.html','answer-relevance')">🎯 Answer Relevance</a>
+        <a href="#" onclick="return goAnchor('concepts.html','retrieval-vs-reasoning')">⚔️ Retrieval vs Reasoning Failure</a>
+        <a href="#" onclick="return goAnchor('concepts.html','similarity-thresholds')">📊 Similarity Thresholds</a>
+        <a href="#" onclick="return goAnchor('concepts.html','top-k-chunks')">🔢 TOP_K_CHUNKS</a>
+        <span class="sub-label">Speed Metrics</span>
+        <a href="#" onclick="return goAnchor('concepts.html','ttft')">⚡ TTFT</a>
+        <a href="#" onclick="return goAnchor('concepts.html','tpot')">⏱ TPOT</a>
+        <span class="sub-label">Evaluation Thinking</span>
+        <a href="#" onclick="return goAnchor('concepts.html','test-case-design')">🎯 Test Case Design</a>
+        <a href="#" onclick="return goAnchor('concepts.html','evidence-documentation')">📋 Evidence Documentation</a>
+        <a href="#" onclick="return goAnchor('concepts.html','coverage-thinking')">🗺 Coverage Thinking</a>
+        <a href="#" onclick="return goAnchor('concepts.html','evaluation-validity')">⚖️ Evaluation Validity</a>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label"
+        style="font-size:10px; color:var(--accent2); letter-spacing:1px; padding-bottom:6px; border-bottom:1px solid var(--border); margin-bottom:6px;">
+        Experiments</div>
+      <div class="nav-label">Phase 1 — First Experiments</div>
+      <a href="#" onclick="return go('test1.html','nav-t1')" id="nav-t1">🧪 Test 1 — Basic Test <span
+          class="tag tag-p1">P1</span></a>
+      <a href="#" onclick="return go('test2.html','nav-t2')" id="nav-t2">📊 Test 2 — Full Evaluations <span
+          class="tag tag-p1">P1</span></a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Phase 2 — Eval Techniques</div>
+      <a href="#" onclick="return go('test3.html','nav-t3')" id="nav-t3">📐 Test 3 — BLEU &amp; ROUGE <span
+          class="tag tag-p2">P2</span></a>
+      <a href="#" onclick="return go('test4.html','nav-t4')" id="nav-t4">🏦 Test 4 — Deterministic Eval <span
+          class="tag tag-p2">P2</span></a>
+      <a href="#" onclick="return go('test5.html','nav-t5')" id="nav-t5">⚖️ Test 5 — LLM-as-a-Judge <span
+          class="tag tag-p2">P2</span></a>
+      <a href="#" onclick="return go('test6.html','nav-t6')" id="nav-t6">🔵 Test 6 — Semantic Similarity <span
+          class="tag tag-p2">P2</span></a>
+      <a href="#" onclick="return go('test7.html','nav-t7')" id="nav-t7">🎯 Test 7 — Groundedness Scoring <span
+          class="tag tag-p2">P2</span></a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Phase 3 — What You Are Evaluating</div>
+      <a href="#" onclick="return go('test8.html','nav-t8')" id="nav-t8">🌡️ Test 8 — Temperature Sensitivity <span
+          class="tag tag-p3">P3</span></a>
+      <a href="#" onclick="return go('test9.html','nav-t9')" id="nav-t9">🔍 Test 9 — RAG Evaluation <span
+          class="tag tag-p3">P3</span></a>
+    </div>
+
+    <div class="nav-footer">docs/ · llm-evaluation</div>
+  </nav>
+
+  <div class="content">
+    <iframe id="content-frame" src="home.html"></iframe>
   </div>
 
-  <div class="nav-section">
-    <div class="nav-label" style="font-size:10px; color:var(--accent2); letter-spacing:1px; padding-bottom:6px; border-bottom:1px solid var(--border); margin-bottom:6px;">Experiments</div>
-    <div class="nav-label">Phase 1 — First Experiments</div>
-    <a href="#" onclick="return go('test1.html','nav-t1')" id="nav-t1">🧪 Test 1 — Basic Test <span class="tag tag-p1">P1</span></a>
-    <a href="#" onclick="return go('test2.html','nav-t2')" id="nav-t2">📊 Test 2 — Full Evaluations <span class="tag tag-p1">P1</span></a>
-  </div>
+  <script>
+    let currentFile = 'home.html';
 
-  <div class="nav-section">
-    <div class="nav-label">Phase 2 — Eval Techniques</div>
-    <a href="#" onclick="return go('test3.html','nav-t3')" id="nav-t3">📐 Test 3 — BLEU &amp; ROUGE <span class="tag tag-p2">P2</span></a>
-    <a href="#" onclick="return go('test4.html','nav-t4')" id="nav-t4">🏦 Test 4 — Deterministic Eval <span class="tag tag-p2">P2</span></a>
-    <a href="#" onclick="return go('test5.html','nav-t5')" id="nav-t5">⚖️ Test 5 — LLM-as-a-Judge <span class="tag tag-p2">P2</span></a>
-    <a href="#" onclick="return go('test6.html','nav-t6')" id="nav-t6">🔵 Test 6 — Semantic Similarity <span class="tag tag-p2">P2</span></a>
-    <a href="#" onclick="return go('test7.html','nav-t7')" id="nav-t7">🎯 Test 7 — Groundedness Scoring <span class="tag tag-p2">P2</span></a>
-  </div>
-
-  <div class="nav-section">
-    <div class="nav-label">Phase 3 — What You Are Evaluating</div>
-    <a href="#" onclick="return go('test8.html','nav-t8')" id="nav-t8">🌡️ Test 8 — Temperature Sensitivity <span class="tag tag-p3">P3</span></a>
-  </div>
-
-  <div class="nav-footer">docs/ · llm-evaluation</div>
-</nav>
-
-<div class="content">
-  <iframe id="content-frame" src="home.html"></iframe>
-</div>
-
-<script>
-  let currentFile = 'home.html';
-
-  function clearActive() {
-    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  }
-
-  function go(file, navId) {
-    document.getElementById('concepts-sub').classList.remove('open');
-    document.getElementById('nav-concepts').classList.remove('open', 'active');
-    clearActive();
-    if (navId) document.getElementById(navId).classList.add('active');
-    loadInFrame(file, null);
-    return false;
-  }
-
-  function toggleConcepts() {
-    const sub = document.getElementById('concepts-sub');
-    const btn = document.getElementById('nav-concepts');
-    const isOpen = sub.classList.contains('open');
-    if (isOpen) {
-      sub.classList.remove('open');
-      btn.classList.remove('open', 'active');
-    } else {
-      sub.classList.add('open');
-      btn.classList.add('open');
-      clearActive();
-      btn.classList.add('active');
-      loadInFrame('concepts.html', null);
+    function clearActive() {
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
     }
-    return false;
-  }
 
-  function goAnchor(file, anchor) {
-    clearActive();
-    document.getElementById('nav-concepts').classList.add('active', 'open');
-    document.getElementById('concepts-sub').classList.add('open');
-    loadInFrame(file, anchor);
-    return false;
-  }
+    function go(file, navId) {
+      document.getElementById('concepts-sub').classList.remove('open');
+      document.getElementById('nav-concepts').classList.remove('open', 'active');
+      clearActive();
+      if (navId) document.getElementById(navId).classList.add('active');
+      loadInFrame(file, null);
+      return false;
+    }
 
-  function loadInFrame(file, anchor) {
-    currentFile = file;
-    // Use fetch + srcdoc so we can strip the concepts sidebar before display
-    fetch(file)
-      .then(r => r.text())
-      .then(html => {
-        // For concepts: remove its own <nav> block so no double sidebar
-        if (file === 'concepts.html') {
-          // Strip <nav>...</nav> block and fix <main> margin
-          html = html.replace(/<nav[\s\S]*?<\/nav>/i, '');
-          html = html.replace(/margin-left\s*:\s*var\(--nav-w\)|margin-left\s*:\s*280px/g, 'margin-left:0');
-        }
-        // Inject into srcdoc — fully isolated, no CSS bleed
-        const frame = document.getElementById('content-frame');
-        frame.srcdoc = html;
-        // After load, scroll to anchor if needed
-        if (anchor) {
-          frame.onload = () => {
-            try {
-              const el = frame.contentDocument.getElementById(anchor);
-              if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
-            } catch(e) {}
-            frame.onload = null;
-          };
-        }
-      })
-      .catch(() => {
-        document.getElementById('content-frame').srcdoc =
-          '<body style="background:#0d0d0f;color:#7a7a90;font-family:JetBrains Mono,monospace;padding:60px;font-size:13px;">File not found. Make sure all HTML files are in the same docs/ folder.</body>';
-      });
-  }
+    function toggleConcepts() {
+      const sub = document.getElementById('concepts-sub');
+      const btn = document.getElementById('nav-concepts');
+      const isOpen = sub.classList.contains('open');
+      if (isOpen) {
+        sub.classList.remove('open');
+        btn.classList.remove('open', 'active');
+      } else {
+        sub.classList.add('open');
+        btn.classList.add('open');
+        clearActive();
+        btn.classList.add('active');
+        loadInFrame('concepts.html', null);
+      }
+      return false;
+    }
 
-  // Initial load
-  loadInFrame('home.html', null);
-</script>
+    function goAnchor(file, anchor) {
+      clearActive();
+      document.getElementById('nav-concepts').classList.add('active', 'open');
+      document.getElementById('concepts-sub').classList.add('open');
+      loadInFrame(file, anchor);
+      return false;
+    }
+
+    function loadInFrame(file, anchor) {
+      currentFile = file;
+      // Use fetch + srcdoc so we can strip the concepts sidebar before display
+      fetch(file)
+        .then(r => r.text())
+        .then(html => {
+          // For concepts: remove its own <nav> block so no double sidebar
+          if (file === 'concepts.html') {
+            // Strip <nav>...</nav> block and fix <main> margin
+            html = html.replace(/<nav[\s\S]*?<\/nav>/i, '');
+            html = html.replace(/margin-left\s*:\s*var\(--nav-w\)|margin-left\s*:\s*280px/g, 'margin-left:0');
+          }
+          // Inject into srcdoc — fully isolated, no CSS bleed
+          const frame = document.getElementById('content-frame');
+          frame.srcdoc = html;
+          // After load, scroll to anchor if needed
+          if (anchor) {
+            frame.onload = () => {
+              try {
+                const el = frame.contentDocument.getElementById(anchor);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } catch (e) { }
+              frame.onload = null;
+            };
+          }
+        })
+        .catch(() => {
+          document.getElementById('content-frame').srcdoc =
+            '<body style="background:#0d0d0f;color:#7a7a90;font-family:JetBrains Mono,monospace;padding:60px;font-size:13px;">File not found. Make sure all HTML files are in the same docs/ folder.</body>';
+        });
+    }
+
+    // Initial load
+    loadInFrame('home.html', null);
+  </script>
 </body>
+
 </html>
