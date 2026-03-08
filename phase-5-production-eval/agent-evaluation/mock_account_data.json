@@ -1,0 +1,30 @@
+{
+  "A1023": {
+    "account_id": "A1023",
+    "status": "dormant",
+    "kyc_pending": true,
+    "branch": "MG Road",
+    "account_type": "Savings"
+  },
+  "B204": {
+    "account_id": "B204",
+    "status": "active",
+    "kyc_pending": true,
+    "branch": "Indiranagar",
+    "account_type": "Current"
+  },
+  "C998": {
+    "account_id": "C998",
+    "status": "active",
+    "kyc_pending": false,
+    "branch": "Whitefield",
+    "account_type": "Salary"
+  },
+  "D441": {
+    "account_id": "D441",
+    "status": "frozen",
+    "kyc_pending": false,
+    "branch": "Koramangala",
+    "account_type": "Savings"
+  }
+}

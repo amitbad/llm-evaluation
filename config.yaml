@@ -84,7 +84,12 @@ phase4_deepeval:
   TOP_K_CHUNKS: 3
   METRIC_THRESHOLD: 0.5
 
-
+phase5_agent_evaluation:
+  BOT_MODEL: "qwen3.5:9b"
+  BOT_PROVIDER: "ollama"
+  EXCEL_FILE: "agent_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  MAX_STEPS: 3
 
 # ─────────────────────────────────────────────────────────────────
 # API KEY REFERENCE

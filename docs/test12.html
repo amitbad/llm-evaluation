@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test 12 — Agent Behavior Evaluation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141417;
+      --surface2: #1c1c21;
+      --border: #2a2a32;
+      --accent: #7c6af7;
+      --accent2: #f7a06a;
+      --danger: #f76a6a;
+      --success: #6af7a0;
+      --text: #e8e8f0;
+      --muted: #7a7a90;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 48px 56px;
+      max-width: 100%;
+      line-height: 1.6;
+    }
+
+    .phase-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 40px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 28px 0 10px;
+    }
+
+    p {
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: #c0c0d8;
+      line-height: 1.75;
+    }
+
+    code {
+      background: var(--surface2);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+    }
+
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--accent2);
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+
+    ul,
+    ol {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      color: #c0c0d8;
+      line-height: 1.7;
+    }
+
+    li strong {
+      color: var(--text);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 10px 13px;
+      text-align: left;
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+      background: var(--surface);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    tr:hover td {
+      background: var(--surface2);
+    }
+
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .warn-box {
+      background: #1a1a10;
+      border: 1px solid #3a3a20;
+      border-left: 3px solid var(--accent2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #c8c890;
+    }
+
+    .success-box {
+      background: #0f1a10;
+      border: 1px solid #1e3a20;
+      border-left: 3px solid var(--success);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #a0d8a0;
+    }
+
+    .danger-box {
+      background: #1a1010;
+      border: 1px solid #3a2020;
+      border-left: 3px solid var(--danger);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #e0b0b0;
+    }
+
+    .file-tag {
+      background: #2a2a1a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .score-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      min-width: 140px;
+      flex: 1;
+    }
+
+    .score-card .score-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .score-card .score-label {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .score-card .score-desc {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pass {
+      color: #4ade80;
+    }
+
+    .fail {
+      color: #f87171;
+    }
+
+    .warn {
+      color: #fbbf24;
+    }
+
+    .tool-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+
+    .tool-lookup {
+      background: #0a2130;
+      color: #7dd3fc;
+    }
+
+    .tool-docs {
+      background: #1d1a08;
+      color: #fcd34d;
+    }
+
+    .tool-calc {
+      background: #102010;
+      color: #86efac;
+    }
+
+    .tool-none {
+      background: #24131a;
+      color: #f9a8d4;
+    }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="phase-badge">Phase 5 — Production Eval</div>
+  <h1>Test 12: Agent Behavior Evaluation</h1>
+  <p class="subtitle">This test is the first agent evaluation exercise in the repo. The goal is not to design a
+    production agent. The goal is to create a small, observable tool-calling system so you can test whether the agent
+    uses tools when needed, avoids tools when not needed, passes the right arguments, and produces a grounded final
+    answer. Every agent step is visible in the generated report.</p>
+  <div class="file-tag">📁 phase-5-production-eval/agent-evaluation/ &nbsp;|&nbsp; test12_agent_evaluator.py · agent.py
+    · tools.py · report_generator.py · agent_test_cases.xlsx · mock_account_data.json</div>
+
+  <h2>Why Test 12 Exists</h2>
+  <p>Up to Test 11, the system under test was mostly single-step: question in, answer out. Even when RAG was involved,
+    the pipeline was still linear. Agents add a new layer of behavior: they decide whether to call a tool, which tool to
+    call, what arguments to pass, whether to call another tool, and when to stop.</p>
+  <p>That means evaluation also changes. You can no longer ask only, “Was the final answer correct?” You also have to
+    ask, “Did the system take the right path to get there?”</p>
+
+  <div class="info-box">
+    🔁 <strong>The key concept is trajectory evaluation.</strong> A trajectory is the sequence of actions the agent
+    took: direct answer, tool call, tool result, second tool call, final answer, or refusal. Test 12 builds the minimum
+    viable agent so that Test 13 can judge those trajectories more formally.
+  </div>
+
+  <h2>What We Built</h2>
+  <p>The agent folder is self-contained except for the shared <code>model_client.py</code>, which remains common at
+    project root like the other phases.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Purpose</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>test12_agent_evaluator.py</code></td>
+        <td><strong>The script you run.</strong> Loads the Excel test cases, runs the agent case by case, compares
+          expected tool path vs actual tool path, prints terminal progress, and generates the HTML trace report.</td>
+        <td>Config-driven via <code>config.yaml</code></td>
+      </tr>
+      <tr>
+        <td><code>agent.py</code></td>
+        <td>Minimal agent loop. Forces the model to return JSON actions only: either a tool call or a final answer.</td>
+        <td>Max steps controlled by config / Excel</td>
+      </tr>
+      <tr>
+        <td><code>tools.py</code></td>
+        <td>Implements the local tools the agent can use.</td>
+        <td>No external services</td>
+      </tr>
+      <tr>
+        <td><code>mock_account_data.json</code></td>
+        <td>Local structured data for account lookups.</td>
+        <td>Important because the model cannot know this from pretraining</td>
+      </tr>
+      <tr>
+        <td><code>agent_test_cases.xlsx</code></td>
+        <td>Learner-friendly test case workbook with expected behavior, expected tool path, and why the case exists.
+        </td>
+        <td>Input only</td>
+      </tr>
+      <tr>
+        <td><code>report_generator.py</code></td>
+        <td>Creates the decorated trace report with visible tool icons and per-case step cards.</td>
+        <td>Output: <code>results/agent_evaluation_report.html</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>The Tools</h2>
+  <p>Test 12 deliberately keeps the tool set small. This is enough to evaluate agent behavior without turning the
+    exercise into an agent-development project.</p>
+
+  <div class="score-row">
+    <div class="score-card">
+      <div class="score-val">🗂️</div>
+      <div class="score-label">lookup_account_status</div>
+      <div class="score-desc">Reads exact account data from <code>mock_account_data.json</code>. Best tool for proving
+        the agent used external state.</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val">📄</div>
+      <div class="score-label">search_docs</div>
+      <div class="score-desc">Searches the local banking documents copied into the Test 12 folder. Used for policy and
+        process questions.</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val">🧮</div>
+      <div class="score-label">calculator</div>
+      <div class="score-desc">Included as a secondary deterministic tool, but not central to this test run.</div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    ⚠️ <strong>Why account lookup matters more than calculator.</strong> A model can often do arithmetic itself, so tool
+    use may be ambiguous. But the model cannot know the local mock account state unless it calls the lookup tool. That
+    makes tool use visible and testable.
+  </div>
+
+  <h2>How the Agent Is Constrained</h2>
+  <p>The agent is intentionally strict. It must return one JSON action per step:</p>
+  <pre>{"action":"tool","tool_name":"lookup_account_status","arguments":{"account_id":"A1023"}}
+{"action":"final","answer":"..."}</pre>
+  <p>This makes the trajectory inspectable. There is no hidden chain-of-thought, and there are no silent tool
+    invocations. If a tool is used, it appears explicitly in the trace.</p>
+
+  <div class="info-box">
+    🎯 <strong>Evaluation-first design.</strong> This agent is not optimised for product quality. It is optimised for
+    observability. The trace matters as much as the final answer.
+  </div>
+
+  <h2>How to Run</h2>
+  <pre>cd phase-5-production-eval/agent-evaluation
+python3 test12_agent_evaluator.py</pre>
+  <p>The evaluator now shows the total test count before asking whether to run all or a limited subset. It reads its
+    settings from <code>config.yaml</code>:</p>
+  <pre>phase5_agent_evaluation:
+  BOT_MODEL: "qwen3.5:9b"
+  BOT_PROVIDER: "ollama"
+  EXCEL_FILE: "agent_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  MAX_STEPS: 3</pre>
+
+  <h2>What Was Tested</h2>
+  <p>The workbook contains 15 cases covering five behavior categories:</p>
+  <ul>
+    <li><strong>No-tool direct answers</strong> — greetings and simple scope questions</li>
+    <li><strong>Structured lookup</strong> — account status, KYC pending, branch lookup</li>
+    <li><strong>Document retrieval</strong> — policy/process questions answered from local docs</li>
+    <li><strong>Multi-step cases</strong> — lookup first, then search docs, then answer</li>
+    <li><strong>Boundary and refusal cases</strong> — missing account ID, out-of-scope weather question, unknown account
+      ID</li>
+  </ul>
+
+  <h2>Actual Run Results</h2>
+  <div class="success-box">
+    ✅ <strong>14 of 15 cases matched the expected tool path exactly.</strong> The latest run behaved correctly on
+    greetings, direct answers, structured lookup, doc retrieval, refusal, clarification, and both designed multi-step
+    flows. Only one case failed: TC13 stopped with a malformed action before the expected account lookup was completed.
+  </div>
+
+  <div class="score-row">
+    <div class="score-card">
+      <div class="score-val pass">15</div>
+      <div class="score-label">Cases Run</div>
+      <div class="score-desc">All workbook cases executed successfully end to end</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val pass">14/15</div>
+      <div class="score-label">Tool Path Match</div>
+      <div class="score-desc">Expected sequence matched actual sequence in all but one case</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val pass">93%</div>
+      <div class="score-label">Observed Success</div>
+      <div class="score-desc">Practical success rate for this first evaluation run</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val fail">1</div>
+      <div class="score-label">Malformed Action</div>
+      <div class="score-desc">TC13 stopped before completing the expected lookup path</div>
+    </div>
+  </div>
+
+  <h3>Per-case summary</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Case</th>
+        <th>Question Type</th>
+        <th>Expected Tool Path</th>
+        <th>Actual Tool Path</th>
+        <th>Stop Reason</th>
+        <th>Outcome</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>TC01</td>
+        <td>Greeting</td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correct direct reply, no unnecessary tool use</td>
+      </tr>
+      <tr>
+        <td>TC02</td>
+        <td>Scope question</td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correctly explained capabilities without tools</td>
+      </tr>
+      <tr>
+        <td>TC03</td>
+        <td>Account status</td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Grounded answer from local structured data</td>
+      </tr>
+      <tr>
+        <td>TC04</td>
+        <td>KYC pending</td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correct yes/no answer using lookup result</td>
+      </tr>
+      <tr>
+        <td>TC05</td>
+        <td>Branch lookup</td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correct branch returned from mock data</td>
+      </tr>
+      <tr>
+        <td>TC06</td>
+        <td>Dormant reactivation form</td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Retrieved policy correctly from local docs</td>
+      </tr>
+      <tr>
+        <td>TC07</td>
+        <td>Gold loan eligibility</td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Used document search rather than model memory</td>
+      </tr>
+      <tr>
+        <td>TC08</td>
+        <td>NextGen account timing</td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correct retrieval for operations timing</td>
+      </tr>
+      <tr>
+        <td>TC09</td>
+        <td>Multi-step dormant account</td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span><span
+            class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span><span
+            class="tool-tag tool-docs">search_docs</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Strong example of correct two-step trajectory with grounded reactivation guidance</td>
+      </tr>
+      <tr>
+        <td>TC10</td>
+        <td>Multi-step issue + next action</td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span><span
+            class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span><span
+            class="tool-tag tool-docs">search_docs</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Current run completed the full two-step path and produced the expected next-action guidance</td>
+      </tr>
+      <tr>
+        <td>TC11</td>
+        <td>Missing account ID</td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correct clarification request; no blind tool call</td>
+      </tr>
+      <tr>
+        <td>TC12</td>
+        <td>Out-of-scope weather</td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correct refusal with no irrelevant tool use</td>
+      </tr>
+      <tr>
+        <td>TC13</td>
+        <td>Unknown account ID</td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><span class="tool-tag tool-none">none</span></td>
+        <td><code>malformed_action</code></td>
+        <td class="fail">MISMATCH</td>
+        <td>The agent failed before completing the expected lookup, showing that action-schema reliability is still
+          brittle on some boundary cases</td>
+      </tr>
+      <tr>
+        <td>TC14</td>
+        <td>Explain dormant account</td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Used docs instead of relying on generic definition</td>
+      </tr>
+      <tr>
+        <td>TC15</td>
+        <td>Generic reactivation guidance</td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-docs">search_docs</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correct generic guidance from documents</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>What We Learned</h2>
+  <h3>1 — The observable trace idea works</h3>
+  <p>The most important success is not the 93% score. It is that every important action is visible. For every case, you
+    can now inspect whether the agent answered directly, invoked a tool, passed arguments, received a tool result, and
+    then produced a final answer.</p>
+
+  <h3>2 — Structured lookup is the cleanest proof of tool use</h3>
+  <p>TC03–TC05 show why local structured data is such a good evaluation target. The model cannot know that account
+    <code>A1023</code> is dormant at branch <code>MG Road</code> unless it calls the lookup tool. That makes correct
+    tool usage obvious and testable.</p>
+
+  <h3>3 — Multi-step flows are where agents begin to fail</h3>
+  <p>The latest run shows that multi-step flows are now more stable: TC09 and TC10 both completed the expected lookup →
+    docs → final-answer path. That is a good sign because it means the agent can sometimes preserve structured actions
+    across more than one tool call.</p>
+
+  <div class="danger-box">
+    🚨 <strong>Important finding from TC13.</strong> The main remaining weakness is still <em>process failure</em>, not
+    banking knowledge. In the latest run, the agent failed on the unknown-account case because it produced a malformed
+    action before completing the required lookup. This is why agent evaluation must inspect the trajectory, not just the
+    final response.
+  </div>
+
+  <h3>4 — Unknown or edge cases can still break structured actions</h3>
+  <p>TC13 is a useful reminder that apparent success on common cases does not mean the agent is structurally robust.
+    Unknown IDs are exactly the kind of edge case where the model should still produce a valid lookup action and then
+    handle the missing result gracefully. Instead, the run broke at the action-format layer before that evaluation could
+    complete.</p>
+
+  <h3>5 — Clarification and refusal are part of correct behavior</h3>
+  <p>TC11 and TC12 are both successful cases even though they do not “complete” the user request directly. Asking for an
+    account ID and refusing an out-of-scope weather question are both correct behaviors. Evaluation must reward those,
+    not penalise them.</p>
+
+  <h2>What This Sets Up for Test 13</h2>
+  <p>Test 12 is intentionally descriptive. It checks expected tool path vs actual tool path and gives you a visible
+    trace report. Test 13 can now become a true trajectory evaluation test with a judge model such as
+    <code>mistral</code>.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>What Test 12 Captures</th>
+        <th>What Test 13 Can Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Actual tool sequence</td>
+        <td>Was the right tool chosen?</td>
+      </tr>
+      <tr>
+        <td>Tool arguments</td>
+        <td>Were the arguments correct and complete?</td>
+      </tr>
+      <tr>
+        <td>Tool outputs</td>
+        <td>Did the agent use the tool results correctly?</td>
+      </tr>
+      <tr>
+        <td>Stop reason</td>
+        <td>Did it stop in the right place?</td>
+      </tr>
+      <tr>
+        <td>Final answer</td>
+        <td>Was the final answer grounded in the trajectory?</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">
+    🔗 <strong>Connection to the concepts reference.</strong> Test 12 is the first practical use of <em>trajectory
+      evaluation</em> in this repo. It also reinforces earlier ideas: refusal handling, evaluation validity, and
+    disaggregated evaluation. The system can succeed on direct lookup but still fail on multi-step structure. That is
+    exactly why metrics must stay separated.
+  </div>
+
+  <h2>How to Read the Generated Report</h2>
+  <p>The HTML report at <code>phase-5-production-eval/agent-evaluation/results/agent_evaluation_report.html</code> is
+    the operational output. It uses icons to show tool invocations clearly:</p>
+  <ul>
+    <li><strong>🗂️</strong> — account lookup tool invoked</li>
+    <li><strong>📄</strong> — document search tool invoked</li>
+    <li><strong>🧮</strong> — calculator tool invoked</li>
+    <li><strong>✅</strong> — final answer produced</li>
+    <li><strong>⚠️</strong> — malformed action or agent error</li>
+  </ul>
+  <p>That report is for inspecting the run. This page explains <em>why</em> the test exists and what the run teaches.
+  </p>
+
+  <footer>Test 12 completed with qwen3.5:9b via Ollama · 15/15 cases run · 14/15 tool-path matches · latest failure:
+    TC13 malformed_action · output documented in <code>results/agent_evaluation_report.html</code></footer>
+
+</body>
+
+</html>
