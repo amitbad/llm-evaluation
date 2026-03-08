@@ -64,6 +64,28 @@ phase3_rag:
   DOCUMENTS_DIR: "documents"
   TOP_K_CHUNKS: 3
 
+phase4_ragas:
+  BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
+  EXCEL_FILE: "ragas_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  TOP_K_CHUNKS: 3
+  RAGAS_LLM_MODEL: "gpt-4o-mini"
+  RAGAS_LLM_PROVIDER: "openai"
+  RAGAS_OPENAI_API_KEY: ""   # leave blank to use OPENAI_API_KEY env var
+
+phase4_deepeval:
+  BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
+  JUDGE_MODEL: "mistral"
+  JUDGE_PROVIDER: "ollama"
+  EXCEL_FILE: "deepeval_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  TOP_K_CHUNKS: 3
+  METRIC_THRESHOLD: 0.5
+
+
+
 # ─────────────────────────────────────────────────────────────────
 # API KEY REFERENCE
 # ─────────────────────────────────────────────────────────────────

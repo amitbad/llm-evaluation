@@ -134,84 +134,14 @@ After the first setup, just activate the venv at the start of each session: `sou
 
 ## Configuration
 
-All settings live in `config.yaml` at the project root.
+All settings live in **`config.yaml`** at the project root — models, providers, file names, and sheet names for every script. Open it and read it; it is well-commented.
 
-Each script section supports `BOT_PROVIDER` and `JUDGE_PROVIDER` independently — bot and judge can use completely different providers and models. Free local bot with paid judge, paid bot with local judge, both paid, both local — any combination works. You decide per script.
+Key things to know:
+- Each script section has its own `BOT_MODEL`, `BOT_PROVIDER`, `JUDGE_MODEL`, `JUDGE_PROVIDER` — bot and judge can use different providers independently.
+- To switch to a paid provider: change two lines (`JUDGE_MODEL` and `JUDGE_PROVIDER`). Nothing else.
+- API keys go in `.env` (copy `.env.example`, fill in, run `source .env`). Keys are never hardcoded. `.env` is gitignored.
 
-```yaml
-shared:
-  OLLAMA_URL: "http://localhost:11434/api/generate"
-  PROVIDER: "ollama"          # default fallback for single-model scripts
-
-phase2:
-  BOT_MODEL: "llama3.1:8b"       # choose any model you have available
-  BOT_PROVIDER: "ollama"          # ollama | openai | anthropic | gemini
-  TEST_SHEET: "Banking Bot Tests"
-
-phase2_llm_as_a_judge:
-  BOT_MODEL: "llama3.1:8b"
-  BOT_PROVIDER: "ollama"
-  JUDGE_MODEL: "gpt-4o-mini"     # ← paid judge, free bot
-  JUDGE_PROVIDER: "openai"
-  JUDGE_OPENAI_API_KEY: ""       # leave blank to use .env / environment variable
-  RESULTS_SHEET: "JudgeResults"
-  EXCEL_FILE: "banking_bot_test_results.xlsx"
-  TEST_SHEET: "Banking Bot Tests"
-
-phase2_semantic_similarity:
-  BOT_MODEL: "llama3.1:8b"
-  BOT_PROVIDER: "ollama"
-  EXCEL_FILE: "healthcare_test_cases.xlsx"
-  TEST_SHEET: "Test Cases"
-
-phase2_groundedness:
-  BOT_MODEL: "llama3.1:8b"
-  BOT_PROVIDER: "ollama"
-  JUDGE_MODEL: "gemma2:9b"
-  JUDGE_PROVIDER: "ollama"
-  EXCEL_FILE: "healthcare_test_cases.xlsx"
-  TEST_SHEET: "Test Cases"
-```
-
-### Switching to a Paid Provider
-
-Two lines in config.yaml — nothing else changes. These are just examples — use any model name from your chosen provider:
-
-```yaml
-JUDGE_MODEL: "claude-3-5-haiku-20241022"   # example — use any Anthropic model
-JUDGE_PROVIDER: "anthropic"
-```
-
-### API Keys
-
-API keys are never hardcoded. They are read in this order — first found wins:
-
-1. Key set directly in the config.yaml section (e.g. `JUDGE_OPENAI_API_KEY: "sk-..."`)
-2. Environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`)
-
-**Recommended approach — use a `.env` file:**
-
-```bash
-# 1. Copy the sample file
-cp .env.example .env
-
-# 2. Fill in your keys in .env
-# 3. Load them into your terminal session
-source .env          # Mac / Linux
-```
-
-`.env` is in `.gitignore` — it will never be committed. See `.env.example` at the project root for the full template.
-
-| Config key name | Environment variable | Provider |
-|---|---|---|
-| `OPENAI_API_KEY` | `OPENAI_API_KEY` | OpenAI (bot) |
-| `JUDGE_OPENAI_API_KEY` | `OPENAI_API_KEY` | OpenAI (judge) |
-| `ANTHROPIC_API_KEY` | `ANTHROPIC_API_KEY` | Anthropic (bot) |
-| `JUDGE_ANTHROPIC_API_KEY` | `ANTHROPIC_API_KEY` | Anthropic (judge) |
-| `GEMINI_API_KEY` | `GEMINI_API_KEY` | Gemini (bot) |
-| `JUDGE_GEMINI_API_KEY` | `GEMINI_API_KEY` | Gemini (judge) |
-
-> **Note:** `.env.example` contains only three variables — one per provider (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`). The `JUDGE_` prefixed names in the table above only exist in `config.yaml` and are for the rare case where bot and judge need different keys for the same provider. For most users, setting one key per provider in `.env` is sufficient for both bot and judge.
+> See `config.yaml` for the full configuration reference with all sections and defaults.
 
 ---
 
@@ -223,11 +153,13 @@ source .env          # Mac / Linux
 | Phase 1 | First Experiments — calling models, comparing outputs | 2–3 days |
 | Phase 2 | Evaluation Techniques — metrics, deterministic eval, behavioural testing, LLM-as-a-Judge, semantic similarity | 4–6 days |
 | Phase 3 | What You Are Evaluating — RAG, agents, tokenisation | 3–4 days |
-| Phase 4 | Frameworks & Tools — RAGAS, DeepEval, LangSmith | 3–5 days |
-| Phase 5 | Production Eval — regression, A/B, red teaming, CI/CD | 4–6 days |
-| Phase 6 | Specialisation — RAG eval, safety, red teaming | 5–7 days |
+| Phase 4 | Frameworks & Tools — RAGAS, DeepEval, LangSmith, Promptfoo | 3–5 days |
+| Phase 5 | Production Eval — regression, A/B, red teaming, CI/CD, Langfuse, agent evaluation, multi-turn, structured output | 6–8 days |
+| Phase 6 | Specialisation — RAG eval full pipeline, safety and red teaming, bias and fairness, multi-modal, model drift | 5–7 days |
 
-**Total: approximately 3–5 weeks** depending on your pace.
+> **Current status:** Phase 4 complete (Test 11 DeepEval done). Test 10 RAGAS pending OpenAI credits. Phase 5 — Test 12 agent evaluation — next.
+
+**Total: approximately 4–6 weeks** depending on your pace.
 
 ---
 
@@ -235,93 +167,60 @@ source .env          # Mac / Linux
 
 ```
 llm-evaluation/
-│
 ├── README.md
-├── requirements.txt                       ← pip install -r requirements.txt
-├── config.yaml                            ← all models, providers, file names, sheet names
-├── model_client.py                        ← universal model caller — ollama, openai, anthropic, gemini
-├── .env.example                           ← copy to .env and fill in API keys for paid providers
+├── requirements.txt
+├── config.yaml                  ← all models, providers, paths — one file for everything
+├── model_client.py              ← universal caller: ollama / openai / anthropic / gemini
+├── .env.example                 ← copy to .env, fill in API keys
 │
-├── docs/                                  ← all documentation
-│   ├── index.html                         ← OPEN THIS — main navigation hub
-│   ├── home.html                          ← phase overview and status
-│   ├── test1.html – test9.html            ← one file per test, results and learnings
-│   ├── concepts.html                      ← key GenAI eval concepts with examples
-│   └── genai_eval_learning_plan.xlsx      ← 7-phase learning roadmap, track progress here
+├── docs/                        ← all documentation (serve with python3 -m http.server 8000)
+│   ├── index.html               ← OPEN THIS — navigation hub
+│   ├── home.html                ← phase overview and status
+│   ├── test1.html – test11.html ← one file per test: results, learnings, findings
+│   ├── concepts.html            ← GenAI eval concepts reference
+│   └── genai_eval_learning_plan.xlsx
 │
 ├── phase-0-foundations/
-│   ├── phase_eval.py                      ← basic Ollama connection test
-│   └── read_squad.py
-│
 ├── phase-1-first-experiments/
-│   ├── test1_basic_test.py                ← single prompt across 4 models
-│   ├── test2_full_evaluations.py          ← 3 use cases x 4 models x 3 runs
-│   ├── test2_score_evaluations.py         ← manual scoring of outputs
-│   └── results/
-│
 ├── phase-2-evaluation-techniques/
-│   ├── test3_bleu_score_evaluation.py     ← BLEU and ROUGE automated metrics
-│   ├── banking-bots/                      ← banking chatbot + behavioural eval
-│   │   ├── bot.py                         ← banking chatbot (llama3.1:8b)
-│   │   ├── banking_evaluator.py           ← evaluator (modes: auto, multi-turn, interactive)
-│   │   └── banking_test_cases.xlsx        ← 49 behavioural test cases
-│   ├── llm-as-a-judge/                    ← LLM-as-a-Judge pipeline
-│   │   ├── llm_judge_evaluator.py         ← bot → human verdict → judge → compare
-│   │   ├── banking_bot_test_results.xlsx  ← fill col H before running
-│   │   └── results/
-│   ├── semantic-similarity/               ← semantic similarity evaluation
-│   │   ├── healthcare_bot.py              ← City General Hospital chatbot (llama3.1:8b)
-│   │   ├── healthcare_test_cases.xlsx     ← 22 QA-format test cases (input only)
-│   │   ├── test6_semantic_similarity.py   ← runs eval, scores with cosine similarity
-│   │   ├── report_generator.py            ← generates dark-theme HTML report
-│   │   └── results/                       ← HTML report saved here after each run
-│   └── groundedness/                      ← groundedness scoring evaluation
-│       ├── groundedness_evaluator.py      ← imports healthcare bot, runs judge scoring
-│       ├── report_generator.py            ← generates dark-theme HTML report
-│       └── results/                       ← HTML report saved here (not committed)
+│   ├── banking-bots/            ← Test 4 — behavioural eval, 49 test cases
+│   ├── llm-as-a-judge/          ← Test 5 — LLM judge pipeline
+│   ├── semantic-similarity/     ← Test 6 — cosine similarity eval
+│   └── groundedness/            ← Test 7 — groundedness scoring
 │
-└── phase-3-what-you-are-evaluating/
-    ├── temperature-sensitivity/
-    │   ├── temperature_evaluator.py       ← main script — 4 temps × 15 cases = 60 calls
-    │   ├── report_generator.py            ← generates dark-theme HTML report
-    │   ├── banking_bot.py                 ← copy of phase-2 bot, reads phase3_temperature config
-    │   ├── banking_evaluator.py           ← reference copy, not run by temperature script
-    │   ├── banking_test_cases.xlsx        ← local copy, Test Cases sheet, input only
-    │   └── results/                       ← HTML report saved here (not committed)
-    └── rag-evaluation/
-        ├── chunker.py                     ← run once to generate chunks.json
-        ├── retriever.py                   ← library — encodes chunks, returns top-K by cosine similarity
-        ├── rag_bot.py                     ← banking RAG assistant — imported by evaluator
-        ├── rag_evaluator.py               ← MAIN SCRIPT — run this
-        ├── report_generator.py            ← called by evaluator, generates HTML report
-        ├── chunks.json                    ← generated by chunker.py (12 chunks, 4 per document)
-        ├── rag_test_cases.xlsx            ← 21 test cases, input only
-        ├── sample_rag_evaluation_report.html ← sample output report for reference
+├── phase-3-what-you-are-evaluating/
+│   ├── temperature-sensitivity/ ← Test 8 — 4 temperatures × 15 cases
+│   └── rag-evaluation/          ← Test 9 — hand-rolled RAG eval (25 cases)
+│       ├── documents/           ← 3 source documents
+│       └── results/             ← sample_rag_evaluation_report.html for reference
+│
+└── phase-4-frameworks-and-tools/
+    ├── ragas-evaluation/        ← Test 10 — RAGAS framework (requires OpenAI judge)
+    └── deepeval-evaluation/     ← Test 11 — DeepEval framework (fully local via Ollama)
         ├── documents/
-        │   ├── Fees_Loans_and_Secured_Assets_Guide.txt
-        │   ├── LearnFund_Credit_Card_Product_Guide.txt
-        │   └── Operations_Guide.txt
-        └── results/                       ← HTML report saved here (not committed)
+        └── results/             ← sample_deepeval_report.html for reference
 ```
+
+> Each phase folder contains a `results/` directory with a sample HTML report so you can see what output looks like before running anything.
 
 ---
 
 ## Where to Start
 
 1. Complete setup above
-2. Open the documentation in your browser:
+2. Open the documentation hub:
    ```bash
    cd docs && python3 -m http.server 8000
    ```
-   Then open **http://localhost:8000** in your browser. This is your main learning hub — read every test page in order as you work through the phases.
-3. Open `docs/genai_eval_learning_plan.xlsx` — track your progress as you go
-4. Run experiments in order — Phase 0 → Phase 1 → Phase 2
+   Open **http://localhost:8000** — read each test page in order as you go.
+3. Open `docs/genai_eval_learning_plan.xlsx` — track your progress
+4. Run experiments in order — Phase 0 → Phase 1 → Phase 2 → …
 
 ---
 
 ## What You Will Learn
 
-By completing Phases 0–2 you will understand:
+By completing Phases 0–4 you will understand:
 
 - Why LLMs need structured evaluation — they are non-deterministic, unlike traditional software
 - How to design test cases for a chatbot in QA format — functional, behavioural, safety categories
@@ -333,6 +232,9 @@ By completing Phases 0–2 you will understand:
 - When a score alone is not enough — high-stakes cases require reading the actual response
 - How to evaluate whether a bot response is grounded in its source material — or invented
 - How to switch between local and paid model providers with a one-line config change
+- How evaluation frameworks like RAGAS and DeepEval work — and how their metric definitions differ from hand-rolled scorers using the same judge
+- Why context relevance scores can differ dramatically between frameworks even with the same judge model — and what that tells you about metric calibration
+- How to handle refusal cases correctly in automated evaluation — they are correct bot behaviour, not failures
 
 ---
 
@@ -348,6 +250,8 @@ By completing Phases 0–2 you will understand:
 | Test 7 | Groundedness Scoring | Source traceability — did the bot say this from source, or invent it? |
 | Test 8 | Temperature Sensitivity | Does temperature affect pass rates? Same suite at T=0.0/0.5/1.0/1.5 across two models. |
 | Test 9 | RAG Evaluation | Context Relevance, Answer Faithfulness, Answer Relevance — 21 cases across 6 categories. |
+| Test 10 | RAGAS Framework | Framework-based RAG evaluation — requires OpenAI judge. Direct comparison against hand-rolled Test 9. |
+| Test 11 | DeepEval Framework | Pytest-style LLM evaluation fully local via Ollama. 25 cases, 1 refusal (TC19). Overall 62%, CTX 24%, Faithfulness 82%, Answer Rel. 81%. 1/25 full PASS (TC15). Calibration analysis vs Test 9. |
 
 ---
 
@@ -361,6 +265,7 @@ By completing Phases 0–2 you will understand:
 | mistral | 7B |
 | deepseek-r1:7b | 7B |
 | gemma2:9b | 9B |
+| qwen3.5:9b | 9B |
 
 These are the models used in this repository. You are not limited to these — any model available in Ollama works. Change `BOT_MODEL` or `JUDGE_MODEL` in `config.yaml` to use a different one.
 

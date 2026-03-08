@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test 11 — DeepEval RAG Evaluation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141417;
+      --surface2: #1c1c21;
+      --border: #2a2a32;
+      --accent: #7c6af7;
+      --accent2: #f7a06a;
+      --danger: #f76a6a;
+      --success: #6af7a0;
+      --text: #e8e8f0;
+      --muted: #7a7a90;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 48px 56px;
+      max-width: 100%;
+      line-height: 1.6;
+    }
+
+    .phase-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+      max-width: 680px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 40px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 28px 0 10px;
+    }
+
+    p {
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: #c0c0d8;
+      line-height: 1.75;
+    }
+
+    code {
+      background: var(--surface2);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+    }
+
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--accent2);
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+
+    ul,
+    ol {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      color: #c0c0d8;
+      line-height: 1.7;
+    }
+
+    li strong {
+      color: var(--text);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 10px 13px;
+      text-align: left;
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+      background: var(--surface);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    tr:hover td {
+      background: var(--surface2);
+    }
+
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .warn-box {
+      background: #1a1a10;
+      border: 1px solid #3a3a20;
+      border-left: 3px solid var(--accent2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #c8c890;
+    }
+
+    .success-box {
+      background: #0f1a10;
+      border: 1px solid #1e3a20;
+      border-left: 3px solid var(--success);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #a0d8a0;
+    }
+
+    .danger-box {
+      background: #1a1010;
+      border: 1px solid #3a2020;
+      border-left: 3px solid var(--danger);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #e0b0b0;
+    }
+
+    .file-tag {
+      background: #2a2a1a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .score-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      min-width: 140px;
+      flex: 1;
+    }
+
+    .score-card .score-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .score-card .score-label {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .score-card .score-desc {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pass {
+      color: #4ade80;
+    }
+
+    .fail {
+      color: #f87171;
+    }
+
+    .warn {
+      color: #fbbf24;
+    }
+
+    .verdict-pass {
+      display: inline-block;
+      background: #1a3a2a;
+      color: #4ade80;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .verdict-fail {
+      display: inline-block;
+      background: #3a1a1a;
+      color: #f87171;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .formula-box {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--accent2);
+      padding: 14px;
+      background: var(--surface2);
+      border-radius: 8px;
+      margin: 14px 0;
+    }
+
+    .compare-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .compare-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .compare-card .compare-title {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .compare-card .compare-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .compare-card .compare-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="phase-badge">Phase 4 — Frameworks &amp; Tools</div>
+  <h1>Test 11: DeepEval</h1>
+  <p class="subtitle">DeepEval is a pytest-style LLM testing framework. Instead of writing your own scoring logic, you
+    declare what you want to test and DeepEval runs the assertions. Every metric produces a PASS or FAIL verdict — not
+    just a score. This test runs the same 25 RAG cases from Test 9 through DeepEval to compare framework-based
+    evaluation against hand-rolled evaluation.</p>
+  <div class="file-tag">📁 phase-4-frameworks-and-tools/deepeval-evaluation/ &nbsp;|&nbsp; test11_deepeval_evaluator.py
+    · report_generator.py · rag_bot.py · retriever.py · chunker.py</div>
+
+  <h2>What Is DeepEval?</h2>
+  <p>Every evaluator you have built so far — Test 5 LLM-as-a-Judge, Test 6 Semantic Similarity, Test 7 Groundedness,
+    Test 9 RAG — required you to write the scoring logic yourself. You decided what a good answer looks like, how to
+    prompt the judge, and how to interpret the score.</p>
+  <p>DeepEval wraps all of that. You pass it a test case and a metric, and it handles the judge prompt, the scoring, the
+    threshold check, and the pass/fail verdict. The output is closer to a test runner than a measurement tool — which is
+    exactly the mental model a QA engineer already has.</p>
+
+  <div class="info-box">
+    🧪 <strong>The unit test analogy.</strong> In software testing, a test either passes or fails. You don't get a "72%
+    correct" result from a unit test — you get green or red. DeepEval applies the same model to LLM evaluation. Each
+    metric has a threshold (default 0.5 in this test). Score at or above threshold = PASS. Below = FAIL. This is a
+    deliberate design choice — it forces you to define what "good enough" means before you run, not after you see the
+    numbers.
+  </div>
+
+  <h2>What We Built</h2>
+  <p>Unlike Test 9 which required five files, Test 11 is self-contained — all support files are copied locally so the
+    folder runs independently without relying on any other phase.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Purpose</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>test11_deepeval_evaluator.py</code></td>
+        <td><strong>The script you run.</strong> Loads test cases, calls the RAG bot per case, builds a
+          <code>LLMTestCase</code> object, runs three DeepEval metrics per case, prints live progress, generates report.
+        </td>
+        <td>New for Test 11</td>
+      </tr>
+      <tr>
+        <td><code>report_generator.py</code></td>
+        <td>Called automatically at the end. Generates <code>results/deepeval_report.html</code> with PASS/FAIL badges,
+          score cards, and per-case breakdown.</td>
+        <td>New for Test 11</td>
+      </tr>
+      <tr>
+        <td><code>rag_bot.py</code></td>
+        <td>Same banking RAG assistant as Test 9. Copied locally so this folder has no dependency on phase-3.</td>
+        <td>Copied from Test 9</td>
+      </tr>
+      <tr>
+        <td><code>retriever.py</code></td>
+        <td>Vector search over chunks.json using sentence-transformers. Copied locally.</td>
+        <td>Copied from Test 9</td>
+      </tr>
+      <tr>
+        <td><code>chunker.py</code></td>
+        <td>Reads documents/, splits into paragraphs, writes chunks.json. Run once at setup.</td>
+        <td>Copied from Test 9</td>
+      </tr>
+      <tr>
+        <td><code>deepeval_test_cases.xlsx</code></td>
+        <td>Same 25 test cases as Test 9/10, renamed for clarity. Input only — never written by the script.</td>
+        <td>Renamed from Test 10</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">
+    🔧 <strong>Self-contained design.</strong> Every file the evaluator needs lives in the deepeval-evaluation folder.
+    No imports from other phases. Anyone can clone the repo, run <code>python chunker.py</code> once to generate
+    chunks.json, then run <code>python test11_deepeval_evaluator.py</code> — without needing Test 9 or Test 10 to have
+    been run first. This is the correct design for evaluation scripts that will be run in isolation or by other team
+    members.
+  </div>
+
+  <h2>How DeepEval Works — The Key Concepts</h2>
+
+  <h3>LLMTestCase — the unit of evaluation</h3>
+  <p>Everything in DeepEval is built around a <code>LLMTestCase</code> object. You provide three things:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>What it is</th>
+        <th>In this test</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>input</code></td>
+        <td>The question asked</td>
+        <td>The Question column from Excel</td>
+      </tr>
+      <tr>
+        <td><code>actual_output</code></td>
+        <td>What the bot said</td>
+        <td>llama3.1:8b response via Ollama</td>
+      </tr>
+      <tr>
+        <td><code>retrieval_context</code></td>
+        <td>The chunks the RAG bot used</td>
+        <td>Top-3 chunks from retriever.py — as a list of strings</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Once a <code>LLMTestCase</code> is built, you pass it to any metric. The metric sends it to the judge model and
+    returns a score, a reason, and a pass/fail verdict.</p>
+
+  <h3>OllamaModel — running without a paid API</h3>
+  <p>DeepEval was designed with OpenAI as the default judge. To use a local Ollama model instead, you register it once
+    via the CLI:</p>
+
+  <pre>deepeval set-ollama --model=mistral --base-url="http://localhost:11434"</pre>
+
+  <p>This writes a config file on your machine. After that, DeepEval uses mistral for all judge calls — no OpenAI key
+    needed. In code, you instantiate <code>OllamaModel</code> and pass it to each metric.</p>
+
+  <div class="warn-box">
+    ⚠️ <strong>async_mode=False is required for local models.</strong> DeepEval defaults to <code>async_mode=True</code>
+    — it fires multiple concurrent requests to the judge. Ollama cannot handle concurrent requests locally. It queues
+    them, the async calls time out waiting, and scores default to 0.0 — appearing as FAILs. Always set
+    <code>async_mode=False</code> when using Ollama. This is a one-line fix per metric:
+    <code>ContextualRelevancyMetric(threshold=0.5, model=judge, async_mode=False)</code>.
+  </div>
+
+  <h3>The three metrics</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>DeepEval class</th>
+        <th>What it judges</th>
+        <th>Equivalent in Test 9</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Contextual Relevancy</strong></td>
+        <td><code>ContextualRelevancyMetric</code></td>
+        <td>Do the retrieved chunks contain what's needed to answer the question?</td>
+        <td>Context Relevance (LLM judge)</td>
+      </tr>
+      <tr>
+        <td><strong>Faithfulness</strong></td>
+        <td><code>FaithfulnessMetric</code></td>
+        <td>Is every claim in the answer supported by the retrieved context, or was something invented?</td>
+        <td>Answer Faithfulness (LLM judge)</td>
+      </tr>
+      <tr>
+        <td><strong>Answer Relevancy</strong></td>
+        <td><code>AnswerRelevancyMetric</code></td>
+        <td>Does the answer directly address what was asked?</td>
+        <td>Answer Relevance (keyword matching in Test 9 — LLM judge here)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">
+    🔗 <strong>Key difference from Test 9:</strong> In Test 9, Answer Relevance used keyword matching — it checked
+    whether expected keywords appeared in the bot's response. In DeepEval, <code>AnswerRelevancyMetric</code> uses the
+    LLM judge — it asks whether the answer semantically addresses the question. This is a stronger, more flexible
+    measure. It can recognise that "I cannot provide information about the CEO's salary" is a correct refusal even if
+    none of the expected keywords appear.
+  </div>
+
+  <h2>How to Run</h2>
+
+  <h3>Step 1 — one-time setup</h3>
+  <pre>pip install deepeval --break-system-packages
+deepeval set-ollama --model=mistral --base-url="http://localhost:11434"</pre>
+
+  <h3>Step 2 — generate chunks (first time only)</h3>
+  <pre>cd phase-4-frameworks-and-tools/deepeval-evaluation
+python chunker.py</pre>
+
+  <h3>Step 3 — run the evaluator</h3>
+  <pre>python test11_deepeval_evaluator.py</pre>
+
+  <p>The terminal shows live progress for all 25 cases. Each case prints the bot answer, chunk count, and three scoring
+    lines. Output is written to <code>results/deepeval_report.html</code>.</p>
+
+  <div class="warn-box">
+    ⚠️ <strong>Runtime warning — this is slow on local Ollama.</strong> With <code>async_mode=False</code>, all 75 judge
+    calls (25 cases × 3 metrics) run sequentially. Each call waits for mistral to respond. Expect 10–20 minutes for the
+    first 15 cases — then timeouts may begin as Ollama's memory fills under sustained load. See the findings section
+    below for the full explanation of what happened in this run and how to address it.
+  </div>
+
+  <h2>Overall Results</h2>
+
+  <div class="warn-box">
+    ⚠️ <strong>Read before interpreting these numbers.</strong> TC01–TC15 scored fully — mistral judged all three
+    metrics successfully. TC16–TC25 ran in a second batch: ContextualRelevancy and Faithfulness timed out on several
+    cases (defaulting to 0.00), but AnswerRelevancy scored correctly on all. The numbers below reflect all 25 cases with
+    the second-run scores applied. TC19 (weather question) is a correct refusal and was excluded from scoring. Only TC15
+    officially passed (all 3 metrics ≥ 0.5). Read the findings section for the full explanation of the timeout problem.
+  </div>
+
+  <div class="score-row">
+    <div class="score-card">
+      <div class="score-val warn">62%</div>
+      <div class="score-label">Overall Avg</div>
+      <div class="score-desc">All 25 cases · 24 scored (TC19 refusal excluded)</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val fail">24%</div>
+      <div class="score-label">Context Relevance</div>
+      <div class="score-desc">3/24 passed — timeouts on TC16–25 defaulted to 0.00</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val pass">82%</div>
+      <div class="score-label">Faithfulness</div>
+      <div class="score-desc">22/24 passed — strongest metric overall</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val pass">81%</div>
+      <div class="score-label">Answer Relevance</div>
+      <div class="score-desc">20/24 passed — LLM judge, not keyword matching</div>
+    </div>
+  </div>
+
+  <div class="score-row">
+    <div class="score-card">
+      <div class="score-val fail">1/25</div>
+      <div class="score-label">Overall PASS</div>
+      <div class="score-desc">TC15 — only case where all 3 metrics ≥ 0.5</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val">0.5</div>
+      <div class="score-label">Threshold</div>
+      <div class="score-desc">Score below this = FAIL on that metric</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val warn">TC01–15</div>
+      <div class="score-label">Fully Scored</div>
+      <div class="score-desc">All three metrics judged by mistral correctly</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val warn">TC16–25</div>
+      <div class="score-label">Partially Scored</div>
+      <div class="score-desc">Answer Rel. valid; Context Rel. / Faithfulness timed out on some cases</div>
+    </div>
+  </div>
+
+  <h2>The Timeout Problem — What Happened and Why</h2>
+
+  <p>This is the most important finding from Test 11 — not the scores, but what caused the scores to break down.</p>
+
+  <h3>What happened</h3>
+  <p>TC01–TC15 ran correctly — mistral judged all three metrics per case and returned real scores. From TC16 onward, the
+    terminal began printing <code>RetryError[TimeoutError]</code> warnings. When a metric times out, DeepEval catches
+    the exception and defaults the score to 0.0, marking it as FAIL. By TC20–TC25, all three metrics were timing out on
+    almost every case.</p>
+
+  <h3>Why it happened</h3>
+  <p>DeepEval's <code>ContextualRelevancyMetric</code> and <code>FaithfulnessMetric</code> are internally decomposed —
+    they send multiple sub-prompts to the judge to build their score. Each case makes significantly more than 3 judge
+    calls. After 15 cases (roughly 2–3 hours of sustained Ollama load), the machine's available RAM was exhausted,
+    Ollama was swapping memory, and response times grew beyond DeepEval's internal timeout window — even with
+    <code>async_mode=False</code>.
+  </p>
+
+  <div class="danger-box">
+    🚨 <strong>This is not a DeepEval bug — it is a local resource constraint.</strong> DeepEval is designed to run
+    against a paid API (OpenAI, Anthropic) where response times are fast and consistent. Running it against a local
+    Ollama model on a 16GB laptop for 5 hours is outside its intended use case. The framework works — the infrastructure
+    does not scale to this volume locally.
+  </div>
+
+  <h3>All 25 cases — full results</h3>
+  <p>TC01–TC15 were scored fully in the first run. TC16–TC25 ran in a second batch: ContextualRelevancy and
+    Faithfulness timed out on several cases (shown as 0.00*), but AnswerRelevancy scored correctly on all. TC19 is a
+    correct refusal (weather question) and is excluded from metric scoring.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Case</th>
+        <th>Category</th>
+        <th>Context Rel.</th>
+        <th>Faithfulness</th>
+        <th>Answer Rel.</th>
+        <th>Verdict</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>TC01</td>
+        <td>Single Doc — Clean</td>
+        <td class="fail">0.41 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Context fails despite correct retrieval — judge penalises supporting chunks</td>
+      </tr>
+      <tr>
+        <td>TC02</td>
+        <td>Single Doc — Clean</td>
+        <td class="fail">0.18 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Context 0.18 — correct answer from correct chunk still fails context check</td>
+      </tr>
+      <tr>
+        <td>TC03</td>
+        <td>Single Doc — Clean</td>
+        <td class="fail">0.20 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Same calibration pattern — context judge harsh on supporting chunks</td>
+      </tr>
+      <tr>
+        <td>TC04</td>
+        <td>Single Doc — Clean</td>
+        <td class="fail">0.35 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>LearnFund degree rate — context just below threshold</td>
+      </tr>
+      <tr>
+        <td>TC05</td>
+        <td>Single Doc — Numbers</td>
+        <td class="fail">0.06 F</td>
+        <td class="pass">0.50 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Unarranged overdraft — context near zero; faithfulness borderline at 0.50</td>
+      </tr>
+      <tr>
+        <td>TC06</td>
+        <td>Single Doc — Numbers</td>
+        <td class="fail">0.41 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Account opening docs — 4/14 context statements relevant per judge</td>
+      </tr>
+      <tr>
+        <td>TC07</td>
+        <td>Single Doc — Numbers</td>
+        <td class="fail">0.13 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>ATM limit — answer correct; judge finds only 1 directly relevant statement</td>
+      </tr>
+      <tr>
+        <td>TC08</td>
+        <td>Cross-Document</td>
+        <td class="fail">0.28 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>LearnFund loan docs — 1/8 context statements relevant per judge</td>
+      </tr>
+      <tr>
+        <td>TC09</td>
+        <td>Cross-Document</td>
+        <td class="pass">0.52 P</td>
+        <td class="pass">1.00 P</td>
+        <td class="fail">0.33 F</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Monthly fee — context passes; answer relevance fails (LLM judge stricter than keywords)</td>
+      </tr>
+      <tr>
+        <td>TC10</td>
+        <td>Cross-Document</td>
+        <td class="fail">0.38 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Cross-doc retrieval — context borderline below 0.5</td>
+      </tr>
+      <tr>
+        <td>TC11</td>
+        <td>Unanswerable</td>
+        <td class="pass">0.50 P</td>
+        <td class="fail">0.00 F</td>
+        <td class="pass">0.50 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Personal loan — correct refusal; faithfulness 0.00 (refusal has no grounding claim)</td>
+      </tr>
+      <tr>
+        <td>TC12</td>
+        <td>Unanswerable</td>
+        <td class="fail">0.20 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="fail">0.00 F</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Unanswerable — context and answer relevance both fail</td>
+      </tr>
+      <tr>
+        <td>TC13</td>
+        <td>Unanswerable</td>
+        <td class="fail">0.33 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Student account refusal — LLM judge correctly scores relevance; context still fails</td>
+      </tr>
+      <tr>
+        <td>TC14</td>
+        <td>Negative / Boundary</td>
+        <td class="fail">0.13 F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">0.50 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Boundary case — context very low; answer and faithfulness ok</td>
+      </tr>
+      <tr>
+        <td>TC15</td>
+        <td>Adversarial / Confused</td>
+        <td class="pass">0.58 P</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-pass">PASS</span></td>
+        <td>Inactive vs dormant — only case to fully pass all 3 metrics</td>
+      </tr>
+      <tr style="border-top:2px solid #3a3a20">
+        <td colspan="7" style="color:#7a7a50;font-size:11px;font-family:'JetBrains Mono',monospace;padding:6px 13px">
+          * TC16–TC25: second run — ContextualRelevancy and Faithfulness timed out on several cases (0.00 = timeout
+          default). AnswerRelevancy scored correctly on all.
+        </td>
+      </tr>
+      <tr>
+        <td>TC16</td>
+        <td>Negative / Boundary</td>
+        <td class="fail">0.00* F</td>
+        <td class="fail">0.00* F</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Context and faith timed out; answer relevance correctly scored 1.00</td>
+      </tr>
+      <tr>
+        <td>TC17</td>
+        <td>Negative / Boundary</td>
+        <td class="fail">0.14* F</td>
+        <td class="pass">0.50 P</td>
+        <td class="pass">0.50 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Context partial timeout; faith and answer rel. borderline pass</td>
+      </tr>
+      <tr>
+        <td>TC18</td>
+        <td>Negative / Boundary</td>
+        <td class="fail">0.00* F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">0.50 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Context timed out; faithfulness strong at 1.00</td>
+      </tr>
+      <tr style="background:#1a1520">
+        <td>TC19</td>
+        <td>Negative / Boundary</td>
+        <td colspan="3" style="color:#666;font-size:12px">⊘ Refusal — weather question is out of scope. Excluded from
+          scoring.</td>
+        <td><span
+            style="background:#222;color:#666;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:2px 8px;border-radius:10px">N/A</span>
+        </td>
+        <td>Only refusal in TC16–25 batch</td>
+      </tr>
+      <tr>
+        <td>TC20</td>
+        <td>Retrieval Confusion</td>
+        <td class="fail">0.20* F</td>
+        <td class="pass">0.50 P</td>
+        <td class="pass">0.67 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Context timed out; faith borderline; answer rel. correctly scored</td>
+      </tr>
+      <tr>
+        <td>TC21</td>
+        <td>Retrieval Confusion</td>
+        <td class="fail">0.17* F</td>
+        <td class="pass">1.00 P</td>
+        <td class="fail">0.00 F</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Answer relevance 0.00 — judge found answer did not address question</td>
+      </tr>
+      <tr>
+        <td>TC22</td>
+        <td>Retrieval Confusion</td>
+        <td class="fail">0.20* F</td>
+        <td class="pass">1.00 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Faith and rel. both strong; context timed out keeping it from passing</td>
+      </tr>
+      <tr>
+        <td>TC23</td>
+        <td>Retrieval Confusion</td>
+        <td class="fail">0.16* F</td>
+        <td class="pass">0.50 P</td>
+        <td class="pass">0.67 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Context timed out; other metrics borderline pass</td>
+      </tr>
+      <tr>
+        <td>TC24</td>
+        <td>Adversarial / Confused</td>
+        <td class="fail">0.20* F</td>
+        <td class="pass">0.50 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Answer relevance full pass; context timeout prevents overall pass</td>
+      </tr>
+      <tr>
+        <td>TC25</td>
+        <td>Negative / Boundary</td>
+        <td class="fail">0.23* F</td>
+        <td class="pass">0.50 P</td>
+        <td class="pass">1.00 P</td>
+        <td><span class="verdict-fail">FAIL</span></td>
+        <td>Same pattern — context timeout; answer correctly scored at 1.00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>The Context Relevance Calibration Problem</h2>
+
+  <p>The single most striking pattern in TC01–TC15 is how harshly DeepEval's <code>ContextualRelevancyMetric</code>
+    scored context relevance compared to Test 9.</p>
+
+  <div class="compare-row">
+    <div class="compare-card">
+      <div class="compare-title">Test 9 — Context Relevance (hand-rolled)</div>
+      <div class="compare-val pass">84%</div>
+      <div class="compare-desc">Average across 25 cases. Most clean single-document cases scored 100%.</div>
+    </div>
+    <div class="compare-card">
+      <div class="compare-title">Test 11 — Context Relevance (DeepEval)</div>
+      <div class="compare-val fail">24%</div>
+      <div class="compare-desc">Average across all 24 scored cases. TC01–TC15 had real judgements; TC16–TC25 had
+        timeouts defaulting to 0.00 on most.</div>
+    </div>
+  </div>
+
+  <p>TC01 is a clean example: "How long does it take to open a NextGen account?" The retriever pulled the correct
+    chunks. The bot gave the correct answer. Test 9 scored this context relevance at 100%. DeepEval scored it at 0.41 —
+    a FAIL.</p>
+
+  <p>This is a <strong>calibration difference</strong>, not a system failure. DeepEval's
+    <code>ContextualRelevancyMetric</code> internally asks whether each retrieved chunk is directly relevant to the
+    question — it penalises any chunk that is topically related but not specifically needed. With TOP_K=3, the third
+    chunk is often a supporting or nearby paragraph that adds background but is not the primary source of the answer.
+    DeepEval's judge penalises this. Test 9's hand-rolled judge was more lenient — it asked "is there enough context
+    here to answer?" rather than "is every chunk directly relevant?"
+  </p>
+
+  <div class="info-box">
+    🎯 <strong>This is the key learning from Test 11.</strong> Two different judges, same metric name, meaningfully
+    different scores. The label "context relevance" does not guarantee identical evaluation — it depends entirely on how
+    the judge prompt is written. When you compare scores across evaluation frameworks, always check whether the
+    underlying prompt is asking the same question. A score of 84% in Test 9 and 27% in Test 11 does not mean one system
+    is wrong — it means the two judges have different calibration.
+  </div>
+
+  <h2>TC11 — Faithfulness 0.0 on a Correct Refusal</h2>
+
+  <p>TC11: "What is the interest rate on a NextGen personal loan?" The bot answered: <em>"The information provided in
+      the context does not mention the interest rate on a NextGen personal loan."</em> This is a correct answer — the
+    documentation does not contain this information.</p>
+
+  <p>DeepEval scored faithfulness at 0.0. Why? <code>FaithfulnessMetric</code> decomposes the answer into claims and
+    checks each claim against the context. A refusal statement like "the information is not available" is not a claim
+    supported by a chunk — it is an absence of information. DeepEval's faithfulness judge does not have a category for
+    "correct absence of claim" — it treats uncorroborated statements as unfaithful.</p>
+
+  <div class="warn-box">
+    ⚠️ <strong>Faithfulness metrics struggle with correct refusals.</strong> This is a known limitation across all
+    faithfulness evaluators — not just DeepEval. When the correct answer is "I don't know", there is no chunk to support
+    that statement. The judge marks it as a faithfulness failure. Human review is required for unanswerable cases —
+    automated faithfulness scoring alone will systematically penalise correct refusals.
+  </div>
+
+  <h2>TC15 — The One PASS</h2>
+
+  <p>TC15: "What is the difference between an inactive and a dormant account?" This is the only case that passed all
+    three metrics.</p>
+
+  <p>Context relevance 0.58, faithfulness 1.00, answer relevance 1.00. The question has a clear factual answer that maps
+    directly to the retrieved chunks. The distinction between inactive (12 months, no transactions) and dormant (24
+    months, no transactions) is precisely described in one chunk. No boundary reasoning is required. No multi-document
+    synthesis. The retriever pulled the right chunk and the bot quoted it accurately.</p>
+
+  <div class="success-box">
+    ✅ <strong>TC15 is the clearest signal that the pipeline works.</strong> When retrieval is clean and the answer is a
+    direct lookup, DeepEval correctly issues a PASS. The 1/25 pass rate is not evidence that the RAG system is broken —
+    it is evidence that the context relevance threshold (0.5) is strict relative to DeepEval's judge calibration, and
+    that the timeout problem corrupted TC16–TC25.
+  </div>
+
+  <h2>Comparing Test 9 vs Test 11 — Valid Cases Only</h2>
+
+  <p>Using only TC01–TC15 where both tests scored correctly:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Test 9 (hand-rolled)</th>
+        <th>Test 11 DeepEval (TC01–15)</th>
+        <th>Key difference</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Context Relevance</strong></td>
+        <td class="pass">84%</td>
+        <td class="fail">~27%</td>
+        <td>DeepEval penalises supporting chunks; Test 9 asked "enough context?"</td>
+      </tr>
+      <tr>
+        <td><strong>Faithfulness</strong></td>
+        <td class="pass">100%</td>
+        <td class="pass">~87%</td>
+        <td>DeepEval scores refusals as 0.0; Test 9 scored TC11 correctly</td>
+      </tr>
+      <tr>
+        <td><strong>Answer Relevance</strong></td>
+        <td class="warn">66%</td>
+        <td class="pass">~83%</td>
+        <td>DeepEval uses LLM judge — recognises correct refusals; Test 9 used keyword matching</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">
+    📊 <strong>Answer relevance improved with a better judge.</strong> Test 9's keyword matching scored TC13 (student
+    account — not in docs) at 0% answer relevance because none of the expected keywords appeared in the refusal.
+    DeepEval's LLM judge correctly recognised the refusal as relevant and scored it higher. This is the concrete benefit
+    of LLM-as-judge over keyword matching for open-ended and refusal cases.
+  </div>
+
+  <h2>What DeepEval Does That Your Hand-Rolled Evaluator Doesn't</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Capability</th>
+        <th>Test 9 hand-rolled</th>
+        <th>Test 11 DeepEval</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Pass/Fail verdict</td>
+        <td>No — score only</td>
+        <td>Yes — per metric, per case</td>
+      </tr>
+      <tr>
+        <td>Threshold configuration</td>
+        <td>No — you interpret the score</td>
+        <td>Yes — set at metric instantiation</td>
+      </tr>
+      <tr>
+        <td>Judge reasoning</td>
+        <td>Partial — one reason per case</td>
+        <td>Yes — per metric with <code>include_reason=True</code></td>
+      </tr>
+      <tr>
+        <td>Metric decomposition</td>
+        <td>No — single judge prompt</td>
+        <td>Yes — faithfulness decomposes into per-claim checks</td>
+      </tr>
+      <tr>
+        <td>pytest integration</td>
+        <td>No</td>
+        <td>Yes — can run as <code>deepeval test run</code> in CI/CD</td>
+      </tr>
+      <tr>
+        <td>Local model support</td>
+        <td>Yes — built in from the start</td>
+        <td>Yes — with <code>OllamaModel</code> and <code>async_mode=False</code></td>
+      </tr>
+      <tr>
+        <td>Calibration transparency</td>
+        <td>High — you wrote the prompt</td>
+        <td>Low — judge prompt is internal to DeepEval</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>When to Use DeepEval vs Hand-Rolled</h2>
+
+  <p>Test 11 surfaces a genuine trade-off that you will face in production evaluation work:</p>
+
+  <ul>
+    <li><strong>Use DeepEval</strong> when you want fast setup, pytest integration, pass/fail verdicts for CI/CD, and
+      you are running against a paid API with consistent response times. It reduces the amount of evaluation code you
+      write and maintain.</li>
+    <li><strong>Use hand-rolled evaluation</strong> when you need full control over the judge prompt, when you need to
+      understand exactly why a case scored the way it did, or when you are running locally and need predictable
+      performance. You also need hand-rolled evaluation when the framework's metric calibration does not match your
+      definition of quality.</li>
+    <li><strong>Use both</strong> when validating a new evaluation setup. If DeepEval and your hand-rolled scorer agree
+      on a verdict, you can trust the verdict. If they disagree, investigate — the disagreement itself is a finding.
+    </li>
+  </ul>
+
+  <div class="info-box">
+    🎯 <strong>The calibration lesson.</strong> Before adopting any evaluation framework in production, run it on a set
+    of cases where you already know the correct verdict — either from human review or from a trusted hand-rolled
+    evaluator. Check how well the framework agrees. If it systematically disagrees on a category (e.g. all refusal
+    cases), understand why before deploying it as your primary quality gate.
+  </div>
+
+  <h2>The Local vs Paid API Problem</h2>
+
+  <p>The 5-hour runtime and timeout cascade from TC16 onward is a concrete demonstration of a trade-off you will face on
+    every evaluation project:</p>
+
+  <div class="compare-row">
+    <div class="compare-card">
+      <div class="compare-title">Local Ollama</div>
+      <div class="compare-val warn">Free</div>
+      <div class="compare-desc">Zero cost. Full privacy. But slow, memory-constrained, and not suitable for sustained
+        multi-metric evaluation runs with frameworks like DeepEval.</div>
+    </div>
+    <div class="compare-card">
+      <div class="compare-title">Paid API (OpenAI / Anthropic)</div>
+      <div class="compare-val pass">~$0.50</div>
+      <div class="compare-desc">25 cases × 3 metrics at gpt-4o-mini pricing. Fast, consistent, no timeouts. DeepEval was
+        designed for this environment.</div>
+    </div>
+  </div>
+
+  <p>For learning and prototyping, Ollama is the right choice — it allowed you to run hundreds of iterations through
+    Tests 1–10 without any cost. For production evaluation pipelines that need to run reliably, on schedule, and at
+    scale, a paid API is the practical choice. The cost is lower than it appears — 25 evaluation cases costs less than a
+    cup of coffee.</p>
+
+  <h2>Key Takeaways</h2>
+  <ul>
+    <li><strong>DeepEval works — the infrastructure is the constraint.</strong> TC01–TC15 scored correctly. The
+      framework produced valid judgements. The failure was not in DeepEval but in running a sustained multi-metric
+      evaluation against a local model on limited RAM.</li>
+    <li><strong>Same metric name ≠ same score.</strong> Context relevance scored 84% in Test 9 and ~27% in Test 11. Both
+      are valid — they measure the same concept with different judge prompts and different thresholds. Always validate a
+      new framework against known results before trusting its scores.</li>
+    <li><strong>Pass/fail verdicts force explicit quality standards.</strong> In Test 9 you observed scores and drew
+      conclusions. In DeepEval you set a threshold before running. This is a better engineering practice — it prevents
+      post-hoc rationalisation of results.</li>
+    <li><strong>Faithfulness 0.0 on correct refusals is a known framework limitation.</strong> TC11 was a correct
+      refusal scored as a faithfulness failure. This is not a bug — it is a calibration gap. Any production faithfulness
+      evaluator needs a separate handling path for unanswerable cases.</li>
+    <li><strong>LLM-judge answer relevance outperforms keyword matching.</strong> DeepEval's AnswerRelevancyMetric
+      correctly handled refusal cases that Test 9's keyword matching scored at 0%. For real evaluation work, LLM-judge
+      answer relevance is worth the extra judge call cost.</li>
+    <li><strong>For production evaluation pipelines: paid API, not local Ollama.</strong> $0.50 for 25 cases at
+      gpt-4o-mini. Reliable. Fast. No timeouts. The local model is for learning — the paid API is for production.</li>
+  </ul>
+
+  <h2>Reflection Questions</h2>
+  <ul>
+    <li>DeepEval scored TC01 context relevance at 0.41 (FAIL) and Test 9 scored it at 100% (PASS). Both used mistral as
+      judge. What does this tell you about the importance of understanding what question a metric is actually asking —
+      not just its name?</li>
+    <li>The faithfulness metric scored TC11 (correct refusal) at 0.0. If you were designing a production evaluation
+      pipeline for a banking RAG bot, how would you handle unanswerable cases differently from factual cases in your
+      scoring logic?</li>
+    <li>You built hand-rolled evaluation from scratch across Tests 5–9 before using DeepEval in Test 11. How does that
+      experience change how you read and trust DeepEval's scores compared to someone who used DeepEval first?</li>
+    <li>If you re-ran Test 11 using a paid API (gpt-4o-mini as judge), which scores do you think would change most —
+      context relevance, faithfulness, or answer relevance? Why?</li>
+    <li>DeepEval integrates with pytest and can run in CI/CD pipelines. If you were setting a pass rate threshold for a
+      banking RAG bot to go to production, what percentage would you require and which metric would you weight most
+      heavily?</li>
+  </ul>
+
+  <h2>Try This — Extend the Experiment</h2>
+
+  <div class="info-box">
+    🧪 <strong>Experiment 1 — Run with a paid API judge.</strong> When OpenAI credits are available, change
+    <code>JUDGE_MODEL</code> to <code>gpt-4o-mini</code> and <code>JUDGE_PROVIDER</code> to <code>openai</code> in
+    <code>config.yaml</code>. Re-run. Compare context relevance scores against the local mistral run. Does the
+    calibration gap close? Does the pass rate improve?
+  </div>
+
+  <div class="info-box">
+    🧪 <strong>Experiment 2 — Adjust the threshold.</strong> Change <code>METRIC_THRESHOLD</code> in
+    <code>config.yaml</code> from <code>0.5</code> to <code>0.3</code>. Re-run TC01–TC15. How many cases now pass? What
+    does this tell you about the relationship between threshold selection and reported pass rates?
+  </div>
+
+  <div class="info-box">
+    🧪 <strong>Experiment 3 — Run fewer cases to avoid timeouts.</strong> Add <code>MAX_CASES: 10</code> to the
+    <code>phase4_deepeval</code> config section and update the script to respect it. Run only the first 10 cases.
+    Confirm all 10 score without timeouts. Compare those 10 results against the same 10 cases from Test 9.
+  </div>
+
+  <h2>How to Run</h2>
+  <pre>cd phase-4-frameworks-and-tools/deepeval-evaluation
+
+# Step 1 — one-time setup (install + register local judge)
+pip install deepeval --break-system-packages
+deepeval set-ollama --model=mistral --base-url="http://localhost:11434"
+
+# Step 2 — generate chunks (first time only)
+python chunker.py
+
+# Step 3 — run evaluation
+python test11_deepeval_evaluator.py</pre>
+
+  <p>To switch to a paid judge — two lines in <code>config.yaml</code>:</p>
+  <pre>phase4_deepeval:
+  JUDGE_MODEL: "gpt-4o-mini"
+  JUDGE_PROVIDER: "openai"
+  # OPENAI_API_KEY: "sk-..."   # or use env var</pre>
+
+  <footer>Test 11 · Phase 4 · llm-evaluation · bot: llama3.1:8b · judge: mistral (Ollama) · 25 cases · 1 scored refusal
+    (TC19) · Overall 62% · CTX 24% · FAITH 82% · REL 81%</footer>
+
+</body>
+
+</html>

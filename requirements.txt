@@ -3,3 +3,6 @@ rouge-score
 openpyxl
 pyyaml
 sentence-transformers
+ragas 
+langchain-openai
+deepeval

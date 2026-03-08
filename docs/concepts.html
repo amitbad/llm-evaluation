@@ -139,8 +139,8 @@
     main {
       margin-left: var(--nav-w);
       flex: 1;
-      padding: 60px 64px;
-      max-width: 900px;
+      padding: 60px 40px;
+      max-width: 1100px;
     }
 
     .page-title {
@@ -159,7 +159,7 @@
       font-size: 15px;
       margin-bottom: 56px;
       line-height: 1.6;
-      max-width: 560px;
+      max-width: 680px;
     }
 
     /* ── Concept Card ── */
@@ -543,6 +543,7 @@
       <a href="#evidence-documentation">📋 Evidence Documentation</a>
       <a href="#coverage-thinking">🗺 Coverage Thinking</a>
       <a href="#evaluation-validity">⚖️ Evaluation Validity</a>
+      <a href="#disaggregated-evaluation">📊 Disaggregated Evaluation</a>
     </div>
 
     <div class="nav-section">
@@ -561,6 +562,21 @@
       <a href="#retrieval-vs-reasoning">⚔️ Retrieval vs Reasoning</a>
       <a href="#similarity-thresholds">📊 Similarity Thresholds</a>
       <a href="#top-k-chunks">🔢 TOP_K_CHUNKS</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Evaluation Frameworks</div>
+      <a href="#metric-calibration">📐 Metric Calibration</a>
+      <a href="#framework-pass-fail">✅ Framework Pass/Fail</a>
+      <a href="#refusal-handling">⊘ Refusal Handling</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Agents &amp; Evaluation</div>
+      <a href="#trajectory-evaluation">
+        🔁 Trajectory Evaluation
+        <span class="tag tag-behav">phase 3</span>
+      </a>
     </div>
   </nav>
 
@@ -1007,10 +1023,13 @@
       </div>
 
       <div class="simple">
-        A way to measure whether two pieces of text <strong>mean the same thing</strong> — even when they use completely different words. Instead of counting word overlap like BLEU, semantic similarity compares meaning.
+        A way to measure whether two pieces of text <strong>mean the same thing</strong> — even when they use completely
+        different words. Instead of counting word overlap like BLEU, semantic similarity compares meaning.
       </div>
 
-      <p class="detail">BLEU and ROUGE compare words. Semantic similarity compares meaning. It converts both texts into numerical representations (embeddings) and measures how close those representations are. A score of 1.0 means identical meaning. A score near 0 means unrelated meaning.</p>
+      <p class="detail">BLEU and ROUGE compare words. Semantic similarity compares meaning. It converts both texts into
+        numerical representations (embeddings) and measures how close those representations are. A score of 1.0 means
+        identical meaning. A score near 0 means unrelated meaning.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">EXAMPLE — why BLEU fails here</div>
@@ -1026,15 +1045,17 @@
       <div class="example-block">
         <div class="example-label label-eg">SCORE THRESHOLDS — our Test 6 settings</div>
         <div class="example-content">
-          <span class="g">0.90 – 1.0  →  Pass    →  Nearly identical meaning</span><br>
-          <span class="g">0.80 – 0.89 →  Pass    →  Very similar meaning</span><br>
-          <span class="u">0.70 – 0.79 →  Partial →  Mostly correct, some drift</span><br>
-          <span class="u">0.60 – 0.69 →  Partial →  Related but missing key points</span><br>
-          <span class="b">Below 0.60  →  Fail    →  Different meaning</span>
+          <span class="g">0.90 – 1.0 → Pass → Nearly identical meaning</span><br>
+          <span class="g">0.80 – 0.89 → Pass → Very similar meaning</span><br>
+          <span class="u">0.70 – 0.79 → Partial → Mostly correct, some drift</span><br>
+          <span class="u">0.60 – 0.69 → Partial → Related but missing key points</span><br>
+          <span class="b">Below 0.60 → Fail → Different meaning</span>
         </div>
       </div>
 
-      <div class="why-matters">Thresholds are not fixed facts — they are QA decisions. Where you draw the pass/fail line depends on how much variation the domain tolerates. Healthcare might need a stricter threshold than a general information bot. The score is input to that decision, not the decision itself.</div>
+      <div class="why-matters">Thresholds are not fixed facts — they are QA decisions. Where you draw the pass/fail line
+        depends on how much variation the domain tolerates. Healthcare might need a stricter threshold than a general
+        information bot. The score is input to that decision, not the decision itself.</div>
     </div>
 
     <!-- Sentence Embeddings -->
@@ -1048,10 +1069,15 @@
       </div>
 
       <div class="simple">
-        A way of converting text into a list of numbers — a <strong>coordinate in meaning-space</strong>. Text that means similar things gets coordinates that are close together. Text that means different things gets coordinates far apart.
+        A way of converting text into a list of numbers — a <strong>coordinate in meaning-space</strong>. Text that
+        means similar things gets coordinates that are close together. Text that means different things gets coordinates
+        far apart.
       </div>
 
-      <p class="detail">The model we use — <code>all-MiniLM-L6-v2</code> from sentence-transformers — was trained on millions of sentence pairs specifically to place similar-meaning text close together in this space. It does not understand language like a human — it learned statistical patterns of which sentences tend to appear together in similar contexts.</p>
+      <p class="detail">The model we use — <code>all-MiniLM-L6-v2</code> from sentence-transformers — was trained on
+        millions of sentence pairs specifically to place similar-meaning text close together in this space. It does not
+        understand language like a human — it learned statistical patterns of which sentences tend to appear together in
+        similar contexts.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">ANALOGY — coordinates in meaning-space</div>
@@ -1072,15 +1098,18 @@
         <div class="example-content">
           <span class="g">Two embeddings are compared using cosine similarity —</span><br>
           <span class="g">a mathematical measure of the angle between two vectors.</span><br><br>
-          <span class="g">Score = 1.0  →  pointing in exactly the same direction (same meaning)</span><br>
-          <span class="g">Score = 0.0  →  pointing at 90 degrees (unrelated meaning)</span><br>
-          <span class="b">Score = -1.0 →  pointing in opposite directions (opposite meaning)</span><br><br>
+          <span class="g">Score = 1.0 → pointing in exactly the same direction (same meaning)</span><br>
+          <span class="g">Score = 0.0 → pointing at 90 degrees (unrelated meaning)</span><br>
+          <span class="b">Score = -1.0 → pointing in opposite directions (opposite meaning)</span><br><br>
           <span class="u">In practice scores between -1 and 0 are rare for natural language.</span><br>
           <span class="u">Most sentence pairs score between 0.3 and 1.0.</span>
         </div>
       </div>
 
-      <div class="why-matters">Understanding embeddings here is the foundation for understanding RAG (Retrieval-Augmented Generation) in Phase 3. RAG uses the same embedding comparison to find relevant documents — it embeds the user's question and searches for document chunks with similar embeddings. The mechanism is identical to what we built in Test 6.</div>
+      <div class="why-matters">Understanding embeddings here is the foundation for understanding RAG
+        (Retrieval-Augmented Generation) in Phase 3. RAG uses the same embedding comparison to find relevant documents —
+        it embeds the user's question and searches for document chunks with similar embeddings. The mechanism is
+        identical to what we built in Test 6.</div>
     </div>
 
     <!-- ════════════════════════════════════════════════════════════════════════ -->
@@ -1301,19 +1330,27 @@
       </div>
 
       <div class="simple">
-        Checking whether a bot's response can be <strong>traced back to the source material</strong> it was given — or whether the bot invented information not present in the source.
+        Checking whether a bot's response can be <strong>traced back to the source material</strong> it was given — or
+        whether the bot invented information not present in the source.
       </div>
 
-      <p class="detail">A bot given a system prompt, a document, or a set of retrieved facts is constrained to that source. Groundedness scoring checks that constraint. Every specific claim in the response — phone numbers, URLs, product names, policy details — must exist in the source. If it does not, the response is ungrounded regardless of how plausible or well-structured it sounds.</p>
+      <p class="detail">A bot given a system prompt, a document, or a set of retrieved facts is constrained to that
+        source. Groundedness scoring checks that constraint. Every specific claim in the response — phone numbers, URLs,
+        product names, policy details — must exist in the source. If it does not, the response is ungrounded regardless
+        of how plausible or well-structured it sounds.</p>
 
       <div class="example-block">
         <div class="example-label label-bad">UNGROUNDED — invented specifics</div>
         <div class="example-content">
           <span class="u">Source says:</span> Direct patients to call the helpline or use the patient portal<br><br>
-          <span class="b">Bot says:</span> "Visit www.citygen.org and call us at (555) 123-4567. Log in to MyChart to book online."<br><br>
-          <span class="b">What was invented:</span> The URL, the phone number, the MyChart product name — none in source<br>
-          <span class="b">Why dangerous:</span> Patient calls a non-working number. Patient visits a non-existent site.<br>
-          <span class="b">Why hard to catch:</span> The response is polite, structured, and on-topic. Lenient judges reward it.
+          <span class="b">Bot says:</span> "Visit www.citygen.org and call us at (555) 123-4567. Log in to MyChart to
+          book online."<br><br>
+          <span class="b">What was invented:</span> The URL, the phone number, the MyChart product name — none in
+          source<br>
+          <span class="b">Why dangerous:</span> Patient calls a non-working number. Patient visits a non-existent
+          site.<br>
+          <span class="b">Why hard to catch:</span> The response is polite, structured, and on-topic. Lenient judges
+          reward it.
         </div>
       </div>
 
@@ -1321,41 +1358,65 @@
         <div class="example-label label-good">GROUNDED — only source material used</div>
         <div class="example-content">
           <span class="g">Source says:</span> Direct patients to the helpline, patient portal, or front desk<br><br>
-          <span class="g">Bot says:</span> "You can book an appointment by calling our helpline, using the online patient portal, or visiting the front desk."<br><br>
+          <span class="g">Bot says:</span> "You can book an appointment by calling our helpline, using the online
+          patient portal, or visiting the front desk."<br><br>
           <span class="g">Every claim traces to source. Nothing invented. Score: 3 — GROUNDED.</span>
         </div>
       </div>
 
-      <p class="detail">Groundedness uses the <strong>LLM-as-a-Judge</strong> pattern — a judge model reads the source, the question, and the bot response, then decides whether each claim is traceable. The judge returns a score and verdict:</p>
+      <p class="detail">Groundedness uses the <strong>LLM-as-a-Judge</strong> pattern — a judge model reads the source,
+        the question, and the bot response, then decides whether each claim is traceable. The judge returns a score and
+        verdict:</p>
 
       <table style="width:100%;border-collapse:collapse;margin:14px 0 20px;font-size:13px;">
         <thead>
           <tr>
-            <th style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">Verdict</th>
-            <th style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">Score</th>
-            <th style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">Meaning</th>
+            <th
+              style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">
+              Verdict</th>
+            <th
+              style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">
+              Score</th>
+            <th
+              style="background:#1c1c21;color:#7a7a90;font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;padding:10px 13px;text-align:left;border:1px solid #2a2a32;font-weight:600;">
+              Meaning</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#4ade80;">✓ Grounded</strong></td>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#4ade80;">3</td>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Every claim in the response can be traced directly to the source material</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#4ade80;">✓
+                Grounded</strong></td>
+            <td
+              style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#4ade80;">
+              3</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Every claim in the
+              response can be traced directly to the source material</td>
           </tr>
           <tr>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#fbbf24;">~ Partial</strong></td>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#fbbf24;">2</td>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Mostly grounded, but contains minor additions or inferences not in the source</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#fbbf24;">~
+                Partial</strong></td>
+            <td
+              style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#fbbf24;">
+              2</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Mostly grounded,
+              but contains minor additions or inferences not in the source</td>
           </tr>
           <tr>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#f87171;">✗ Ungrounded</strong></td>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#f87171;">1</td>
-            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Contains invented facts, hallucinations, or information not present in the source</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;"><strong style="color:#f87171;">✗
+                Ungrounded</strong></td>
+            <td
+              style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;font-family:'JetBrains Mono',monospace;color:#f87171;">
+              1</td>
+            <td style="padding:11px 13px;border:1px solid #2a2a32;background:#141417;color:#c0c0d8;">Contains invented
+              facts, hallucinations, or information not present in the source</td>
           </tr>
         </tbody>
       </table>
 
-      <div class="why-matters">In RAG systems — where the bot is given retrieved documents and must answer from them — groundedness is the primary safety check. The three core RAG eval metrics (context relevance, answer faithfulness, answer relevance) are all forms of groundedness evaluation. Understanding groundedness here is the foundation for evaluating RAG systems in Phase 3.</div>
+      <div class="why-matters">In RAG systems — where the bot is given retrieved documents and must answer from them —
+        groundedness is the primary safety check. The three core RAG eval metrics (context relevance, answer
+        faithfulness, answer relevance) are all forms of groundedness evaluation. Understanding groundedness here is the
+        foundation for evaluating RAG systems in Phase 3.</div>
     </div>
 
     <!-- Reference Contamination -->
@@ -1369,21 +1430,32 @@
       </div>
 
       <div class="simple">
-        When the <strong>expected answer itself contains hallucinated or unverified information</strong> — not derived from the actual source material. Every evaluation method then measures agreement between two hallucinations and produces high scores with complete false confidence.
+        When the <strong>expected answer itself contains hallucinated or unverified information</strong> — not derived
+        from the actual source material. Every evaluation method then measures agreement between two hallucinations and
+        produces high scores with complete false confidence.
       </div>
 
-      <p class="detail">This is one of the most dangerous silent failures in LLM evaluation. It is invisible in the results — scores look good, verdicts look clean. But the entire evaluation is built on a contaminated foundation. The bot hallucinated. The expected answer hallucinated the same plausible details. They agreed. Every metric rewarded it.</p>
+      <p class="detail">This is one of the most dangerous silent failures in LLM evaluation. It is invisible in the
+        results — scores look good, verdicts look clean. But the entire evaluation is built on a contaminated
+        foundation. The bot hallucinated. The expected answer hallucinated the same plausible details. They agreed.
+        Every metric rewarded it.</p>
 
       <div class="example-block">
         <div class="example-label label-bad">REFERENCE CONTAMINATION — discovered in Test 7</div>
         <div class="example-content">
-          <span class="u">System prompt says:</span> Direct patients to the helpline for appointment information. Nothing about cancellation policy, fees, or notice periods.<br><br>
+          <span class="u">System prompt says:</span> Direct patients to the helpline for appointment information.
+          Nothing about cancellation policy, fees, or notice periods.<br><br>
           <span class="u">Expected answer (written during test case design):</span><br>
-          <span class="b">"Please cancel at least 24 hours in advance to avoid a cancellation fee of $25. You can cancel via the patient portal, by phone, or by email."</span><br><br>
-          <span class="b">Problem: 24-hour notice, $25 fee, portal/phone/email — none of this is in the system prompt. The expected answer was hallucinated.</span><br><br>
+          <span class="b">"Please cancel at least 24 hours in advance to avoid a cancellation fee of $25. You can cancel
+            via the patient portal, by phone, or by email."</span><br><br>
+          <span class="b">Problem: 24-hour notice, $25 fee, portal/phone/email — none of this is in the system prompt.
+            The expected answer was hallucinated.</span><br><br>
           <span class="u">Bot response:</span><br>
-          <span class="b">"Please contact our scheduling department at least 24 hours in advance. You may be subject to a fee if you cancel with less than 24 hours notice."</span><br><br>
-          <span class="b">The bot also hallucinated — but it matched the expected answer. Semantic similarity scored high. Groundedness judge saw it as Partial rather than Ungrounded. Both were wrong. Neither was caught.</span>
+          <span class="b">"Please contact our scheduling department at least 24 hours in advance. You may be subject to
+            a fee if you cancel with less than 24 hours notice."</span><br><br>
+          <span class="b">The bot also hallucinated — but it matched the expected answer. Semantic similarity scored
+            high. Groundedness judge saw it as Partial rather than Ungrounded. Both were wrong. Neither was
+            caught.</span>
         </div>
       </div>
 
@@ -1391,14 +1463,22 @@
         <div class="example-label label-good">CORRECT expected answer — derived from source only</div>
         <div class="example-content">
           <span class="g">System prompt says nothing about cancellation policy.</span><br>
-          <span class="g">Correct expected answer: "I don't have specific information about our cancellation policy. Please call our helpline or visit the front desk for details."</span><br><br>
-          <span class="g">This forces the bot to either stay grounded (admit it doesn't know) or hallucinate (invent a policy). Now the evaluation can actually detect the failure.</span>
+          <span class="g">Correct expected answer: "I don't have specific information about our cancellation policy.
+            Please call our helpline or visit the front desk for details."</span><br><br>
+          <span class="g">This forces the bot to either stay grounded (admit it doesn't know) or hallucinate (invent a
+            policy). Now the evaluation can actually detect the failure.</span>
         </div>
       </div>
 
-      <p class="detail">Reference contamination most commonly happens when expected answers are generated by an LLM rather than written from the source material directly. The LLM fills in plausible details — fees, timeframes, contact methods — that sound correct but have no basis in the source. When the bot does the same thing, both agree and the evaluation passes silently.</p>
+      <p class="detail">Reference contamination most commonly happens when expected answers are generated by an LLM
+        rather than written from the source material directly. The LLM fills in plausible details — fees, timeframes,
+        contact methods — that sound correct but have no basis in the source. When the bot does the same thing, both
+        agree and the evaluation passes silently.</p>
 
-      <div class="why-matters">Expected answers must be derived strictly from the source material — the system prompt, the document, the knowledge base. If the source does not mention it, the expected answer must not mention it either. A contaminated reference does not just affect one test case — it undermines the entire evaluation suite. Every high score built on a contaminated reference is meaningless.</div>
+      <div class="why-matters">Expected answers must be derived strictly from the source material — the system prompt,
+        the document, the knowledge base. If the source does not mention it, the expected answer must not mention it
+        either. A contaminated reference does not just affect one test case — it undermines the entire evaluation suite.
+        Every high score built on a contaminated reference is meaningless.</div>
     </div>
 
     <!-- Evaluation Rubric Design -->
@@ -1412,15 +1492,20 @@
       </div>
 
       <div class="simple">
-        The set of instructions and criteria given to a judge model that determines <strong>what it looks for</strong> when scoring a response. The rubric shapes what gets caught — and what gets missed.
+        The set of instructions and criteria given to a judge model that determines <strong>what it looks for</strong>
+        when scoring a response. The rubric shapes what gets caught — and what gets missed.
       </div>
 
-      <p class="detail">A rubric is not just a score scale. It is a contract with the judge: here is what good looks like, here is what bad looks like, here is what you must check. Two rubrics on the same judge model can produce dramatically different verdicts on the same response. Rubric design is as important as judge model selection.</p>
+      <p class="detail">A rubric is not just a score scale. It is a contract with the judge: here is what good looks
+        like, here is what bad looks like, here is what you must check. Two rubrics on the same judge model can produce
+        dramatically different verdicts on the same response. Rubric design is as important as judge model selection.
+      </p>
 
       <div class="example-block">
         <div class="example-label label-bad">WEAK rubric — topic alignment only</div>
         <div class="example-content">
-          <span class="b">Instruction: "Score whether the bot response is helpful and relevant to the question."</span><br><br>
+          <span class="b">Instruction: "Score whether the bot response is helpful and relevant to the
+            question."</span><br><br>
           <span class="b">Result: Rewards confident, well-structured hallucinations that are on-topic.</span><br>
           <span class="b">Misses: Invented URLs, fake phone numbers, fabricated product names.</span><br>
           <span class="b">TC001 scored PARTIAL under this rubric — 4 fabricated specifics missed.</span>
@@ -1430,15 +1515,23 @@
       <div class="example-block">
         <div class="example-label label-good">STRONG rubric — claim-level traceability</div>
         <div class="example-content">
-          <span class="g">Instruction: "For each specific claim in the response — names, numbers, URLs, products, policies — verify it can be found in the source material. If any specific claim is not traceable to the source, score it UNGROUNDED."</span><br><br>
-          <span class="g">Result: Catches individual fabricated specifics even in polite, structured responses.</span><br>
+          <span class="g">Instruction: "For each specific claim in the response — names, numbers, URLs, products,
+            policies — verify it can be found in the source material. If any specific claim is not traceable to the
+            source, score it UNGROUNDED."</span><br><br>
+          <span class="g">Result: Catches individual fabricated specifics even in polite, structured
+            responses.</span><br>
           <span class="g">TC001 would score UNGROUNDED — 4 fabricated specifics caught.</span>
         </div>
       </div>
 
-      <p class="detail">Rubric design also interacts with judge model selection. A strict rubric instructs the judge what to look for — but the judge model must be capable of following it consistently. A lenient model may acknowledge the rubric and still miss specifics. A stricter model follows claim-level instructions more reliably.</p>
+      <p class="detail">Rubric design also interacts with judge model selection. A strict rubric instructs the judge
+        what to look for — but the judge model must be capable of following it consistently. A lenient model may
+        acknowledge the rubric and still miss specifics. A stricter model follows claim-level instructions more
+        reliably.</p>
 
-      <div class="why-matters">In production evaluation pipelines, rubric design is iterated just like test case design. You run the judge, review verdicts you disagree with, identify what the rubric failed to catch, and tighten the instruction. A rubric is never final — it evolves as you discover new failure patterns.</div>
+      <div class="why-matters">In production evaluation pipelines, rubric design is iterated just like test case design.
+        You run the judge, review verdicts you disagree with, identify what the rubric failed to catch, and tighten the
+        instruction. A rubric is never final — it evolves as you discover new failure patterns.</div>
     </div>
 
     <!-- Answer Faithfulness -->
@@ -1452,33 +1545,52 @@
       </div>
 
       <div class="simple">
-        The industry-standard term for what groundedness scoring measures — <strong>does every claim in the bot's answer stay faithful to its source context?</strong> If the bot says something not found in the source, it is unfaithful. Used in RAGAS and across RAG evaluation frameworks.
+        The industry-standard term for what groundedness scoring measures — <strong>does every claim in the bot's answer
+          stay faithful to its source context?</strong> If the bot says something not found in the source, it is
+        unfaithful. Used in RAGAS and across RAG evaluation frameworks.
       </div>
 
-      <p class="detail">Answer faithfulness evaluates at the individual claim level — not the response as a whole. A response can be mostly faithful but contain one invented phone number, one fabricated URL, or one made-up policy detail. That single unfaithful claim makes the entire response unreliable in high-stakes domains like healthcare or finance.</p>
+      <p class="detail">Answer faithfulness evaluates at the individual claim level — not the response as a whole. A
+        response can be mostly faithful but contain one invented phone number, one fabricated URL, or one made-up policy
+        detail. That single unfaithful claim makes the entire response unreliable in high-stakes domains like healthcare
+        or finance.</p>
 
       <div class="example-block">
         <div class="example-label label-bad">UNFAITHFUL response — TC13 from Test 7</div>
         <div class="example-content">
           <span class="b">Question: "How can I get a copy of my medical records?"</span><br><br>
-          <span class="b">Source (system prompt): Direct patients to the medical records department. No phone number, no email, no floor number, no processing time.</span><br><br>
-          <span class="b">Bot invented: (555) 123-4567 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="523f37363b31333e2037313d20362112313b262b35373c3720333e3a3d21223b26333e7c313d3f">[email&#160;protected]</a> · "second floor" · "7-10 business days"</span><br><br>
-          <span class="b">Judge verdict: GROUNDED. Reason: "contact details and processing time are consistent with source material."</span><br><br>
-          <span class="b">Why it failed: gemma evaluated topic relevance, not faithfulness. None of those specifics exist in the source. Every claim was fabricated. Answer faithfulness = 0.</span>
+          <span class="b">Source (system prompt): Direct patients to the medical records department. No phone number, no
+            email, no floor number, no processing time.</span><br><br>
+          <span class="b">Bot invented: (555) 123-4567 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__"
+              data-cfemail="523f37363b31333e2037313d20362112313b262b35373c3720333e3a3d21223b26333e7c313d3f">[email&#160;protected]</a>
+            · "second floor" · "7-10 business days"</span><br><br>
+          <span class="b">Judge verdict: GROUNDED. Reason: "contact details and processing time are consistent with
+            source material."</span><br><br>
+          <span class="b">Why it failed: gemma evaluated topic relevance, not faithfulness. None of those specifics
+            exist in the source. Every claim was fabricated. Answer faithfulness = 0.</span>
         </div>
       </div>
 
       <div class="example-block">
         <div class="example-label label-good">FAITHFUL response — what it should have said</div>
         <div class="example-content">
-          <span class="g">"To obtain a copy of your medical records, please contact our medical records department. They will guide you through the process."</span><br><br>
-          <span class="g">No invented contact details. No fabricated timelines. Only what the source authorises. This is a faithful response — lower confidence, but fully traceable.</span>
+          <span class="g">"To obtain a copy of your medical records, please contact our medical records department. They
+            will guide you through the process."</span><br><br>
+          <span class="g">No invented contact details. No fabricated timelines. Only what the source authorises. This is
+            a faithful response — lower confidence, but fully traceable.</span>
         </div>
       </div>
 
-      <p class="detail">Answer faithfulness is different from answer correctness. A response can be factually correct in the real world but still unfaithful — if the information came from the model's training data rather than the provided source. In RAG evaluation, faithfulness to the retrieved context is the only thing that matters, regardless of whether the invented detail happens to be true.</p>
+      <p class="detail">Answer faithfulness is different from answer correctness. A response can be factually correct in
+        the real world but still unfaithful — if the information came from the model's training data rather than the
+        provided source. In RAG evaluation, faithfulness to the retrieved context is the only thing that matters,
+        regardless of whether the invented detail happens to be true.</p>
 
-      <div class="why-matters">Answer faithfulness is one of the three core metrics in RAG evaluation frameworks — alongside context relevance (did retrieval return the right documents?) and answer relevance (did the answer actually address the question?). Groundedness scoring in Test 7 is a hand-built version of answer faithfulness evaluation. When you reach Phase 4, you will see how these same concepts are measured at scale using dedicated frameworks.</div>
+      <div class="why-matters">Answer faithfulness is one of the three core metrics in RAG evaluation frameworks —
+        alongside context relevance (did retrieval return the right documents?) and answer relevance (did the answer
+        actually address the question?). Groundedness scoring in Test 7 is a hand-built version of answer faithfulness
+        evaluation. When you reach Phase 4, you will see how these same concepts are measured at scale using dedicated
+        frameworks.</div>
     </div>
 
     <!-- ════════════════════════════════════════════════════════════════════════ -->
@@ -1499,34 +1611,53 @@
       </div>
 
       <div class="simple">
-        Temperature controls how the model picks the next word. <strong>Low temperature = predictable, consistent, deterministic. High temperature = creative, varied, less reliable for structured tasks.</strong>
+        Temperature controls how the model picks the next word. <strong>Low temperature = predictable, consistent,
+          deterministic. High temperature = creative, varied, less reliable for structured tasks.</strong>
       </div>
 
-      <p class="detail">Every time a model generates the next word, it calculates a probability score for every word in its vocabulary — ranked from most to least likely. Temperature controls how far down that ranked list the model is willing to reach.</p>
+      <p class="detail">Every time a model generates the next word, it calculates a probability score for every word in
+        its vocabulary — ranked from most to least likely. Temperature controls how far down that ranked list the model
+        is willing to reach.</p>
 
-      <p class="detail">At temperature 0.0 it always picks rank #1 — the single most probable word. The same input will produce the same output every time. At temperature 1.5 it may pick rank #4 or #5. Those lower-ranked words are less expected, which is why responses become more varied and less predictable.</p>
+      <p class="detail">At temperature 0.0 it always picks rank #1 — the single most probable word. The same input will
+        produce the same output every time. At temperature 1.5 it may pick rank #4 or #5. Those lower-ranked words are
+        less expected, which is why responses become more varied and less predictable.</p>
 
       <div class="example-block">
-        <div class="example-label" style="background:#1a2a1a;color:#4ade80;border-color:#2a4a2a">Temperature spectrum</div>
+        <div class="example-label" style="background:#1a2a1a;color:#4ade80;border-color:#2a4a2a">Temperature spectrum
+        </div>
         <div class="example-content">
-          <span class="g"><strong>0.0</strong> — Fully deterministic. Always picks the most probable word. Same input = same output every run.</span><br><br>
-          <span class="g"><strong>0.5</strong> — Slightly relaxed. Minor wording variation between runs. Still highly reliable.</span><br><br>
-          <span style="color:#fbbf24"><strong>1.0</strong> — Default for most models. Raw probability distribution used as-is. Noticeable variation between runs.</span><br><br>
-          <span class="b"><strong>1.5</strong> — Loosely bound. Less probable words become meaningfully likely. Creative but unreliable for constrained tasks.</span>
+          <span class="g"><strong>0.0</strong> — Fully deterministic. Always picks the most probable word. Same input =
+            same output every run.</span><br><br>
+          <span class="g"><strong>0.5</strong> — Slightly relaxed. Minor wording variation between runs. Still highly
+            reliable.</span><br><br>
+          <span style="color:#fbbf24"><strong>1.0</strong> — Default for most models. Raw probability distribution used
+            as-is. Noticeable variation between runs.</span><br><br>
+          <span class="b"><strong>1.5</strong> — Loosely bound. Less probable words become meaningfully likely. Creative
+            but unreliable for constrained tasks.</span>
         </div>
       </div>
 
-      <p class="detail">In Test 8, we ran the full 15-case banking bot test suite at all four temperatures. The pass rate was identical across all settings — 13/15 at every temperature. This is itself a finding: llama3.1:8b has deeply embedded refusal training that temperature cannot disrupt, and factual recall (interest rates, fees) is anchored strongly enough that even high temperature does not introduce errors.</p>
+      <p class="detail">In Test 8, we ran the full 15-case banking bot test suite at all four temperatures. The pass
+        rate was identical across all settings — 13/15 at every temperature. This is itself a finding: llama3.1:8b has
+        deeply embedded refusal training that temperature cannot disrupt, and factual recall (interest rates, fees) is
+        anchored strongly enough that even high temperature does not introduce errors.</p>
 
       <div class="example-block">
         <div class="example-label label-bad">Common misconception</div>
         <div class="example-content">
           <span class="b">"Temperature 0.0 gives the best answers."</span><br><br>
-          <span class="b">Not necessarily. Temperature 0.0 gives the most predictable answers. For factual Q&A and banking bots that is exactly what you want. For tasks that need variety — generating multiple options, creative writing, brainstorming — 0.0 will produce the same output every time regardless of how many times you ask.</span>
+          <span class="b">Not necessarily. Temperature 0.0 gives the most predictable answers. For factual Q&A and
+            banking bots that is exactly what you want. For tasks that need variety — generating multiple options,
+            creative writing, brainstorming — 0.0 will produce the same output every time regardless of how many times
+            you ask.</span>
         </div>
       </div>
 
-      <div class="why-matters">Production banking and healthcare bots typically run at 0.0–0.3. Not because high temperature always produces worse answers, but because predictability is a compliance and auditability property. If a bot can give two different answers to the same question depending on temperature, that is a risk in regulated industries — regardless of whether both answers happen to be correct.</div>
+      <div class="why-matters">Production banking and healthcare bots typically run at 0.0–0.3. Not because high
+        temperature always produces worse answers, but because predictability is a compliance and auditability property.
+        If a bot can give two different answers to the same question depending on temperature, that is a risk in
+        regulated industries — regardless of whether both answers happen to be correct.</div>
     </div>
 
     <!-- Non-Determinism -->
@@ -1540,36 +1671,59 @@
       </div>
 
       <div class="simple">
-        Non-determinism means <strong>the same input can produce different outputs on different runs</strong>. Unlike traditional software where the same input always produces the same output, LLMs are probabilistic by design. This is one of the most fundamental differences between LLM evaluation and traditional QA.
+        Non-determinism means <strong>the same input can produce different outputs on different runs</strong>. Unlike
+        traditional software where the same input always produces the same output, LLMs are probabilistic by design.
+        This is one of the most fundamental differences between LLM evaluation and traditional QA.
       </div>
 
-      <p class="detail">In traditional software testing, if a function returns a wrong value you have a bug — fix it and it stays fixed. In LLM evaluation, a test can pass on one run and fail on the next with no code change at all. The model itself is the source of variation.</p>
+      <p class="detail">In traditional software testing, if a function returns a wrong value you have a bug — fix it and
+        it stays fixed. In LLM evaluation, a test can pass on one run and fail on the next with no code change at all.
+        The model itself is the source of variation.</p>
 
-      <p class="detail">Temperature is the most direct cause of non-determinism, but not the only one. Even at temperature 0.0, minor differences in hardware floating-point precision, batching, or model loading can produce slightly different outputs. For practical evaluation purposes, temperature 0.0 is treated as deterministic — but it is worth knowing that absolute determinism is not guaranteed across different machines or model versions.</p>
+      <p class="detail">Temperature is the most direct cause of non-determinism, but not the only one. Even at
+        temperature 0.0, minor differences in hardware floating-point precision, batching, or model loading can produce
+        slightly different outputs. For practical evaluation purposes, temperature 0.0 is treated as deterministic — but
+        it is worth knowing that absolute determinism is not guaranteed across different machines or model versions.</p>
 
       <div class="example-block">
-        <div class="example-label" style="background:#1a1a2a;color:#a78bfa;border-color:#2a2a4a">What non-determinism looks like in practice</div>
+        <div class="example-label" style="background:#1a1a2a;color:#a78bfa;border-color:#2a2a4a">What non-determinism
+          looks like in practice</div>
         <div class="example-content">
-          <span class="g"><strong>Run 1:</strong> "The Gold Account offers a 4% annual interest rate." ✅ PASS</span><br><br>
-          <span class="g"><strong>Run 2:</strong> "Gold Account holders enjoy a competitive 4% annual interest rate, making it our best option for savers." ✅ PASS</span><br><br>
-          <span class="b"><strong>Run 3:</strong> "Our Gold Account is designed for customers seeking growth, with rates reviewed annually." ❌ FAIL — missing keyword: 4%</span><br><br>
-          <span style="color:#7a7a90">Same prompt. Same model. Same system prompt. Different results. The third run drifted from the expected answer not because anything changed — but because the model picked a different path through its probability distribution.</span>
+          <span class="g"><strong>Run 1:</strong> "The Gold Account offers a 4% annual interest rate." ✅
+            PASS</span><br><br>
+          <span class="g"><strong>Run 2:</strong> "Gold Account holders enjoy a competitive 4% annual interest rate,
+            making it our best option for savers." ✅ PASS</span><br><br>
+          <span class="b"><strong>Run 3:</strong> "Our Gold Account is designed for customers seeking growth, with rates
+            reviewed annually." ❌ FAIL — missing keyword: 4%</span><br><br>
+          <span style="color:#7a7a90">Same prompt. Same model. Same system prompt. Different results. The third run
+            drifted from the expected answer not because anything changed — but because the model picked a different
+            path through its probability distribution.</span>
         </div>
       </div>
 
-      <p class="detail">This is why evaluation runs use multiple passes in research contexts — running the same test once and declaring a pass or fail is not statistically reliable. In Test 2, we ran each use case three times specifically to observe this. In Test 8, we observed the opposite: some models are stable enough that temperature barely affects their outputs on structured tasks.</p>
+      <p class="detail">This is why evaluation runs use multiple passes in research contexts — running the same test
+        once and declaring a pass or fail is not statistically reliable. In Test 2, we ran each use case three times
+        specifically to observe this. In Test 8, we observed the opposite: some models are stable enough that
+        temperature barely affects their outputs on structured tasks.</p>
 
       <div class="example-block">
         <div class="example-label label-good">How to handle non-determinism in evaluation</div>
         <div class="example-content">
-          <span class="g">1. Run tests multiple times and track pass rate across runs, not just a single pass/fail.</span><br><br>
-          <span class="g">2. Set temperature to 0.0 for evaluation runs where consistency matters — this minimises but does not eliminate variation.</span><br><br>
-          <span class="g">3. When a test fails unexpectedly, re-run before investigating — it may have been a one-off variation, not a real regression.</span><br><br>
-          <span class="g">4. Design must-contain keywords broadly enough to accept valid paraphrases of the expected answer — not so narrow that correct responses fail due to wording variation.</span>
+          <span class="g">1. Run tests multiple times and track pass rate across runs, not just a single
+            pass/fail.</span><br><br>
+          <span class="g">2. Set temperature to 0.0 for evaluation runs where consistency matters — this minimises but
+            does not eliminate variation.</span><br><br>
+          <span class="g">3. When a test fails unexpectedly, re-run before investigating — it may have been a one-off
+            variation, not a real regression.</span><br><br>
+          <span class="g">4. Design must-contain keywords broadly enough to accept valid paraphrases of the expected
+            answer — not so narrow that correct responses fail due to wording variation.</span>
         </div>
       </div>
 
-      <div class="why-matters">Non-determinism is why LLM evaluation is a discipline, not just a checklist. A single test run tells you what happened once. An evaluation suite run multiple times at different temperatures tells you how reliable the system is. The goal is not a binary pass/fail — it is a confidence level. This is the core shift in thinking from traditional QA to GenAI evaluation.</div>
+      <div class="why-matters">Non-determinism is why LLM evaluation is a discipline, not just a checklist. A single
+        test run tells you what happened once. An evaluation suite run multiple times at different temperatures tells
+        you how reliable the system is. The goal is not a binary pass/fail — it is a confidence level. This is the core
+        shift in thinking from traditional QA to GenAI evaluation.</div>
     </div>
 
     <!-- ════════════════════════════════════════════════════════════════════════ -->
@@ -1580,7 +1734,9 @@
     </div>
 
     <p style="color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7;">
-      RAG — Retrieval Augmented Generation — is a pattern where the bot searches a document corpus first and answers only from what it retrieves. Evaluating a RAG system means evaluating three things separately: did it find the right information, did it answer from that information, and did it address what was actually asked.
+      RAG — Retrieval Augmented Generation — is a pattern where the bot searches a document corpus first and answers
+      only from what it retrieves. Evaluating a RAG system means evaluating three things separately: did it find the
+      right information, did it answer from that information, and did it address what was actually asked.
     </p>
 
     <!-- Chunking -->
@@ -1594,27 +1750,36 @@
       </div>
 
       <div class="simple">
-        Splitting source documents into <strong>smaller retrievable pieces</strong> before storing them. The retriever searches over chunks, not whole documents — so how you split determines what can be found.
+        Splitting source documents into <strong>smaller retrievable pieces</strong> before storing them. The retriever
+        searches over chunks, not whole documents — so how you split determines what can be found.
       </div>
 
-      <p class="detail">A document containing 10 facts cannot be retrieved "partly" — if you store the whole document as one unit, every search either retrieves all 10 facts or none of them. Chunking solves this by splitting the document into pieces so the retriever can return only the relevant section. The size and strategy of the split affects everything downstream.</p>
+      <p class="detail">A document containing 10 facts cannot be retrieved "partly" — if you store the whole document as
+        one unit, every search either retrieves all 10 facts or none of them. Chunking solves this by splitting the
+        document into pieces so the retriever can return only the relevant section. The size and strategy of the split
+        affects everything downstream.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">CHUNKING STRATEGIES</div>
         <div class="example-content">
           <span class="g">Paragraph-based — split on blank lines. Each paragraph is one chunk.</span><br>
           <span class="g">Used in Test 9: 3 documents → 12 chunks (4 per document).</span><br><br>
-          <span class="u">Fixed-size — split every N tokens regardless of content. Simple but can cut sentences mid-thought.</span><br><br>
-          <span class="b">Sentence-based — split on full stops. Very granular. May lose context that spans multiple sentences.</span><br><br>
-          <span style="color:var(--muted)">Semantic chunking — use embeddings to find natural topic boundaries. Most accurate, most complex.</span>
+          <span class="u">Fixed-size — split every N tokens regardless of content. Simple but can cut sentences
+            mid-thought.</span><br><br>
+          <span class="b">Sentence-based — split on full stops. Very granular. May lose context that spans multiple
+            sentences.</span><br><br>
+          <span style="color:var(--muted)">Semantic chunking — use embeddings to find natural topic boundaries. Most
+            accurate, most complex.</span>
         </div>
       </div>
 
       <div class="example-block">
         <div class="example-label label-bad">BAD chunk — too large</div>
         <div class="example-content">
-          <span class="b">Chunk contains: account types, fees, interest rates, eligibility, and contact information — all in one block.</span><br>
-          <span class="b">Result: Retriever pulls this chunk for any question. Bot always has too much irrelevant context.</span>
+          <span class="b">Chunk contains: account types, fees, interest rates, eligibility, and contact information —
+            all in one block.</span><br>
+          <span class="b">Result: Retriever pulls this chunk for any question. Bot always has too much irrelevant
+            context.</span>
         </div>
       </div>
 
@@ -1622,11 +1787,15 @@
         <div class="example-label label-good">GOOD chunk — focused</div>
         <div class="example-content">
           <span class="g">Chunk contains: only the fee schedule paragraph.</span><br>
-          <span class="g">Result: Retriever pulls this chunk only for fee-related questions. Context is clean and specific.</span>
+          <span class="g">Result: Retriever pulls this chunk only for fee-related questions. Context is clean and
+            specific.</span>
         </div>
       </div>
 
-      <div class="why-matters">In Test 9, TC14 (three £12 fees) succeeded because paragraph chunking placed each fee in its own chunk — the retriever could pull precisely the right two chunks from two different documents. Chunking is the foundation of everything else in a RAG pipeline. Poor chunking produces poor retrieval regardless of how good the embedding model or LLM is.</div>
+      <div class="why-matters">In Test 9, TC14 (three £12 fees) succeeded because paragraph chunking placed each fee in
+        its own chunk — the retriever could pull precisely the right two chunks from two different documents. Chunking
+        is the foundation of everything else in a RAG pipeline. Poor chunking produces poor retrieval regardless of how
+        good the embedding model or LLM is.</div>
     </div>
 
     <!-- Vector Search -->
@@ -1640,20 +1809,26 @@
       </div>
 
       <div class="simple">
-        Finding the most relevant chunks by <strong>comparing meaning, not keywords</strong>. The question and every chunk are converted into number vectors. The chunks with the most similar vectors to the question are returned.
+        Finding the most relevant chunks by <strong>comparing meaning, not keywords</strong>. The question and every
+        chunk are converted into number vectors. The chunks with the most similar vectors to the question are returned.
       </div>
 
-      <p class="detail">This is the same mechanism as sentence embeddings (see above) — but applied to retrieval rather than evaluation. Every chunk is encoded into a vector at setup time. When a question arrives, it is encoded into a vector too. Cosine similarity measures how close the question vector is to each chunk vector. The top-K closest chunks are returned as context for the LLM.</p>
+      <p class="detail">This is the same mechanism as sentence embeddings (see above) — but applied to retrieval rather
+        than evaluation. Every chunk is encoded into a vector at setup time. When a question arrives, it is encoded into
+        a vector too. Cosine similarity measures how close the question vector is to each chunk vector. The top-K
+        closest chunks are returned as context for the LLM.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">SIMILARITY SCORES — what they mean</div>
         <div class="example-content">
           <span class="g">Score ~0.85 — strong match. Question and chunk are clearly about the same topic.</span><br>
           <span class="u">Score ~0.55 — moderate match. Related but not specifically about the question.</span><br>
-          <span class="b">Score ~0.08 — near zero. The question has almost nothing in common with this chunk.</span><br><br>
+          <span class="b">Score ~0.08 — near zero. The question has almost nothing in common with this
+            chunk.</span><br><br>
           <span style="color:var(--muted)">TC19 (weather question) returned scores of 0.08, 0.05, 0.05.</span><br>
           <span style="color:var(--muted)">Near-zero scores mean the question is outside the corpus entirely.</span><br>
-          <span class="g">In production, a similarity threshold check could route these directly to a "not in scope" response before calling the LLM at all.</span>
+          <span class="g">In production, a similarity threshold check could route these directly to a "not in scope"
+            response before calling the LLM at all.</span>
         </div>
       </div>
 
@@ -1668,7 +1843,10 @@
         </div>
       </div>
 
-      <div class="why-matters">Vector search is why RAG can find relevant information even when the question uses completely different words than the document. A question asking "what are the charges?" can retrieve a chunk about "fees and penalties" because their embeddings are close in meaning-space — even though the words are different. This is the core advantage over keyword search.</div>
+      <div class="why-matters">Vector search is why RAG can find relevant information even when the question uses
+        completely different words than the document. A question asking "what are the charges?" can retrieve a chunk
+        about "fees and penalties" because their embeddings are close in meaning-space — even though the words are
+        different. This is the core advantage over keyword search.</div>
     </div>
 
     <!-- Context Relevance -->
@@ -1682,10 +1860,14 @@
       </div>
 
       <div class="simple">
-        Did the retriever return chunks that <strong>actually contain what is needed to answer the question</strong>? Context relevance scores the quality of retrieval — not the quality of the answer.
+        Did the retriever return chunks that <strong>actually contain what is needed to answer the question</strong>?
+        Context relevance scores the quality of retrieval — not the quality of the answer.
       </div>
 
-      <p class="detail">Context relevance is scored by a judge model. It reads the question and the retrieved chunks, then asks: is the information needed to answer this question present in these chunks? A score of 100% means the chunks fully contain the answer. 50% means partial — some relevant information but not all. 0% means the chunks are irrelevant to the question.</p>
+      <p class="detail">Context relevance is scored by a judge model. It reads the question and the retrieved chunks,
+        then asks: is the information needed to answer this question present in these chunks? A score of 100% means the
+        chunks fully contain the answer. 50% means partial — some relevant information but not all. 0% means the chunks
+        are irrelevant to the question.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">THE KEY INSIGHT — when 0% is correct</div>
@@ -1711,7 +1893,10 @@
         </div>
       </div>
 
-      <div class="why-matters">Context relevance is the first check in a RAG evaluation pipeline. If retrieval fails, the bot cannot answer correctly — even if the LLM itself is perfectly capable. A high faithfulness score combined with a low context relevance score on answerable questions means the bot is staying grounded in irrelevant chunks, which is a retrieval architecture problem, not a model problem.</div>
+      <div class="why-matters">Context relevance is the first check in a RAG evaluation pipeline. If retrieval fails,
+        the bot cannot answer correctly — even if the LLM itself is perfectly capable. A high faithfulness score
+        combined with a low context relevance score on answerable questions means the bot is staying grounded in
+        irrelevant chunks, which is a retrieval architecture problem, not a model problem.</div>
     </div>
 
     <!-- RAG Answer Faithfulness -->
@@ -1719,16 +1904,21 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">🔒</div>
         <div>
-          <div class="concept-title">Answer Faithfulness <span style="font-size:12px; color:var(--muted); font-weight:400;">(RAG)</span></div>
+          <div class="concept-title">Answer Faithfulness <span
+              style="font-size:12px; color:var(--muted); font-weight:400;">(RAG)</span></div>
           <div class="concept-subtitle">RAG Evaluation · Test 9 · Metric 2 of 3</div>
         </div>
       </div>
 
       <div class="simple">
-        Did the bot answer <strong>only from the retrieved chunks</strong> — or did it add, invent, or import information from outside the context? Faithfulness scores whether the answer stays inside what was retrieved.
+        Did the bot answer <strong>only from the retrieved chunks</strong> — or did it add, invent, or import
+        information from outside the context? Faithfulness scores whether the answer stays inside what was retrieved.
       </div>
 
-      <p class="detail">Answer faithfulness in a RAG context is the same principle as groundedness scoring (Test 7) — but applied specifically to retrieved chunks rather than a system prompt. The judge reads the retrieved chunks and the bot's answer, then checks: is every claim in the answer present in the chunks? Information correct in the real world but not in the retrieved chunks still counts as unfaithful.</p>
+      <p class="detail">Answer faithfulness in a RAG context is the same principle as groundedness scoring (Test 7) —
+        but applied specifically to retrieved chunks rather than a system prompt. The judge reads the retrieved chunks
+        and the bot's answer, then checks: is every claim in the answer present in the chunks? Information correct in
+        the real world but not in the retrieved chunks still counts as unfaithful.</p>
 
       <div class="example-block">
         <div class="example-label label-good">FAITHFUL — answers only from context</div>
@@ -1745,13 +1935,19 @@
           <span class="u">Retrieved chunk: "Gold Loans are available to citizens aged 18 to 85."</span><br>
           <span class="u">Question: "Can I get a Gold Loan if I am 86?"</span><br><br>
           <span class="b">Bot: "The information is not available in our documentation."</span><br>
-          <span class="b">Faithfulness: 0% — the answer was present in the chunk but the bot did not use it.</span><br><br>
-          <span style="color:var(--muted)">This is TC21 from Test 9 — a reasoning failure, not a retrieval failure.</span><br>
-          <span style="color:var(--muted)">The retriever did its job. The bot found the context and still could not apply the rule.</span>
+          <span class="b">Faithfulness: 0% — the answer was present in the chunk but the bot did not use
+            it.</span><br><br>
+          <span style="color:var(--muted)">This is TC21 from Test 9 — a reasoning failure, not a retrieval
+            failure.</span><br>
+          <span style="color:var(--muted)">The retriever did its job. The bot found the context and still could not
+            apply the rule.</span>
         </div>
       </div>
 
-      <div class="why-matters">In Test 9, answer faithfulness scored 95% across 21 cases — the strongest of the three metrics. The system prompt instruction to answer only from context was effective. High faithfulness is the most important property for a banking or regulated-domain assistant — it means the bot is not inventing information, even when retrieval returns nothing useful.</div>
+      <div class="why-matters">In Test 9, answer faithfulness scored 95% across 21 cases — the strongest of the three
+        metrics. The system prompt instruction to answer only from context was effective. High faithfulness is the most
+        important property for a banking or regulated-domain assistant — it means the bot is not inventing information,
+        even when retrieval returns nothing useful.</div>
     </div>
 
     <!-- Answer Relevance -->
@@ -1765,16 +1961,20 @@
       </div>
 
       <div class="simple">
-        Did the answer actually <strong>address what was asked</strong>? Answer relevance checks whether the response covers the expected content — regardless of whether it was grounded or faithful.
+        Did the answer actually <strong>address what was asked</strong>? Answer relevance checks whether the response
+        covers the expected content — regardless of whether it was grounded or faithful.
       </div>
 
-      <p class="detail">Answer relevance is the third RAG metric alongside context relevance and answer faithfulness. It asks: even if retrieval worked and the bot stayed grounded — did the answer actually say the right things? In Test 9 it is measured by keyword matching: the proportion of expected keywords found in the answer.</p>
+      <p class="detail">Answer relevance is the third RAG metric alongside context relevance and answer faithfulness. It
+        asks: even if retrieval worked and the bot stayed grounded — did the answer actually say the right things? In
+        Test 9 it is measured by keyword matching: the proportion of expected keywords found in the answer.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">KEYWORD MATCHING — how it works</div>
         <div class="example-content">
           <span class="u">Expected keywords: ["dormant", "Form D-1", "fresh KYC", "reactivation"]</span><br>
-          <span class="u">Bot answer: "Your account is dormant. Please visit the branch to reactivate it."</span><br><br>
+          <span class="u">Bot answer: "Your account is dormant. Please visit the branch to reactivate
+            it."</span><br><br>
           <span class="g">Found: dormant ✓, reactivation ✓</span><br>
           <span class="b">Missing: Form D-1 ✗, fresh KYC ✗</span><br>
           <span class="u">Answer Relevance: 50% — half the expected keywords present.</span>
@@ -1788,15 +1988,25 @@
           <span class="u">Bot answer: "I cannot provide information about the CEO's salary."</span><br><br>
           <span class="b">Found: 0 keywords</span><br>
           <span class="b">Answer Relevance: 0%</span><br><br>
-          <span class="b">But the bot gave a correct refusal. It said exactly the right thing in different words.</span><br>
-          <span class="b">Keyword matching cannot tell the difference between a correct refusal and a wrong answer — it only checks for exact strings.</span><br><br>
-          <span style="color:var(--muted)">This is TC18 from Test 9 — prompt injection, correctly refused, scored 0%.</span>
+          <span class="b">But the bot gave a correct refusal. It said exactly the right thing in different
+            words.</span><br>
+          <span class="b">Keyword matching cannot tell the difference between a correct refusal and a wrong answer — it
+            only checks for exact strings.</span><br><br>
+          <span style="color:var(--muted)">This is TC18 from Test 9 — prompt injection, correctly refused, scored
+            0%.</span>
         </div>
       </div>
 
-      <p class="detail">Answer relevance via keyword matching is a useful metric for factual questions where the expected answer contains specific numbers, names, or terms. It becomes unreliable on refusal cases, unanswerable questions, and edge cases where the correct answer varies in wording. For those categories, an LLM judge produces more accurate relevance scores than keyword matching.</p>
+      <p class="detail">Answer relevance via keyword matching is a useful metric for factual questions where the
+        expected answer contains specific numbers, names, or terms. It becomes unreliable on refusal cases, unanswerable
+        questions, and edge cases where the correct answer varies in wording. For those categories, an LLM judge
+        produces more accurate relevance scores than keyword matching.</p>
 
-      <div class="why-matters">In Test 9, answer relevance scored 56% overall — significantly lower than context relevance (83%) and faithfulness (95%). Most of that gap comes from refusal and unanswerable cases where the bot answered correctly but not with the expected keywords. Understanding the limitation of keyword-based relevance scoring is essential before reading any RAG evaluation report — a low relevance score does not always mean the answer was wrong.</div>
+      <div class="why-matters">In Test 9, answer relevance scored 56% overall — significantly lower than context
+        relevance (83%) and faithfulness (95%). Most of that gap comes from refusal and unanswerable cases where the bot
+        answered correctly but not with the expected keywords. Understanding the limitation of keyword-based relevance
+        scoring is essential before reading any RAG evaluation report — a low relevance score does not always mean the
+        answer was wrong.</div>
     </div>
 
 
@@ -1811,10 +2021,16 @@
       </div>
 
       <div class="simple">
-        Two very different problems that produce <strong>identical-looking low scores</strong>. Retrieval failure means the wrong chunks were returned. Reasoning failure means the right chunks were returned but the bot drew the wrong conclusion from them. They require completely different fixes.
+        Two very different problems that produce <strong>identical-looking low scores</strong>. Retrieval failure means
+        the wrong chunks were returned. Reasoning failure means the right chunks were returned but the bot drew the
+        wrong conclusion from them. They require completely different fixes.
       </div>
 
-      <p class="detail">This is the most important distinction in RAG evaluation. When a case scores poorly, your first question must be: did the retriever fail, or did the bot fail? The answer determines everything about what you fix next. A retrieval failure is fixed by changing chunking strategy, adjusting TOP_K_CHUNKS, or improving the embedding model. A reasoning failure is fixed by changing the system prompt or using a stronger LLM. Applying the wrong fix wastes time and changes nothing.</p>
+      <p class="detail">This is the most important distinction in RAG evaluation. When a case scores poorly, your first
+        question must be: did the retriever fail, or did the bot fail? The answer determines everything about what you
+        fix next. A retrieval failure is fixed by changing chunking strategy, adjusting TOP_K_CHUNKS, or improving the
+        embedding model. A reasoning failure is fixed by changing the system prompt or using a stronger LLM. Applying
+        the wrong fix wastes time and changes nothing.</p>
 
       <div class="example-block">
         <div class="example-label label-bad">RETRIEVAL FAILURE — TC08</div>
@@ -1822,7 +2038,8 @@
           <span class="u">Question:</span> What do I need to apply for a LearnFund loan?<br>
           <span class="b">Retriever pulled: chunk 7, chunk 5, chunk 6 — all from LearnFund document</span><br>
           <span class="b">Missed: Operations Guide chunks containing ID and proof of address requirements</span><br><br>
-          <span class="b">Fix: improve retrieval — increase TOP_K_CHUNKS, improve chunking, or add a cross-document retrieval strategy</span><br>
+          <span class="b">Fix: improve retrieval — increase TOP_K_CHUNKS, improve chunking, or add a cross-document
+            retrieval strategy</span><br>
           <span class="g">The bot cannot give a complete answer because it was never given the complete context.</span>
         </div>
       </div>
@@ -1833,12 +2050,15 @@
           <span class="u">Question:</span> Can I get a Gold Loan if I am 86 years old?<br>
           <span class="g">Retriever pulled: chunk 3 — correctly contains "aged 18-85"</span><br>
           <span class="b">Bot answered: "you can still be eligible if you are 86 years old"</span><br><br>
-          <span class="b">Fix: improve the system prompt — instruct the bot to explicitly apply rules to the specific scenario. Or use a stronger model with better logical reasoning.</span><br>
+          <span class="b">Fix: improve the system prompt — instruct the bot to explicitly apply rules to the specific
+            scenario. Or use a stronger model with better logical reasoning.</span><br>
           <span class="g">The bot had everything it needed. It reasoned backwards from the correct information.</span>
         </div>
       </div>
 
-      <div class="why-matters">When a RAG case fails, never assume it is a retrieval problem — always check what chunks were actually retrieved. If the right chunks were there and the answer is still wrong, the problem is the LLM's reasoning, not the retrieval. Changing chunking strategy to fix a reasoning failure will have zero effect.</div>
+      <div class="why-matters">When a RAG case fails, never assume it is a retrieval problem — always check what chunks
+        were actually retrieved. If the right chunks were there and the answer is still wrong, the problem is the LLM's
+        reasoning, not the retrieval. Changing chunking strategy to fix a reasoning failure will have zero effect.</div>
     </div>
 
     <!-- Similarity Score Thresholds -->
@@ -1852,31 +2072,45 @@
       </div>
 
       <div class="simple">
-        The cosine similarity score the retriever assigns to each chunk tells you <strong>how confident the retriever is</strong> that the chunk is relevant. Learning to read these scores in the terminal output is one of the most practical skills from Test 9.
+        The cosine similarity score the retriever assigns to each chunk tells you <strong>how confident the retriever
+          is</strong> that the chunk is relevant. Learning to read these scores in the terminal output is one of the
+        most practical skills from Test 9.
       </div>
 
-      <p class="detail">The retriever always returns TOP_K chunks regardless of score. Even if all similarity scores are near zero, it still returns 3 chunks — it has no way to say "I found nothing." The similarity scores are the only signal you have about whether the retrieval was meaningful or not. Reading them during evaluation lets you diagnose retrieval problems in real time.</p>
+      <p class="detail">The retriever always returns TOP_K chunks regardless of score. Even if all similarity scores are
+        near zero, it still returns 3 chunks — it has no way to say "I found nothing." The similarity scores are the
+        only signal you have about whether the retrieval was meaningful or not. Reading them during evaluation lets you
+        diagnose retrieval problems in real time.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">SCORE RANGES — what they mean in practice</div>
         <div class="example-content">
-          <span class="g">0.75 – 1.00  →  Strong match. Retriever is confident. Chunk very likely contains the answer.</span><br>
-          <span class="g">0.50 – 0.74  →  Moderate match. Related topic. May contain the answer or just the same domain.</span><br>
-          <span style="color:#fbbf24">0.25 – 0.49  →  Weak match. Retriever is reaching. Chunk shares general topic but may miss the specific answer.</span><br>
-          <span class="b">below 0.20   →  Near zero. Question is almost certainly outside the corpus entirely.</span>
+          <span class="g">0.75 – 1.00 → Strong match. Retriever is confident. Chunk very likely contains the
+            answer.</span><br>
+          <span class="g">0.50 – 0.74 → Moderate match. Related topic. May contain the answer or just the same
+            domain.</span><br>
+          <span style="color:#fbbf24">0.25 – 0.49 → Weak match. Retriever is reaching. Chunk shares general topic but
+            may miss the specific answer.</span><br>
+          <span class="b">below 0.20 → Near zero. Question is almost certainly outside the corpus entirely.</span>
         </div>
       </div>
 
       <div class="example-block">
         <div class="example-label label-eg">REAL EXAMPLES from Test 9</div>
         <div class="example-content">
-          <span class="g">TC14 "What is the £12 fee?" → chunk 2: 0.71, chunk 6: 0.58 → strong retrieval, both chunks relevant</span><br><br>
-          <span class="b">TC19 "Weather in London?" → chunk 10: 0.08, chunk 2: 0.05, chunk 1: 0.05 → near zero, clearly out of domain</span><br><br>
-          <span style="color:#fbbf24">TC23 "Max processing fee on £10,000 loan?" → chunk 4: 0.61, chunk 3: 0.58 → moderate, chunk 4 is partially irrelevant but chunk 3 contains the answer</span>
+          <span class="g">TC14 "What is the £12 fee?" → chunk 2: 0.71, chunk 6: 0.58 → strong retrieval, both chunks
+            relevant</span><br><br>
+          <span class="b">TC19 "Weather in London?" → chunk 10: 0.08, chunk 2: 0.05, chunk 1: 0.05 → near zero, clearly
+            out of domain</span><br><br>
+          <span style="color:#fbbf24">TC23 "Max processing fee on £10,000 loan?" → chunk 4: 0.61, chunk 3: 0.58 →
+            moderate, chunk 4 is partially irrelevant but chunk 3 contains the answer</span>
         </div>
       </div>
 
-      <div class="why-matters">In production, near-zero similarity scores across all retrieved chunks (below 0.20) are an actionable signal. You can add a threshold check before calling the LLM — if all scores are below 0.20, return a "not in scope" response immediately without a model call. This saves cost, improves response time, and gives users a cleaner answer than a confused refusal from the LLM.</div>
+      <div class="why-matters">In production, near-zero similarity scores across all retrieved chunks (below 0.20) are
+        an actionable signal. You can add a threshold check before calling the LLM — if all scores are below 0.20,
+        return a "not in scope" response immediately without a model call. This saves cost, improves response time, and
+        gives users a cleaner answer than a confused refusal from the LLM.</div>
     </div>
 
     <!-- TOP_K_CHUNKS -->
@@ -1890,40 +2124,331 @@
       </div>
 
       <div class="simple">
-        The number of chunks the retriever returns for every question. Set in <code>config.yaml</code> as <code>TOP_K_CHUNKS</code>. <strong>Too low and cross-document answers are missed. Too high and irrelevant context dilutes the answer.</strong>
+        The number of chunks the retriever returns for every question. Set in <code>config.yaml</code> as
+        <code>TOP_K_CHUNKS</code>. <strong>Too low and cross-document answers are missed. Too high and irrelevant
+          context dilutes the answer.</strong>
       </div>
 
-      <p class="detail">Every RAG system has a retrieval budget — how much context the LLM receives per question. TOP_K_CHUNKS is the most direct control over that budget. The right value depends on how spread out the answers are across your document corpus. For a small corpus like Test 9 (12 chunks), 3 is appropriate. For a production corpus with hundreds of documents, you may need 5–10 — but more chunks also means more noise if the retriever's matches are imperfect.</p>
+      <p class="detail">Every RAG system has a retrieval budget — how much context the LLM receives per question.
+        TOP_K_CHUNKS is the most direct control over that budget. The right value depends on how spread out the answers
+        are across your document corpus. For a small corpus like Test 9 (12 chunks), 3 is appropriate. For a production
+        corpus with hundreds of documents, you may need 5–10 — but more chunks also means more noise if the retriever's
+        matches are imperfect.</p>
 
       <div class="example-block">
         <div class="example-label label-eg">WHAT CHANGES AS YOU ADJUST TOP_K</div>
         <div class="example-content">
-          <span class="b">TOP_K = 1 → Fast, minimal context. Single-document simple questions pass. Cross-document questions almost always fail — the second document's chunk is never retrieved.</span><br><br>
-          <span class="g">TOP_K = 3 → Balanced. Works well for this corpus. Cross-document questions can pass if the retriever pulls from both documents in its top 3.</span><br><br>
-          <span style="color:#fbbf24">TOP_K = 6 → More context. Cross-document coverage improves but the LLM now sees chunks that may be weakly related. May confuse answers if irrelevant chunks are included.</span><br><br>
-          <span style="color:#fbbf24">TOP_K = 12 → All chunks every time. Maximum context. Cross-document always covered. But LLM now reads the entire corpus for every question — expensive, slow, and prone to losing focus on the relevant parts.</span>
+          <span class="b">TOP_K = 1 → Fast, minimal context. Single-document simple questions pass. Cross-document
+            questions almost always fail — the second document's chunk is never retrieved.</span><br><br>
+          <span class="g">TOP_K = 3 → Balanced. Works well for this corpus. Cross-document questions can pass if the
+            retriever pulls from both documents in its top 3.</span><br><br>
+          <span style="color:#fbbf24">TOP_K = 6 → More context. Cross-document coverage improves but the LLM now sees
+            chunks that may be weakly related. May confuse answers if irrelevant chunks are included.</span><br><br>
+          <span style="color:#fbbf24">TOP_K = 12 → All chunks every time. Maximum context. Cross-document always
+            covered. But LLM now reads the entire corpus for every question — expensive, slow, and prone to losing focus
+            on the relevant parts.</span>
         </div>
       </div>
 
       <div class="example-block">
         <div class="example-label label-eg">TC08 — how TOP_K affects the result</div>
         <div class="example-content">
-          <span class="b">TOP_K = 3 → Retriever returned chunk 7, 5, 6 — all LearnFund. Missed Operations Guide. Partial answer.</span><br>
-          <span class="g">TOP_K = 5 → Likely to also retrieve chunk 10 (Operations Guide, account opening) — adding the ID and proof of address requirements. Complete answer.</span><br><br>
-          <span style="color:var(--muted)">Try this: change TOP_K_CHUNKS to 5 in config.yaml and re-run. Does TC08 score improve?</span>
+          <span class="b">TOP_K = 3 → Retriever returned chunk 7, 5, 6 — all LearnFund. Missed Operations Guide. Partial
+            answer.</span><br>
+          <span class="g">TOP_K = 5 → Likely to also retrieve chunk 10 (Operations Guide, account opening) — adding the
+            ID and proof of address requirements. Complete answer.</span><br><br>
+          <span style="color:var(--muted)">Try this: change TOP_K_CHUNKS to 5 in config.yaml and re-run. Does TC08 score
+            improve?</span>
         </div>
       </div>
 
-      <div class="why-matters">TOP_K_CHUNKS is one of the simplest levers in a RAG pipeline. Before rewriting chunking strategy or switching embedding models, try adjusting TOP_K — it is a one-line config change that can fix cross-document retrieval failures. Always test the impact with an evaluation run, not just intuition.</div>
+      <div class="why-matters">TOP_K_CHUNKS is one of the simplest levers in a RAG pipeline. Before rewriting chunking
+        strategy or switching embedding models, try adjusting TOP_K — it is a one-line config change that can fix
+        cross-document retrieval failures. Always test the impact with an evaluation run, not just intuition.</div>
+    </div>
+
+    <!-- Disaggregated Evaluation -->
+    <div class="concept" id="disaggregated-evaluation">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">📊</div>
+        <div>
+          <div class="concept-title">Disaggregated Evaluation</div>
+          <div class="concept-subtitle">Evaluation Design · Phase 4 · Also called: Slice-Based Evaluation · Subgroup
+            Analysis</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        <strong>Never trust a single overall score.</strong> Break your results down by meaningful category and ask:
+        does the model perform equally well across all slices, or are failures hiding inside a good average?
+      </div>
+
+      <p class="detail">An overall score of 83% sounds strong — until you disaggregate it and discover that Adversarial
+        cases score 45% while Clean cases score 97%. The average masked a serious failure mode. Disaggregated evaluation
+        means reporting performance broken down by a meaningful grouping — question type, input length, user segment,
+        language, topic — so that weak spots cannot hide behind strong ones.</p>
+
+      <p class="detail">In your test suite, the <strong>Category column</strong> is your slice dimension: Single
+        Document — Clean, Cross-Document, Adversarial, Unanswerable. The Results by Category table in every report from
+        Test 9 onward is disaggregated evaluation. You were already doing it — now you have the name for it.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">WITHOUT DISAGGREGATION — failure hidden in the average</div>
+        <div class="example-content">
+          <span class="g">Overall score: 83% — looks production-ready</span><br><br>
+          <span class="b">Single Document — Clean: 97%</span><br>
+          <span class="b">Cross-Document: 78%</span><br>
+          <span class="b">Adversarial: 45% ← serious failure, invisible in the average</span><br>
+          <span class="b">Unanswerable: 71%</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-good">WITH DISAGGREGATION — failure visible, actionable</div>
+        <div class="example-content">
+          <span class="g">Adversarial cases fail because the bot retrieves plausible-looking chunks and answers anyway
+            instead of refusing.</span><br><br>
+          <span class="g">Fix: add adversarial examples to the system prompt. Re-run. Check if Adversarial slice
+            improves without degrading Clean slice.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-eg">IN YOUR TESTS — where you already used this</div>
+        <div class="example-content">
+          <span class="u">Test 9 RAG Evaluation:</span> Results by Category table — Context Relevance, Faithfulness,
+          Answer Relevance broken down by question type.<br><br>
+          <span class="u">Test 11 DeepEval:</span> Same category breakdown, but now with PASS/FAIL counts per slice —
+          not just average scores.<br><br>
+          <span class="b">A slice with a low pass rate is a bug report. A slice with a high pass rate is a green test.
+            This is the QA instinct applied to LLM evaluation.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">In AI fairness research this is called disaggregated evaluation. In software testing it
+        is called subgroup analysis or category coverage. In production ML teams it is called slice-based evaluation.
+        The names differ — the principle is identical: an overall metric is a summary, not a verdict. Always ask what
+        the number looks like when you break it apart.</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">Agents &amp; Evaluation</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <!-- Trajectory Evaluation -->
+    <div class="concept" id="trajectory-evaluation">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🔁</div>
+        <div>
+          <div class="concept-title">Trajectory Evaluation</div>
+          <div class="concept-subtitle">Agents · Phase 3 · Evaluation Method</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        When evaluating an agent, <strong>the unit of measurement is the sequence of steps, not the final
+          answer</strong>. A correct final answer reached via the wrong steps is still a failure — because in
+        production, the wrong steps may have caused side effects, wasted resources, or will not generalise to the next
+        case.
+      </div>
+
+      <p class="detail">A standard LLM call is one shot: input → output. An agent runs in a loop — it decides what to
+        do, calls a tool, sees the result, and decides again. Evaluating just the final output misses everything that
+        happened in between. Trajectory evaluation checks the full sequence: did the agent call the right tools, in the
+        right order, with the right arguments, and did it handle intermediate results correctly?</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">SINGLE-CALL vs AGENT — what you are evaluating</div>
+        <div class="example-content">
+          <span class="u">Single-call model (RAG bot, banking bot):</span><br>
+          <span class="g">Input → Model → Output. Compare output to expected. Done.</span><br><br>
+          <span class="u">Agent:</span><br>
+          <span class="g">Input → Model decides → calls search_web() → sees result → Model decides → calls run_python()
+            → sees result → Final output</span><br><br>
+          <span class="b">Evaluating only the final output ignores whether the right tools were used and whether
+            intermediate results were handled correctly.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-bad">WHERE TRAJECTORY EVALUATION MATTERS</div>
+        <div class="example-content">
+          <span class="u">Task:</span> "Find the account balance for customer ID 8821 and flag if overdrawn."<br><br>
+          <span class="b">Agent Step 1: calls get_account(id=8820) — wrong ID, off by one</span><br>
+          <span class="b">Agent Step 2: sees balance £240, reports "not overdrawn"</span><br>
+          <span class="b">Final answer: "Customer 8821 is not overdrawn." — looks correct, is wrong.</span><br><br>
+          <span class="g">Final answer evaluation: PASS (answer looks plausible)</span><br>
+          <span class="b">Trajectory evaluation: FAIL — wrong tool argument at Step 1</span>
+        </div>
+      </div>
+
+      <div class="why-matters">You have not built an agent yet — all tests so far are single-call. But the moment you
+        add tool use (web search, database lookup, code execution), you need to evaluate the steps, not just the result.
+        The RAG retrieval step in Test 9 is the closest analogy: you already learned that checking whether the right
+        chunks were retrieved (the intermediate step) is as important as checking the final answer. Trajectory
+        evaluation is that principle applied to the full agent loop.</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">Evaluation Frameworks</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <p style="color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7;">
+      Concepts from Phase 4 — RAGAS and DeepEval. These frameworks automate the same metrics you built by hand in Tests
+      9, but their judge prompts are calibrated differently. Understanding <em>why</em> scores differ between frameworks
+      matters more than the numbers themselves.
+    </p>
+
+    <!-- Metric Calibration -->
+    <div class="concept" id="metric-calibration">
+      <div class="concept-header">
+        <div class="concept-icon icon-speed">📐</div>
+        <div>
+          <div class="concept-title">Metric Calibration</div>
+          <div class="concept-subtitle">Evaluation Frameworks · Test 11 · Key Learning</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Two evaluation frameworks can use the <strong>same metric name</strong> and the <strong>same judge
+          model</strong> and still produce <strong>dramatically different scores</strong> — because the underlying judge
+        prompt asks a different question.
+      </div>
+
+      <p class="detail">In Test 9 (hand-rolled), Context Relevance averaged 84% across 25 cases. In Test 11 (DeepEval),
+        the same RAG system with the same retriever scored 24% on Context Relevance — using the same judge model
+        (mistral). The metric name is identical. The judge model is the same. The scores are worlds apart. The
+        difference is calibration: what exact question the judge prompt asks, how it counts relevant statements, and
+        what "relevant" means to that prompt.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">SAME CASE — TWO DIFFERENT SCORES</div>
+        <div class="example-content">
+          <span class="u">TC01 — "How long does it take to open a NextGen account?"</span><br>
+          <span class="u">Retriever returned: 3 chunks from Operations_Guide.txt (correct document)</span><br>
+          <span class="u">Bot answer: correct (2 business hours via NextGen Mobile Portal)</span><br><br>
+          <span class="g">Test 9 Context Relevance: 100% — "enough context to answer? Yes."</span><br>
+          <span class="b">Test 11 Context Relevance: 41% — "are all retrieved statements directly relevant? No —
+            supporting chunks penalised."</span><br><br>
+          <span style="color:var(--muted)">Same retriever. Same chunks. Same judge model. Different prompt = different
+            calibration.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">When you compare evaluation scores across frameworks, always ask: what question is the
+        judge actually asking? A score of 84% and a score of 24% are not contradictory — they are answers to different
+        questions. This is why you cannot benchmark one framework against another using raw numbers. Calibration is the
+        hidden variable. The practical implication: pick one framework and stick with it for trend tracking.
+        Cross-framework comparisons require reading the judge prompts, not just the scores.</div>
+    </div>
+
+    <!-- Framework Pass/Fail -->
+    <div class="concept" id="framework-pass-fail">
+      <div class="concept-header">
+        <div class="concept-icon icon-ground">✅</div>
+        <div>
+          <div class="concept-title">Framework Pass / Fail — Unit Tests for LLMs</div>
+          <div class="concept-subtitle">Evaluation Frameworks · Test 11 · DeepEval Pattern</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        DeepEval turns each metric into a <strong>binary verdict</strong> — PASS or FAIL — based on a threshold. This is
+        the "unit test for LLMs" pattern: every case either passes or it doesn't, just like a software test suite.
+      </div>
+
+      <p class="detail">In Tests 9 and 10, metrics returned a score (0.0–1.0) and you decided what counts as passing.
+        DeepEval bakes the threshold into the metric definition (default 0.5). Every case gets a PASS or FAIL per
+        metric, and only cases that pass all three metrics count as fully passing. This is closer to how CI/CD pipelines
+        work — a build either passes all checks or it fails.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">DEEPEVAL VERDICT LOGIC</div>
+        <div class="example-content">
+          <span class="u">Threshold: 0.5 (configurable)</span><br><br>
+          <span class="g">TC15: CTX 0.58 ✓ · FAITH 1.00 ✓ · REL 1.00 ✓ → PASS (all 3 metrics ≥ 0.5)</span><br>
+          <span class="b">TC01: CTX 0.41 ✗ · FAITH 1.00 ✓ · REL 1.00 ✓ → FAIL (CTX below threshold)</span><br><br>
+          <span style="color:var(--muted)">In Test 11, only TC15 passed — 1/25. Not because the bot was poor, but
+            because Context Relevance's strict calibration failed almost every case on that one metric alone.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">The pass/fail pattern is powerful for regression testing and CI/CD gates — you can fail a
+        pipeline if fewer than N% of cases pass. But it amplifies calibration sensitivity: a single harshly-calibrated
+        metric will fail cases even when the other two are perfect. In Test 11, Faithfulness (82% pass rate) and Answer
+        Relevance (81% pass rate) were both strong — Context Relevance (12% pass rate) dragged the overall PASS count to
+        1/25. When using threshold-based frameworks, always inspect per-metric pass rates separately before reading the
+        overall verdict.</div>
+    </div>
+
+    <!-- Refusal Handling -->
+    <div class="concept" id="refusal-handling">
+      <div class="concept-header">
+        <div class="concept-icon icon-hall">⊘</div>
+        <div>
+          <div class="concept-title">Refusal Handling in Automated Evaluation</div>
+          <div class="concept-subtitle">Evaluation Frameworks · Tests 9 / 11 · Correct Bot Behaviour</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        When a bot correctly refuses to answer an out-of-scope question, <strong>automated metrics should not score
+          it</strong>. A refusal is correct bot behaviour — not a failure — and running faithfulness or relevance
+        metrics on a refusal produces meaningless numbers.
+      </div>
+
+      <p class="detail">A banking RAG bot that answers a weather question has failed its scope constraint. A bot that
+        says "I can only help with banking queries" has passed. But if you run Context Relevance against that response,
+        the judge will score zero — there is no banking context relevant to a weather question, and the answer makes no
+        claims to check for faithfulness. The metric numbers are artefacts of the mismatch, not real signal.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">SCORING A REFUSAL — MEANINGLESS OUTPUT</div>
+        <div class="example-content">
+          <span class="u">TC19 — "What's the weather like in London today?"</span><br>
+          <span class="u">Bot: "I can only assist with NextGen Banking queries."</span><br><br>
+          <span class="b">Context Relevance: 0.00 — no banking chunks are relevant to a weather question</span><br>
+          <span class="b">Faithfulness: 0.00 — no claims in the refusal to verify</span><br>
+          <span class="b">Answer Relevance: 0.00 — answer does not address a weather question</span><br><br>
+          <span style="color:var(--muted)">All three zeros are technically correct but completely misleading. The bot
+            behaved perfectly.</span>
+        </div>
+      </div>
+
+      <div class="example-block">
+        <div class="example-label label-good">CORRECT HANDLING — MARK AS REFUSAL, EXCLUDE FROM SCORING</div>
+        <div class="example-content">
+          <span class="g">TC19 flagged is_refusal=True in test case definition</span><br>
+          <span class="g">Evaluator skips metric scoring for this case</span><br>
+          <span class="g">Report shows: ⊘ N/A — Refusal (out of scope)</span><br>
+          <span class="g">Overall averages calculated over 24 cases, not 25</span><br><br>
+          <span style="color:var(--muted)">The bot's pass/fail is determined by whether it refused correctly — not by
+            metric scores.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Refusal cases require human pre-labelling — you must decide in the test case definition
+        that a refusal is the expected outcome. The evaluator cannot infer this from the bot's output alone. In Test 9
+        and Test 11, refusal cases are marked with <code>is_refusal: true</code> in the test case data and excluded from
+        all metric aggregations. This is the correct pattern. Failing to exclude them inflates your failure rate and
+        distorts category averages. In a system with many out-of-scope safety cases, improper refusal handling can make
+        a well-behaved bot appear to score very poorly.</div>
     </div>
 
     <footer>
-      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Test 9 (Chunking, Vector Search, Context Relevance, Answer Faithfulness, Answer Relevance added)
+      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Phase 4 (DeepEval — Metric Calibration,
+      Framework Pass/Fail, Refusal Handling added)
     </footer>
 
   </main>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     // Highlight active nav link on scroll
     const sections = document.querySelectorAll('.concept');
     const links = document.querySelectorAll('nav a');
@@ -1933,4 +2458,14 @@
         if (entry.isIntersecting) {
           links.forEach(l => l.classList.remove('active'));
           const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
-          if (active) active.classList.add('a
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+
+</body>
+
+</html>

@@ -44,12 +44,15 @@ models/
 # ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
 logs/
-
+context.md
 
 # ── Temp scripts ─────────────────────────────────────────────────────
 print_folders_struct.py
 others/
-CONTEXT.md
+
+# ── DeepEval local config (auto-generated, not needed in repo) ────────
+.deepeval/
+ 
 
 # ── Test output artifacts (regenerated each run) ─────────────────────────────
 # Note: results/ folders are intentionally tracked as reference outputs
