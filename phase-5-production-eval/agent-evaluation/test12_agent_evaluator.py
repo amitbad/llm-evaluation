@@ -72,11 +72,27 @@ def parse_expected_sequence(raw_value) -> list[str]:
     return [part.strip() for part in raw.split(">") if part.strip()]
 
 
+def find_first_tool_step(trace: list[dict], tool_name: str) -> dict | None:
+    for step in trace:
+        if step.get("action") == "tool" and step.get("tool_name") == tool_name:
+            return step
+    return None
+
+
+def normalize_hint_words(raw_hints: str) -> list[str]:
+    if not raw_hints.strip():
+        return []
+    parts = raw_hints.replace(",", " ").split()
+    return [part.strip().lower() for part in parts if part.strip()]
+
+
 def evaluate_case(tc: dict) -> dict:
     question = str(tc.get("Question", "")).strip()
     max_steps = int(tc.get("Step Limit") or DEFAULT_MAX_STEPS)
     expected_sequence = parse_expected_sequence(tc.get("Expected Tool Path"))
     expected_behavior = str(tc.get("What Good Behavior Looks Like", "")).strip()
+    expected_account_id = str(tc.get("Account ID (if needed)", "") or "").strip()
+    expected_search_query_hints = str(tc.get("Search Hint Words", "") or "").strip()
     should_use_tool = str(tc.get("Tool Needed?", "No")).strip().lower() == "yes"
     should_refuse = str(tc.get("Refusal Expected?", "No")).strip().lower() == "yes"
 
@@ -97,6 +113,22 @@ def evaluate_case(tc: dict) -> dict:
     used_any_tool = bool(actual_tool_sequence)
     tool_match = actual_tool_sequence == expected_sequence
     unnecessary_tool_use = (not should_use_tool) and used_any_tool
+    lookup_step = find_first_tool_step(trace, "lookup_account_status")
+    docs_step = find_first_tool_step(trace, "search_docs")
+    actual_account_id = str((lookup_step or {}).get("arguments", {}).get("account_id", "") or "").strip()
+    actual_search_query = str((docs_step or {}).get("arguments", {}).get("query", "") or "").strip()
+
+    account_id_match = True
+    if expected_account_id:
+        account_id_match = actual_account_id == expected_account_id
+
+    query_hint_words = normalize_hint_words(expected_search_query_hints)
+    actual_search_query_lower = actual_search_query.lower()
+    search_query_hint_match = True
+    if query_hint_words:
+        search_query_hint_match = all(word in actual_search_query_lower for word in query_hint_words)
+
+    argument_match = account_id_match and search_query_hint_match
 
     return {
         "tc_id": str(tc.get("TC_ID", "")),
@@ -105,15 +137,20 @@ def evaluate_case(tc: dict) -> dict:
         "expected_behavior": expected_behavior,
         "expected_tool_sequence": " > ".join(expected_sequence) if expected_sequence else "none",
         "expected_final_action": str(tc.get("Expected End", "final")),
-        "expected_account_id": str(tc.get("Account ID (if needed)", "") or ""),
-        "expected_search_query_hints": str(tc.get("Search Hint Words", "") or ""),
+        "expected_account_id": expected_account_id,
+        "expected_search_query_hints": expected_search_query_hints,
         "should_use_tool": should_use_tool,
         "should_refuse": should_refuse,
         "max_steps": max_steps,
         "why_this_case_exists": str(tc.get("Why This Test Exists", "") or ""),
         "actual_tool_sequence": actual_tool_sequence,
+        "actual_account_id": actual_account_id,
+        "actual_search_query": actual_search_query,
         "used_any_tool": used_any_tool,
         "tool_match": tool_match,
+        "account_id_match": account_id_match,
+        "search_query_hint_match": search_query_hint_match,
+        "argument_match": argument_match,
         "unnecessary_tool_use": unnecessary_tool_use,
         "final_answer": agent_result.get("final_answer", ""),
         "stop_reason": agent_result.get("stop_reason", "unknown"),
@@ -163,9 +200,14 @@ def main():
         actual = " > ".join(result["actual_tool_sequence"]) if result["actual_tool_sequence"] else "none"
         print(f"  Expected tools : {result['expected_tool_sequence']}")
         print(f"  Actual tools   : {actual}")
+        if result["expected_account_id"]:
+            print(f"  Account arg    : {result['actual_account_id'] or 'missing'} ({'MATCH' if result['account_id_match'] else 'MISMATCH'})")
+        if result["expected_search_query_hints"]:
+            print(f"  Search args    : {'MATCH' if result['search_query_hint_match'] else 'MISMATCH'}")
         print(f"  Stop reason    : {result['stop_reason']}")
         print(f"  Final answer   : {result['final_answer'][:120]}{'...' if len(result['final_answer']) > 120 else ''}")
-        print(f"  Tool pattern   : {'MATCH' if result['tool_match'] else 'MISMATCH'}\n")
+        print(f"  Tool pattern   : {'MATCH' if result['tool_match'] else 'MISMATCH'}")
+        print(f"  Args pattern   : {'MATCH' if result['argument_match'] else 'MISMATCH'}\n")
         results.append(result)
         cases_run += 1
 

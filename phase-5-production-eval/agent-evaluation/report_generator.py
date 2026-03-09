@@ -63,6 +63,7 @@ def generate_report(results, config, results_dir: Path) -> Path:
     total = len(results)
     tool_cases = sum(1 for r in results if r.get("used_any_tool"))
     correct_tool = sum(1 for r in results if r.get("tool_match") is True)
+    correct_arguments = sum(1 for r in results if r.get("argument_match") is True)
     unnecessary_tool = sum(1 for r in results if r.get("unnecessary_tool_use"))
     refusals = sum(1 for r in results if r.get("should_refuse"))
 
@@ -77,6 +78,7 @@ def generate_report(results, config, results_dir: Path) -> Path:
       {card('Cases', total, 'All Test 12 agent cases', '#f7a06a')}
       {card('Tool Used', tool_cases, 'Cases where at least one tool was invoked', '#6af7a0')}
       {card('Right Tool Pattern', f'{correct_tool}/{total}', 'Expected tool sequence matched exactly', '#7c6af7')}
+      {card('Right Arguments', f'{correct_arguments}/{total}', 'Expected account IDs and query hints matched the observed tool arguments', '#5dd6ff')}
       {card('Unnecessary Tool Use', unnecessary_tool, 'Cases where a tool was used but should not have been', '#f76a6a')}
       {card('Refusal Cases', refusals, 'Out-of-scope or boundary cases expecting refusal', '#f0c040')}
     </div>'''
@@ -109,6 +111,8 @@ def generate_report(results, config, results_dir: Path) -> Path:
         status_color = "#6af7a0" if r.get("tool_match") else "#f76a6a"
         status_label = "MATCH" if r.get("tool_match") else "MISMATCH"
         stop_title, stop_explanation, stop_color = explain_stop_reason(r)
+        argument_status_color = "#6af7a0" if r.get("argument_match") else "#f76a6a"
+        argument_status_label = "MATCH" if r.get("argument_match") else "MISMATCH"
         rows.append(f'''<div style="background:#141417;border:1px solid #2a2a32;border-radius:18px;padding:18px;margin-bottom:18px">
           <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px">
             <div>
@@ -124,13 +128,22 @@ def generate_report(results, config, results_dir: Path) -> Path:
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> {escape(str(r.get('expected_behavior','')))}</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> {escape(str(r.get('expected_tool_sequence','')))}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> {escape(str(r.get('expected_account_id','')) or 'n/a')}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> {escape(str(r.get('expected_search_query_hints','')) or 'n/a')}</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> {escape(str(r.get('max_steps','')))}</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> {escape(' > '.join(r.get('actual_tool_sequence', [])) or 'none')}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> {escape(str(r.get('actual_account_id','')) or 'n/a')}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> {escape(str(r.get('actual_search_query','')) or 'n/a')}</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> {escape(str(r.get('stop_reason','')))}</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> {escape(str(r.get('used_any_tool', False)))}</div>
+                <div style="background:{argument_status_color}14;border:1px solid {argument_status_color}55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:{argument_status_color};margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>{argument_status_label}</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: {escape(str(r.get('account_id_match', True)))} · Search hint match: {escape(str(r.get('search_query_hint_match', True)))}</div>
+                </div>
                 <div style="background:{stop_color}14;border:1px solid {stop_color}55;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:{stop_color};margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>{escape(stop_title)}</b></div>
