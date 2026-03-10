@@ -24,7 +24,7 @@ You do not need a data science background. You do not need to understand the mat
 - **Not an academic course** — no mathematics, no statistics theory, no research papers required before you start.
 - **Not a tutorial series** — no presenter walking through pre-filled notebook outputs. You run real scripts against real models and read real results.
 - **Not model-specific** — nothing here is tied to a single provider. The same techniques apply whether you use Ollama, GPT-4o, Claude, or Gemini.
-- **Not a replacement for frameworks** — Phase 4 onward introduces RAGAS, DeepEval, and LangSmith. This repository teaches you the concepts first so those frameworks make sense when you reach them.
+- **Not a replacement for frameworks** — Phase 4 onward introduces RAGAS and DeepEval, with more frameworks coming. This repository teaches you the concepts first so those frameworks make sense when you reach them.
 
 ---
 
@@ -57,14 +57,6 @@ There is no shortcut through LLM evaluation. Each phase builds on the one before
 **Do not try to match numbers.** You will run these experiments and get different outputs than the ones documented here. That is expected and intentional — LLMs are non-deterministic. Your 4% interest rate answer might be phrased differently from the example. Your pass rate at temperature 1.0 might be 12/15 instead of 13/15. This is not a bug. It is the subject matter. The goal is to understand *why* outputs vary and *how* to evaluate them — not to reproduce identical results.
 
 **You are expected to think, not follow.** This repository is designed to make you an educated evaluator, not a pipeline operator. When a test fails, ask why. When results are surprising, investigate. When a concept is unclear, check the Concepts Reference before moving on. Black-box testing instincts — "it passed, move on" — do not transfer to GenAI evaluation. Understanding the failure is the work.
-
----
-
-## What This Repository Is
-
-This is not a framework. It is a **learning-by-doing repository** where every concept is taught through a real exercise. You build something, run it, observe the output, and understand why it behaves the way it does.
-
-The goal is to develop practical skills in evaluating LLM-based systems — the kind of skills needed to work as a GenAI Evaluation Engineer or AI Quality Specialist in industry.
 
 ---
 
@@ -226,7 +218,7 @@ llm-evaluation/
 
 ## What You Will Learn
 
-By completing Phases 0–4 you will understand:
+By completing Phases 0–5 you will understand:
 
 - Why LLMs need structured evaluation — they are non-deterministic, unlike traditional software
 - How to design test cases for a chatbot in QA format — functional, behavioural, safety categories
