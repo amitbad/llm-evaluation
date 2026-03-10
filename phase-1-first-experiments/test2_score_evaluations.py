@@ -55,13 +55,19 @@ total_ratings = int(total_use_cases * total_models * total_runs * total_metrics_
 print()
 header("Phase 1 — Test 2 · Manual Scoring")
 print(f"""
-  {c(BOLD, 'What this script does:')}
-  Reads outputs from {c(CYAN, 'evaluation_results.json')} and asks you to rate
-  each output on 1–5 for a set of metrics. Scores are saved to {c(CYAN, 'scores.json')}.
-  {c(DIM, 'This is Phase 1 human-in-the-loop evaluation — you are the judge.')}
+  {c(BOLD + GREEN, '✔ NO MODEL IS CALLED. NO INTERNET NEEDED. OLLAMA DOES NOT NEED TO BE RUNNING.')}
+  This script only reads the outputs that were already saved to {c(CYAN, 'evaluation_results.json')}
+  by {c(CYAN, 'test2_full_evaluations.py')}. It then asks {c(BOLD, 'you')} to type a number 1–5
+  for each output. That is the entire script.
+
+  {c(BOLD, 'What this produces:')}
+  Your scores are saved to {c(CYAN, 'scores.json')}. That file contains a number for every
+  output across every model and use case. It is {c(BOLD, 'your personal evaluation record')} —
+  a snapshot of how you judged each model on each task at this point in the course.
+  You can open it any time to review your ratings.
 
   {c(BOLD, 'Dependency:')}
-  {c(GREEN, '✔')} {c(DIM, 'test2_full_evaluations.py must have run first (evaluation_results.json found ✓)')}
+  {c(GREEN, '✔')} {c(DIM, 'evaluation_results.json found ✓ — you are ready to score')}
 
   {c(BOLD, 'Rating scale:')}  1 = poor  ·  2 = weak  ·  3 = ok  ·  4 = good  ·  5 = excellent
   {c(BOLD, 'Metrics by use case:')}
@@ -69,10 +75,11 @@ print(f"""
     question_answering : {c(YELLOW, 'accuracy · completeness · relevance')}
     summarization      : {c(YELLOW, 'completeness · conciseness · accuracy')}
 
-  {c(ORANGE, f'You will be asked for ≈{total_ratings} ratings total. Take your time with each output.')}
-  {c(DIM, 'Tip: read the full output before rating. A short output is not always worse.')}
+  {c(ORANGE, f'✏  You will type ≈{total_ratings} numbers in total (one per metric per run).')}
+  {c(DIM, 'Tip: skim the output first, then rate. It takes about 10–15 minutes at a relaxed pace.')}
+  {c(DIM, 'Scores are saved to scores.json only at the very end. Do not Ctrl-C partway through.')}
 """)
-input(f"  {c(BOLD, 'Press Enter to start scoring...')}")
+input(f"  {c(BOLD, 'Press Enter to start scoring...')} ")
 
 # Dict to store scores
 scores = {}

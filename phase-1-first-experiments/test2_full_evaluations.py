@@ -16,6 +16,7 @@ GREEN  = "\033[32m"
 RED    = "\033[31m"
 PURPLE = "\033[35m"
 WHITE  = "\033[97m"
+ORANGE = "\033[38;5;214m"
 
 def c(color, text):
     return f"{color}{text}{RESET}"
@@ -75,9 +76,18 @@ print(f"""
   {c(BOLD, 'Use cases :')} text_generation · question_answering · summarization
   {c(BOLD, 'Models    :')} {c(YELLOW, str(models))}
   {c(BOLD, 'Runs each :')} 3  {c(DIM, '(to check consistency across identical prompts)')}
-
-  {c(DIM, 'This may take several minutes. Each line below = one completed call.')}
 """)
+
+est_mins_low  = total_calls * 1
+est_mins_high = total_calls * 4
+print(f"  {c(BOLD + ORANGE, '⏱  TIME WARNING')}")
+print(f"  Each model call takes roughly 1–4 minutes depending on your hardware.")
+print(f"  With {total_calls} calls total, expect {c(YELLOW, f'{est_mins_low}–{est_mins_high} minutes')} for this script to finish.")
+print(f"  {c(DIM, 'Do not close the terminal. Each completed call will appear below as it finishes.')}")
+print()
+print(f"  {c(BOLD, 'Nothing is saved until all calls finish.')} The JSON file is written at the very end.")
+print(f"  {c(DIM, 'Each line below = one completed call. The script is working even if it looks stuck.')}")
+print()
 sys.stdout.flush()
 
 results = {}

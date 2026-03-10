@@ -308,6 +308,25 @@ python3 test1_basic_test.py</pre>
       results. Everything from here builds on making this process more systematic and scalable.</li>
   </ul>
 
+  <h2>What's Next — After This Test</h2>
+  <div class="info-box">
+    <strong>Step 2: Run test2_full_evaluations.py</strong><br><br>
+    Test 1 only sends one prompt and prints the result. That tells you whether models work and how fast they are — but
+    it says nothing about quality across different types of tasks.<br><br>
+    Test 2 is the next script to run. It sends <strong>3 different prompts</strong> (a story, a factual question, a
+    summary) to all your models, <strong>3 times each</strong>, and saves every response to a file called
+    <code>evaluation_results.json</code>.<br><br>
+    <strong>⚠ Warning:</strong> Test 2 takes a long time — roughly 1–4 minutes per model call. With 4 models × 3 tasks ×
+    3 runs = 36 calls, expect it to run for <strong>30–90 minutes</strong>. Start it and leave it running.
+  </div>
+  <div class="warn-box">
+    <strong>Step 3: Run test2_score_evaluations.py (after Step 2 finishes)</strong><br><br>
+    Once <code>evaluation_results.json</code> exists, this script reads it and walks you through each response one by
+    one, asking you to rate it 1–5 on metrics like coherence, accuracy, and conciseness. <strong>No model is called —
+      you are the judge.</strong> Takes about 10–15 minutes of reading and typing. Your scores are saved to
+    <code>scores.json</code>.
+  </div>
+
   <footer>Test 1 · Phase 1 · llm-evaluation</footer>
 </body>
 

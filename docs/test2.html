@@ -359,6 +359,27 @@ python3 test2_score_evaluations.py</pre>
   <p><a href="../phase-1-first-experiments/results/full_results.html" style="color:var(--accent);">View Full Evaluation
       Results with Scores →</a></p>
 
+  <h2>What's Next — After This Test</h2>
+  <div class="info-box">
+    <strong>You have now completed Phase 1.</strong><br><br>
+    You ran models against real tasks, collected outputs, and scored them yourself. That manual scoring process — where
+    you are the judge — is the baseline that all automated evaluation methods try to replicate.<br><br>
+    The key question Phase 1 leaves unanswered: <strong>can a computer do what you just did?</strong> Can it rate an
+    output for coherence, accuracy, or conciseness without a human typing in a number?
+  </div>
+  <div class="warn-box">
+    <strong>Phase 2 — Eval Techniques (Tests 3–7)</strong><br><br>
+    The next phase introduces automated evaluation methods that replace manual scoring:<br><br>
+    &nbsp;• <strong>Test 3 — BLEU &amp; ROUGE:</strong> Word-overlap scores. Compare a model output to a reference
+    answer mathematically.<br>
+    &nbsp;• <strong>Test 4 — Deterministic Eval:</strong> Rule-based checks (must-contain, must-not-contain, regex).<br>
+    &nbsp;• <strong>Test 5 — LLM-as-a-Judge:</strong> Use a second model to rate the first model's output.<br>
+    &nbsp;• <strong>Test 6 — Semantic Similarity:</strong> Compare meaning, not just words.<br>
+    &nbsp;• <strong>Test 7 — Groundedness Scoring:</strong> Did the answer come from the source, or was it
+    invented?<br><br>
+    No dependencies between Phase 1 and Phase 2 — you can start Test 3 independently.
+  </div>
+
   <footer>Test 2 · Phase 1 · llm-evaluation</footer>
 </body>
 
