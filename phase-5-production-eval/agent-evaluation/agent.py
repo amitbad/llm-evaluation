@@ -42,6 +42,30 @@ def run_agent(
             system=_system_prompt(),
             ollama_url=ollama_url,
         )
+        if _is_timeout(raw_output):
+            import time as _time
+            print(f"    [timeout] step {step_no} timed out — waiting 10s and retrying once...")
+            _time.sleep(10)
+            raw_output = call_model(
+                model=model,
+                provider=provider,
+                prompt=prompt,
+                system=_system_prompt(),
+                ollama_url=ollama_url,
+            )
+            if _is_timeout(raw_output):
+                trace.append({
+                    "step": step_no,
+                    "action": "error",
+                    "raw_output": raw_output,
+                    "error": "Ollama request timed out after retry",
+                })
+                return {
+                    "final_answer": "The model did not respond in time. This is a timeout, not an agent logic failure.",
+                    "stop_reason": "timeout_error",
+                    "trace": trace,
+                }
+
         action = _parse_action(raw_output)
 
         if not action:
@@ -101,7 +125,7 @@ def run_agent(
 
         conversation.append({
             "role": "assistant",
-            "content": raw_output,
+            "content": _strip_thinking(raw_output),
         })
         conversation.append({
             "role": "tool",
@@ -138,9 +162,22 @@ def _build_prompt(
     current_step: int,
 ) -> str:
     history_lines = []
+    tool_results_received = 0
     for item in conversation:
         history_lines.append(f"{item['role'].upper()}: {item['content']}")
+        if item["role"] == "tool":
+            tool_results_received += 1
     history = "\n\n".join(history_lines)
+
+    if tool_results_received > 0:
+        next_step_hint = (
+            f"\nTOOL RESULT RECEIVED ({tool_results_received} tool(s) have already run). "
+            "You now have the information needed. "
+            'Produce {"action":"final","answer":"..."} with your complete answer. '
+            "Do NOT call another tool unless essential information is still missing."
+        )
+    else:
+        next_step_hint = ""
 
     return f"""Customer question:
 {question}
@@ -151,7 +188,7 @@ Available tools:
 Conversation so far:
 {history}
 
-Current step: {current_step} of {max_steps}
+Current step: {current_step} of {max_steps}{next_step_hint}
 
 Return exactly one JSON object in one of these forms:
 {{"action":"tool","tool_name":"lookup_account_status","arguments":{{"account_id":"A1023"}}}}
@@ -165,7 +202,16 @@ Rules:
 - Do not call tools if the question is a greeting or clearly out of banking scope.
 - If account id is missing, ask for it in a final answer.
 - If a tool already returned enough information, produce the final answer.
-- JSON only."""
+- JSON only. No markdown. No prose. No explanation. Output a single JSON object and nothing else."""
+
+
+def _is_timeout(raw_output: str) -> bool:
+    markers = ("Read timed out", "timed out", "HTTPConnectionPool", "ConnectionError", "RemoteDisconnected")
+    return any(m in raw_output for m in markers)
+
+
+def _strip_thinking(text: str) -> str:
+    return re.sub(r"<think>[\s\S]*?</think>", "", text, flags=re.IGNORECASE).strip()
 
 
 def _parse_action(raw_output: str) -> dict[str, Any] | None:
@@ -173,12 +219,14 @@ def _parse_action(raw_output: str) -> dict[str, Any] | None:
     if not raw_output:
         return None
 
+    cleaned = _strip_thinking(raw_output)
+
     try:
-        return json.loads(raw_output)
+        return json.loads(cleaned)
     except json.JSONDecodeError:
         pass
 
-    match = re.search(r"\{[\s\S]*\}", raw_output)
+    match = re.search(r"\{[\s\S]*\}", cleaned)
     if not match:
         return None
 

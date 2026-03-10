@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test 13 — Trajectory Evaluation with Judge Model</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141417;
+      --surface2: #1c1c21;
+      --border: #2a2a32;
+      --accent: #7c6af7;
+      --accent2: #f7a06a;
+      --danger: #f76a6a;
+      --success: #6af7a0;
+      --text: #e8e8f0;
+      --muted: #7a7a90;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 48px 56px;
+      max-width: 100%;
+      line-height: 1.6;
+    }
+
+    .phase-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 40px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 28px 0 10px;
+    }
+
+    p {
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: #c0c0d8;
+      line-height: 1.75;
+    }
+
+    code {
+      background: var(--surface2);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+    }
+
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--accent2);
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+
+    ul,
+    ol {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      color: #c0c0d8;
+      line-height: 1.7;
+    }
+
+    li strong {
+      color: var(--text);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 10px 13px;
+      text-align: left;
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+      background: var(--surface);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    tr:hover td {
+      background: var(--surface2);
+    }
+
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .warn-box {
+      background: #1a1a10;
+      border: 1px solid #3a3a20;
+      border-left: 3px solid var(--accent2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #c8c890;
+    }
+
+    .success-box {
+      background: #0f1a10;
+      border: 1px solid #1e3a20;
+      border-left: 3px solid var(--success);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #a0d8a0;
+    }
+
+    .file-tag {
+      background: #2a2a1a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .score-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .score-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      min-width: 140px;
+      flex: 1;
+    }
+
+    .score-card .score-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .score-card .score-label {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .score-card .score-desc {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pass {
+      color: #4ade80;
+    }
+
+    .warn {
+      color: #fbbf24;
+    }
+
+    .dim-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+
+    .dim-tool {
+      background: #0a2130;
+      color: #7dd3fc;
+    }
+
+    .dim-args {
+      background: #1a1230;
+      color: #a78bfa;
+    }
+
+    .dim-ground {
+      background: #102010;
+      color: #86efac;
+    }
+
+    .dim-stop {
+      background: #1d1a08;
+      color: #fcd34d;
+    }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="phase-badge">Phase 5 — Production Eval</div>
+  <h1>Test 13: Trajectory Evaluation with Judge Model</h1>
+  <p class="subtitle">Test 13 takes the JSON trace produced by Test 12 and asks a judge model to score each trajectory
+    independently on four dimensions. It does not re-run the agent. It reads the saved trace and evaluates the quality
+    of every decision the agent made.</p>
+  <div class="file-tag">📁 phase-5-production-eval/trajectory-evaluation/ &nbsp;|&nbsp;
+    test13_trajectory_evaluator.py · report_generator.py · sample_agent_evaluation_results.json</div>
+
+  <div
+    style="background:#1a1510;border:1px solid #4a3a20;border-left:4px solid #f7a06a;border-radius:10px;padding:14px 18px;margin-bottom:28px;font-size:13.5px;line-height:1.7;color:#c8c890">
+    ⚠️ <strong style="color:#f7a06a">Read Test 12 before this page.</strong> Test 13 scores trajectories that Test 12
+    produced. The four scoring dimensions here only make sense once you understand what a trajectory is, why the agent
+    is constrained to emit JSON actions, and what the expected tool paths looked like. If you have not read <a href="#"
+      onclick="parent.go('test12.html','nav-t12');return false;" style="color:#f7a06a">Test 12</a> yet, start there.
+  </div>
+
+  <h2>Why Test 13 Exists</h2>
+  <p>Test 12 is deterministic: it checks expected tool path vs actual tool path and flags mismatches. That is useful,
+    but it cannot answer qualitative questions like "How well did the agent use the tool result?" or "Was the final
+    answer actually grounded in what the tool returned?"</p>
+  <p>Test 13 adds a second layer: a judge model reads each trajectory and gives a score for each decision dimension.
+    This is the same LLM-as-a-Judge idea used in Test 5 and Test 7, now applied to agent trajectories instead of
+    single Q&amp;A pairs.</p>
+
+  <div class="info-box">
+    🧑‍⚖️ <strong>The key shift from Test 12 to Test 13.</strong> Test 12 asks "Did it use the right tools?" (binary).
+    Test 13 asks "How well did it use those tools, and how well did it use the results?" (scored 1–5). Both are needed.
+    Binary path-matching catches wrong behavior. Judge scoring surfaces quality gradients that binary checks miss.
+  </div>
+
+  <h2>Independence from Test 12 and Phase 4</h2>
+  <p>Test 13 is a completely independent script. It does not import anything from
+    <code>test12_agent_evaluator.py</code>,
+    <code>agent.py</code>, or any Phase 4 code. Its only shared dependency is <code>model_client.py</code> at the
+    project root, which is the universal model caller used by every phase.
+  </p>
+  <p>The input to Test 13 is a JSON file — either the live output from a Test 12 run
+    (<code>agent_evaluation_results.json</code>) or the committed sample
+    (<code>sample_agent_evaluation_results.json</code>). The trace file path is configured in
+    <code>config.yaml</code> under <code>phase5_trajectory_evaluation</code>.
+  </p>
+
+  <h2>The Four Scoring Dimensions</h2>
+  <div class="score-row">
+    <div class="score-card">
+      <div class="score-val">🧭</div>
+      <div class="score-label">Tool Selection</div>
+      <div class="score-desc">Did the agent choose the right tools in the right order? Scores 5 for exact match, 3 for
+        partially correct, 1 for wrong tools or unnecessary use.</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val">🧩</div>
+      <div class="score-label">Argument Quality</div>
+      <div class="score-desc">Were the tool arguments correct and complete? Scores 5 for exact match, 3 for close but
+        imprecise, 1 for wrong or missing arguments.</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val">🔒</div>
+      <div class="score-label">Answer Groundedness</div>
+      <div class="score-desc">Is the final answer grounded in the tool results, or invented from model memory? 5 = fully
+        grounded, 1 = hallucinated.</div>
+    </div>
+    <div class="score-card">
+      <div class="score-val">🛑</div>
+      <div class="score-label">Stop Appropriateness</div>
+      <div class="score-desc">Did the agent stop at the right point — not too early, not after unnecessary extra steps?
+        5 = clean stop after expected flow.</div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    ⚠️ <strong>Why four separate dimensions?</strong> An agent can score 5 on tool selection (right tool) but 2 on
+    answer groundedness (ignored the tool result and answered from memory). Combining these into one score would hide
+    that failure. Disaggregated scoring is a core evaluation principle — the same reason Test 12 keeps tool path and
+    stop quality as separate checks.
+  </div>
+
+  <h2>What We Built</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Purpose</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>test13_trajectory_evaluator.py</code></td>
+        <td>The script you run. Loads a Test 12-style JSON trace, sends each trajectory to the judge model, collects
+          4-dimension scores, and generates JSON results and an HTML report.</td>
+        <td>Config-driven via <code>config.yaml</code></td>
+      </tr>
+      <tr>
+        <td><code>report_generator.py</code></td>
+        <td>Generates the HTML report with summary score cards and per-case 4-dimension score panels with score bars.
+        </td>
+        <td>Output: <code>results/trajectory_evaluation_report.html</code></td>
+      </tr>
+      <tr>
+        <td><code>sample_agent_evaluation_results.json</code></td>
+        <td>A committed copy of a real Test 12 run output. Lets you run Test 13 without needing to re-run the agent.
+        </td>
+        <td>Checked in — safe to commit</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Config</h2>
+  <pre>phase5_trajectory_evaluation:
+  JUDGE_MODEL: "mistral"
+  JUDGE_PROVIDER: "ollama"
+  TRACE_FILE: "sample_agent_evaluation_results.json"</pre>
+  <p>The judge model is <code>mistral</code> via Ollama (free, local). To switch to a paid judge, change
+    <code>JUDGE_MODEL</code> and <code>JUDGE_PROVIDER</code> — the script resolves the API key from the same
+    <code>config.yaml</code> key names used in earlier phases.
+  </p>
+
+  <h2>How to Run</h2>
+  <pre>cd phase-5-production-eval/trajectory-evaluation
+python3 test13_trajectory_evaluator.py</pre>
+  <p>The evaluator loads the trace file, shows the total case count, and asks whether to score all trajectories or a
+    limited subset. Each scored trajectory is printed to terminal with all four dimension scores and a judge summary.
+    Results are saved as JSON and an HTML report.</p>
+
+  <h2>How the Judge Prompt Works</h2>
+  <p>For each trajectory the evaluator sends a single prompt to the judge model containing:</p>
+  <ul>
+    <li><strong>The original question</strong> — what the customer asked</li>
+    <li><strong>Expected behavior</strong> — from the test case workbook</li>
+    <li><strong>Expected vs actual tool sequence</strong> — for comparison</li>
+    <li><strong>The full step-by-step trajectory</strong> — each tool call with arguments and result, then the final
+      answer</li>
+  </ul>
+  <p>The judge is asked to return a JSON object with scores and one-sentence reasons for each dimension. The evaluator
+    strips any <code>&lt;think&gt;...&lt;/think&gt;</code> blocks before parsing, using the same approach as Test 12.
+  </p>
+
+  <pre>{{
+  "tool_selection":       {{"score": 5, "reason": "..."}},
+  "argument_quality":     {{"score": 4, "reason": "..."}},
+  "answer_groundedness":  {{"score": 5, "reason": "..."}},
+  "stop_appropriateness": {{"score": 5, "reason": "..."}},
+  "overall":              {{"score": 5, "verdict": "pass", "summary": "..."}}
+}}</pre>
+
+  <h2>What Test 12 vs Test 13 Measure</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Dimension</th>
+        <th>Test 12 (deterministic)</th>
+        <th>Test 13 (judge-scored)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="dim-tag dim-tool">Tool Path</span></td>
+        <td>Exact sequence match (MATCH / MISMATCH)</td>
+        <td>Quality score 1–5 with reason</td>
+      </tr>
+      <tr>
+        <td><span class="dim-tag dim-args">Arguments</span></td>
+        <td>Account ID exact match + hint word majority match</td>
+        <td>Quality score 1–5 — correctness and completeness</td>
+      </tr>
+      <tr>
+        <td><span class="dim-tag dim-ground">Groundedness</span></td>
+        <td>Not measured</td>
+        <td>Score 1–5 — was answer derived from tool output or invented?</td>
+      </tr>
+      <tr>
+        <td><span class="dim-tag dim-stop">Stop Behavior</span></td>
+        <td>Binary — stopped too early / at right point</td>
+        <td>Quality score 1–5 with judge reasoning</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-box">
+    🔗 <strong>The groundedness dimension is new in Test 13.</strong> Test 12 cannot tell if the final answer actually
+    used the tool result. The agent could call the right tool, receive the result, and then produce a generic answer
+    from its own training data instead of the retrieved information. That failure mode is invisible to Test 12 and only
+    detectable with a judge.
+  </div>
+
+  <h2>What the JSON File Is For</h2>
+  <p>The <code>agent_evaluation_results.json</code> produced by Test 12 is the live run artifact — it changes every
+    time you run the agent. Do not commit it. The <code>sample_agent_evaluation_results.json</code> is a committed
+    snapshot of a real stable run. Test 13 reads that sample by default so it can be run independently without needing
+    to re-run the agent. If you want Test 13 to score the latest live run, point <code>TRACE_FILE</code> in config to
+    <code>../agent-evaluation/results/agent_evaluation_results.json</code>.
+  </p>
+
+  <h2>What This Sets Up</h2>
+  <p>Together, Test 12 and Test 13 form a two-layer agent evaluation pipeline:</p>
+  <ol>
+    <li><strong>Test 12</strong> — Run the agent, capture the trajectory, check deterministic correctness (tool path,
+      arguments, stop behavior). Fast and cheap.</li>
+    <li><strong>Test 13</strong> — Feed the saved trajectory to a judge model for qualitative scoring across four
+      independent dimensions. Adds depth that binary checks cannot provide.</li>
+  </ol>
+  <p>This pattern is directly transferable to production: deterministic checks as a fast gate, judge scoring for
+    quality auditing and regression tracking.</p>
+
+  <footer>Test 13 · Trajectory evaluation with judge model · mistral via Ollama · consumes Test 12 JSON trace ·
+    output: results/trajectory_evaluation_report.html</footer>
+
+</body>
+
+</html>

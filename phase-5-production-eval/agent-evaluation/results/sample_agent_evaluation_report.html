@@ -20,7 +20,7 @@
 </head>
 <body>
   <h1>Test 12 — Agent Behavior Evaluation</h1>
-  <div class="meta">Bot: <b style="color:#d8d8e5">qwen3.5:9b</b> &nbsp;|&nbsp; Cases: <b style="color:#d8d8e5">15</b> &nbsp;|&nbsp; Generated: <b style="color:#d8d8e5">08 Mar 2026 22:14</b></div>
+  <div class="meta">Bot: <b style="color:#d8d8e5">qwen3.5:9b</b> &nbsp;|&nbsp; Cases: <b style="color:#d8d8e5">15</b> &nbsp;|&nbsp; Generated: <b style="color:#d8d8e5">09 Mar 2026 10:57</b></div>
   <div class="note">This report is evaluation-first: the goal is to show whether the agent invoked tools when needed, with what arguments, and how the final answer used those tool outputs. Tool invocations are shown with explicit icons: 🗂️ account lookup, 📄 document search, 🧮 calculator.</div>
   <div style="display:flex;gap:14px;flex-wrap:wrap;margin:24px 0 28px;">
       <div style="background:#17171c;border:1px solid #2a2a32;border-radius:14px;padding:18px;flex:1;min-width:180px">
@@ -29,7 +29,7 @@
           <div style="font-size:12px;color:#76768a">All Test 12 agent cases</div>
         </div>
       <div style="background:#17171c;border:1px solid #2a2a32;border-radius:14px;padding:18px;flex:1;min-width:180px">
-          <div style="font-size:30px;font-weight:800;color:#6af7a0;margin-bottom:6px">10</div>
+          <div style="font-size:30px;font-weight:800;color:#6af7a0;margin-bottom:6px">11</div>
           <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:6px">Tool Used</div>
           <div style="font-size:12px;color:#76768a">Cases where at least one tool was invoked</div>
         </div>
@@ -37,6 +37,16 @@
           <div style="font-size:30px;font-weight:800;color:#7c6af7;margin-bottom:6px">14/15</div>
           <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:6px">Right Tool Pattern</div>
           <div style="font-size:12px;color:#76768a">Expected tool sequence matched exactly</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:14px;padding:18px;flex:1;min-width:180px">
+          <div style="font-size:30px;font-weight:800;color:#5dd6ff;margin-bottom:6px">8/15</div>
+          <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:6px">Right Arguments</div>
+          <div style="font-size:12px;color:#76768a">Expected account IDs and query hints matched the observed tool arguments</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:14px;padding:18px;flex:1;min-width:180px">
+          <div style="font-size:30px;font-weight:800;color:#a78bfa;margin-bottom:6px">14/15</div>
+          <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:6px">Right Stop Behavior</div>
+          <div style="font-size:12px;color:#76768a">Agent stopped at the appropriate point for the expected flow</div>
         </div>
       <div style="background:#17171c;border:1px solid #2a2a32;border-radius:14px;padding:18px;flex:1;min-width:180px">
           <div style="font-size:30px;font-weight:800;color:#f76a6a;margin-bottom:6px">0</div>
@@ -65,19 +75,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Respond directly without any tool call.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 1</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 1</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> False</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Hello! I am an evaluation-only banking agent and can assist you with account lookups, policy documentation searches, and financial calculations. Is there a specific banking-related question or transaction you&#x27;d like help with today?</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Hello! How can I assist you today? If you need to check account status, inquire about policies, or have other banking questions, please let me know.</div>
               </div>
             </div>
             <div>
@@ -85,7 +111,7 @@
               <div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Hello! I am an evaluation-only banking agent and can assist you with account lookups, policy documentation searches, and financial calculations. Is there a specific banking-related question or transaction you&#x27;d like help with today?</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Hello! How can I assist you today? If you need to check account status, inquire about policies, or have other banking questions, please let me know.</div>
                 </div>
             </div>
           </div>
@@ -104,19 +130,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Explain supported banking help areas without using tools.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 1</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 1</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> False</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> I can help with looking up account status (requires your exact account ID), searching for policy documents about banking processes, or performing numerical calculations like interest rate computations. Let me know what you need!</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> I can help you with account lookups (provide your account ID), searching for banking policies and documents, and performing numeric calculations such as interest or payment amounts. What would you like to do today?</div>
               </div>
             </div>
             <div>
@@ -124,7 +166,7 @@
               <div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">I can help with looking up account status (requires your exact account ID), searching for policy documents about banking processes, or performing numerical calculations like interest rate computations. Let me know what you need!</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">I can help you with account lookups (provide your account ID), searching for banking policies and documents, and performing numeric calculations such as interest or payment amounts. What would you like to do today?</div>
                 </div>
             </div>
           </div>
@@ -143,19 +185,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Use account lookup and answer from returned status only.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> A1023</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> A1023</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Account A1023 is currently in dormant status. Additional details: KYC is pending, located at MG Road branch, and it is a Savings account.</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Account A1023 has a status of dormant. Additional details: KYC is pending, branch is MG Road, and account type is Savings.</div>
               </div>
             </div>
             <div>
@@ -168,7 +226,7 @@
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Account A1023 is currently in dormant status. Additional details: KYC is pending, located at MG Road branch, and it is a Savings account.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Account A1023 has a status of dormant. Additional details: KYC is pending, branch is MG Road, and account type is Savings.</div>
                 </div>
             </div>
           </div>
@@ -187,13 +245,29 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Use account lookup and answer yes/no from returned field.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> B204</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> B204</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
@@ -231,13 +305,29 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Use account lookup and answer with branch name only if found.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> C998</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> C998</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
@@ -275,19 +365,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Search documents and answer using retrieved policy text.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> dormant account reactivation Form D-1 fresh KYC</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> dormant account reactivation form</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: False</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> To reactivate a dormant account, you need to submit Form D-1 along with fresh KYC documentation and complete physical signature verification at a partner branch.</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> To reactivate a dormant account, you must submit Form D-1 along with fresh KYC (Know Your Customer) documentation and complete physical signature verification at a partner branch.</div>
               </div>
             </div>
             <div>
@@ -300,7 +406,7 @@
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">To reactivate a dormant account, you need to submit Form D-1 along with fresh KYC documentation and complete physical signature verification at a partner branch.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">To reactivate a dormant account, you must submit Form D-1 along with fresh KYC (Know Your Customer) documentation and complete physical signature verification at a partner branch.</div>
                 </div>
             </div>
           </div>
@@ -319,19 +425,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Search documents and answer using the exact age range from docs.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> gold loan age eligibility 18 85</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> gold loan age eligibility</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: False</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Based on our documents, Gold Loans are available to citizens aged 18-85 years.</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Gold Loans are available to citizens aged 18-85.</div>
               </div>
             </div>
             <div>
@@ -339,12 +461,12 @@
               <div style="background:#131318;border:1px solid #2a2a32;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#f7a06a;margin-bottom:8px">📄 Tool Invoked — search_docs</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;gold loan eligibility age range&#x27;}</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;gold loan eligibility age range&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Fees_Loans_and_Secured_Assets_Guide.txt&#x27;, &#x27;score&#x27;: 3, &#x27;text&#x27;: &#x27;We provide four flexible repayment options for secured loans: a &quot;Bullet Repayment&quot; at the end of the tenure, standard monthly principal and interest payments, an Overdraft facility where interest is only charged on the withdrawn amount, and a &quot;Flexi-Pay&quot; option which allows for repayment without foreclosure charges. Unlike standard personal loans, Gold Loan eligibility does not heavily weight credit scores or employment status, as the physical gold acts as the primary security. Regarding taxation, under the UK Foreign Income and Gains (FIG) regime, funds remitted through the Temporary Repatriation Facility (TRF) are subject to a fixed 12% tax rate.&#x27;}, {&#x27;source&#x27;: &#x27;Fees_Loans_and_Secured_Assets_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;NextGen offers specialized Loan Against Securities (LAS) and Gold Loans for immediate liquidity. For LAS, the loan value is determined by the asset class: Shares and Equity Mutual Funds allow for a draw-down of up to 50% of the pledged value, capped at £20,000. Debt Mutual Funds offer a higher limit of 80% of the pledged value. Fixed Maturity Plans (FMPs) require a minimum loan of £1,000, while Sovereign Gold Bonds and Life Insurance Policies require a minimum of £500. Our Gold Loans are available to citizens aged 18-85, offering instant disbursal of up to £2,000,000 against gold jewellery. The interest rate for these secured products ranges from 8.75% to 16.65% per annum, with a processing &#x27;}]}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;gold loan age eligibility&#x27;}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;gold loan age eligibility&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Fees_Loans_and_Secured_Assets_Guide.txt&#x27;, &#x27;score&#x27;: 3, &#x27;text&#x27;: &#x27;We provide four flexible repayment options for secured loans: a &quot;Bullet Repayment&quot; at the end of the tenure, standard monthly principal and interest payments, an Overdraft facility where interest is only charged on the withdrawn amount, and a &quot;Flexi-Pay&quot; option which allows for repayment without foreclosure charges. Unlike standard personal loans, Gold Loan eligibility does not heavily weight credit scores or employment status, as the physical gold acts as the primary security. Regarding taxation, under the UK Foreign Income and Gains (FIG) regime, funds remitted through the Temporary Repatriation Facility (TRF) are subject to a fixed 12% tax rate.&#x27;}, {&#x27;source&#x27;: &#x27;Fees_Loans_and_Secured_Assets_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;NextGen offers specialized Loan Against Securities (LAS) and Gold Loans for immediate liquidity. For LAS, the loan value is determined by the asset class: Shares and Equity Mutual Funds allow for a draw-down of up to 50% of the pledged value, capped at £20,000. Debt Mutual Funds offer a higher limit of 80% of the pledged value. Fixed Maturity Plans (FMPs) require a minimum loan of £1,000, while Sovereign Gold Bonds and Life Insurance Policies require a minimum of £500. Our Gold Loans are available to citizens aged 18-85, offering instant disbursal of up to £2,000,000 against gold jewellery. The interest rate for these secured products ranges from 8.75% to 16.65% per annum, with a processing &#x27;}]}</div>
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Based on our documents, Gold Loans are available to citizens aged 18-85 years.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Gold Loans are available to citizens aged 18-85.</div>
                 </div>
             </div>
           </div>
@@ -363,19 +485,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Search documents and answer with the documented processing timeline.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> NextGen account opening time business hours mobile portal</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> NextGen account opening time how long to open</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: False</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> The account opening process for a NextGen account typically results in a decision within 2 business hours after completing the required documentation and biometrics scan.</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> To open a NextGen account, you must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal with a mandatory Liveness Check biometrics scan, and you will receive a decision within 2 business hours. Upon approval, your Contactless Visa Debit ATM Card will be dispatched via first-class post, arriving within 3–5 working days.</div>
               </div>
             </div>
             <div>
@@ -383,12 +521,12 @@
               <div style="background:#131318;border:1px solid #2a2a32;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#f7a06a;margin-bottom:8px">📄 Tool Invoked — search_docs</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;NextGen account opening time duration&#x27;}</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;NextGen account opening time duration&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 3, &#x27;text&#x27;: &#x27;NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management.&#x27;}, {&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 3, &#x27;text&#x27;: &#x27;To open any NextGen account, applicants must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal, featuring a mandatory &quot;Liveness Check&quot; biometrics scan, and typically results in a decision within 2 business hours. Upon approval, a Contactless Visa Debit ATM Card is dispatched via first-class post, arriving within 3–5 working days. This card carries a daily ATM withdrawal limit of £500 for Standard accounts and £1,000 for Platinum accoun&#x27;}]}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;NextGen account opening time how long to open&#x27;}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;NextGen account opening time how long to open&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 5, &#x27;text&#x27;: &#x27;To open any NextGen account, applicants must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal, featuring a mandatory &quot;Liveness Check&quot; biometrics scan, and typically results in a decision within 2 business hours. Upon approval, a Contactless Visa Debit ATM Card is dispatched via first-class post, arriving within 3–5 working days. This card carries a daily ATM withdrawal limit of £500 for Standard accounts and £1,000 for Platinum accoun&#x27;}, {&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 3, &#x27;text&#x27;: &#x27;NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management.&#x27;}]}</div>
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">The account opening process for a NextGen account typically results in a decision within 2 business hours after completing the required documentation and biometrics scan.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">To open a NextGen account, you must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal with a mandatory Liveness Check biometrics scan, and you will receive a decision within 2 business hours. Upon approval, your Contactless Visa Debit ATM Card will be dispatched via first-class post, arriving within 3–5 working days.</div>
                 </div>
             </div>
           </div>
@@ -407,19 +545,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Lookup account first, then search docs for dormant reactivation steps, then answer.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> lookup_account_status &gt; search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> A1023</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> dormant account reactivation steps Form D-1 fresh KYC</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 3</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> lookup_account_status &gt; search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> A1023</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> dormant account reactivation</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 3</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: False</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> To reactivate your dormant Account A1023 (MG Road branch), please submit Form D-1, provide updated KYC documentation, and complete physical signature verification at a partner branch. Ensure account balance transfers or closures follow standard processes if applicable.</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> To reactivate your dormant account A1023, you must submit Form D-1 along with fresh KYC documentation and complete a physical signature verification at a partner branch.</div>
               </div>
             </div>
             <div>
@@ -437,7 +591,7 @@
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 3</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">To reactivate your dormant Account A1023 (MG Road branch), please submit Form D-1, provide updated KYC documentation, and complete physical signature verification at a partner branch. Ensure account balance transfers or closures follow standard processes if applicable.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">To reactivate your dormant account A1023, you must submit Form D-1 along with fresh KYC documentation and complete a physical signature verification at a partner branch.</div>
                 </div>
             </div>
           </div>
@@ -447,7 +601,7 @@
               <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8a8aa0;margin-bottom:6px">TC10 · Multi-Step</div>
               <div style="font-size:18px;font-weight:700;color:#ececf5;line-height:1.4">For account B204, explain the issue and next action.</div>
             </div>
-            <div style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:1px">MATCH</div>
+            <div style="background:#f76a6a22;color:#f76a6a;border:1px solid #f76a6a55;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:1px">MISMATCH</div>
           </div>
 
           <div style="display:grid;grid-template-columns:1.1fr 1.6fr;gap:16px;align-items:start">
@@ -456,19 +610,37 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Lookup account first, then use docs if needed, then answer with next action.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> lookup_account_status &gt; search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> B204</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> KYC pending next action branch documents</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 3</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> lookup_account_status &gt; search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> B204</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
-                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
-                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
-                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
-                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: False</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Account B204 Issue: KYC (Know Your Customer) verification is pending. The account status is &#x27;active&#x27; but requires completion of required documentation.\n\nRequired Documentation per Operations_Guide:\n- Primary ID: Valid UK Passport, EU National ID Card, or Full UK Driving Licence\n- Secondary proof of address dated within 90 days (Utility bill, Council Tax statement, or HMRC correspondence)\n\nNext Action:\nThe customer must submit the required KYC documents to complete verification. This can be done via the NextGen Mobile Portal which features a mandatory &#x27;Liveness Check&#x27; biometrics scan, or by visiting a partner branch in Indiranagar for physical signature verification. Once submitted and approved, the account will move to full operational status. If the customer prefers in-person submission, bring valid identification documents to any branch.</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped too early before completing all expected tool calls.</div>
+                </div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">WHY IT STOPPED</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped with an incomplete or unexpected path</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent produced a final answer, but the observed tool path (lookup_account_status) did not match the expected path (lookup_account_status &gt; search_docs).</div>
+                </div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Issue: Account B204 has pending KYC (Know Your Customer) status while currently active at Indiranagar branch.
+
+Next Action: The account holder needs to complete their KYC documentation by visiting the branch or completing online verification. Once KYC is completed, the account will be fully compliant and can continue normal operations.</div>
               </div>
             </div>
             <div>
@@ -478,15 +650,12 @@
                   <div style="font-size:15px;font-weight:700;color:#f7a06a;margin-bottom:8px">🗂️ Tool Invoked — lookup_account_status</div>
                   <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;account_id&#x27;: &#x27;B204&#x27;}</div>
                   <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;lookup_account_status&#x27;, &#x27;record&#x27;: {&#x27;account_id&#x27;: &#x27;B204&#x27;, &#x27;status&#x27;: &#x27;active&#x27;, &#x27;kyc_pending&#x27;: True, &#x27;branch&#x27;: &#x27;Indiranagar&#x27;, &#x27;account_type&#x27;: &#x27;Current&#x27;}}</div>
-                </div><div style="background:#131318;border:1px solid #2a2a32;border-radius:12px;padding:14px;margin-bottom:10px">
-                  <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
-                  <div style="font-size:15px;font-weight:700;color:#f7a06a;margin-bottom:8px">📄 Tool Invoked — search_docs</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;KYC pending account handling process&#x27;}</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;KYC pending account handling process&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;To open any NextGen account, applicants must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal, featuring a mandatory &quot;Liveness Check&quot; biometrics scan, and typically results in a decision within 2 business hours. Upon approval, a Contactless Visa Debit ATM Card is dispatched via first-class post, arriving within 3–5 working days. This card carries a daily ATM withdrawal limit of £500 for Standard accounts and £1,000 for Platinum accoun&#x27;}, {&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;Maintaining account activity is critical; an account is classified as &quot;Inactive&quot; if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated &quot;Dormant.&quot; To reactivate a dormant account, the holder must submit a &quot;Form D-1&quot; along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or &quot;Foreclosure&quot; of a linked savings product is free of charge, provided the accoun&#x27;}]}</div>
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
-                  <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 3</div>
+                  <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Account B204 Issue: KYC (Know Your Customer) verification is pending. The account status is &#x27;active&#x27; but requires completion of required documentation.\n\nRequired Documentation per Operations_Guide:\n- Primary ID: Valid UK Passport, EU National ID Card, or Full UK Driving Licence\n- Secondary proof of address dated within 90 days (Utility bill, Council Tax statement, or HMRC correspondence)\n\nNext Action:\nThe customer must submit the required KYC documents to complete verification. This can be done via the NextGen Mobile Portal which features a mandatory &#x27;Liveness Check&#x27; biometrics scan, or by visiting a partner branch in Indiranagar for physical signature verification. Once submitted and approved, the account will move to full operational status. If the customer prefers in-person submission, bring valid identification documents to any branch.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Issue: Account B204 has pending KYC (Know Your Customer) status while currently active at Indiranagar branch.
+
+Next Action: The account holder needs to complete their KYC documentation by visiting the branch or completing online verification. Once KYC is completed, the account will be fully compliant and can continue normal operations.</div>
                 </div>
             </div>
           </div>
@@ -505,19 +674,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Ask for an account ID instead of calling any tool.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 1</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 1</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> False</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> I can help check your account status. Could you please provide your account ID so I can look up your information?</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> I&#x27;d be happy to check your account status. Could you please provide your account ID (e.g., A1023 or B204)?</div>
               </div>
             </div>
             <div>
@@ -525,7 +710,7 @@
               <div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">I can help check your account status. Could you please provide your account ID so I can look up your information?</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">I&#x27;d be happy to check your account status. Could you please provide your account ID (e.g., A1023 or B204)?</div>
                 </div>
             </div>
           </div>
@@ -544,19 +729,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Refuse as out of banking scope. No tool call.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 1</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> none</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 1</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> False</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> I&#x27;m sorry, but I can only assist with banking-related inquiries such as checking account status or searching our banking documents. I cannot provide weather information. Is there anything else I can help you with regarding your accounts?</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> I&#x27;m sorry, I can only assist with banking-related inquiries such as account information, document searches, and financial calculations. I cannot provide weather information or general non-banking service.</div>
               </div>
             </div>
             <div>
@@ -564,7 +765,7 @@
               <div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">I&#x27;m sorry, but I can only assist with banking-related inquiries such as checking account status or searching our banking documents. I cannot provide weather information. Is there anything else I can help you with regarding your accounts?</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">I&#x27;m sorry, I can only assist with banking-related inquiries such as account information, document searches, and financial calculations. I cannot provide weather information or general non-banking service.</div>
                 </div>
             </div>
           </div>
@@ -574,7 +775,7 @@
               <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8a8aa0;margin-bottom:6px">TC13 · Boundary / Missing Record</div>
               <div style="font-size:18px;font-weight:700;color:#ececf5;line-height:1.4">What is the status of account Z9999?</div>
             </div>
-            <div style="background:#f76a6a22;color:#f76a6a;border:1px solid #f76a6a55;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:1px">MISMATCH</div>
+            <div style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:1px">MATCH</div>
           </div>
 
           <div style="display:grid;grid-template-columns:1.1fr 1.6fr;gap:16px;align-items:start">
@@ -583,27 +784,48 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Use lookup tool, then say the account was not found without hallucinating details.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> Z9999</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> n/a</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> none</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> malformed_action</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> False</div>
-                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
-                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">WHY IT STOPPED</div>
-                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped because the action format broke</b></div>
-                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The model stopped producing a valid structured action, so the evaluator halted the run instead of guessing what the agent meant.</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> lookup_account_status</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> Z9999</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: True</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> I could not complete the task because the agent output was malformed.</div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
+                </div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> Account Z9999 was not found in our system. Please verify the account number and try again, or contact customer service if you believe this is an error.</div>
               </div>
             </div>
             <div>
               <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">TRACE</div>
-              <div style="background:#1d1414;border:1px solid #4a2323;border-radius:12px;padding:14px;margin-bottom:10px">
+              <div style="background:#131318;border:1px solid #2a2a32;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
-                  <div style="font-size:15px;font-weight:700;color:#f76a6a;margin-bottom:8px">⚠️ Agent Error</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Model did not return valid JSON action</div>
+                  <div style="font-size:15px;font-weight:700;color:#f7a06a;margin-bottom:8px">🗂️ Tool Invoked — lookup_account_status</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;account_id&#x27;: &#x27;Z9999&#x27;}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: False, &#x27;tool_name&#x27;: &#x27;lookup_account_status&#x27;, &#x27;account_id&#x27;: &#x27;Z9999&#x27;, &#x27;error&#x27;: &#x27;Account not found&#x27;}</div>
+                </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
+                  <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
+                  <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">Account Z9999 was not found in our system. Please verify the account number and try again, or contact customer service if you believe this is an error.</div>
                 </div>
             </div>
           </div>
@@ -622,19 +844,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Answer directly or with a single doc search, but avoid unnecessary multi-step behavior.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> dormant account meaning</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> dormant account definition</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: False</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> In banking, an account is classified as &#x27;Dormant&#x27; after 24 months of inactivity following a period where no customer-initiated transactions occur for 12 consecutive months (classified as &#x27;Inactive&#x27;). Reactivating a dormant account typically requires submitting Form D-1, updated KYC documentation, and physical signature verification at a partner branch.</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> In banking, a dormant account is one that has been inactive for 24 consecutive months after an initial inactivity period of 12 months (classified as &#x27;Inactive&#x27;). To reactivate a dormant account, the holder must submit Form D-1 with updated KYC documentation and complete physical signature verification at a partner branch. Accounts meeting dormancy criteria may also face closure or foreclosure of linked products.</div>
               </div>
             </div>
             <div>
@@ -642,12 +880,12 @@
               <div style="background:#131318;border:1px solid #2a2a32;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#f7a06a;margin-bottom:8px">📄 Tool Invoked — search_docs</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;dormant account definition banking&#x27;}</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;dormant account definition banking&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management.&#x27;}, {&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;Maintaining account activity is critical; an account is classified as &quot;Inactive&quot; if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated &quot;Dormant.&quot; To reactivate a dormant account, the holder must submit a &quot;Form D-1&quot; along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or &quot;Foreclosure&quot; of a linked savings product is free of charge, provided the accoun&#x27;}]}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;dormant account definition&#x27;}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;dormant account definition&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;Maintaining account activity is critical; an account is classified as &quot;Inactive&quot; if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated &quot;Dormant.&quot; To reactivate a dormant account, the holder must submit a &quot;Form D-1&quot; along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or &quot;Foreclosure&quot; of a linked savings product is free of charge, provided the accoun&#x27;}, {&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 1, &#x27;text&#x27;: &#x27;NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management.&#x27;}]}</div>
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">In banking, an account is classified as &#x27;Dormant&#x27; after 24 months of inactivity following a period where no customer-initiated transactions occur for 12 consecutive months (classified as &#x27;Inactive&#x27;). Reactivating a dormant account typically requires submitting Form D-1, updated KYC documentation, and physical signature verification at a partner branch.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">In banking, a dormant account is one that has been inactive for 24 consecutive months after an initial inactivity period of 12 months (classified as &#x27;Inactive&#x27;). To reactivate a dormant account, the holder must submit Form D-1 with updated KYC documentation and complete physical signature verification at a partner branch. Accounts meeting dormancy criteria may also face closure or foreclosure of linked products.</div>
                 </div>
             </div>
           </div>
@@ -666,19 +904,35 @@
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
                 <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> Ask a clarifying question if account-specific data is required, or answer with generic documented process only.</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> reactivation dormant account generic process</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> 2</div>
               </div>
               <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
                 <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> search_docs</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> n/a</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> dormant account reactivation</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> final_answer</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual final action:</b> final</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Step count:</b> 2</div>
                 <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> True</div>
+                <div style="background:#f76a6a14;border:1px solid #f76a6a55;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#f76a6a;margin-bottom:6px">ARGUMENT CHECK</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MISMATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: True · Search hint match: False</div>
+                </div>
+                <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
+                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">STOP QUALITY</div>
+                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>MATCH</b></div>
+                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent stopped at an appropriate point after completing the expected flow.</div>
+                </div>
                 <div style="background:#6af7a014;border:1px solid #6af7a055;border-radius:10px;padding:12px;margin:10px 0 12px">
                   <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:#6af7a0;margin-bottom:6px">WHY IT STOPPED</div>
                   <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>Stopped normally</b></div>
                   <div style="font-size:12px;color:#c7c9d6;line-height:1.6">The agent reached a final answer and its tool path matched the expected pattern.</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> To reactivate a dormant account, the customer must: 1) Submit Form D-1, 2) Provide fresh KYC (Know Your Customer) documentation, and 3) Complete physical signature verification at a partner branch. The account has been inactive for more than 24 consecutive months. All balances and direct debits can be transferred under the CASS Guarantee if the customer chooses to switch banks instead.</div>
+                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> To reactivate a dormant account, inform the customer that they must: 1) Submit Form D-1, 2) Provide fresh KYC documentation, and 3) Complete physical signature verification at a partner branch. Please note that an account is classified as &quot;Inactive&quot; after 12 months of no activity and becomes &quot;Dormant&quot; after 24 months of inactivity.</div>
               </div>
             </div>
             <div>
@@ -686,12 +940,12 @@
               <div style="background:#131318;border:1px solid #2a2a32;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 1</div>
                   <div style="font-size:15px;font-weight:700;color:#f7a06a;margin-bottom:8px">📄 Tool Invoked — search_docs</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;dormant account reactivation policy&#x27;}</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;dormant account reactivation policy&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;Maintaining account activity is critical; an account is classified as &quot;Inactive&quot; if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated &quot;Dormant.&quot; To reactivate a dormant account, the holder must submit a &quot;Form D-1&quot; along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or &quot;Foreclosure&quot; of a linked savings product is free of charge, provided the accoun&#x27;}, {&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 1, &#x27;text&#x27;: &#x27;NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management.&#x27;}]}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d0d0dc;margin-bottom:8px"><b>Arguments:</b> {&#x27;query&#x27;: &#x27;dormant account reactivation&#x27;}</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ea0b4;white-space:pre-wrap"><b>Tool Output:</b> {&#x27;ok&#x27;: True, &#x27;tool_name&#x27;: &#x27;search_docs&#x27;, &#x27;query&#x27;: &#x27;dormant account reactivation&#x27;, &#x27;matches&#x27;: [{&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 2, &#x27;text&#x27;: &#x27;Maintaining account activity is critical; an account is classified as &quot;Inactive&quot; if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated &quot;Dormant.&quot; To reactivate a dormant account, the holder must submit a &quot;Form D-1&quot; along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or &quot;Foreclosure&quot; of a linked savings product is free of charge, provided the accoun&#x27;}, {&#x27;source&#x27;: &#x27;Operations_Guide.txt&#x27;, &#x27;score&#x27;: 1, &#x27;text&#x27;: &#x27;NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management.&#x27;}]}</div>
                 </div><div style="background:#131a14;border:1px solid #22422a;border-radius:12px;padding:14px;margin-bottom:10px">
                   <div style="font-size:12px;color:#8a8aa0;margin-bottom:6px">STEP 2</div>
                   <div style="font-size:15px;font-weight:700;color:#6af7a0;margin-bottom:8px">✅ Final Answer</div>
-                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">To reactivate a dormant account, the customer must: 1) Submit Form D-1, 2) Provide fresh KYC (Know Your Customer) documentation, and 3) Complete physical signature verification at a partner branch. The account has been inactive for more than 24 consecutive months. All balances and direct debits can be transferred under the CASS Guarantee if the customer chooses to switch banks instead.</div>
+                  <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap">To reactivate a dormant account, inform the customer that they must: 1) Submit Form D-1, 2) Provide fresh KYC documentation, and 3) Complete physical signature verification at a partner branch. Please note that an account is classified as &quot;Inactive&quot; after 12 months of no activity and becomes &quot;Dormant&quot; after 24 months of inactivity.</div>
                 </div>
             </div>
           </div>

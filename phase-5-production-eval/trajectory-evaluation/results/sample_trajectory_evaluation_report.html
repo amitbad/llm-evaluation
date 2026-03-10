@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test 13 — Trajectory Evaluation</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#0d0d0f; color:#e8e8f0; font-family:'Syne',sans-serif; padding:28px; line-height:1.6; }
+  h1 { font-size:28px; color:#f7a06a; margin-bottom:6px; }
+  h2 { font-size:16px; color:#c9c9d6; margin:22px 0 12px; }
+  .meta { color:#8a8aa0; font-size:12px; margin-bottom:8px; }
+  .note { background:#141417; border:1px solid #2a2a32; border-left:4px solid #7c6af7; padding:12px 14px; border-radius:10px; color:#cbcbda; font-size:13px; margin-bottom:8px; }
+  code { background:#1c1c22; padding:1px 5px; border-radius:4px; font-family:'JetBrains Mono',monospace; font-size:11px; color:#f7a06a; }
+</style>
+</head>
+<body>
+  <h1>Test 13 — Trajectory Evaluation</h1>
+  <div class="meta">Judge: <b style="color:#d8d8e5">mistral</b> &nbsp;|&nbsp; Cases: <b style="color:#d8d8e5">15</b> &nbsp;|&nbsp; Generated: <b style="color:#d8d8e5">10 Mar 2026 09:36</b></div>
+  <div class="note">Test 13 uses a judge model to score each Test 12 trajectory on four independent dimensions: tool selection, argument quality, answer groundedness, and stop appropriateness. It does not re-run the agent — it reads the saved JSON trace and evaluates the quality of each decision in the trajectory.</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 24px">
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:12px;padding:14px 16px;flex:1;min-width:140px">
+          <div style="font-size:26px;font-weight:800;color:#f7a06a;margin-bottom:4px">15</div>
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:4px">Trajectories</div>
+          <div style="font-size:11px;color:#76768a">Total cases scored</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:12px;padding:14px 16px;flex:1;min-width:140px">
+          <div style="font-size:26px;font-weight:800;color:#6af7a0;margin-bottom:4px">15</div>
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:4px">Pass</div>
+          <div style="font-size:11px;color:#76768a">Overall score ≥ 3</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:12px;padding:14px 16px;flex:1;min-width:140px">
+          <div style="font-size:26px;font-weight:800;color:#f76a6a;margin-bottom:4px">0</div>
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:4px">Fail</div>
+          <div style="font-size:11px;color:#76768a">Overall score < 3</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:12px;padding:14px 16px;flex:1;min-width:140px">
+          <div style="font-size:26px;font-weight:800;color:#f0c040;margin-bottom:4px">0</div>
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:4px">Judge Errors</div>
+          <div style="font-size:11px;color:#76768a">Could not parse judge output</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:12px;padding:14px 16px;flex:1;min-width:140px">
+          <div style="font-size:26px;font-weight:800;color:#7c6af7;margin-bottom:4px">5.0</div>
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:4px">Avg Overall</div>
+          <div style="font-size:11px;color:#76768a">Mean judge score across all cases</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:12px;padding:14px 16px;flex:1;min-width:140px">
+          <div style="font-size:26px;font-weight:800;color:#5dd6ff;margin-bottom:4px">5.0</div>
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:4px">Avg Tool Select</div>
+          <div style="font-size:11px;color:#76768a">Mean tool selection score</div>
+        </div>
+      <div style="background:#17171c;border:1px solid #2a2a32;border-radius:12px;padding:14px 16px;flex:1;min-width:140px">
+          <div style="font-size:26px;font-weight:800;color:#a78bfa;margin-bottom:4px">5.0</div>
+          <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#b8b8c8;margin-bottom:4px">Avg Groundedness</div>
+          <div style="font-size:11px;color:#76768a">Mean answer groundedness score</div>
+        </div>
+    </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+    <div style="background:#101016;border:1px solid #23232c;border-radius:10px;padding:10px 12px;text-align:center">
+      <div style="font-size:20px;font-weight:800;color:#5dd6ff">5.0</div>
+      <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Avg Tool Select</div>
+    </div>
+    <div style="background:#101016;border:1px solid #23232c;border-radius:10px;padding:10px 12px;text-align:center">
+      <div style="font-size:20px;font-weight:800;color:#a78bfa">5.0</div>
+      <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Avg Arg Quality</div>
+    </div>
+    <div style="background:#101016;border:1px solid #23232c;border-radius:10px;padding:10px 12px;text-align:center">
+      <div style="font-size:20px;font-weight:800;color:#6af7a0">5.0</div>
+      <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Avg Groundedness</div>
+    </div>
+    <div style="background:#101016;border:1px solid #23232c;border-radius:10px;padding:10px 12px;text-align:center">
+      <div style="font-size:20px;font-weight:800;color:#f0c040">5.0</div>
+      <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Avg Stop Timing</div>
+    </div>
+  </div>
+  <h2>Per-Case Judge Scores</h2>
+  <div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC01 · No Tool / Direct</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">Hello</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">No tools were used in this interaction. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent provided a comprehensive list of potential services. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer is directly related to the banking agent&#x27;s purpose. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped after the initial greeting and prompted the user for further action. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent displayed appropriate and accurate behavior for the given scenario.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC02 · No Tool / Direct</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">What can you help me with?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent did not use any tools and answered the question directly. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent provided correct and complete arguments. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was grounded in the provided information. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped at the appropriate point in the conversation. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a good understanding of the question and provided a detailed and accurate response.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC03 · Structured Lookup</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">What is the status of account A1023?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the expected tool sequence: lookup_account_status </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments were correct and complete </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped at the right point after expected flow </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a correct and complete understanding and execution of the task
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC04 · Structured Lookup</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">Is account B204 KYC pending?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the expected tool sequence, lookup_account_status. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent provided the correct account_id argument. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped cleanly after the expected final_answer step. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent correctly used the lookup_account_status tool with a correct argument and grounded the final answer in the tool results.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC05 · Structured Lookup</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">Which branch is linked to account C998?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the expected tool &#x27;lookup_account_status&#x27; and did not use any unnecessary tools. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent provided correct and complete arguments for the &#x27;lookup_account_status&#x27; tool call. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer is fully grounded in the tool results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped cleanly after the expected flow. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a strong performance, using the correct tools, providing a grounded answer, and stopping at the expected point.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC06 · Doc Retrieval</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">What form is needed to reactivate a dormant account?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the correct tool, search_docs, to find the answer. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments were correct and complete. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was grounded in the tool results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped at the right point, after the expected final answer. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a good understanding of the task and provided the correct answer grounded in the tool results.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC07 · Doc Retrieval</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">What is the age range for gold loan eligibility?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the correct tool, search_docs, to find the answer. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments provided were exact matches from the document. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped cleanly after the expected flow. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent performed well, using the correct tools and providing a grounded and accurate final answer.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC08 · Doc Retrieval</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">How long does it take to open a NextGen account?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the &#x27;search_docs&#x27; tool as expected. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments provided were exact matches from the search results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped appropriately after the expected final answer. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a correct use of the tool sequence, provided accurate arguments, grounded the final answer in the tool results, and stopped appropriately.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC09 · Multi-Step</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">Account A1023 is dormant. What should the customer do next?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the expected tools in the correct order </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments were correct and complete </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped cleanly after the expected flow </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a strong understanding of the trajectory and provided an accurate and well-grounded final answer.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC10 · Multi-Step</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">For account B204, explain the issue and next action.</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the expected tool &#x27;lookup_account_status&#x27; first. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent provided accurate and complete arguments from the tool result. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool result. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped at the expected point in the flow. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a correct understanding of the problem and provided an accurate solution.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC11 · Boundary / Clarification</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">Can you check my account status?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">No tools were used, and it was not necessary to do so </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The argument was clear and correct </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was grounded in the expected behavior </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped after providing a clear request for information </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a good understanding of the expected behavior and responded appropriately
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC12 · Boundary / Refusal</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">What is the weather in London today?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">No tools were required as the agent handled the request without tool usage </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The argument provided was precise and relevant to the request </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the agent&#x27;s programmed response </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped after providing the expected response </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent correctly identified the request as out of scope and provided an appropriate response
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC13 · Boundary / Missing Record</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">What is the status of account Z9999?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the correct tool in the expected order. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments were correct and complete. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped at the right point after the expected flow. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent followed the expected behavior, using the correct tool, providing a correct answer grounded in the tool results, and stopping at the right point.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC14 · Tool Overuse Check</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">What does dormant mean in banking?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the search_docs tool to find the definition of a dormant account. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments were exact and complete. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results. </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped at the right point, after finding the final answer. </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent performed well by using the correct tools, providing accurate arguments, grounding the final answer in the tool results, and stopping at the right point.
+          </div>
+        </div><div style="background:#141417;border:1px solid #2a2a32;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <div>
+              <span style="font-size:11px;color:#8a8aa0;font-family:monospace">TC15 · Boundary / Ambiguous</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;margin-top:2px">Customer wants reactivation. What should I tell them?</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:13px;color:#b8b8c8">Overall: <span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></span>
+              <span style="background:#6af7a022;color:#6af7a0;border:1px solid #6af7a055;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:1px">PASS</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tool Selection</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent used the expected tool sequence (search_docs) to find the required information </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Argument Quality</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The tool arguments (dormant account reactivation) were correct and complete </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Answer Groundedness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The final answer was fully grounded in the tool results </div>
+            </div>
+            <div style="background:#101016;border:1px solid #23232c;border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Stop Appropriateness</div>
+              <div style="margin-bottom:4px"><span style="font-family:monospace;letter-spacing:2px;color:#6af7a0">█████<span style="color:#2a2a32"></span></span> <span style="color:#6af7a0;font-weight:700">5/5</span></div>
+              <div style="font-size:11px;color:#a0a0b8">The agent stopped cleanly after expected flow </div>
+            </div>
+          </div>
+          <div style="background:#0e0e14;border:1px solid #23232c;border-radius:8px;padding:8px 10px;font-size:12px;color:#c0c0d8">
+            <b style="color:#8a8aa0">Judge summary:</b> The agent demonstrated a correct tool sequence, high-quality arguments, grounded answers, and appropriate stopping criteria.
+          </div>
+        </div>
+  <footer style="margin-top:40px;padding-top:14px;border-top:1px solid #2a2a32;font-size:11px;color:#8a8aa0;font-family:'JetBrains Mono',monospace">
+    Test 13 · Judge: mistral · 15 trajectories scored · output: trajectory_evaluation_results.json
+  </footer>
+</body>
+</html>

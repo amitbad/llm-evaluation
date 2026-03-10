@@ -19,17 +19,26 @@
       "max_steps": 1,
       "why_this_case_exists": "Detect unnecessary tool use on simple greetings.",
       "actual_tool_sequence": [],
+      "actual_account_id": "",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 1,
       "used_any_tool": false,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "Hello! I am an evaluation-only banking agent and can assist you with account lookups, policy documentation searches, and financial calculations. Is there a specific banking-related question or transaction you'd like help with today?",
+      "final_answer": "Hello! How can I assist you today? If you need to check account status, inquire about policies, or have other banking questions, please let me know.",
       "stop_reason": "final_answer",
       "trace": [
         {
           "step": 1,
           "action": "final",
-          "answer": "Hello! I am an evaluation-only banking agent and can assist you with account lookups, policy documentation searches, and financial calculations. Is there a specific banking-related question or transaction you'd like help with today?",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"Hello! I am an evaluation-only banking agent and can assist you with account lookups, policy documentation searches, and financial calculations. Is there a specific banking-related question or transaction you'd like help with today?\"}"
+          "answer": "Hello! How can I assist you today? If you need to check account status, inquire about policies, or have other banking questions, please let me know.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"Hello! How can I assist you today? If you need to check account status, inquire about policies, or have other banking questions, please let me know.\"}"
         }
       ]
     },
@@ -47,17 +56,26 @@
       "max_steps": 1,
       "why_this_case_exists": "Tests scope explanation without tool overuse.",
       "actual_tool_sequence": [],
+      "actual_account_id": "",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 1,
       "used_any_tool": false,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "I can help with looking up account status (requires your exact account ID), searching for policy documents about banking processes, or performing numerical calculations like interest rate computations. Let me know what you need!",
+      "final_answer": "I can help you with account lookups (provide your account ID), searching for banking policies and documents, and performing numeric calculations such as interest or payment amounts. What would you like to do today?",
       "stop_reason": "final_answer",
       "trace": [
         {
           "step": 1,
           "action": "final",
-          "answer": "I can help with looking up account status (requires your exact account ID), searching for policy documents about banking processes, or performing numerical calculations like interest rate computations. Let me know what you need!",
-          "raw_output": "{\n\"action\": \"final\",\n\"answer\": \"I can help with looking up account status (requires your exact account ID), searching for policy documents about banking processes, or performing numerical calculations like interest rate computations. Let me know what you need!\"\n}"
+          "answer": "I can help you with account lookups (provide your account ID), searching for banking policies and documents, and performing numeric calculations such as interest or payment amounts. What would you like to do today?",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"I can help you with account lookups (provide your account ID), searching for banking policies and documents, and performing numeric calculations such as interest or payment amounts. What would you like to do today?\"}"
         }
       ]
     },
@@ -77,10 +95,19 @@
       "actual_tool_sequence": [
         "lookup_account_status"
       ],
+      "actual_account_id": "A1023",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "Account A1023 is currently in dormant status. Additional details: KYC is pending, located at MG Road branch, and it is a Savings account.",
+      "final_answer": "Account A1023 has a status of dormant. Additional details: KYC is pending, branch is MG Road, and account type is Savings.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -101,13 +128,13 @@
               "account_type": "Savings"
             }
           },
-          "raw_output": "{\n  \"action\": \"tool\",\n  \"tool_name\": \"lookup_account_status\",\n  \"arguments\": {\n    \"account_id\": \"A1023\"\n  }\n}"
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"lookup_account_status\",\"arguments\":{\"account_id\":\"A1023\"}}"
         },
         {
           "step": 2,
           "action": "final",
-          "answer": "Account A1023 is currently in dormant status. Additional details: KYC is pending, located at MG Road branch, and it is a Savings account.",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"Account A1023 is currently in dormant status. Additional details: KYC is pending, located at MG Road branch, and it is a Savings account.\"}"
+          "answer": "Account A1023 has a status of dormant. Additional details: KYC is pending, branch is MG Road, and account type is Savings.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"Account A1023 has a status of dormant. Additional details: KYC is pending, branch is MG Road, and account type is Savings.\"}"
         }
       ]
     },
@@ -127,8 +154,17 @@
       "actual_tool_sequence": [
         "lookup_account_status"
       ],
+      "actual_account_id": "B204",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
       "final_answer": "Yes, account B204 has pending KYC status.",
       "stop_reason": "final_answer",
@@ -177,8 +213,17 @@
       "actual_tool_sequence": [
         "lookup_account_status"
       ],
+      "actual_account_id": "C998",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
       "final_answer": "Account C998 is linked to the Whitefield branch.",
       "stop_reason": "final_answer",
@@ -227,10 +272,19 @@
       "actual_tool_sequence": [
         "search_docs"
       ],
+      "actual_account_id": "",
+      "actual_search_query": "dormant account reactivation form",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": false,
+      "argument_match": false,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "To reactivate a dormant account, you need to submit Form D-1 along with fresh KYC documentation and complete physical signature verification at a partner branch.",
+      "final_answer": "To reactivate a dormant account, you must submit Form D-1 along with fresh KYC (Know Your Customer) documentation and complete physical signature verification at a partner branch.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -257,13 +311,13 @@
               }
             ]
           },
-          "raw_output": "{\n\"action\": \"tool\",\n\"tool_name\": \"search_docs\",\n\"arguments\": {\"query\": \"dormant account reactivation form\"}\n}"
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"dormant account reactivation form\"}}"
         },
         {
           "step": 2,
           "action": "final",
-          "answer": "To reactivate a dormant account, you need to submit Form D-1 along with fresh KYC documentation and complete physical signature verification at a partner branch.",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"To reactivate a dormant account, you need to submit Form D-1 along with fresh KYC documentation and complete physical signature verification at a partner branch.\"}"
+          "answer": "To reactivate a dormant account, you must submit Form D-1 along with fresh KYC (Know Your Customer) documentation and complete physical signature verification at a partner branch.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"To reactivate a dormant account, you must submit Form D-1 along with fresh KYC (Know Your Customer) documentation and complete physical signature verification at a partner branch.\"}"
         }
       ]
     },
@@ -283,10 +337,19 @@
       "actual_tool_sequence": [
         "search_docs"
       ],
+      "actual_account_id": "",
+      "actual_search_query": "gold loan age eligibility",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": false,
+      "argument_match": false,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "Based on our documents, Gold Loans are available to citizens aged 18-85 years.",
+      "final_answer": "Gold Loans are available to citizens aged 18-85.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -294,12 +357,12 @@
           "action": "tool",
           "tool_name": "search_docs",
           "arguments": {
-            "query": "gold loan eligibility age range"
+            "query": "gold loan age eligibility"
           },
           "tool_result": {
             "ok": true,
             "tool_name": "search_docs",
-            "query": "gold loan eligibility age range",
+            "query": "gold loan age eligibility",
             "matches": [
               {
                 "source": "Fees_Loans_and_Secured_Assets_Guide.txt",
@@ -313,13 +376,13 @@
               }
             ]
           },
-          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"gold loan eligibility age range\"}}"
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"gold loan age eligibility\"}}"
         },
         {
           "step": 2,
           "action": "final",
-          "answer": "Based on our documents, Gold Loans are available to citizens aged 18-85 years.",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"Based on our documents, Gold Loans are available to citizens aged 18-85 years.\"}"
+          "answer": "Gold Loans are available to citizens aged 18-85.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"Gold Loans are available to citizens aged 18-85.\"}"
         }
       ]
     },
@@ -339,10 +402,19 @@
       "actual_tool_sequence": [
         "search_docs"
       ],
+      "actual_account_id": "",
+      "actual_search_query": "NextGen account opening time how long to open",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": false,
+      "argument_match": false,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "The account opening process for a NextGen account typically results in a decision within 2 business hours after completing the required documentation and biometrics scan.",
+      "final_answer": "To open a NextGen account, you must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal with a mandatory Liveness Check biometrics scan, and you will receive a decision within 2 business hours. Upon approval, your Contactless Visa Debit ATM Card will be dispatched via first-class post, arriving within 3–5 working days.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -350,32 +422,32 @@
           "action": "tool",
           "tool_name": "search_docs",
           "arguments": {
-            "query": "NextGen account opening time duration"
+            "query": "NextGen account opening time how long to open"
           },
           "tool_result": {
             "ok": true,
             "tool_name": "search_docs",
-            "query": "NextGen account opening time duration",
+            "query": "NextGen account opening time how long to open",
             "matches": [
               {
                 "source": "Operations_Guide.txt",
-                "score": 3,
-                "text": "NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management."
+                "score": 5,
+                "text": "To open any NextGen account, applicants must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal, featuring a mandatory \"Liveness Check\" biometrics scan, and typically results in a decision within 2 business hours. Upon approval, a Contactless Visa Debit ATM Card is dispatched via first-class post, arriving within 3–5 working days. This card carries a daily ATM withdrawal limit of £500 for Standard accounts and £1,000 for Platinum accoun"
               },
               {
                 "source": "Operations_Guide.txt",
                 "score": 3,
-                "text": "To open any NextGen account, applicants must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal, featuring a mandatory \"Liveness Check\" biometrics scan, and typically results in a decision within 2 business hours. Upon approval, a Contactless Visa Debit ATM Card is dispatched via first-class post, arriving within 3–5 working days. This card carries a daily ATM withdrawal limit of £500 for Standard accounts and £1,000 for Platinum accoun"
+                "text": "NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management."
               }
             ]
           },
-          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"NextGen account opening time duration\"}}"
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"NextGen account opening time how long to open\"}}"
         },
         {
           "step": 2,
           "action": "final",
-          "answer": "The account opening process for a NextGen account typically results in a decision within 2 business hours after completing the required documentation and biometrics scan.",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"The account opening process for a NextGen account typically results in a decision within 2 business hours after completing the required documentation and biometrics scan.\"}"
+          "answer": "To open a NextGen account, you must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal with a mandatory Liveness Check biometrics scan, and you will receive a decision within 2 business hours. Upon approval, your Contactless Visa Debit ATM Card will be dispatched via first-class post, arriving within 3–5 working days.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"To open a NextGen account, you must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal with a mandatory Liveness Check biometrics scan, and you will receive a decision within 2 business hours. Upon approval, your Contactless Visa Debit ATM Card will be dispatched via first-class post, arriving within 3–5 working days.\"}"
         }
       ]
     },
@@ -396,10 +468,19 @@
         "lookup_account_status",
         "search_docs"
       ],
+      "actual_account_id": "A1023",
+      "actual_search_query": "dormant account reactivation",
+      "actual_final_action": "final",
+      "step_count": 3,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": false,
+      "argument_match": false,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "To reactivate your dormant Account A1023 (MG Road branch), please submit Form D-1, provide updated KYC documentation, and complete physical signature verification at a partner branch. Ensure account balance transfers or closures follow standard processes if applicable.",
+      "final_answer": "To reactivate your dormant account A1023, you must submit Form D-1 along with fresh KYC documentation and complete a physical signature verification at a partner branch.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -451,8 +532,8 @@
         {
           "step": 3,
           "action": "final",
-          "answer": "To reactivate your dormant Account A1023 (MG Road branch), please submit Form D-1, provide updated KYC documentation, and complete physical signature verification at a partner branch. Ensure account balance transfers or closures follow standard processes if applicable.",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"To reactivate your dormant Account A1023 (MG Road branch), please submit Form D-1, provide updated KYC documentation, and complete physical signature verification at a partner branch. Ensure account balance transfers or closures follow standard processes if applicable.\"}"
+          "answer": "To reactivate your dormant account A1023, you must submit Form D-1 along with fresh KYC documentation and complete a physical signature verification at a partner branch.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"To reactivate your dormant account A1023, you must submit Form D-1 along with fresh KYC documentation and complete a physical signature verification at a partner branch.\"}"
         }
       ]
     },
@@ -470,13 +551,21 @@
       "max_steps": 3,
       "why_this_case_exists": "Tests combining structured lookup with policy retrieval.",
       "actual_tool_sequence": [
-        "lookup_account_status",
-        "search_docs"
+        "lookup_account_status"
       ],
+      "actual_account_id": "B204",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
-      "tool_match": true,
+      "tool_match": false,
+      "account_id_match": true,
+      "search_query_hint_match": false,
+      "argument_match": false,
+      "stop_quality_match": false,
+      "stop_quality_note": "The agent stopped too early before completing all expected tool calls.",
       "unnecessary_tool_use": false,
-      "final_answer": "Account B204 Issue: KYC (Know Your Customer) verification is pending. The account status is 'active' but requires completion of required documentation.\\n\\nRequired Documentation per Operations_Guide:\\n- Primary ID: Valid UK Passport, EU National ID Card, or Full UK Driving Licence\\n- Secondary proof of address dated within 90 days (Utility bill, Council Tax statement, or HMRC correspondence)\\n\\nNext Action:\\nThe customer must submit the required KYC documents to complete verification. This can be done via the NextGen Mobile Portal which features a mandatory 'Liveness Check' biometrics scan, or by visiting a partner branch in Indiranagar for physical signature verification. Once submitted and approved, the account will move to full operational status. If the customer prefers in-person submission, bring valid identification documents to any branch.",
+      "final_answer": "Issue: Account B204 has pending KYC (Know Your Customer) status while currently active at Indiranagar branch.\n\nNext Action: The account holder needs to complete their KYC documentation by visiting the branch or completing online verification. Once KYC is completed, the account will be fully compliant and can continue normal operations.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -497,39 +586,13 @@
               "account_type": "Current"
             }
           },
-          "raw_output": "{\n\"action\": \"tool\",\n\"tool_name\": \"lookup_account_status\",\n\"arguments\": {\n\"account_id\": \"B204\"\n}\n}"
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"lookup_account_status\",\"arguments\":{\"account_id\":\"B204\"}}"
         },
         {
           "step": 2,
-          "action": "tool",
-          "tool_name": "search_docs",
-          "arguments": {
-            "query": "KYC pending account handling process"
-          },
-          "tool_result": {
-            "ok": true,
-            "tool_name": "search_docs",
-            "query": "KYC pending account handling process",
-            "matches": [
-              {
-                "source": "Operations_Guide.txt",
-                "score": 2,
-                "text": "To open any NextGen account, applicants must provide two distinct documents: a primary ID (valid UK Passport, EU National ID Card, or Full UK Driving Licence) and a secondary proof of address dated within the last 90 days (Utility bill, Council Tax statement, or HMRC correspondence). The account opening process is initiated via the NextGen Mobile Portal, featuring a mandatory \"Liveness Check\" biometrics scan, and typically results in a decision within 2 business hours. Upon approval, a Contactless Visa Debit ATM Card is dispatched via first-class post, arriving within 3–5 working days. This card carries a daily ATM withdrawal limit of £500 for Standard accounts and £1,000 for Platinum accoun"
-              },
-              {
-                "source": "Operations_Guide.txt",
-                "score": 2,
-                "text": "Maintaining account activity is critical; an account is classified as \"Inactive\" if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated \"Dormant.\" To reactivate a dormant account, the holder must submit a \"Form D-1\" along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or \"Foreclosure\" of a linked savings product is free of charge, provided the accoun"
-              }
-            ]
-          },
-          "raw_output": "{\n\"action\": \"tool\",\n\"tool_name\": \"search_docs\",\n\"arguments\": {\n\"query\": \"KYC pending account handling process\"\n}\n}"
-        },
-        {
-          "step": 3,
           "action": "final",
-          "answer": "Account B204 Issue: KYC (Know Your Customer) verification is pending. The account status is 'active' but requires completion of required documentation.\\n\\nRequired Documentation per Operations_Guide:\\n- Primary ID: Valid UK Passport, EU National ID Card, or Full UK Driving Licence\\n- Secondary proof of address dated within 90 days (Utility bill, Council Tax statement, or HMRC correspondence)\\n\\nNext Action:\\nThe customer must submit the required KYC documents to complete verification. This can be done via the NextGen Mobile Portal which features a mandatory 'Liveness Check' biometrics scan, or by visiting a partner branch in Indiranagar for physical signature verification. Once submitted and approved, the account will move to full operational status. If the customer prefers in-person submission, bring valid identification documents to any branch.",
-          "raw_output": "{\n\"action\":\"final\",\n\"answer\":\"Account B204 Issue: KYC (Know Your Customer) verification is pending. The account status is 'active' but requires completion of required documentation.\\\\n\\\\nRequired Documentation per Operations_Guide:\\\\n- Primary ID: Valid UK Passport, EU National ID Card, or Full UK Driving Licence\\\\n- Secondary proof of address dated within 90 days (Utility bill, Council Tax statement, or HMRC correspondence)\\\\n\\\\nNext Action:\\\\nThe customer must submit the required KYC documents to complete verification. This can be done via the NextGen Mobile Portal which features a mandatory 'Liveness Check' biometrics scan, or by visiting a partner branch in Indiranagar for physical signature verification. Once submitted and approved, the account will move to full operational status. If the customer prefers in-person submission, bring valid identification documents to any branch.\"\n}"
+          "answer": "Issue: Account B204 has pending KYC (Know Your Customer) status while currently active at Indiranagar branch.\n\nNext Action: The account holder needs to complete their KYC documentation by visiting the branch or completing online verification. Once KYC is completed, the account will be fully compliant and can continue normal operations.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"Issue: Account B204 has pending KYC (Know Your Customer) status while currently active at Indiranagar branch.\\n\\nNext Action: The account holder needs to complete their KYC documentation by visiting the branch or completing online verification. Once KYC is completed, the account will be fully compliant and can continue normal operations.\"}"
         }
       ]
     },
@@ -547,17 +610,26 @@
       "max_steps": 1,
       "why_this_case_exists": "Tests whether the agent avoids invalid tool calls when required args are missing.",
       "actual_tool_sequence": [],
+      "actual_account_id": "",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 1,
       "used_any_tool": false,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "I can help check your account status. Could you please provide your account ID so I can look up your information?",
+      "final_answer": "I'd be happy to check your account status. Could you please provide your account ID (e.g., A1023 or B204)?",
       "stop_reason": "final_answer",
       "trace": [
         {
           "step": 1,
           "action": "final",
-          "answer": "I can help check your account status. Could you please provide your account ID so I can look up your information?",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"I can help check your account status. Could you please provide your account ID so I can look up your information?\"}"
+          "answer": "I'd be happy to check your account status. Could you please provide your account ID (e.g., A1023 or B204)?",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"I'd be happy to check your account status. Could you please provide your account ID (e.g., A1023 or B204)?\"}"
         }
       ]
     },
@@ -575,17 +647,26 @@
       "max_steps": 1,
       "why_this_case_exists": "Tests safe refusal for irrelevant requests.",
       "actual_tool_sequence": [],
+      "actual_account_id": "",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 1,
       "used_any_tool": false,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "I'm sorry, but I can only assist with banking-related inquiries such as checking account status or searching our banking documents. I cannot provide weather information. Is there anything else I can help you with regarding your accounts?",
+      "final_answer": "I'm sorry, I can only assist with banking-related inquiries such as account information, document searches, and financial calculations. I cannot provide weather information or general non-banking service.",
       "stop_reason": "final_answer",
       "trace": [
         {
           "step": 1,
           "action": "final",
-          "answer": "I'm sorry, but I can only assist with banking-related inquiries such as checking account status or searching our banking documents. I cannot provide weather information. Is there anything else I can help you with regarding your accounts?",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"I'm sorry, but I can only assist with banking-related inquiries such as checking account status or searching our banking documents. I cannot provide weather information. Is there anything else I can help you with regarding your accounts?\"}"
+          "answer": "I'm sorry, I can only assist with banking-related inquiries such as account information, document searches, and financial calculations. I cannot provide weather information or general non-banking service.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"I'm sorry, I can only assist with banking-related inquiries such as account information, document searches, and financial calculations. I cannot provide weather information or general non-banking service.\"}"
         }
       ]
     },
@@ -602,18 +683,44 @@
       "should_refuse": false,
       "max_steps": 2,
       "why_this_case_exists": "Tests graceful handling of missing tool records.",
-      "actual_tool_sequence": [],
-      "used_any_tool": false,
-      "tool_match": false,
+      "actual_tool_sequence": [
+        "lookup_account_status"
+      ],
+      "actual_account_id": "Z9999",
+      "actual_search_query": "",
+      "actual_final_action": "final",
+      "step_count": 2,
+      "used_any_tool": true,
+      "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": true,
+      "argument_match": true,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "I could not complete the task because the agent output was malformed.",
-      "stop_reason": "malformed_action",
+      "final_answer": "Account Z9999 was not found in our system. Please verify the account number and try again, or contact customer service if you believe this is an error.",
+      "stop_reason": "final_answer",
       "trace": [
         {
           "step": 1,
-          "action": "error",
-          "raw_output": "ERROR: HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=120)",
-          "error": "Model did not return valid JSON action"
+          "action": "tool",
+          "tool_name": "lookup_account_status",
+          "arguments": {
+            "account_id": "Z9999"
+          },
+          "tool_result": {
+            "ok": false,
+            "tool_name": "lookup_account_status",
+            "account_id": "Z9999",
+            "error": "Account not found"
+          },
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"lookup_account_status\",\"arguments\":{\"account_id\":\"Z9999\"}}"
+        },
+        {
+          "step": 2,
+          "action": "final",
+          "answer": "Account Z9999 was not found in our system. Please verify the account number and try again, or contact customer service if you believe this is an error.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"Account Z9999 was not found in our system. Please verify the account number and try again, or contact customer service if you believe this is an error.\"}"
         }
       ]
     },
@@ -633,10 +740,19 @@
       "actual_tool_sequence": [
         "search_docs"
       ],
+      "actual_account_id": "",
+      "actual_search_query": "dormant account definition",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": false,
+      "argument_match": false,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "In banking, an account is classified as 'Dormant' after 24 months of inactivity following a period where no customer-initiated transactions occur for 12 consecutive months (classified as 'Inactive'). Reactivating a dormant account typically requires submitting Form D-1, updated KYC documentation, and physical signature verification at a partner branch.",
+      "final_answer": "In banking, a dormant account is one that has been inactive for 24 consecutive months after an initial inactivity period of 12 months (classified as 'Inactive'). To reactivate a dormant account, the holder must submit Form D-1 with updated KYC documentation and complete physical signature verification at a partner branch. Accounts meeting dormancy criteria may also face closure or foreclosure of linked products.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -644,32 +760,32 @@
           "action": "tool",
           "tool_name": "search_docs",
           "arguments": {
-            "query": "dormant account definition banking"
+            "query": "dormant account definition"
           },
           "tool_result": {
             "ok": true,
             "tool_name": "search_docs",
-            "query": "dormant account definition banking",
+            "query": "dormant account definition",
             "matches": [
               {
                 "source": "Operations_Guide.txt",
                 "score": 2,
-                "text": "NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management."
+                "text": "Maintaining account activity is critical; an account is classified as \"Inactive\" if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated \"Dormant.\" To reactivate a dormant account, the holder must submit a \"Form D-1\" along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or \"Foreclosure\" of a linked savings product is free of charge, provided the accoun"
               },
               {
                 "source": "Operations_Guide.txt",
-                "score": 2,
-                "text": "Maintaining account activity is critical; an account is classified as \"Inactive\" if no customer-initiated transactions occur for 12 consecutive months. After 24 months of inactivity, the account is designated \"Dormant.\" To reactivate a dormant account, the holder must submit a \"Form D-1\" along with fresh KYC (Know Your Customer) documentation and a physical signature verification at a partner branch. For those looking to leave NextGen, we adhere to the Current Account Switch Service (CASS) Guarantee, ensuring all balances and direct debits are transferred to another bank within 7 working days. Account closure or \"Foreclosure\" of a linked savings product is free of charge, provided the accoun"
+                "score": 1,
+                "text": "NextGen Banking and Finance operates as a digital-first institution with specific physical branch services available for complex wealth management. This guide outlines the mandatory operational procedures for account maintenance, opening, and lifecycle management."
               }
             ]
           },
-          "raw_output": "{\n  \"action\": \"tool\",\n  \"tool_name\": \"search_docs\",\n  \"arguments\": {\n    \"query\": \"dormant account definition banking\"\n  }\n}"
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"dormant account definition\"}}"
         },
         {
           "step": 2,
           "action": "final",
-          "answer": "In banking, an account is classified as 'Dormant' after 24 months of inactivity following a period where no customer-initiated transactions occur for 12 consecutive months (classified as 'Inactive'). Reactivating a dormant account typically requires submitting Form D-1, updated KYC documentation, and physical signature verification at a partner branch.",
-          "raw_output": "{\n  \"action\": \"final\",\n  \"answer\": \"In banking, an account is classified as 'Dormant' after 24 months of inactivity following a period where no customer-initiated transactions occur for 12 consecutive months (classified as 'Inactive'). Reactivating a dormant account typically requires submitting Form D-1, updated KYC documentation, and physical signature verification at a partner branch.\"\n}"
+          "answer": "In banking, a dormant account is one that has been inactive for 24 consecutive months after an initial inactivity period of 12 months (classified as 'Inactive'). To reactivate a dormant account, the holder must submit Form D-1 with updated KYC documentation and complete physical signature verification at a partner branch. Accounts meeting dormancy criteria may also face closure or foreclosure of linked products.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"In banking, a dormant account is one that has been inactive for 24 consecutive months after an initial inactivity period of 12 months (classified as 'Inactive'). To reactivate a dormant account, the holder must submit Form D-1 with updated KYC documentation and complete physical signature verification at a partner branch. Accounts meeting dormancy criteria may also face closure or foreclosure of linked products.\"}"
         }
       ]
     },
@@ -689,10 +805,19 @@
       "actual_tool_sequence": [
         "search_docs"
       ],
+      "actual_account_id": "",
+      "actual_search_query": "dormant account reactivation",
+      "actual_final_action": "final",
+      "step_count": 2,
       "used_any_tool": true,
       "tool_match": true,
+      "account_id_match": true,
+      "search_query_hint_match": false,
+      "argument_match": false,
+      "stop_quality_match": true,
+      "stop_quality_note": "The agent stopped at an appropriate point after completing the expected flow.",
       "unnecessary_tool_use": false,
-      "final_answer": "To reactivate a dormant account, the customer must: 1) Submit Form D-1, 2) Provide fresh KYC (Know Your Customer) documentation, and 3) Complete physical signature verification at a partner branch. The account has been inactive for more than 24 consecutive months. All balances and direct debits can be transferred under the CASS Guarantee if the customer chooses to switch banks instead.",
+      "final_answer": "To reactivate a dormant account, inform the customer that they must: 1) Submit Form D-1, 2) Provide fresh KYC documentation, and 3) Complete physical signature verification at a partner branch. Please note that an account is classified as \"Inactive\" after 12 months of no activity and becomes \"Dormant\" after 24 months of inactivity.",
       "stop_reason": "final_answer",
       "trace": [
         {
@@ -700,12 +825,12 @@
           "action": "tool",
           "tool_name": "search_docs",
           "arguments": {
-            "query": "dormant account reactivation policy"
+            "query": "dormant account reactivation"
           },
           "tool_result": {
             "ok": true,
             "tool_name": "search_docs",
-            "query": "dormant account reactivation policy",
+            "query": "dormant account reactivation",
             "matches": [
               {
                 "source": "Operations_Guide.txt",
@@ -719,13 +844,13 @@
               }
             ]
           },
-          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"dormant account reactivation policy\"}}"
+          "raw_output": "{\"action\":\"tool\",\"tool_name\":\"search_docs\",\"arguments\":{\"query\":\"dormant account reactivation\"}}"
         },
         {
           "step": 2,
           "action": "final",
-          "answer": "To reactivate a dormant account, the customer must: 1) Submit Form D-1, 2) Provide fresh KYC (Know Your Customer) documentation, and 3) Complete physical signature verification at a partner branch. The account has been inactive for more than 24 consecutive months. All balances and direct debits can be transferred under the CASS Guarantee if the customer chooses to switch banks instead.",
-          "raw_output": "{\"action\":\"final\",\"answer\":\"To reactivate a dormant account, the customer must: 1) Submit Form D-1, 2) Provide fresh KYC (Know Your Customer) documentation, and 3) Complete physical signature verification at a partner branch. The account has been inactive for more than 24 consecutive months. All balances and direct debits can be transferred under the CASS Guarantee if the customer chooses to switch banks instead.\"}"
+          "answer": "To reactivate a dormant account, inform the customer that they must: 1) Submit Form D-1, 2) Provide fresh KYC documentation, and 3) Complete physical signature verification at a partner branch. Please note that an account is classified as \"Inactive\" after 12 months of no activity and becomes \"Dormant\" after 24 months of inactivity.",
+          "raw_output": "{\"action\":\"final\",\"answer\":\"To reactivate a dormant account, inform the customer that they must: 1) Submit Form D-1, 2) Provide fresh KYC documentation, and 3) Complete physical signature verification at a partner branch. Please note that an account is classified as \\\"Inactive\\\" after 12 months of no activity and becomes \\\"Dormant\\\" after 24 months of inactivity.\"}"
         }
       ]
     }

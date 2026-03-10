@@ -464,31 +464,32 @@ python3 test12_agent_evaluator.py</pre>
 
   <h2>Actual Run Results</h2>
   <div class="success-box">
-    ✅ <strong>14 of 15 cases matched the expected tool path exactly.</strong> The latest run behaved correctly on
-    greetings, direct answers, structured lookup, doc retrieval, refusal, clarification, and both designed multi-step
-    flows. Only one case failed: TC13 stopped with a malformed action before the expected account lookup was completed.
+    ✅ <strong>14 of 15 cases passed all checks.</strong> The latest stable run produced zero malformed actions and zero
+    timeouts. The retry-on-timeout mechanism recovered three cases that stalled under Ollama load. All no-tool, lookup,
+    doc-retrieval, clarification, and refusal cases are fully passing. The single remaining failure is TC10, where the
+    agent stopped after one tool call instead of the expected two-step path.
   </div>
 
   <div class="score-row">
     <div class="score-card">
       <div class="score-val pass">15</div>
       <div class="score-label">Cases Run</div>
-      <div class="score-desc">All workbook cases executed successfully end to end</div>
+      <div class="score-desc">All 15 workbook cases executed end to end with no evaluator errors</div>
     </div>
     <div class="score-card">
       <div class="score-val pass">14/15</div>
       <div class="score-label">Tool Path Match</div>
-      <div class="score-desc">Expected sequence matched actual sequence in all but one case</div>
+      <div class="score-desc">Expected tool sequence matched actual sequence in 14 out of 15 cases</div>
     </div>
     <div class="score-card">
-      <div class="score-val pass">93%</div>
-      <div class="score-label">Observed Success</div>
-      <div class="score-desc">Practical success rate for this first evaluation run</div>
+      <div class="score-val pass">14/15</div>
+      <div class="score-label">Stop Quality Match</div>
+      <div class="score-desc">Agent stopped at the right point in 14 cases; TC10 stopped one step too early</div>
     </div>
     <div class="score-card">
-      <div class="score-val fail">1</div>
-      <div class="score-label">Malformed Action</div>
-      <div class="score-desc">TC13 stopped before completing the expected lookup path</div>
+      <div class="score-val pass">0</div>
+      <div class="score-label">Malformed Actions</div>
+      <div class="score-desc">Zero structured action failures after think-tag stripping and retry logic</div>
     </div>
   </div>
 
@@ -594,11 +595,11 @@ python3 test12_agent_evaluator.py</pre>
         <td>Multi-step issue + next action</td>
         <td><span class="tool-tag tool-lookup">lookup_account_status</span><span
             class="tool-tag tool-docs">search_docs</span></td>
-        <td><span class="tool-tag tool-lookup">lookup_account_status</span><span
-            class="tool-tag tool-docs">search_docs</span></td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
         <td><code>final_answer</code></td>
-        <td class="pass">MATCH</td>
-        <td>Current run completed the full two-step path and produced the expected next-action guidance</td>
+        <td class="fail">MISMATCH</td>
+        <td>Agent answered from the lookup result alone without consulting docs for KYC next-action guidance. Stopped
+          one step too early.</td>
       </tr>
       <tr>
         <td>TC11</td>
@@ -622,11 +623,10 @@ python3 test12_agent_evaluator.py</pre>
         <td>TC13</td>
         <td>Unknown account ID</td>
         <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
-        <td><span class="tool-tag tool-none">none</span></td>
-        <td><code>malformed_action</code></td>
-        <td class="fail">MISMATCH</td>
-        <td>The agent failed before completing the expected lookup, showing that action-schema reliability is still
-          brittle on some boundary cases</td>
+        <td><span class="tool-tag tool-lookup">lookup_account_status</span></td>
+        <td><code>final_answer</code></td>
+        <td class="pass">MATCH</td>
+        <td>Correctly called lookup, received not-found result, and produced a grounded fallback answer</td>
       </tr>
       <tr>
         <td>TC14</td>
@@ -658,35 +658,51 @@ python3 test12_agent_evaluator.py</pre>
   <h3>2 — Structured lookup is the cleanest proof of tool use</h3>
   <p>TC03–TC05 show why local structured data is such a good evaluation target. The model cannot know that account
     <code>A1023</code> is dormant at branch <code>MG Road</code> unless it calls the lookup tool. That makes correct
-    tool usage obvious and testable.</p>
+    tool usage obvious and testable.
+  </p>
 
-  <h3>3 — Multi-step flows are where agents begin to fail</h3>
-  <p>The latest run shows that multi-step flows are now more stable: TC09 and TC10 both completed the expected lookup →
-    docs → final-answer path. That is a good sign because it means the agent can sometimes preserve structured actions
-    across more than one tool call.</p>
+  <h3>3 — Thinking models need output stripping before parsing</h3>
+  <p><code>qwen3.5:9b</code> is a reasoning model. Before producing its answer it emits a
+    <code>&lt;think&gt;...&lt;/think&gt;</code> block. The original parser tried to JSON-parse the entire raw output and
+    failed on every case. The fix was a <code>_strip_thinking()</code> helper that removes those blocks before parsing.
+    The same cleaned output is also stored in conversation history so that step-2 prompts are not poisoned by thinking
+    content.
+  </p>
 
-  <div class="danger-box">
-    🚨 <strong>Important finding from TC13.</strong> The main remaining weakness is still <em>process failure</em>, not
-    banking knowledge. In the latest run, the agent failed on the unknown-account case because it produced a malformed
-    action before completing the required lookup. This is why agent evaluation must inspect the trajectory, not just the
-    final response.
+  <h3>4 — Local model timeouts need retry logic, not just longer timeouts</h3>
+  <p>On an M1 Mac with 16GB RAM, <code>qwen3.5:9b</code> (5.6GB) sometimes exceeds Ollama's 2-minute request timeout
+    under sustained load. Increasing the <code>requests</code> client timeout alone does not help because the Ollama
+    server itself has its own deadline. The solution was a <strong>one-retry with 10-second backoff</strong> on
+    <code>timeout_error</code> inside <code>agent.py</code>, plus a <code>time.sleep(2)</code> gap between cases to
+    prevent sustained memory pressure. All three timed-out cases in the latest run recovered on retry.
+  </p>
+
+  <div class="warn-box">
+    ⚠️ <strong>TC10 — the one remaining real failure.</strong> Account B204 is active with KYC pending. The expected
+    behavior is: lookup the account, then search docs for what the next action for a KYC-pending account should be, then
+    answer. The agent stopped after the lookup and answered from general knowledge instead of consulting the policy
+    documents. The final answer is plausible but not grounded in retrieved docs — exactly the kind of shortcut that
+    makes RAG-based agents unreliable in production.
   </div>
 
-  <h3>4 — Unknown or edge cases can still break structured actions</h3>
-  <p>TC13 is a useful reminder that apparent success on common cases does not mean the agent is structurally robust.
-    Unknown IDs are exactly the kind of edge case where the model should still produce a valid lookup action and then
-    handle the missing result gracefully. Instead, the run broke at the action-format layer before that evaluation could
-    complete.</p>
+  <h3>5 — Multi-step flows need explicit guidance after tool results</h3>
+  <p>To prevent the model from stopping early after a first tool result, the prompt now includes a
+    <code>TOOL RESULT RECEIVED</code> hint that tells the model explicitly to produce a
+    <code>{"action":"final",...}</code> JSON when it already has enough information. Without this, the model would
+    produce flowing prose after the tool result instead of a valid structured action, which was misclassified as
+    <code>malformed_action</code>.
+  </p>
 
-  <h3>5 — Clarification and refusal are part of correct behavior</h3>
-  <p>TC11 and TC12 are both successful cases even though they do not “complete” the user request directly. Asking for an
+  <h3>6 — Clarification and refusal are part of correct behavior</h3>
+  <p>TC11 and TC12 are both successful cases even though they do not "complete" the user request directly. Asking for an
     account ID and refusing an out-of-scope weather question are both correct behaviors. Evaluation must reward those,
     not penalise them.</p>
 
   <h2>What This Sets Up for Test 13</h2>
   <p>Test 12 is intentionally descriptive. It checks expected tool path vs actual tool path and gives you a visible
     trace report. Test 13 can now become a true trajectory evaluation test with a judge model such as
-    <code>mistral</code>.</p>
+    <code>mistral</code>.
+  </p>
 
   <table>
     <thead>
@@ -739,8 +755,9 @@ python3 test12_agent_evaluator.py</pre>
   <p>That report is for inspecting the run. This page explains <em>why</em> the test exists and what the run teaches.
   </p>
 
-  <footer>Test 12 completed with qwen3.5:9b via Ollama · 15/15 cases run · 14/15 tool-path matches · latest failure:
-    TC13 malformed_action · output documented in <code>results/agent_evaluation_report.html</code></footer>
+  <footer>Test 12 completed with qwen3.5:9b via Ollama · 15/15 cases run · 14/15 tool-path matches · 0 malformed actions
+    · 1 real failure: TC10 stopped one step early · output documented in
+    <code>results/agent_evaluation_report.html</code></footer>
 
 </body>
 

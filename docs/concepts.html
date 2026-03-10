@@ -553,15 +553,23 @@
     </div>
 
     <div class="nav-section">
-      <div class="nav-section-label">RAG Evaluation</div>
-      <a href="#chunking">✂️ Chunking</a>
-      <a href="#vector-search">🔎 Vector Search</a>
-      <a href="#context-relevance">📥 Context Relevance</a>
-      <a href="#rag-answer-faithfulness">🔒 Answer Faithfulness</a>
-      <a href="#answer-relevance">🎯 Answer Relevance</a>
-      <a href="#retrieval-vs-reasoning">⚔️ Retrieval vs Reasoning</a>
-      <a href="#similarity-thresholds">📊 Similarity Thresholds</a>
-      <a href="#top-k-chunks">🔢 TOP_K_CHUNKS</a>
+      <span class="sub-label">Agents &amp; Evaluation</span>
+      <a href="#" onclick="return goAnchor('concepts.html','trajectory-evaluation')">🔁 Trajectory Evaluation</a>
+      <a href="#" onclick="return goAnchor('concepts.html','tool-selection-correctness')">🧭 Tool Selection
+        Correctness</a>
+      <a href="#" onclick="return goAnchor('concepts.html','tool-argument-correctness')">🧩 Tool Argument
+        Correctness</a>
+      <a href="#" onclick="return goAnchor('concepts.html','tool-overuse-underuse')">⚖️ Tool Overuse / Underuse</a>
+      <a href="#" onclick="return goAnchor('concepts.html','clarification-correct-behavior')">❓ Clarification as
+        Correct Behavior</a>
+      <a href="#" onclick="return goAnchor('concepts.html','action-schema-reliability')">🧱 Action Schema
+        Reliability</a>
+      <a href="#" onclick="return goAnchor('concepts.html','judge-vs-binary')">⚖️ Judge Scoring vs Binary
+        Matching</a>
+      <a href="#" onclick="return goAnchor('concepts.html','trajectory-groundedness')">� Trajectory
+        Groundedness</a>
+      <a href="#" onclick="return goAnchor('concepts.html','two-layer-evaluation')">� Two-Layer Evaluation
+        Pipeline</a>
     </div>
 
     <div class="nav-section">
@@ -982,6 +990,112 @@
         wrong-answer label.</div>
     </div>
 
+    <!-- Judge Scoring vs Binary Matching -->
+    <div class="concept" id="judge-vs-binary">
+      <div class="concept-header">
+        <div class="concept-icon icon-ground">⚖️</div>
+        <div>
+          <div class="concept-title">Judge Scoring vs Binary Matching</div>
+          <div class="concept-subtitle">Agents &amp; Evaluation · Test 13 · Two Evaluation Lenses</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Binary matching catches <strong>wrong behavior</strong>. Judge scoring surfaces <strong>quality
+          gradients</strong> that binary checks miss entirely.
+      </div>
+
+      <p class="detail">Test 12 asks: did the agent use the right tool sequence? The answer is MATCH or MISMATCH — a
+        binary gate. Test 13 asks: how well did the agent execute each decision? A score of 1–5 per dimension reveals
+        whether a passing case was excellent or barely adequate, and whether a failing case had partially correct
+        reasoning.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">TEST 12 vs TEST 13 — SAME TRAJECTORY, TWO VERDICTS</div>
+        <div class="example-content">
+          <span class="u">Test 12 (binary):</span> tool path = MATCH ✅<br>
+          <span class="u">Test 13 (judge):</span> tool_selection=5, argument_quality=5, groundedness=3, stop=5<br><br>
+          <span class="b">The binary check passed. The judge reveals the answer was only partially grounded —
+            the agent called the right tool but then answered partly from model memory.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Use binary matching as a fast gate. Use judge scoring for quality auditing. Neither
+        replaces the other — they answer different questions about the same trajectory.</div>
+    </div>
+
+    <!-- Trajectory Groundedness -->
+    <div class="concept" id="trajectory-groundedness">
+      <div class="concept-header">
+        <div class="concept-icon icon-ground">🔒</div>
+        <div>
+          <div class="concept-title">Trajectory Groundedness</div>
+          <div class="concept-subtitle">Agents &amp; Evaluation · Test 13 · Answer Source Tracing</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        An agent can call the right tool and still produce an answer that <strong>ignores the tool result</strong> and
+        draws from model memory instead.
+      </div>
+
+      <p class="detail">Trajectory groundedness asks: is the final answer derived from what the tool actually returned,
+        or is it generic knowledge the model had before seeing any tool output? Binary path-matching cannot detect this
+        failure because the tool call succeeded — only a judge reading the full trace and the final answer together can
+        identify the gap.</p>
+
+      <div class="example-block">
+        <div class="example-label label-bad">TEST 13 — GROUNDEDNESS FAILURE PATTERN</div>
+        <div class="example-content">
+          <span class="u">Tool result:</span> account B204 is active, KYC pending since 14 Feb<br>
+          <span class="u">Final answer:</span> "KYC pending accounts typically need to complete verification within
+          30 days."<br><br>
+          <span class="b">The answer is plausible general knowledge — not grounded in the tool result.
+            Tool path = MATCH (Test 12 passes). Groundedness = 2/5 (Test 13 catches it).</span>
+        </div>
+      </div>
+
+      <div class="why-matters">Trajectory groundedness is the agent equivalent of answer faithfulness in RAG. Both
+        measure the same thing: did the system use what it retrieved, or fabricate from its own knowledge?</div>
+    </div>
+
+    <!-- Two-Layer Evaluation Pipeline -->
+    <div class="concept" id="two-layer-evaluation">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🔀</div>
+        <div>
+          <div class="concept-title">Two-Layer Evaluation Pipeline</div>
+          <div class="concept-subtitle">Agents &amp; Evaluation · Tests 12 + 13 · Production Pattern</div>
+        </div>
+      </div>
+
+      <div class="simple">
+        Deterministic checks run first as a <strong>fast gate</strong>. Judge scoring runs second for
+        <strong>quality depth</strong>. Each layer answers questions the other cannot.
+      </div>
+
+      <p class="detail">Test 12 (deterministic) is cheap and fast: it checks expected tool sequence vs actual,
+        argument correctness, and stop behavior with exact rules. Test 13 (judge-scored) is slower and more expensive:
+        it reads the full trajectory and evaluates the quality of each decision. Running both gives you coverage at two
+        levels — correctness and quality.</p>
+
+      <div class="example-block">
+        <div class="example-label label-eg">TESTS 12 + 13 — LAYERED COVERAGE</div>
+        <div class="example-content">
+          <span class="g">Layer 1 (Test 12): Did the agent use the right tools? Did it pass the right arguments? Did
+            it stop correctly?</span><br>
+          <span class="g">Layer 2 (Test 13): How well did it use the tool results? Was the answer grounded? Were the
+            arguments precise or just approximately correct?</span><br><br>
+          <span class="u">Layer 1 catches wrong behavior. Layer 2 catches poor-quality behavior that Layer 1
+            misses.</span>
+        </div>
+      </div>
+
+      <div class="why-matters">This pattern is directly transferable to production: run deterministic checks as a CI/CD
+        gate (fast, free), then run judge scoring on a sample for quality auditing. You do not need to judge every
+        trajectory — just enough to track quality regression over time.</div>
+    </div>
+
     <!-- ════════════════════════════════════════════════════════════════════════ -->
     <div class="section-divider">
       <div class="section-divider-line"></div>
@@ -1065,8 +1179,8 @@
     </div>
 
     <footer>
-      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Phase 5 (Agent Evaluation concepts + Phase
-      4 framework concepts)
+      docs/concepts.html · LLM Evaluation Learning Repository · Updated after Phase 5 (Test 13 trajectory evaluation
+      concepts added)
     </footer>
 
   </main>

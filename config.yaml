@@ -91,6 +91,11 @@ phase5_agent_evaluation:
   TEST_SHEET: "Test Cases"
   MAX_STEPS: 3
 
+phase5_trajectory_evaluation:
+  JUDGE_MODEL: "mistral"
+  JUDGE_PROVIDER: "ollama"
+  TRACE_FILE: "sample_agent_evaluation_results.json"
+
 # ─────────────────────────────────────────────────────────────────
 # API KEY REFERENCE
 # ─────────────────────────────────────────────────────────────────

@@ -157,7 +157,7 @@ Key things to know:
 | Phase 5 | Production Eval — regression, A/B, red teaming, CI/CD, Langfuse, agent evaluation, multi-turn, structured output | 6–8 days |
 | Phase 6 | Specialisation — RAG eval full pipeline, safety and red teaming, bias and fairness, multi-modal, model drift | 5–7 days |
 
-> **Current status:** Phase 4 complete (Test 11 DeepEval done). Test 10 RAGAS pending OpenAI credits. Phase 5 — Test 12 agent evaluation — next.
+> **Current status:** Phase 5 Tests 12 and 13 complete. Test 10 RAGAS pending OpenAI credits.
 
 **Total: approximately 4–6 weeks** depending on your pace.
 
@@ -176,9 +176,8 @@ llm-evaluation/
 ├── docs/                        ← all documentation (serve with python3 -m http.server 8000)
 │   ├── index.html               ← OPEN THIS — navigation hub
 │   ├── home.html                ← phase overview and status
-│   ├── test1.html – test11.html ← one file per test: results, learnings, findings
-│   ├── concepts.html            ← GenAI eval concepts reference
-│   └── genai_eval_learning_plan.xlsx
+│   ├── test1.html – test13.html ← one file per test: results, learnings, findings
+│   └── concepts.html            ← GenAI eval concepts reference
 │
 ├── phase-0-foundations/
 ├── phase-1-first-experiments/
@@ -194,11 +193,18 @@ llm-evaluation/
 │       ├── documents/           ← 3 source documents
 │       └── results/             ← sample_rag_evaluation_report.html for reference
 │
-└── phase-4-frameworks-and-tools/
-    ├── ragas-evaluation/        ← Test 10 — RAGAS framework (requires OpenAI judge)
-    └── deepeval-evaluation/     ← Test 11 — DeepEval framework (fully local via Ollama)
-        ├── documents/
-        └── results/             ← sample_deepeval_report.html for reference
+├── phase-4-frameworks-and-tools/
+│   ├── ragas-evaluation/        ← Test 10 — RAGAS framework (requires OpenAI judge)
+│   └── deepeval-evaluation/     ← Test 11 — DeepEval framework (fully local via Ollama)
+│       ├── documents/
+│       └── results/             ← sample_deepeval_report.html for reference
+│
+└── phase-5-production-eval/
+    ├── agent-evaluation/        ← Test 12 — Tool-calling agent eval (15 cases, qwen3.5:9b)
+    │   ├── agent_test_cases.xlsx
+    │   └── results/             ← sample_agent_evaluation_report.html + sample JSON
+    └── trajectory-evaluation/   ← Test 13 — Trajectory judge scoring (mistral, 4 dimensions)
+        └── results/             ← sample_trajectory_evaluation_report.html + sample JSON
 ```
 
 > Each phase folder contains a `results/` directory with a sample HTML report so you can see what output looks like before running anything.
@@ -235,6 +241,10 @@ By completing Phases 0–4 you will understand:
 - How evaluation frameworks like RAGAS and DeepEval work — and how their metric definitions differ from hand-rolled scorers using the same judge
 - Why context relevance scores can differ dramatically between frameworks even with the same judge model — and what that tells you about metric calibration
 - How to handle refusal cases correctly in automated evaluation — they are correct bot behaviour, not failures
+- How to build a tool-calling agent with observable trajectories and evaluate tool path, argument correctness, and stop behavior deterministically
+- Why binary path-matching and judge scoring answer different questions about the same trajectory — and why you need both
+- What trajectory groundedness means: an agent can call the right tool and still ignore the result and answer from model memory
+- How a two-layer evaluation pipeline works: deterministic checks as a fast gate, judge scoring for quality depth
 
 ---
 
@@ -252,6 +262,8 @@ By completing Phases 0–4 you will understand:
 | Test 9 | RAG Evaluation | Context Relevance, Answer Faithfulness, Answer Relevance — 21 cases across 6 categories. |
 | Test 10 | RAGAS Framework | Framework-based RAG evaluation — requires OpenAI judge. Direct comparison against hand-rolled Test 9. |
 | Test 11 | DeepEval Framework | Pytest-style LLM evaluation fully local via Ollama. 25 cases, 1 refusal (TC19). Overall 62%, CTX 24%, Faithfulness 82%, Answer Rel. 81%. 1/25 full PASS (TC15). Calibration analysis vs Test 9. |
+| Test 12 | Agent Trajectory Eval (Deterministic) | Tool-calling agent with observable trajectories. 15 test cases. Checks tool-path match, argument correctness, stop behavior. 14/15 PASS (TC10 behaviour gap). |
+| Test 13 | Agent Trajectory Eval (Judge-Scored) | Reads Test 12 JSON traces. Judge scores 4 dimensions per trajectory: tool selection, argument quality, answer groundedness, stop appropriateness. 15/15 PASS with mistral. |
 
 ---
 

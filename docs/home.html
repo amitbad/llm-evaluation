@@ -147,6 +147,16 @@
       color: #34d399;
     }
 
+    .tag-p4 {
+      background: #1a1a2a;
+      color: #a78bfa;
+    }
+
+    .tag-p5 {
+      background: #2a1a1a;
+      color: #f7a06a;
+    }
+
     .tip {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -275,8 +285,32 @@
     <a class="card" href="#" onclick="parent.go('test9.html','nav-t9');return false;">
       <div class="card-phase">Phase 3</div>
       <div class="card-title">🔍 Test 9 — RAG Evaluation</div>
-      <div class="card-desc">Build a RAG pipeline from scratch. Evaluate retrieval quality, answer faithfulness, and answer relevance across 21 test cases covering clean, cross-document, adversarial, and unanswerable questions.</div>
+      <div class="card-desc">Build a RAG pipeline from scratch. Evaluate retrieval quality, answer faithfulness, and
+        answer relevance across 21 test cases covering clean, cross-document, adversarial, and unanswerable questions.
+      </div>
       <span class="card-tag tag-p3">Phase 3</span>
+    </a>
+    <a class="card" href="#" onclick="parent.go('test11.html','nav-t11');return false;">
+      <div class="card-phase">Phase 4</div>
+      <div class="card-title">🧪 Test 11 — DeepEval</div>
+      <div class="card-desc">Run the same RAG pipeline through DeepEval's automated metrics. Discover how metric
+        calibration causes scores to diverge dramatically from hand-rolled results even with the same judge model.</div>
+      <span class="card-tag tag-p4">Phase 4</span>
+    </a>
+    <a class="card" href="#" onclick="parent.go('test12.html','nav-t12');return false;">
+      <div class="card-phase">Phase 5</div>
+      <div class="card-title">🤖 Test 12 — Agent Evaluation</div>
+      <div class="card-desc">First agent evaluation exercise. Build a tool-calling agent with observable trajectories
+        and evaluate whether it uses the right tools, passes the right arguments, and stops at the right point.</div>
+      <span class="card-tag tag-p5">Phase 5</span>
+    </a>
+    <a class="card" href="#" onclick="parent.go('test13.html','nav-t13');return false;">
+      <div class="card-phase">Phase 5</div>
+      <div class="card-title">🧑‍⚖️ Test 13 — Trajectory Evaluation</div>
+      <div class="card-desc">Feed Test 12 traces to a judge model for qualitative scoring across four dimensions: tool
+        selection, argument quality, answer groundedness, and stop appropriateness. Two-layer evaluation in practice.
+      </div>
+      <span class="card-tag tag-p5">Phase 5</span>
     </a>
   </div>
 

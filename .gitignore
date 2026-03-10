@@ -50,6 +50,10 @@ context.md
 print_folders_struct.py
 others/
 
+# ── Local-only learning artifacts ────────────────────────────────────
+docs/genai_eval_learning_plan.xlsx
+docs/.~lock.genai_eval_learning_plan.xlsx#
+
 # ── DeepEval local config (auto-generated, not needed in repo) ────────
 .deepeval/
  

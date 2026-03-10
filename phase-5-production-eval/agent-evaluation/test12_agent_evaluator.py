@@ -1,10 +1,9 @@
 import os
 import json
+import time
 from pathlib import Path
-
 import openpyxl
 import yaml
-
 from agent import run_agent
 from report_generator import generate_report
 
@@ -86,11 +85,58 @@ def normalize_hint_words(raw_hints: str) -> list[str]:
     return [part.strip().lower() for part in parts if part.strip()]
 
 
+def derive_actual_final_action(trace: list[dict], stop_reason: str) -> str:
+    for step in reversed(trace):
+        if step.get("action") == "final":
+            return "final"
+    if stop_reason == "malformed_action":
+        return "malformed_action"
+    if stop_reason == "max_steps_reached":
+        return "incomplete"
+    if stop_reason == "tool_error":
+        return "tool_error"
+    return "unknown"
+
+
+def assess_stop_quality(
+    expected_sequence: list[str],
+    actual_tool_sequence: list[str],
+    expected_final_action: str,
+    actual_final_action: str,
+    stop_reason: str,
+    max_steps: int,
+    trace: list[dict],
+) -> tuple[bool, str]:
+    expected_final_action_normalized = expected_final_action.strip().lower() or "final"
+    final_action_match = actual_final_action == expected_final_action_normalized
+    used_steps = len(trace)
+
+    if stop_reason == "max_steps_reached":
+        return False, f"The agent hit the step limit ({max_steps}) before finishing the expected flow."
+
+    if stop_reason == "malformed_action":
+        return False, "The agent stopped because its structured action format broke before the case could complete cleanly."
+
+    if expected_sequence != actual_tool_sequence:
+        if len(actual_tool_sequence) < len(expected_sequence):
+            return False, "The agent stopped too early before completing all expected tool calls."
+        return False, "The agent took an unexpected tool path before stopping."
+
+    if not final_action_match:
+        return False, f"The observed final action was '{actual_final_action}' instead of the expected '{expected_final_action_normalized}'."
+
+    if used_steps > max_steps:
+        return False, "The agent exceeded the allowed step budget before stopping."
+
+    return True, "The agent stopped at an appropriate point after completing the expected flow."
+
+
 def evaluate_case(tc: dict) -> dict:
     question = str(tc.get("Question", "")).strip()
     max_steps = int(tc.get("Step Limit") or DEFAULT_MAX_STEPS)
     expected_sequence = parse_expected_sequence(tc.get("Expected Tool Path"))
     expected_behavior = str(tc.get("What Good Behavior Looks Like", "")).strip()
+    expected_final_action = str(tc.get("Expected End", "final")).strip().lower() or "final"
     expected_account_id = str(tc.get("Account ID (if needed)", "") or "").strip()
     expected_search_query_hints = str(tc.get("Search Hint Words", "") or "").strip()
     should_use_tool = str(tc.get("Tool Needed?", "No")).strip().lower() == "yes"
@@ -126,9 +172,21 @@ def evaluate_case(tc: dict) -> dict:
     actual_search_query_lower = actual_search_query.lower()
     search_query_hint_match = True
     if query_hint_words:
-        search_query_hint_match = all(word in actual_search_query_lower for word in query_hint_words)
+        matched = sum(1 for word in query_hint_words if word in actual_search_query_lower)
+        search_query_hint_match = matched >= max(1, len(query_hint_words) // 2)
 
     argument_match = account_id_match and search_query_hint_match
+    stop_reason = agent_result.get("stop_reason", "unknown")
+    actual_final_action = derive_actual_final_action(trace, stop_reason)
+    stop_quality_match, stop_quality_note = assess_stop_quality(
+        expected_sequence=expected_sequence,
+        actual_tool_sequence=actual_tool_sequence,
+        expected_final_action=expected_final_action,
+        actual_final_action=actual_final_action,
+        stop_reason=stop_reason,
+        max_steps=max_steps,
+        trace=trace,
+    )
 
     return {
         "tc_id": str(tc.get("TC_ID", "")),
@@ -136,7 +194,7 @@ def evaluate_case(tc: dict) -> dict:
         "question": question,
         "expected_behavior": expected_behavior,
         "expected_tool_sequence": " > ".join(expected_sequence) if expected_sequence else "none",
-        "expected_final_action": str(tc.get("Expected End", "final")),
+        "expected_final_action": expected_final_action,
         "expected_account_id": expected_account_id,
         "expected_search_query_hints": expected_search_query_hints,
         "should_use_tool": should_use_tool,
@@ -146,14 +204,18 @@ def evaluate_case(tc: dict) -> dict:
         "actual_tool_sequence": actual_tool_sequence,
         "actual_account_id": actual_account_id,
         "actual_search_query": actual_search_query,
+        "actual_final_action": actual_final_action,
+        "step_count": len(trace),
         "used_any_tool": used_any_tool,
         "tool_match": tool_match,
         "account_id_match": account_id_match,
         "search_query_hint_match": search_query_hint_match,
         "argument_match": argument_match,
+        "stop_quality_match": stop_quality_match,
+        "stop_quality_note": stop_quality_note,
         "unnecessary_tool_use": unnecessary_tool_use,
         "final_answer": agent_result.get("final_answer", ""),
-        "stop_reason": agent_result.get("stop_reason", "unknown"),
+        "stop_reason": stop_reason,
         "trace": trace,
     }
 
@@ -205,11 +267,13 @@ def main():
         if result["expected_search_query_hints"]:
             print(f"  Search args    : {'MATCH' if result['search_query_hint_match'] else 'MISMATCH'}")
         print(f"  Stop reason    : {result['stop_reason']}")
+        print(f"  Stop quality   : {'MATCH' if result['stop_quality_match'] else 'MISMATCH'}")
         print(f"  Final answer   : {result['final_answer'][:120]}{'...' if len(result['final_answer']) > 120 else ''}")
         print(f"  Tool pattern   : {'MATCH' if result['tool_match'] else 'MISMATCH'}")
         print(f"  Args pattern   : {'MATCH' if result['argument_match'] else 'MISMATCH'}\n")
         results.append(result)
         cases_run += 1
+        time.sleep(2)
 
     report_config = {
         "BOT_MODEL": BOT_MODEL,

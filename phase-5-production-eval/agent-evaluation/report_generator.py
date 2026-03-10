@@ -50,6 +50,13 @@ def explain_stop_reason(result) -> tuple[str, str, str]:
             "#f76a6a",
         )
 
+    if stop_reason == "timeout_error":
+        return (
+            "Stopped because Ollama timed out",
+            "The local model did not respond within the allowed time. This is a resource or load issue, not an agent logic failure. Re-run the case when the model is less busy.",
+            "#f0c040",
+        )
+
     return (
         "Stopped for an unclassified reason",
         f"The evaluator recorded the raw stop reason as '{stop_reason}'. Review the trace for the exact point where the run ended.",
@@ -64,6 +71,7 @@ def generate_report(results, config, results_dir: Path) -> Path:
     tool_cases = sum(1 for r in results if r.get("used_any_tool"))
     correct_tool = sum(1 for r in results if r.get("tool_match") is True)
     correct_arguments = sum(1 for r in results if r.get("argument_match") is True)
+    correct_stop_quality = sum(1 for r in results if r.get("stop_quality_match") is True)
     unnecessary_tool = sum(1 for r in results if r.get("unnecessary_tool_use"))
     refusals = sum(1 for r in results if r.get("should_refuse"))
 
@@ -79,6 +87,7 @@ def generate_report(results, config, results_dir: Path) -> Path:
       {card('Tool Used', tool_cases, 'Cases where at least one tool was invoked', '#6af7a0')}
       {card('Right Tool Pattern', f'{correct_tool}/{total}', 'Expected tool sequence matched exactly', '#7c6af7')}
       {card('Right Arguments', f'{correct_arguments}/{total}', 'Expected account IDs and query hints matched the observed tool arguments', '#5dd6ff')}
+      {card('Right Stop Behavior', f'{correct_stop_quality}/{total}', 'Agent stopped at the appropriate point for the expected flow', '#a78bfa')}
       {card('Unnecessary Tool Use', unnecessary_tool, 'Cases where a tool was used but should not have been', '#f76a6a')}
       {card('Refusal Cases', refusals, 'Out-of-scope or boundary cases expecting refusal', '#f0c040')}
     </div>'''
@@ -113,47 +122,50 @@ def generate_report(results, config, results_dir: Path) -> Path:
         stop_title, stop_explanation, stop_color = explain_stop_reason(r)
         argument_status_color = "#6af7a0" if r.get("argument_match") else "#f76a6a"
         argument_status_label = "MATCH" if r.get("argument_match") else "MISMATCH"
-        rows.append(f'''<div style="background:#141417;border:1px solid #2a2a32;border-radius:18px;padding:18px;margin-bottom:18px">
-          <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px">
+        stop_quality_color = "#6af7a0" if r.get("stop_quality_match") else "#f76a6a"
+        stop_quality_label = "MATCH" if r.get("stop_quality_match") else "MISMATCH"
+        rows.append(f'''<div style="background:#141417;border:1px solid #2a2a32;border-radius:14px;padding:14px 16px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
             <div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8a8aa0;margin-bottom:6px">{escape(str(r.get('tc_id','')))} · {escape(str(r.get('category','')))}</div>
-              <div style="font-size:18px;font-weight:700;color:#ececf5;line-height:1.4">{escape(str(r.get('question','')))}</div>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8a8aa0">{escape(str(r.get('tc_id','')))} · {escape(str(r.get('category','')))}</span>
+              <div style="font-size:15px;font-weight:700;color:#ececf5;line-height:1.3;margin-top:2px">{escape(str(r.get('question','')))}</div>
             </div>
-            <div style="background:{status_color}22;color:{status_color};border:1px solid {status_color}55;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;letter-spacing:1px">{status_label}</div>
+            <div style="background:{status_color}22;color:{status_color};border:1px solid {status_color}55;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:700;letter-spacing:1px;white-space:nowrap">{status_label}</div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1.1fr 1.6fr;gap:16px;align-items:start">
-            <div>
-              <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px;margin-bottom:12px">
-                <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">EXPECTED</div>
-                <div style="font-size:13px;color:#d8d8e5;margin-bottom:8px"><b>Behavior:</b> {escape(str(r.get('expected_behavior','')))}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Tool sequence:</b> {escape(str(r.get('expected_tool_sequence','')))}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected account ID:</b> {escape(str(r.get('expected_account_id','')) or 'n/a')}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8;margin-bottom:6px"><b>Expected query hints:</b> {escape(str(r.get('expected_search_query_hints','')) or 'n/a')}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#b8b8c8"><b>Max steps:</b> {escape(str(r.get('max_steps','')))}</div>
+          <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:12px;align-items:start">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="background:#101016;border:1px solid #23232c;border-radius:10px;padding:10px">
+                <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Expected</div>
+                <div style="font-size:12px;color:#c0c0d4;margin-bottom:4px">{escape(str(r.get('expected_behavior','')))}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#b8b8c8;line-height:1.8">
+                  Tools: {escape(str(r.get('expected_tool_sequence','')))} &nbsp;|&nbsp;
+                  Account: {escape(str(r.get('expected_account_id','')) or '—')} &nbsp;|&nbsp;
+                  Steps: {escape(str(r.get('max_steps','')))}
+                </div>
               </div>
-              <div style="background:#101016;border:1px solid #23232c;border-radius:12px;padding:14px">
-                <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">OBSERVED</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual tools:</b> {escape(' > '.join(r.get('actual_tool_sequence', [])) or 'none')}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual account ID:</b> {escape(str(r.get('actual_account_id','')) or 'n/a')}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Actual search query:</b> {escape(str(r.get('actual_search_query','')) or 'n/a')}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Stop reason:</b> {escape(str(r.get('stop_reason','')))}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#d8d8e5;margin-bottom:6px"><b>Used any tool:</b> {escape(str(r.get('used_any_tool', False)))}</div>
-                <div style="background:{argument_status_color}14;border:1px solid {argument_status_color}55;border-radius:10px;padding:12px;margin:10px 0 12px">
-                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:{argument_status_color};margin-bottom:6px">ARGUMENT CHECK</div>
-                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>{argument_status_label}</b></div>
-                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">Account ID match: {escape(str(r.get('account_id_match', True)))} · Search hint match: {escape(str(r.get('search_query_hint_match', True)))}</div>
+              <div style="background:#101016;border:1px solid #23232c;border-radius:10px;padding:10px">
+                <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Observed</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#d8d8e5;line-height:1.9">
+                  Tools: {escape(' > '.join(r.get('actual_tool_sequence', [])) or 'none')}<br>
+                  Account: {escape(str(r.get('actual_account_id','')) or '—')} &nbsp;|&nbsp; Query: {escape(str(r.get('actual_search_query','')) or '—')}<br>
+                  Stop: {escape(str(r.get('stop_reason','')))} &nbsp;|&nbsp; Steps: {escape(str(r.get('step_count','')))}
                 </div>
-                <div style="background:{stop_color}14;border:1px solid {stop_color}55;border-radius:10px;padding:12px;margin:10px 0 12px">
-                  <div style="font-size:12px;font-weight:700;letter-spacing:0.4px;color:{stop_color};margin-bottom:6px">WHY IT STOPPED</div>
-                  <div style="font-size:13px;color:#ececf5;margin-bottom:6px"><b>{escape(stop_title)}</b></div>
-                  <div style="font-size:12px;color:#c7c9d6;line-height:1.6">{escape(stop_explanation)}</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <div style="background:{argument_status_color}14;border:1px solid {argument_status_color}44;border-radius:8px;padding:6px 10px;flex:1;min-width:80px">
+                  <div style="font-size:10px;color:{argument_status_color};font-weight:700;letter-spacing:0.5px">ARGS</div>
+                  <div style="font-size:12px;color:#ececf5;font-weight:700">{argument_status_label}</div>
                 </div>
-                <div style="font-size:13px;color:#d8d8e5;white-space:pre-wrap"><b>Final answer:</b> {escape(str(r.get('final_answer','')))}</div>
+                <div style="background:{stop_quality_color}14;border:1px solid {stop_quality_color}44;border-radius:8px;padding:6px 10px;flex:1;min-width:80px">
+                  <div style="font-size:10px;color:{stop_quality_color};font-weight:700;letter-spacing:0.5px">STOP</div>
+                  <div style="font-size:12px;color:#ececf5;font-weight:700">{stop_quality_label}</div>
+                  <div style="font-size:11px;color:#9a9aaa;margin-top:2px">{escape(stop_title)}</div>
+                </div>
               </div>
             </div>
             <div>
-              <div style="font-size:12px;color:#8a8aa0;margin-bottom:8px">TRACE</div>
+              <div style="font-size:10px;color:#8a8aa0;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Trace</div>
               {trace_html}
             </div>
           </div>

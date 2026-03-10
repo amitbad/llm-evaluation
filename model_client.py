@@ -86,7 +86,7 @@ def _call_ollama(model: str, prompt: str, system: str, url: str) -> str:
     if system:
         payload["system"] = system
     try:
-        response = requests.post(url, json=payload, timeout=120)
+        response = requests.post(url, json=payload, timeout=300)
         response.raise_for_status()
         return response.json().get("response", "").strip()
     except requests.exceptions.ConnectionError:
