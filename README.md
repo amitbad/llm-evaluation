@@ -148,7 +148,7 @@ Key things to know:
 | Phase 4 | Frameworks & Tools — RAGAS, DeepEval | 2–4 days |
 | Phase 5 | Production Eval — agent evaluation, trajectory evaluation | 3–5 days |
 
-> **Current status:** Phases 0–5 are present in the repository. Test 10 RAGAS requires OpenAI credits.
+> **Current status:** Phases 0–5 are present in the repository today, and more topics may be added over time. Test 10 RAGAS currently requires OpenAI credits.
 
 **Total: approximately 3–5 weeks** depending on your pace.
 
@@ -277,6 +277,8 @@ This repository does **not** currently teach every GenAI evaluation topic. For e
 
 | Test | Method | What It Measures |
 |------|--------|-----------------|
+| Test 0 | Foundations / Simple Checks | Basic evaluation thinking — keyword checks, topic drift, quality failure, and benchmark dataset awareness through small local examples. |
+| Test 1 | Basic Model Comparison | First direct comparison across models — does each model respond, how fast is it, and how does response style differ on the same prompt? |
 | Test 2 | Manual Scoring | Human judgement — coherence, accuracy, consistency |
 | Test 3 | BLEU / ROUGE | Word overlap with a reference answer |
 | Test 4 | Keyword Matching | Deterministic pass/fail on must-contain / must-not-contain rules |
@@ -320,13 +322,9 @@ Bot and judge can use different providers — any combination works.
 
 ## Notes for Learners
 
-- **Take your time.** This is not a small topic. Each phase is designed to be absorbed, not completed. If something feels unclear, slow down — do not push forward hoping it will make sense later.
-- **Do not try to match results.** LLMs are non-deterministic. Your outputs will differ from the documented ones even on identical prompts. That is expected. Focus on understanding the technique and what the results are telling you — not on reproducing specific numbers.
-- **You are here to understand, not to execute.** When a test fails, ask why. When a score surprises you, read the actual response. Black-box testing instincts — "it passed, move on" — do not apply here. The failure is often the most valuable part.
-- **Premium models will give different results.** If you use GPT-4o or Claude instead of a local Ollama model, you will see higher pass rates, better groundedness scores, and more consistent refusals. That is not a problem with the documented experiments — it is expected. Use whatever model you have and understand what it tells you about that model.
-- **Excel is input only (from Test 6 onwards).** For semantic similarity and future tests, Excel stores test cases only. Results go to the HTML report. Earlier tests (Test 4, Test 5) do write results back to Excel — that is intentional for those exercises.
-- **Read the HTML report, not the Excel.** After running any evaluator, open the generated HTML report in your browser. It shows Expected vs Bot Response side by side with colour-coded verdicts.
-- **Fill your verdict before running the judge.** In `llm-as-a-judge`, always fill col H (Result) with your own Pass/Fail/Partial before running `llm_judge_evaluator.py`. The disagreements only have learning value if your verdict came first.
-- **A score is not the final word.** In high-stakes domains like healthcare, always read the actual response for safety-critical cases — a lower score that provides a crisis helpline is better than a higher score that misses it.
-- **You do not need to be a data scientist.** QA and testing instincts are the most valuable skill here. Threshold decisions, test case design, and reading results are all QA work.
-- **Never commit `.env`.** It is in `.gitignore` by default. API keys in `.env` stay local. If you add a key directly to `config.yaml` instead, make sure `config.yaml` is also gitignored or the key field is left blank before committing.
+- **Move in order.** The repository is designed as a sequence. Earlier tests make later ones easier to understand.
+- **Do not try to match exact outputs.** LLMs are non-deterministic. Focus on understanding the evaluation method, not reproducing the same wording or score.
+- **Read the HTML page after running a script.** The script shows what happened. The HTML page explains what it means.
+- **Always read surprising results.** A score or pass/fail label is a signal, not the whole answer.
+- **Use premium models only if you want to.** Ollama is enough to learn the techniques. Paid providers are optional.
+- **Never commit `.env`.** Keep API keys local only.
