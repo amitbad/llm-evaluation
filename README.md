@@ -1,4 +1,4 @@
-# LLM Evaluation — Learning Repository
+# LLM Evaluation for Engineers — Hands-On, No Maths, No Fluff
 
 A hands-on, structured learning journey for evaluating Large Language Models (LLMs) and GenAI systems.
 
@@ -148,7 +148,7 @@ Key things to know:
 | Phase 4 | Frameworks & Tools — RAGAS, DeepEval | 2–4 days |
 | Phase 5 | Production Eval — agent evaluation, trajectory evaluation | 3–5 days |
 
-> **Current status:** Phases 0–5 are present in the repository today, and more topics may be added over time. Test 10 RAGAS currently requires OpenAI credits.
+> **Current status:** Phases 0–5 are present in the repository today, and more topics may be added over time. Test 10 RAGAS requires OpenAI credits.
 
 **Total: approximately 3–5 weeks** depending on your pace.
 
