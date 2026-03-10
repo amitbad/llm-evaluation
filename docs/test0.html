@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test 0 — Phase 0 Foundations</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141417;
+      --surface2: #1c1c21;
+      --border: #2a2a32;
+      --accent: #7c6af7;
+      --accent2: #f7a06a;
+      --danger: #f76a6a;
+      --success: #6af7a0;
+      --text: #e8e8f0;
+      --muted: #7a7a90;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 48px 56px;
+      max-width: 100%;
+      line-height: 1.6;
+    }
+
+    .phase-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--success);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 36px;
+      max-width: 700px;
+      line-height: 1.7;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 40px 0 14px;
+    }
+
+    h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 24px 0 8px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #c8c8d8;
+      line-height: 1.75;
+      margin-bottom: 12px;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .task-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .task-num {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--accent);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    .task-name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 6px 16px;
+      margin-bottom: 6px;
+      font-size: 13.5px;
+    }
+
+    .task-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      padding-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .pass-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      background: #6af7a022;
+      color: var(--success);
+      border: 1px solid #6af7a055;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .fail-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      background: #f76a6a22;
+      color: var(--danger);
+      border: 1px solid #f76a6a55;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .warn-box {
+      background: #2a200a;
+      border: 1px solid #f7a06a55;
+      border-left: 4px solid var(--accent2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13.5px;
+      color: #e8c88a;
+      margin: 14px 0;
+      line-height: 1.65;
+    }
+
+    .warn-box strong { color: var(--accent2); }
+
+    .info-box {
+      background: #0f1a2a;
+      border: 1px solid #7c6af755;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13.5px;
+      color: #b8c8e8;
+      margin: 14px 0;
+      line-height: 1.65;
+    }
+
+    .info-box strong { color: #a89cf7; }
+
+    .success-box {
+      background: #0a1f14;
+      border: 1px solid #6af7a055;
+      border-left: 4px solid var(--success);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13.5px;
+      color: #8ae8b8;
+      margin: 14px 0;
+      line-height: 1.65;
+    }
+
+    .success-box strong { color: var(--success); }
+
+    .concept-chip {
+      display: inline-block;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      background: #1c1c2a;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin: 3px 3px 3px 0;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .concept-chip:hover { background: #2a2a40; }
+
+    code {
+      background: #1c1c22;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+    }
+
+    pre {
+      background: #0e0e14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #c8c8da;
+      overflow-x: auto;
+      margin: 12px 0;
+      line-height: 1.6;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .compare-card {
+      background: #0e0e14;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .compare-label {
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    .run-command {
+      background: #0e0e14;
+      border: 1px solid #6af7a044;
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--success);
+      margin: 12px 0;
+    }
+
+    .concept-ref-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="phase-badge">Phase 0 · Foundations</div>
+  <h1>Test 0 — Basics &amp;<br>Benchmark Data</h1>
+  <p class="subtitle">Two foundational exercises before your first real test. Understand what deterministic evaluation
+    looks like, where its limits are, and what structured evaluation data looks like in the wild.</p>
+
+  <div class="info-box">
+    <strong>What this page covers.</strong> Two scripts: <code>phase_eval.py</code> runs 3 evaluation tasks using
+    keyword checks against a local model. <code>explore_squad.py</code> reads 2 examples from the SQuAD benchmark
+    dataset — no model, just structured data exploration. Both are Phase 0 foundations before numbered tests begin.
+  </div>
+
+  <!-- ── PART 1: phase_eval.py ─────────────────────────────────────────────── -->
+  <h2>Part 1 — phase_eval.py · Keyword-Based Evaluation</h2>
+  <p>This script sends 3 prompts to a local model and applies a deterministic pass/fail check to each output.
+    No judge model. No scoring. No human involved. Just: does the required word appear in the response?</p>
+
+  <div class="run-command">cd phase-0-foundations &amp;&amp; python3 phase_eval.py</div>
+
+  <div class="section">
+    <div class="section-title">The 3 Tasks — What They Test and Where They Break</div>
+
+    <!-- Task 1 -->
+    <div class="task-card">
+      <div class="task-header">
+        <span class="task-num">TASK 1</span>
+        <span class="task-name">Creative Generation — Keyword Check</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Prompt</span>
+        <span>Tell a joke about a robot.</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Check</span>
+        <span>Does the output contain <code>robot</code>? → PASS / FAIL</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Why</span>
+        <span>Verifies the model stayed on topic — it was asked about robots, so 'robot' must appear.</span>
+      </div>
+
+      <div class="warn-box" style="margin-top:14px">
+        <strong>⚠ Limitation — Quality Failure gap</strong><br>
+        The model could write a completely nonsensical joke and still PASS. The word 'robot' just needs to be
+        present somewhere. This is called a <strong>Quality Failure</strong>: the check passes, but the output
+        is poor. Keyword checks measure <em>topic adherence</em>, not <em>output quality</em>.
+      </div>
+      <div class="warn-box">
+        <strong>⚠ What would cause a FAIL?</strong><br>
+        If the model drifted off topic — for example, told a generic technology joke without mentioning 'robot'
+        at all — the check would fail. That failure mode is called <strong>Topic Drift</strong>.
+      </div>
+      <div class="concept-ref-row">
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','quality-failure');return false;">⚠️ Quality Failure</a>
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','topic-drift');return false;">🌊 Topic Drift</a>
+      </div>
+    </div>
+
+    <!-- Task 2 -->
+    <div class="task-card">
+      <div class="task-header">
+        <span class="task-num">TASK 2</span>
+        <span class="task-name">Summarisation — Keyword Check</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Prompt</span>
+        <span>Summarize: The sky is blue because of Rayleigh scattering.</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Check</span>
+        <span>Does the summary contain <code>scattering</code>? → PASS / FAIL</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Why</span>
+        <span>A good summary must retain the central technical term. Dropping it means the most important fact was lost.</span>
+      </div>
+
+      <div class="warn-box" style="margin-top:14px">
+        <strong>⚠ Limitation — Hallucination gap</strong><br>
+        The model could hallucinate additional facts ("...also caused by ozone layer interactions") and still PASS
+        because 'scattering' is present. Keyword checks cannot detect <strong>fabricated content</strong> added
+        alongside the correct term.
+      </div>
+      <div class="warn-box">
+        <strong>⚠ What would cause a FAIL?</strong><br>
+        If the model gave a vague general answer like "The sky appears blue due to light interactions with the
+        atmosphere" — accurate in spirit but missing the word 'scattering' — this check would FAIL it. That is
+        a <strong>Topic Drift</strong> failure: the key term from the source was dropped.
+      </div>
+
+      <div class="success-box">
+        <strong>✅ What good output looks like</strong><br>
+        "The sky is blue because of Rayleigh scattering, where shorter blue wavelengths of light are scattered
+        more than longer red wavelengths by atmospheric molecules." — contains 'scattering', stays accurate,
+        no extra invented content. PASS.
+      </div>
+      <div class="concept-ref-row">
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','topic-drift');return false;">🌊 Topic Drift</a>
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','hallucination');return false;">🌀 Hallucination</a>
+      </div>
+    </div>
+
+    <!-- Task 3 -->
+    <div class="task-card">
+      <div class="task-header">
+        <span class="task-num">TASK 3</span>
+        <span class="task-name">Arithmetic — Custom Validator</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Prompt</span>
+        <span>What is 2+2? Answer in one word.</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Check</span>
+        <span>Does the output contain <code>4</code> or <code>four</code> (either form accepted)?</span>
+      </div>
+      <div class="task-row">
+        <span class="task-label">Why</span>
+        <span>There are two equally valid forms of the same answer. A plain keyword check on 'four' alone would fail '4'.</span>
+      </div>
+
+      <div class="two-col" style="margin:14px 0">
+        <div class="compare-card">
+          <div class="compare-label" style="color:var(--danger)">Plain Keyword Check — 'four'</div>
+          <p style="font-size:13px; margin:0">Model answers: <code>Four.</code> → <span class="pass-badge">PASS</span><br>
+          Model answers: <code>4</code> → <span class="fail-badge">FAIL</span><br>
+          <span style="color:var(--muted); font-size:12px">Wrong — '4' is correct but not matched</span></p>
+        </div>
+        <div class="compare-card">
+          <div class="compare-label" style="color:var(--success)">Custom Validator — regex <code>\b(4|four)\b</code></div>
+          <p style="font-size:13px; margin:0">Model answers: <code>Four.</code> → <span class="pass-badge">PASS</span><br>
+          Model answers: <code>4</code> → <span class="pass-badge">PASS</span><br>
+          <span style="color:var(--muted); font-size:12px">Correct — both valid forms accepted</span></p>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <strong>Key insight.</strong> This is why real eval pipelines replace rigid keyword checks with smarter
+        validators. In Test 4 onward, you will see this escalate: must-contain rules, must-not-contain rules,
+        regex validators, and eventually LLM judges that evaluate meaning rather than exact text.
+      </div>
+      <div class="concept-ref-row">
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
+        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','gold-answer');return false;">🥇 Gold Answer</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Learnings Phase Eval -->
+  <div class="section">
+    <div class="section-title">Key Learnings — phase_eval.py</div>
+
+    <h3>What keyword checks are good for</h3>
+    <p>Fast, deterministic, zero-cost. No model needed. Always give the same result for the same input. Good for
+      catching obvious failures: topic drift, missing required terms, wrong answer format.</p>
+
+    <h3>What keyword checks cannot catch</h3>
+    <p>They cannot detect hallucinated content added alongside the correct keyword. They cannot measure response
+      quality, tone, helpfulness, or reasoning. A perfectly structured wrong answer with the right word PASSES.</p>
+
+    <h3>Why this matters for Phase 2 onward</h3>
+    <p>Every technique introduced in Phase 2 exists to close a gap that keyword checks leave open:</p>
+    <ul style="margin: 8px 0 12px 20px; font-size:14px; color:#c8c8d8; line-height:2">
+      <li><strong>BLEU/ROUGE (Test 3)</strong> — word overlap against a reference answer</li>
+      <li><strong>LLM-as-a-Judge (Test 5)</strong> — qualitative scoring by a second model</li>
+      <li><strong>Semantic Similarity (Test 6)</strong> — meaning, not just words</li>
+      <li><strong>Groundedness (Test 7)</strong> — is the answer traceable to source material?</li>
+    </ul>
+    <div class="concept-ref-row">
+      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','quality-failure');return false;">⚠️ Quality Failure</a>
+      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','topic-drift');return false;">🌊 Topic Drift</a>
+      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
+      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','hallucination');return false;">🌀 Hallucination</a>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── PART 2: explore_squad.py ─────────────────────────────────────────── -->
+  <h2>Part 2 — explore_squad.py · What Eval Data Looks Like</h2>
+  <p>This is <strong>not a test</strong>. No model is called. It reads 2 examples from the SQuAD validation set and
+    prints them. The purpose is to understand what structured evaluation data looks like before you build your own.</p>
+
+  <div class="run-command">cd phase-0-foundations &amp;&amp; python3 explore_squad.py</div>
+
+  <div class="section">
+    <div class="section-title">What is SQuAD?</div>
+    <p><strong>Stanford Question Answering Dataset</strong> — one of the most widely used NLP benchmarks. Each example
+      has three parts:</p>
+    <div class="two-col" style="margin:16px 0">
+      <div class="compare-card">
+        <div class="compare-label" style="color:var(--accent)">SQuAD Example Structure</div>
+        <p style="font-size:13px; margin:0; line-height:1.9">
+          <strong>Passage</strong> — the context (source of truth)<br>
+          <strong>Question</strong> — what to find in the passage<br>
+          <strong>Gold Answer</strong> — extracted phrase from the passage
+        </p>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color:var(--success)">Your Test Cases (from Phase 1)</div>
+        <p style="font-size:13px; margin:0; line-height:1.9">
+          <strong>Prompt</strong> — the input to the model<br>
+          <strong>Expected</strong> — what correct output looks like<br>
+          <strong>Check rule</strong> — how to verify the answer
+        </p>
+      </div>
+    </div>
+    <p>The two structures are identical in concept. SQuAD uses human-extracted spans. Your test cases use
+      keywords, judge verdicts, or similarity scores. The underlying pattern — input + expected + verification —
+      is the same across all evaluation methods in this repository.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">What to Notice When You Run It</div>
+
+    <h3>1. The gold answer is always a span from the passage</h3>
+    <p>The answer to every SQuAD question is a short phrase that literally appears in the passage text. The model
+      does not need external knowledge — it only needs to read and extract. This is the definition of
+      <strong>grounded answering</strong>: the answer must come from the source, not from model memory.</p>
+
+    <h3>2. Multiple phrasings of the same answer are all valid</h3>
+    <p>You will see the gold answer repeated 3 times: <code>['Denver Broncos', 'Denver Broncos', 'Denver Broncos']</code>.
+      This reflects 3 human annotators who all gave the same answer. In some cases the phrasings differ — "Denver
+      Broncos" vs "the Broncos". A plain keyword check would fail the second. A smarter validator or a judge model
+      would pass it. This is why flexible evaluation matters.</p>
+
+    <h3>3. The passage is longer than the answer</h3>
+    <p>The model is given a full paragraph but must extract a short, precise phrase. This mirrors RAG evaluation
+      (Test 9): the retriever returns a chunk, the model must answer from that chunk without drifting outside it.</p>
+
+    <div class="concept-ref-row">
+      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','gold-answer');return false;">🥇 Gold Answer</a>
+      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','benchmark-dataset');return false;">📚 Benchmark Dataset</a>
+      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','groundedness');return false;">🎯 Groundedness Scoring</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">SQuAD vs What You Will Build</div>
+    <div class="two-col">
+      <div class="compare-card">
+        <div class="compare-label" style="color:var(--muted)">SQuAD</div>
+        <ul style="font-size:13px; color:#c8c8d8; margin: 8px 0 0 16px; line-height:2">
+          <li>Public, pre-built benchmark</li>
+          <li>Gold answers extracted by humans</li>
+          <li>Answer is always a span in the passage</li>
+          <li>Evaluated with Exact Match or F1</li>
+          <li>For research comparison across models</li>
+        </ul>
+      </div>
+      <div class="compare-card">
+        <div class="compare-label" style="color:var(--success)">Your Test Cases (Tests 1–13)</div>
+        <ul style="font-size:13px; color:#c8c8d8; margin: 8px 0 0 16px; line-height:2">
+          <li>Private, domain-specific benchmark</li>
+          <li>Gold answers defined by you</li>
+          <li>Evaluated with keyword, judge, similarity</li>
+          <li>Tailored to your system's behaviour</li>
+          <li>For regression testing and quality gates</li>
+        </ul>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:16px">
+      <strong>The connection to Test 9.</strong> The RAG evaluation in Test 9 uses the same three-field pattern as
+      SQuAD: a source document (passage), a question, and a gold answer. The difference is that you write the gold
+      answers yourself, tuned for the documents you have. SQuAD gives you a working mental model for what that
+      structure should look like.
+    </div>
+  </div>
+
+  <!-- Files reference -->
+  <div class="section">
+    <div class="section-title">Files in This Phase</div>
+    <div class="task-row" style="margin-bottom:10px">
+      <span class="task-label">Script</span>
+      <code>phase-0-foundations/phase_eval.py</code>
+    </div>
+    <div class="task-row" style="margin-bottom:10px">
+      <span class="task-label">Script</span>
+      <code>phase-0-foundations/explore_squad.py</code>
+    </div>
+    <div class="task-row" style="margin-bottom:10px">
+      <span class="task-label">Config</span>
+      <code>config.yaml</code> → <code>phase0.MODEL</code> controls which model <code>phase_eval.py</code> uses
+    </div>
+    <div class="task-row">
+      <span class="task-label">Concepts</span>
+      <span>All terms used in this test are defined in Concepts Reference — see chips above</span>
+    </div>
+  </div>
+
+  <footer>
+    docs/test0.html · Phase 0 Foundations · phase_eval.py + explore_squad.py · LLM Evaluation Learning Repository
+  </footer>
+
+</body>
+
+</html>

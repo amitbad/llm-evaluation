@@ -1,8 +1,15 @@
-import ollama
-import time
 import json
+import os
+import time
 
-models = ['deepseek-r1:7b', 'mistral', 'llama3.1:8b', 'gemma2:9b']
+import ollama
+import yaml
+
+_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config.yaml")
+with open(_CONFIG_FILE, "r", encoding="utf-8") as _f:
+    _cfg = yaml.safe_load(_f)
+
+models = _cfg.get("phase1", {}).get("MODELS", ["llama3.1:8b"])
 
 def query_model(model, prompt):
     start_time = time.time()

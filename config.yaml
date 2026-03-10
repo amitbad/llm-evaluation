@@ -1,12 +1,22 @@
 # ─────────────────────────────────────────────────────────────────
-# config.yaml — updated sections
-# Replace your existing shared, phase2_llm_as_a_judge and
-# phase2_groundedness sections with these.
+# config.yaml
 # ─────────────────────────────────────────────────────────────────
 
 shared:
   OLLAMA_URL: "http://localhost:11434/api/generate"
   PROVIDER: "ollama"          # default fallback for single-model scripts
+
+phase0:
+  MODEL: "llama3.1:8b"
+  PROVIDER: "ollama"
+
+phase1:
+  MODELS:
+    - "deepseek-r1:7b"
+    - "mistral"
+    - "llama3.1:8b"
+    - "gemma2:9b"
+  PROVIDER: "ollama"
 
 phase2:
   BOT_MODEL: "llama3.1:8b"

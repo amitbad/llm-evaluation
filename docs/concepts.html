@@ -484,6 +484,15 @@
     </div>
 
     <div class="nav-section">
+      <div class="nav-section-label">Phase 0 — Foundations</div>
+      <a href="#keyword-check">🔑 Keyword Check</a>
+      <a href="#topic-drift">🌊 Topic Drift</a>
+      <a href="#quality-failure">⚠️ Quality Failure</a>
+      <a href="#gold-answer">🥇 Gold Answer</a>
+      <a href="#benchmark-dataset">📚 Benchmark Dataset</a>
+    </div>
+
+    <div class="nav-section">
       <div class="nav-section-label">Behavioural Testing</div>
       <a href="#hallucination" class="active">
         🌀 Hallucination
@@ -594,6 +603,169 @@
     <div class="page-title">Concepts<br>Reference</div>
     <p class="page-subtitle">Key terms used across the LLM evaluation learning repository. Every definition includes a
       simple explanation, a real example from our banking bot tests, and why it matters in production.</p>
+
+    <!-- ════════════════════════════════════════════════════════════════════════ -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">Phase 0 — Foundations</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <!-- Keyword Check -->
+    <div class="concept" id="keyword-check">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">🔑</div>
+        <div>
+          <div class="concept-title">Keyword Check</div>
+          <div class="concept-subtitle">Phase 0 · Deterministic Evaluation · Simplest Eval Method</div>
+        </div>
+      </div>
+      <div class="simple">
+        The simplest possible evaluation: <strong>does the model output contain a required word or phrase?</strong>
+        Pass if yes. Fail if no. No model involved, no human judgement — just string matching.
+      </div>
+      <p class="detail">A keyword check is deterministic — it always gives the same answer for the same input. It is
+        fast, free, and requires no setup. It is the foundation of every deterministic eval pipeline. The weakness: it
+        checks <em>presence</em>, not <em>correctness</em>. A response can contain the required word and still be
+        wrong, misleading, or low quality.</p>
+      <div class="example-block">
+        <div class="example-label label-eg">EXAMPLE — from phase_eval.py Task 1</div>
+        <div class="example-content">
+          <span class="u">Prompt:</span> Tell a joke about a robot.<br>
+          <span class="g">Check: does output contain 'robot'? → PASS ✅</span><br><br>
+          <span class="b">Bot: Why did the robot go on a diet? To lose some bytes!</span><br>
+          <span class="g">The word 'robot' is present. Check passes — regardless of joke quality.</span>
+        </div>
+      </div>
+      <div class="why-matters">Keyword checks are the starting point for automated evaluation. They catch topic
+        drift and missing required terms. Everything in Phase 2 onward (LLM-as-a-Judge, semantic similarity,
+        groundedness) exists to catch what keyword checks miss.</div>
+    </div>
+
+    <!-- Topic Drift -->
+    <div class="concept" id="topic-drift">
+      <div class="concept-header">
+        <div class="concept-icon icon-hall">🌊</div>
+        <div>
+          <div class="concept-title">Topic Drift</div>
+          <div class="concept-subtitle">Phase 0 · Evaluation Failure Mode</div>
+        </div>
+      </div>
+      <div class="simple">
+        When the model's output <strong>moves away from the subject it was asked about</strong> — producing a
+        response that is plausible but off-topic or too general.
+      </div>
+      <p class="detail">Topic drift is common in summarisation tasks. The model is asked to summarise a specific
+        technical sentence but returns a generic paragraph about the broader topic, dropping the key term entirely.
+        A keyword check catches this: if the required term is absent, the check fails. In more complex evals,
+        topic drift is harder to detect because the output can seem reasonable while missing the point.</p>
+      <div class="example-block">
+        <div class="example-label label-bad">TOPIC DRIFT — from phase_eval.py Task 2</div>
+        <div class="example-content">
+          <span class="u">Prompt:</span> Summarize: The sky is blue because of Rayleigh scattering.<br>
+          <span class="b">Bot: The sky is blue due to the way light interacts with the atmosphere.</span><br><br>
+          <span class="g">Missing: 'scattering' — the key term was dropped. Keyword check catches this as FAIL.</span>
+        </div>
+      </div>
+      <div class="why-matters">Topic drift is a signal that the model has generalised away from the specific
+        information in the prompt. In RAG pipelines (Test 9), this becomes answer relevance failure — the retrieval
+        worked, but the model answered a different question than was asked.</div>
+    </div>
+
+    <!-- Quality Failure -->
+    <div class="concept" id="quality-failure">
+      <div class="concept-header">
+        <div class="concept-icon icon-behav">⚠️</div>
+        <div>
+          <div class="concept-title">Quality Failure</div>
+          <div class="concept-subtitle">Phase 0 · Evaluation Blind Spot · Keyword Check Limitation</div>
+        </div>
+      </div>
+      <div class="simple">
+        When an output <strong>passes a check but is still poor quality</strong> — correct keyword present,
+        wrong content, bad reasoning, or misleading phrasing.
+      </div>
+      <p class="detail">This is the core limitation of keyword checks. The check measures one thing: presence of a
+        word. It cannot measure whether the sentence using that word is accurate, helpful, or appropriate. A model
+        can include 'robot' in a joke that makes no sense. A model can include 'scattering' in a paragraph that
+        then contradicts itself. Both pass the check. Both are quality failures.</p>
+      <div class="example-block">
+        <div class="example-label label-bad">QUALITY FAILURE — passes keyword check, fails quality</div>
+        <div class="example-content">
+          <span class="u">Prompt:</span> Tell a joke about a robot.<br>
+          <span class="b">Bot: A robot. That is the joke. Robot.</span><br><br>
+          <span class="g">Contains 'robot' → keyword check PASS ✅</span><br>
+          <span class="b">But the response is nonsense — quality failure that the check cannot see.</span>
+        </div>
+      </div>
+      <div class="why-matters">Recognising quality failure gaps is why LLM-as-a-Judge (Test 5) and semantic
+        similarity (Test 6) exist. They are not replacements for keyword checks — they are the next layer
+        that catches what keyword checks cannot.</div>
+    </div>
+
+    <!-- Gold Answer -->
+    <div class="concept" id="gold-answer">
+      <div class="concept-header">
+        <div class="concept-icon icon-ground">🥇</div>
+        <div>
+          <div class="concept-title">Gold Answer</div>
+          <div class="concept-subtitle">Phase 0 · Evaluation Datasets · Reference Standard</div>
+        </div>
+      </div>
+      <div class="simple">
+        The <strong>known-correct answer</strong> that a human has pre-verified and recorded in the test case.
+        The model's output is compared against it to determine pass or fail.
+      </div>
+      <p class="detail">In structured benchmarks like SQuAD, the gold answer is a short phrase extracted directly
+        from the source passage by a human annotator. In your own test cases (from Phase 1 onward), the gold answer
+        is whatever you write in the 'expected' column of your Excel file. The quality of your evaluation is only
+        as good as the quality of your gold answers.</p>
+      <div class="example-block">
+        <div class="example-label label-eg">EXAMPLE — from explore_squad.py</div>
+        <div class="example-content">
+          <span class="u">Question:</span> Which NFL team represented the AFC at Super Bowl 50?<br>
+          <span class="g">Gold Answers: ['Denver Broncos', 'Denver Broncos', 'Denver Broncos']</span><br><br>
+          <span class="u">Note:</span> Multiple phrasings of the same answer are all valid.
+          The model could answer 'The Broncos' and a keyword check on 'Denver Broncos' would fail it —
+          even though the answer is essentially correct. This is why flexible validators matter.
+        </div>
+      </div>
+      <div class="why-matters">Every evaluation method — keyword check, BLEU score, semantic similarity,
+        LLM judge — ultimately compares against a gold answer. Garbage-in gold answers produce garbage-out
+        evaluation results. Defining gold answers well is the most important step in building a test suite.</div>
+    </div>
+
+    <!-- Benchmark Dataset -->
+    <div class="concept" id="benchmark-dataset">
+      <div class="concept-header">
+        <div class="concept-icon icon-ground">📚</div>
+        <div>
+          <div class="concept-title">Benchmark Dataset</div>
+          <div class="concept-subtitle">Phase 0 · Evaluation Infrastructure · SQuAD Pattern</div>
+        </div>
+      </div>
+      <div class="simple">
+        A <strong>curated, publicly available dataset of questions with verified correct answers</strong> used to
+        measure how well a model performs on a defined task.
+      </div>
+      <p class="detail">SQuAD (Stanford Question Answering Dataset) is one of the most widely used benchmarks for
+        reading comprehension. Each example contains a passage, a question about that passage, and one or more
+        gold answers extracted from the passage by human annotators. Benchmarks allow consistent comparison across
+        models and over time — if you run the same benchmark on two models, the results are directly comparable.</p>
+      <div class="example-block">
+        <div class="example-label label-eg">SQuAD STRUCTURE — seen in explore_squad.py</div>
+        <div class="example-content">
+          <span class="u">Passage:</span> Super Bowl 50 was an American football game...<br>
+          <span class="u">Question:</span> Which NFL team represented the AFC at Super Bowl 50?<br>
+          <span class="g">Gold Answer:</span> Denver Broncos<br><br>
+          The passage is the only source of truth. A correct model reads the passage and extracts the answer.
+          It does not need external knowledge.
+        </div>
+      </div>
+      <div class="why-matters">Benchmarks matter because they are reproducible. When you build your own test
+        cases in Excel, you are building a private benchmark for your specific system. The SQuAD pattern
+        (passage + question + gold answer) is directly reused in your RAG evaluation test cases in Test 9.</div>
+    </div>
 
     <!-- ════════════════════════════════════════════════════════════════════════ -->
     <div class="section-divider">
@@ -1180,7 +1352,8 @@
 
     <footer>
       docs/concepts.html · LLM Evaluation Learning Repository · Updated after Phase 5 (Test 13 trajectory evaluation
-      concepts added)
+      concepts added) + Phase 0 foundations concepts added (keyword check, topic drift, quality failure, gold answer,
+      benchmark dataset)
     </footer>
 
   </main>
