@@ -2,7 +2,7 @@
 
 A hands-on, structured learning journey for evaluating Large Language Models (LLMs) and GenAI systems.
 
-Built for **anyone who needs to test and evaluate LLM-based systems** — QA Engineers, Test Engineers, developers, or anyone at any stage of building or validating a GenAI product. No data science background required. — no data science background required.
+Built for **anyone who needs to test and evaluate LLM-based systems** — QA Engineers, Test Engineers, developers, or anyone at any stage of building or validating a GenAI product. No data science background required.
 
 ---
 
@@ -111,7 +111,7 @@ These are the models used in this repository. You can use any model available in
 
 ```bash
 # 1. Clone the repository
-git clone <repo-url>
+git clone git@github.com:amitbad/llm-evaluation.git
 cd llm-evaluation
 
 # 2. Create and activate virtual environment
