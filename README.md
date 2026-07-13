@@ -148,7 +148,7 @@ Key things to know:
 | Phase 4 | Frameworks & Tools — RAGAS, DeepEval | 2–4 days |
 | Phase 5 | Production Eval — agent evaluation, trajectory evaluation | 3–5 days |
 
-> **Current status:** Phases 0–5 are present in the repository today, and more topics may be added over time. Test 10 RAGAS requires OpenAI credits.
+> **Current status:** Phases 0–5 are present in the repository today, and more topics may be added over time. Test 10 RAGAS requires OpenAI credits. Test 14 Langfuse requires Docker (see `docs/test14.html` for full setup instructions).
 
 **Total: approximately 3–5 weeks** depending on your pace.
 
@@ -167,7 +167,7 @@ llm-evaluation/
 ├── docs/                        ← all documentation (serve with python3 -m http.server 8000)
 │   ├── index.html               ← OPEN THIS — navigation hub
 │   ├── home.html                ← phase overview and status
-│   ├── test1.html – test13.html ← one file per test: results, learnings, findings
+│   ├── test1.html – test14.html ← one file per test: results, learnings, findings
 │   └── concepts.html            ← GenAI eval concepts reference
 │
 ├── phase-0-foundations/
@@ -194,8 +194,11 @@ llm-evaluation/
     ├── agent-evaluation/        ← Test 12 — Tool-calling agent eval (15 cases, qwen3.5:9b)
     │   ├── agent_test_cases.xlsx
     │   └── results/             ← sample_agent_evaluation_report.html + sample JSON
-    └── trajectory-evaluation/   ← Test 13 — Trajectory judge scoring (mistral, 4 dimensions)
-        └── results/             ← sample_trajectory_evaluation_report.html + sample JSON
+    ├── trajectory-evaluation/   ← Test 13 — Trajectory judge scoring (mistral, 4 dimensions)
+    │   └── results/             ← sample_trajectory_evaluation_report.html + sample JSON
+    └── langfuse-observability/  ← Test 14 — Langfuse self-hosted observability (Docker)
+        ├── docker-compose.yml   ← starts Langfuse + PostgreSQL locally
+        └── results/             ← langfuse_results_*.json (live run artifacts)
 ```
 
 > Each phase folder contains a `results/` directory with a sample HTML report so you can see what output looks like before running anything.
@@ -291,6 +294,7 @@ This repository does **not** currently teach every GenAI evaluation topic. For e
 | Test 11 | DeepEval Framework | Pytest-style LLM evaluation fully local via Ollama. 25 cases, 1 refusal (TC19). Overall 62%, CTX 24%, Faithfulness 82%, Answer Rel. 81%. 1/25 full PASS (TC15). Calibration analysis vs Test 9. |
 | Test 12 | Agent Trajectory Eval (Deterministic) | Tool-calling agent with observable trajectories. 15 test cases. Checks tool-path match, argument correctness, stop behavior. 14/15 PASS (TC10 behaviour gap). |
 | Test 13 | Agent Trajectory Eval (Judge-Scored) | Reads Test 12 JSON traces. Judge scores 4 dimensions per trajectory: tool selection, argument quality, answer groundedness, stop appropriateness. 15/15 PASS with mistral. |
+| Test 14 | Langfuse Observability | Self-hosted LLM observability via Docker. Banking chatbot traces (20 cases, 6 categories) sent to Langfuse with keyword_pass scores, latency, and tags. Explore traces, spans, and score filtering in the dashboard. |
 
 ---
 

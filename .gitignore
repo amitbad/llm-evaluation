@@ -44,11 +44,10 @@ models/
 # ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
 logs/
-context.md
 
 # ── Temp scripts ─────────────────────────────────────────────────────
 print_folders_struct.py
-others/
+# others/
 
 # ── Local-only learning artifacts ────────────────────────────────────
 docs/genai_eval_learning_plan.xlsx

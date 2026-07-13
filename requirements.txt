@@ -6,3 +6,5 @@ sentence-transformers
 ragas 
 langchain-openai
 deepeval
+langfuse>=2,<3
+openai>=1.30.0,<2

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test 14 — Langfuse Observability</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #141417;
+      --surface2: #1c1c21;
+      --border: #2a2a32;
+      --accent: #7c6af7;
+      --accent2: #f7a06a;
+      --danger: #f76a6a;
+      --success: #6af7a0;
+      --text: #e8e8f0;
+      --muted: #7a7a90;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 48px 56px;
+      max-width: 100%;
+      line-height: 1.6;
+    }
+
+    .phase-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 40px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent2);
+      margin: 28px 0 10px;
+    }
+
+    p {
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: #c0c0d8;
+      line-height: 1.75;
+    }
+
+    code {
+      background: var(--surface2);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent2);
+    }
+
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--accent2);
+      margin: 14px 0;
+      overflow-x: auto;
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 10px;
+      font-size: 13.5px;
+      color: #c0c0d8;
+      line-height: 1.7;
+    }
+
+    li strong { color: var(--text); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 10px 13px;
+      text-align: left;
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 11px 13px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      vertical-align: top;
+      background: var(--surface);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    tr:hover td { background: var(--surface2); }
+
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    .warn-box {
+      background: #1a1a10;
+      border: 1px solid #3a3a20;
+      border-left: 3px solid var(--accent2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #c8c890;
+    }
+
+    .success-box {
+      background: #0f1a10;
+      border: 1px solid #1e3a20;
+      border-left: 3px solid var(--success);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #a0d8a0;
+    }
+
+    .danger-box {
+      background: #1a0f0f;
+      border: 1px solid #3a2020;
+      border-left: 3px solid var(--danger);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+      line-height: 1.7;
+      color: #d8a0a0;
+    }
+
+    .file-tag {
+      background: #2a2a1a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent2);
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin-bottom: 20px;
+    }
+
+    .step-content { flex: 1; }
+
+    .concept-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .concept-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      min-width: 160px;
+      flex: 1;
+    }
+
+    .concept-card .icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .concept-card .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .concept-card .desc {
+      font-size: 12px;
+      color: #c0c0d8;
+      line-height: 1.6;
+    }
+
+    .dashboard-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+    }
+
+    .dashboard-step .ds-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .dashboard-step .ds-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .dashboard-step .ds-desc {
+      font-size: 13px;
+      color: #c0c0d8;
+      line-height: 1.6;
+    }
+
+    footer {
+      margin-top: 64px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="phase-badge">Phase 5 — Production Eval</div>
+  <h1>Test 14: Langfuse Observability</h1>
+  <p class="subtitle">This test introduces observability for LLM applications. You will set up Langfuse locally using
+    Docker, instrument a banking chatbot to send every interaction as a trace, and explore what the Langfuse dashboard
+    reveals about your model's behaviour — latency, pass rates, and failure patterns — without changing how the model
+    runs.</p>
+  <div class="file-tag">📁 phase-5-production-eval/langfuse-observability/ &nbsp;|&nbsp;
+    test14_langfuse_evaluator.py · banking_bot.py · docker-compose.yml · banking_test_cases.xlsx</div>
+
+  <div class="warn-box">
+    ⚠️ <strong>This test requires Docker.</strong> Langfuse runs as a local Docker container — it does not call any
+    external API. Your traces, scores, and model outputs stay entirely on your machine. If you do not have Docker
+    installed, complete Step 1 below before anything else.
+  </div>
+
+  <h2>What Observability Means in LLM Systems</h2>
+  <p>In traditional software, observability means logs, metrics, and traces. You can tell exactly what happened, when,
+    and why a failure occurred. LLM systems have the same need — but the inputs and outputs are unstructured text, not
+    typed function calls. A model can return the "right" response category and still be wrong in subtle ways.</p>
+  <p>Langfuse is the observability layer for LLM applications. Every time your bot calls a model, Langfuse records the
+    prompt, the response, the latency, and any scores you attach. Over many runs you can see patterns that a single test
+    run will never show: which categories fail most often, which questions are slow, whether a model change improved or
+    degraded quality.</p>
+
+  <div class="info-box">
+    🔍 <strong>The key mental shift.</strong> Evaluation (Tests 1–13) gives you a verdict per run. Observability gives
+    you a history. With Langfuse you are not asking "did this test pass?" — you are asking "how is this system
+    behaving over time, across categories, and across model versions?"
+  </div>
+
+  <h2>Core Langfuse Concepts</h2>
+  <div class="concept-row">
+    <div class="concept-card">
+      <div class="icon">🔁</div>
+      <div class="label">Trace</div>
+      <div class="desc">One complete interaction — e.g. one test case from question to final response. The top-level
+        unit in Langfuse.</div>
+    </div>
+    <div class="concept-card">
+      <div class="icon">📦</div>
+      <div class="label">Span</div>
+      <div class="desc">A step inside a trace — e.g. the LLM call itself. Spans capture input, output, and duration of
+        one operation.</div>
+    </div>
+    <div class="concept-card">
+      <div class="icon">🏷️</div>
+      <div class="label">Score</div>
+      <div class="desc">A numeric value attached to a trace — e.g. keyword_pass=1, latency=2.3s. Used for filtering and
+        trend analysis.</div>
+    </div>
+    <div class="concept-card">
+      <div class="icon">🗂️</div>
+      <div class="label">Tags</div>
+      <div class="desc">Labels on a trace — e.g. "security", "loans". Let you filter all traces of one category in the
+        dashboard.</div>
+    </div>
+    <div class="concept-card">
+      <div class="icon">📊</div>
+      <div class="label">Metadata</div>
+      <div class="desc">Arbitrary key-value data on a trace — model name, case number, notes. Searchable in the
+        dashboard.</div>
+    </div>
+  </div>
+
+  <h2>What We Built</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Purpose</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>test14_langfuse_evaluator.py</code></td>
+        <td>The main script. Loads test cases, runs the banking bot, sends every interaction to Langfuse as a trace with
+          spans and scores.</td>
+        <td>Config-driven via <code>config.yaml</code></td>
+      </tr>
+      <tr>
+        <td><code>banking_bot.py</code></td>
+        <td>Self-contained banking chatbot. Calls Ollama directly — no imports from other phase folders.</td>
+        <td>System prompt hardcoded inside this file</td>
+      </tr>
+      <tr>
+        <td><code>docker-compose.yml</code></td>
+        <td>Spins up Langfuse + PostgreSQL locally. One command to start. All data stays on your machine.</td>
+        <td>Uses <code>langfuse/langfuse:2</code> image</td>
+      </tr>
+      <tr>
+        <td><code>banking_test_cases.xlsx</code></td>
+        <td>20 test cases across 6 categories: account_info, transactions, loans, security, fees, out_of_scope.</td>
+        <td>Generate with <code>create_test_cases.py</code> if missing</td>
+      </tr>
+      <tr>
+        <td><code>create_test_cases.py</code></td>
+        <td>One-time script to generate the Excel test case file.</td>
+        <td>Run once, then delete or keep</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <h2 id="setup">Step 1 — Install Docker (one time only)</h2>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <p>Langfuse runs inside Docker containers. Docker is a tool that packages an application and everything it needs
+    (databases, servers) into isolated containers that run the same way on any machine.</p>
+
+  <div class="warn-box">
+    ⚠️ <strong>If Docker is already installed</strong>, skip to Step 2. Check with:
+    <pre>docker --version</pre>
+    If you see a version number, Docker is installed.
+  </div>
+
+  <h3>Install Docker Desktop (Mac)</h3>
+  <ol>
+    <li>Go to <strong>https://www.docker.com/products/docker-desktop/</strong></li>
+    <li>Download the installer for your chip: <strong>Apple Silicon (M1/M2/M3)</strong> or
+      <strong>Intel</strong>.</li>
+    <li>Open the downloaded <code>.dmg</code> file and drag Docker to Applications.</li>
+    <li>Open Docker from Applications. It will ask for your password to install helper tools — allow it.</li>
+    <li>Wait for the Docker whale icon in your menu bar to stop animating. Docker is ready when the icon is
+      still.</li>
+    <li>Verify in terminal:
+      <pre>docker --version
+docker compose version</pre>
+      Both should print version numbers. If <code>docker compose</code> fails, try <code>docker-compose</code> (older
+      installs use the hyphen form).
+    </li>
+  </ol>
+
+  <div class="info-box">
+    💡 <strong>What Docker is doing here.</strong> When you run <code>docker compose up -d</code>, Docker will
+    download two images — <code>langfuse/langfuse:2</code> (the Langfuse server, ~500 MB) and
+    <code>postgres:16-alpine</code> (the database, ~100 MB). These are downloaded once and cached locally. All
+    subsequent starts are instant. Your data is stored in a Docker volume on your machine — nothing is sent anywhere.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <h2>Step 2 — Start Langfuse with Docker Compose</h2>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <p>The <code>docker-compose.yml</code> file in this folder defines two services: the Langfuse server and a
+    PostgreSQL database. One command starts both.</p>
+
+  <pre>cd phase-5-production-eval/langfuse-observability
+docker compose up -d</pre>
+
+  <p>The <code>-d</code> flag means "detached" — the containers run in the background. You will see Docker pulling
+    images on first run (this takes 1–3 minutes depending on your internet speed). Subsequent starts take a few
+    seconds.</p>
+
+  <p>After the command completes, verify both containers are running:</p>
+  <pre>docker compose ps</pre>
+  <p>You should see two rows with <strong>State: running</strong> — one for <code>langfuse-server</code> and one for
+    <code>langfuse-db</code>.</p>
+
+  <div class="success-box">
+    ✓ <strong>Open the Langfuse dashboard:</strong> <a href="http://localhost:3000"
+      style="color:var(--success)">http://localhost:3000</a><br><br>
+    You will see a registration screen on first launch. Create a local account — email and password are stored only in
+    your local PostgreSQL container.
+  </div>
+
+  <h3>Common Docker issues</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Problem</th>
+        <th>Cause</th>
+        <th>Fix</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Port 3000 already in use</td>
+        <td>Another app is using port 3000</td>
+        <td>Change <code>"3000:3000"</code> to <code>"3001:3000"</code> in docker-compose.yml, then use
+          <code>http://localhost:3001</code></td>
+      </tr>
+      <tr>
+        <td>Container exits immediately</td>
+        <td>Database not ready yet</td>
+        <td>Wait 10s and run <code>docker compose up -d</code> again. The healthcheck retries automatically.</td>
+      </tr>
+      <tr>
+        <td>Cannot connect to localhost:3000</td>
+        <td>Docker Desktop not running</td>
+        <td>Open Docker Desktop from Applications, wait for the whale icon to stop animating, then retry.</td>
+      </tr>
+      <tr>
+        <td>docker compose not found</td>
+        <td>Older Docker version</td>
+        <td>Try <code>docker-compose up -d</code> (with hyphen)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Stop and restart Langfuse</h3>
+  <pre># Stop containers (data is preserved)
+docker compose down
+
+# Start again
+docker compose up -d
+
+# Wipe all data and start fresh (destructive)
+docker compose down -v</pre>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <h2>Step 3 — Create Your Langfuse Account and Get API Keys</h2>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <ol>
+    <li>Open <strong>http://localhost:3000</strong> in your browser.</li>
+    <li>Click <strong>Sign Up</strong> and create a local account with any email and password. These are stored only
+      in your local Docker database — they are not sent anywhere.</li>
+    <li>After signing in, click <strong>Create a new project</strong>. Name it anything, e.g.
+      <code>llm-evaluation-test14</code>.</li>
+    <li>In the left sidebar, go to <strong>Settings → API Keys</strong>.</li>
+    <li>Click <strong>Create new API key</strong>. Langfuse generates a <strong>Public Key</strong> and a
+      <strong>Secret Key</strong>.</li>
+    <li>Copy both keys. You will need them in Step 4.</li>
+  </ol>
+
+  <div class="warn-box">
+    ⚠️ <strong>Keep your keys local.</strong> These keys only work on your local Langfuse instance — they have no
+    access to any external service. Still, treat them like any credential: do not commit them to Git. Add them to
+    <code>config.yaml</code> under <code>phase5_langfuse</code> or set them as environment variables
+    (<code>LANGFUSE_PUBLIC_KEY</code>, <code>LANGFUSE_SECRET_KEY</code>). The <code>config.yaml</code> file is
+    committed — if you put keys there, do not commit that change.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <h2>Step 4 — Configure Keys and Run the Evaluator</h2>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <h3>Option A — Set keys in config.yaml (easiest, do not commit)</h3>
+  <pre>phase5_langfuse:
+  BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
+  EXCEL_FILE: "banking_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  LANGFUSE_HOST: "http://localhost:3000"
+  LANGFUSE_PUBLIC_KEY: "pk-lf-..."
+  LANGFUSE_SECRET_KEY: "sk-lf-..."</pre>
+
+  <h3>Option B — Set keys as environment variables</h3>
+  <pre>export LANGFUSE_PUBLIC_KEY="pk-lf-..."
+export LANGFUSE_SECRET_KEY="sk-lf-..."</pre>
+
+  <h3>Install the Python SDK</h3>
+  <pre>pip install "langfuse>=2,<3" "openai>=1.30.0,<2"</pre>
+  <p>The <code>openai</code> package is a dependency of the Langfuse SDK — it is needed even though we are using
+    Ollama. You do not need an OpenAI API key.</p>
+
+  <h3>Generate the test case Excel file</h3>
+  <pre>cd phase-5-production-eval/langfuse-observability
+python3 create_test_cases.py</pre>
+  <p>This creates <code>banking_test_cases.xlsx</code> with 20 test cases across 6 categories. Run it once.</p>
+
+  <h3>Run the evaluator</h3>
+  <pre>cd phase-5-production-eval/langfuse-observability
+python3 test14_langfuse_evaluator.py</pre>
+
+  <p>The script asks how many cases to run — start with 5 to verify the pipeline, then run all 20. Each case appears
+    in your terminal as it completes, and its trace is sent to Langfuse in real time. After the script finishes,
+    <code>langfuse.flush()</code> ensures all queued traces are delivered before the process exits.</p>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <h2>Step 5 — What to Explore in the Langfuse Dashboard</h2>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <p>After the script runs, open <strong>http://localhost:3000</strong>. Here is a guided tour of what to look for and
+    why it matters.</p>
+
+  <div class="dashboard-step">
+    <div class="ds-num">Dashboard Tour · 01</div>
+    <div class="ds-title">Traces list — see every interaction</div>
+    <div class="ds-desc">Click <strong>Traces</strong> in the left sidebar. You will see one row per test case. Each
+      row shows the trace name (e.g. <code>banking-bot-tc01</code>), when it ran, the latency, and the tags.
+      <br><br>
+      <strong>What to notice:</strong> The total latency column shows how long each case took end-to-end. Look for
+      outliers — cases that took 2× longer than average. That is a signal worth investigating. Click any trace to open
+      its detail view.
+    </div>
+  </div>
+
+  <div class="dashboard-step">
+    <div class="ds-num">Dashboard Tour · 02</div>
+    <div class="ds-title">Trace detail — drill into one interaction</div>
+    <div class="ds-desc">Inside a trace you see:
+      <ul style="margin-top:8px">
+        <li><strong>Input</strong> — the original customer question</li>
+        <li><strong>Output</strong> — the model's full response</li>
+        <li><strong>Spans</strong> — the <code>llm-call</code> span shows exactly what was sent to the model and what
+          came back, with its own latency</li>
+        <li><strong>Scores</strong> — <code>keyword_pass</code> (1 or 0), <code>response_length_chars</code>,
+          <code>latency_seconds</code></li>
+        <li><strong>Metadata</strong> — category, model name, case number, notes</li>
+      </ul>
+      <strong>What to notice:</strong> Compare the span latency vs the trace latency. They should be nearly equal
+      since the only operation is one LLM call. If they differ significantly, that is overhead worth profiling in a
+      real production system.
+    </div>
+  </div>
+
+  <div class="dashboard-step">
+    <div class="ds-num">Dashboard Tour · 03</div>
+    <div class="ds-title">Filter by tag — isolate a category</div>
+    <div class="ds-desc">In the Traces list, use the <strong>Tags</strong> filter dropdown and select
+      <code>security</code>. You now see only the 4 security-category traces.
+      <br><br>
+      <strong>What to notice:</strong> Do the security cases have a lower keyword_pass rate? Security cases have
+      stricter keyword rules (must warn about phishing, must not say "provide password"). If any fail, click into the
+      trace to read the full response and understand why.
+    </div>
+  </div>
+
+  <div class="dashboard-step">
+    <div class="ds-num">Dashboard Tour · 04</div>
+    <div class="ds-title">Filter by score — find all keyword failures</div>
+    <div class="ds-desc">In the Traces list, use the <strong>Scores</strong> filter and set
+      <code>keyword_pass = 0</code>. You now see only the failing cases.
+      <br><br>
+      <strong>What to notice:</strong> Which categories fail most? Are failures clustered in one category or spread
+      across all? This is the same question a QA engineer asks when looking at a defect category distribution — the
+      technique is identical, just applied to LLM outputs.
+    </div>
+  </div>
+
+  <div class="dashboard-step">
+    <div class="ds-num">Dashboard Tour · 05</div>
+    <div class="ds-title">Latency comparison across categories</div>
+    <div class="ds-desc">Sort the Traces list by latency (click the latency column header). Look at which categories
+      produce the longest responses.
+      <br><br>
+      <strong>What to notice:</strong> Loan and out_of_scope questions often produce longer responses — the model
+      either explains loan eligibility in detail or adds disclaimers. Account_info questions are usually shorter and
+      faster. This latency pattern is directly relevant in production: longer responses cost more tokens and increase
+      response time for users.
+    </div>
+  </div>
+
+  <div class="dashboard-step">
+    <div class="ds-num">Dashboard Tour · 06</div>
+    <div class="ds-title">Metadata search — find traces by model</div>
+    <div class="ds-desc">In the Traces list, use the search or metadata filter and look for
+      <code>model: llama3.1:8b</code>. In this test all traces use the same model, so all 20 will appear.
+      <br><br>
+      <strong>Why this matters in production:</strong> If you later change <code>BOT_MODEL</code> to
+      <code>mistral</code> and rerun, you can filter by model and compare the keyword_pass rate between the two
+      model versions side by side. This is A/B comparison without any extra tooling.
+    </div>
+  </div>
+
+  <div class="dashboard-step">
+    <div class="ds-num">Dashboard Tour · 07</div>
+    <div class="ds-title">Sessions — multi-turn conversations</div>
+    <div class="ds-desc">Langfuse supports grouping multiple traces into a <strong>Session</strong> using a
+      <code>session_id</code>. In this test each trace is independent (one question, one response). But in a real
+      chatbot a user might ask 5 follow-up questions in one session.
+      <br><br>
+      <strong>What to think about:</strong> How would you evaluate a multi-turn conversation? The quality of turn 3
+      depends on turns 1 and 2. Langfuse sessions let you see the full conversation history as one unit. Test 15
+      explores this directly with DeepEval's ConversationalMetric.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <h2>How the Script Instruments the Bot</h2>
+  <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+  <p>The key pattern in <code>test14_langfuse_evaluator.py</code> is three nested calls:</p>
+  <pre>trace = langfuse.trace(name=..., input=question, tags=[category, model])
+
+span = trace.span(name="llm-call", input={"question": question})
+response = ask_banking_bot(question, model, ollama_url)   # the actual LLM call
+span.end(output={"response": response})
+
+trace.score(name="keyword_pass", value=1.0)
+trace.score(name="latency_seconds", value=2.3)</pre>
+
+  <div class="info-box">
+    💡 <strong>The bot does not know it is being observed.</strong> The <code>ask_banking_bot()</code> function in
+    <code>banking_bot.py</code> is unchanged — it just calls Ollama and returns a string. All Langfuse instrumentation
+    is in the evaluator script, wrapping the call. This is the correct pattern: observability is added at the
+    orchestration layer, not inside the model call itself.
+  </div>
+
+  <h2>Config Reference</h2>
+  <pre>phase5_langfuse:
+  BOT_MODEL: "llama3.1:8b"          # model to use for the banking bot
+  BOT_PROVIDER: "ollama"             # provider (ollama / openai / anthropic / gemini)
+  EXCEL_FILE: "banking_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  LANGFUSE_HOST: "http://localhost:3000"
+  LANGFUSE_PUBLIC_KEY: ""            # from Settings → API Keys in dashboard
+  LANGFUSE_SECRET_KEY: ""            # from Settings → API Keys in dashboard</pre>
+
+  <h2>What This Test Does Not Cover</h2>
+  <ul>
+    <li><strong>Prompt management</strong> — Langfuse has a Prompt Registry where you can version and A/B test system
+      prompts. Not used here, but available in the dashboard under Prompts.</li>
+    <li><strong>Human annotation</strong> — The Langfuse dashboard supports manual human scoring on any trace. You can
+      open a trace, read the response, and add a human score. Useful for spot-checking automated scores.</li>
+    <li><strong>Datasets</strong> — Langfuse can store test case datasets directly and link them to traces. Useful for
+      regression testing across model versions.</li>
+    <li><strong>Production ingestion</strong> — In a real app you would wrap model calls in a decorator or middleware
+      and traces would be sent automatically. Test 14 uses the manual <code>trace()</code> / <code>span()</code>
+      pattern which shows exactly what is happening.</li>
+  </ul>
+
+  <h2>What This Sets Up</h2>
+  <p>Langfuse is the bridge between offline evaluation (Tests 1–13) and production monitoring. In Tests 1–13 you run a
+    script, get a result, and move on. In a live system you cannot do that — the model is serving users continuously.
+    Langfuse lets you attach the same evaluation logic (keyword pass, scores, categories) to every live request and
+    watch the results accumulate over time.</p>
+
+  <p>The mental model to take from Test 14: <strong>evaluation logic does not change</strong> — keyword checks,
+    categories, pass/fail rules are the same as Test 4. What changes is that Langfuse stores the results, makes them
+    searchable, and lets you track trends instead of just running a batch and discarding the output.</p>
+
+  <footer>Test 14 · Langfuse observability · llama3.1:8b via Ollama · langfuse/langfuse:2 via Docker ·
+    output: results/langfuse_results_*.json + Langfuse dashboard at localhost:3000</footer>
+
+</body>
+
+</html>

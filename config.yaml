@@ -106,6 +106,15 @@ phase5_trajectory_evaluation:
   JUDGE_PROVIDER: "ollama"
   TRACE_FILE: "sample_agent_evaluation_results.json"
 
+phase5_langfuse:
+  BOT_MODEL: "llama3.1:8b"
+  BOT_PROVIDER: "ollama"
+  EXCEL_FILE: "banking_test_cases.xlsx"
+  TEST_SHEET: "Test Cases"
+  LANGFUSE_HOST: "http://localhost:3000"
+  LANGFUSE_PUBLIC_KEY: ""
+  LANGFUSE_SECRET_KEY: ""
+
 # ─────────────────────────────────────────────────────────────────
 # API KEY REFERENCE
 # ─────────────────────────────────────────────────────────────────
