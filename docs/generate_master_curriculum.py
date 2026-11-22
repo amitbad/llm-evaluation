@@ -4,6 +4,7 @@ import argparse
 from collections import Counter
 from html import escape
 from html.parser import HTMLParser
+import json
 from pathlib import Path
 import posixpath
 import re
@@ -13,17 +14,19 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "MASTER_CURRICULUM.md"
 OUTPUT = ROOT / "docs/master-curriculum.html"
+ROADMAP_SCRIPT = ROOT / "docs/learning_roadmap.js"
 STAGES = ("Beginner", "Intermediate", "Advanced", "Production", "Specialized / Expert")
 SECTIONS = ("Course overview", "Learning paths", "Repository coverage", "Teaching plan", "Detailed curriculum")
 STATUSES = ("Reusable", "Needs Improvement", "Needs Correction", "New", "Not Assessed")
 DIFFICULTIES = ("Beginner", "Intermediate", "Advanced", "Expert")
 TIME_LABELS = ("Theory", "Guided hands-on", "Experiments", "Exercises", "Learner total", "Instructor-led")
 MODULE_FIELDS = (
-    "Difficulty", "Track", "Subject", "Description", "Objectives", "Prerequisites",
+    "Difficulty", "Track", "Subject", "Description", "Objectives",
     "Labs", "Competencies", "Completion", "Hours",
 )
+DEPENDENCIES = ("Mandatory prerequisites", "Recommended prerequisites", "Conditional prerequisites")
 TOPIC_FIELDS = (
-    "Difficulty", "Why it matters", "Concepts", "Prerequisites", "Demonstration",
+    "Difficulty", "Why it matters", "Concepts", *DEPENDENCIES, "Implementation readiness", "Demonstration",
     "Exercise and assessment", "Hours", "Status", "Existing files", "Audit findings",
     "Reuse strategy", "Teaching and experiment gaps", "Technical corrections",
 )
@@ -104,13 +107,123 @@ def parse(source):
                 record["fields"][key] = value
     require(tuple(stages) == STAGES and all(stages.values()), "Missing, unordered or empty stage")
     validate(stages, records, sections["Course overview"], source)
-    return title[2:], sections, stages
+    return title[2:], sections, stages, roadmap_data(stages, sections["Learning paths"], source)
+
+
+def linked_ids(value, context, conditional=False):
+    if value == "—":
+        return []
+    result = []
+    for entry in value.split(" / " if conditional else ", "):
+        label, separator, note = entry.partition(" — ")
+        link = LINK.fullmatch(label)
+        require(link and link[2] == "#" + link[1].lower(), f"Invalid link in {context}: {entry}")
+        require((separator and note.strip()) if conditional else not separator,
+                f"Expected {'a condition' if conditional else 'only a linked ID'} in {context}: {entry}")
+        result.append({"id": link[1], "note": note})
+    require(len({edge["id"] for edge in result}) == len(result), f"Duplicate links in {context}")
+    return result
+
+
+def mandatory_closures(topics):
+    """Return each topic and its distinct mandatory ancestors in curriculum order."""
+    closures, visiting = {}, set()
+
+    def visit(topic_id):
+        require(topic_id in topics, f"Missing prerequisite {topic_id}")
+        require(topic_id not in visiting, f"Mandatory dependency cycle at {topic_id}")
+        if topic_id not in closures:
+            visiting.add(topic_id)
+            parents = topics[topic_id]["mandatory"]
+            closures[topic_id] = {topic_id}.union(*(visit(parent["id"]) for parent in parents))
+            visiting.remove(topic_id)
+        return closures[topic_id]
+
+    for topic_id in topics:
+        visit(topic_id)
+    order = {topic_id: index for index, topic_id in enumerate(topics)}
+    for topic_id, topic in topics.items():
+        for parent in topic["mandatory"]:
+            require(order[parent["id"]] < order[topic_id], f"Out-of-order mandatory prerequisite {parent['id']} in {topic_id}")
+    return {topic_id: sorted(closure, key=order.__getitem__) for topic_id, closure in closures.items()}
+
+
+def roadmap_data(stages, learning_paths, source):
+    modules, topics = {}, {}
+    for stage_index, group in enumerate(stages.values()):
+        for module in group:
+            code, fields = module["id"], module["fields"]
+            modules[code] = {
+                "id": code, "title": module["title"], "stage": stage_index, "hours": module["hours"][4],
+                "track": fields["Track"], "description": fields["Description"], "outcome": fields["Competencies"],
+                "topics": [topic["id"] for topic in module["topics"]],
+            }
+            for topic in module["topics"]:
+                key, info = topic["id"], topic["fields"]
+                topics[key] = {
+                    "id": key, "title": topic["title"], "stage": stage_index, "module": code,
+                    "hours": topic["hours"][4], "description": info["Why it matters"], "concepts": info["Concepts"],
+                    "outcome": info["Exercise and assessment"], "readiness": info["Implementation readiness"],
+                    **{kind: linked_ids(info[field], f"{key} {field}", kind == "conditional")
+                       for kind, field in zip(("mandatory", "recommended", "conditional"), DEPENDENCIES, strict=True)},
+                }
+    closures = mandatory_closures(topics)
+    for key, topic in topics.items():
+        topic["closure"] = closures[key]
+        for kind in ("recommended", "conditional"):
+            for parent in topic[kind]:
+                require(parent["id"] in topics and parent["id"] != key, f"Invalid {kind} prerequisite {parent['id']} in {key}")
+    for code, module in modules.items():
+        module["closure"] = combined_closure(module["topics"], topics)
+
+    blocks = learning_paths.split("\n\n")
+    preparation = table_rows(next((block for block in blocks if block.startswith("| ID | Readiness skill |")), ""))
+    total = re.search(r"Allow \*\*(\d+(?:\.5)?) learner hours\*\*", learning_paths)
+    require(len(preparation) > 1 and total, "Missing preparation table or total")
+    prep_ids = [row[0] for row in preparation[1:]]
+    require(len(set(prep_ids)) == len(prep_ids) and all(re.fullmatch(r"P\d{2}", key) for key in prep_ids),
+            "Invalid or duplicate preparation IDs")
+    require(all(len(row) == 5 and all(row) and NUMBER.fullmatch(row[-1]) and float(row[-1]) > 0
+                for row in preparation[1:]), "Invalid preparation row")
+    require(sum(float(row[-1]) for row in preparation[1:]) == float(total[1]), "Preparation hours do not add up")
+    for key, topic in topics.items():
+        for skill in re.findall(r"\bP\d{2}\b", topic["readiness"]):
+            require(skill in prep_ids, f"Unknown preparation skill {skill} in {key}")
+    paths = table_rows(next((block for block in blocks if block.startswith("| Path | Name |")), ""))
+    require(len(paths) == 8 and all(len(row) == 5 for row in paths), "Expected learning paths A–G")
+    require([row[0] for row in paths[1:]] == list("ABCDEFG"), "Missing, duplicate or unordered learning path IDs")
+    result = {}
+    for key, name, value, count, hours in paths[1:]:
+        if key in ("A", "G"):
+            required = "Core" if key == "A" else "All"
+            require(value == required, f"Path {key} must target {required}")
+            targets = [code for code, module in modules.items() if required in ("All", module["track"])]
+        else:
+            targets = [edge["id"] for edge in linked_ids(value, f"path {key}")]
+        require(targets and all(target in topics or target in modules for target in targets),
+                f"Invalid target for path {key}")
+        roots = {topic for target in targets for topic in (modules[target]["topics"] if target in modules else [target])}
+        closure = combined_closure(roots, topics)
+        if key == "A":
+            require(set(closure) == roots, "Core topics must not require an elective")
+        require(count == str(len(closure)) and NUMBER.fullmatch(hours)
+                and float(hours) == sum(topics[topic]["hours"] for topic in closure), f"Stale totals for path {key}")
+        result[key] = {"id": key, "title": name, "roots": [topic for topic in topics if topic in roots], "closure": closure,
+                       "hours": float(hours)}
+    revision = re.search(r"^Curriculum revision (\d+(?:\.\d+)+)\.$", source, re.M)
+    require(revision, "A curriculum revision is required for roadmap exports")
+    return {"modules": modules, "topics": topics, "paths": result, "stages": STAGES,
+            "revision": revision[1], "preparation": float(total[1])}
+
+
+def combined_closure(roots, topics):
+    included = {item for topic in roots for item in topics[topic]["closure"]}
+    return [topic for topic in topics if topic in included]
 
 
 def validate(stages, records, overview, source):
     audit = ROOT / "docs/COURSE_AUDIT_REPORT.md"
     known_findings = set(re.findall(r"^\| ([CSV]\d{2}) \|", audit.read_text(encoding="utf-8"), re.M)) if audit.is_file() else None
-    prior = set()
     for code, record in records.items():
         fields = record["fields"]
         is_module = "topics" in record
@@ -119,16 +232,6 @@ def validate(stages, records, overview, source):
         require(all(value.strip() for value in fields.values()), f"Empty field in {code}")
         require(fields["Difficulty"] in DIFFICULTIES, f"Unknown difficulty in {code}")
         record["hours"] = read_hours(fields["Hours"].split("/"), code)
-        prereqs = fields["Prerequisites"]
-        refs = LINK.findall(prereqs)
-        if prereqs != "None":
-            require(", ".join(f"[{label}]({target})" for label, target in refs) == prereqs and refs,
-                    f"Invalid prerequisites in {code}")
-            for label, target in refs:
-                require(label in prior and target == "#" + label.lower() and ("-T" in label) != is_module,
-                        f"Missing or out-of-order prerequisite {label} in {code}")
-        prior.add(code)
-
         if not is_module:
             require(fields["Status"] in STATUSES, f"Unknown status in {code}")
             files = fields["Existing files"]
@@ -213,7 +316,8 @@ def prose(markdown):
             parts.append(f"<h3>{inline(block[4:])}</h3>")
         elif block.startswith("|"):
             header, *rows = table_rows(block)
-            parts.append(table(header, rows, "Course hours by track"))
+            caption = {"Path": "Learning path estimates", "ID": "Preparation skills"}.get(header[0], "Course hours by track")
+            parts.append(table(header, rows, caption))
         elif block.startswith("- ") or re.match(r"\d+\. ", block):
             tag = "ul" if block.startswith("- ") else "ol"
             items = [re.sub(r"^(?:-|\d+\.) ", "", line) for line in block.splitlines()]
@@ -240,8 +344,8 @@ def html_topic(topic, module):
     fields = topic["fields"]
     anchor = topic["id"].lower()
     options = "".join(f"<option>{status}</option>" for status in ("Not Started", "In Progress", "Completed"))
-    description = definitions(fields, TOPIC_FIELDS[1:6])
-    mapping = definitions(fields, TOPIC_FIELDS[8:])
+    description = definitions(fields, TOPIC_FIELDS[1:9])
+    mapping = definitions(fields, TOPIC_FIELDS[11:])
     return f'''<details class="topic" id="{anchor}" data-topic="{topic['id']}" data-difficulty="{fields['Difficulty']}"
 data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Status']}" data-track="{module['fields']['Track']}">
   <summary><span class="item-title"><span class="item-id">{topic['id']}</span> {escape(topic['title'])}</span>
@@ -269,7 +373,7 @@ def html_module(module):
     <span class="module-progress" hidden data-module-progress></span></summary>
   <div class="module-body">
     <p class="track">{fields['Difficulty']} · {fields['Track']} · {escape(fields['Subject'])}</p>
-    {definitions(fields, MODULE_FIELDS[3:9])}
+    {definitions(fields, MODULE_FIELDS[3:8])}
     {time_cards(module['hours'])}
     {topics}
   </div>
@@ -288,7 +392,59 @@ def html_stages(stages):
     return "\n".join(result)
 
 
-def render(title, sections, stages):
+def roadmap_view(data):
+    paths = "".join(f'<option value="{path["id"]}">{path["id"]} — {escape(path["title"])}</option>'
+                    for path in data["paths"].values())
+    stages = "".join(f'<option value="{index}">{escape(stage)}</option>' for index, stage in enumerate(data["stages"]))
+    return f'''<noscript><p>The interactive roadmap uses JavaScript. The Learning Paths and Detailed Curriculum sections list the same prerequisites and estimates.</p></noscript>
+<div id="roadmap-app" hidden>
+  <p>Select a module or topic to see the required study and its estimated hours. Dotted links apply to the exercise named in the selection panel.</p>
+  <div class="road-controls">
+    <div class="road-search">
+      <label for="road-search">Find a module or topic</label>
+      <input id="road-search" type="search" placeholder="Try M08, citations or calibration" aria-controls="road-results">
+      <div class="road-results" id="road-results" hidden aria-label="Search matches"></div>
+    </div>
+    <label for="road-stage">Find within stage<select id="road-stage"><option value="">All stages</option>{stages}</select></label>
+    <label for="road-path">Learning path<select id="road-path"><option value="">Choose A–G</option>{paths}</select></label>
+    <label for="road-mode">Graph detail<select id="road-mode"><option value="module">Module overview</option><option value="topic">Topic detail</option></select></label>
+  </div>
+  <ul id="road-legend" class="road-legend" aria-label="Graph legend"></ul>
+  <div class="road-workspace">
+    <div class="road-board">
+      <div class="road-toolbar">
+        <button type="button" id="road-zoom-out" aria-label="Zoom out">−</button>
+        <output id="road-zoom" aria-label="Zoom level"></output>
+        <button type="button" id="road-zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" id="road-reset">Reset view</button>
+        <label><input id="road-focus" type="checkbox" disabled> Focus on selection</label>
+        <label><input id="road-optional" type="checkbox"> Show optional links</label>
+        <a href="#road-inspector" id="road-jump" hidden>Selection details</a>
+      </div>
+      <div id="road-viewport" tabindex="0" role="region" aria-label="Learning dependency graph" aria-describedby="road-help"></div>
+      <p id="road-help">Drag the background or use arrow keys while the graph has focus. Use the zoom buttons or + and −. Search can take you directly to a node.</p>
+    </div>
+    <aside id="road-inspector" class="road-inspector" aria-label="Selected target">
+      <div class="road-inspector-head"><h3 id="road-title">Choose a target</h3><button type="button" id="road-clear" hidden>Clear</button></div>
+      <p id="road-estimate" role="status" aria-live="polite"></p>
+      <div id="road-details"></div>
+    </aside>
+  </div>
+  <div class="road-downloads">
+    <label for="road-export">Export graph<select id="road-export">
+      <option value="module">Complete module roadmap</option>
+      <option value="selection" disabled>Selected path or target</option>
+      <option value="topic">Complete topic roadmap</option>
+    </select></label>
+    <button type="button" id="road-svg">Download SVG</button>
+    <button type="button" id="road-png">Download PNG</button>
+    <button type="button" id="road-html">Download HTML</button>
+    <output id="road-download-status" aria-live="polite"></output>
+  </div>
+</div>'''
+
+
+def render(title, sections, stages, data):
     modules = [module for group in stages.values() for module in group]
     topics = [topic for module in modules for topic in module["topics"]]
     hours = sum_hours(modules)
@@ -312,13 +468,16 @@ def render(title, sections, stages):
     tabs = (
         ("overview", "Curriculum Overview", prose(sections["Course overview"]) + progress),
         ("detail", "Detailed Curriculum", detailed),
-        ("paths", "Learning Paths", prose(sections["Learning paths"])),
+        ("paths", "Learning Paths", prose(sections["Learning paths"]) + '<p><a href="#roadmap">Open the Learning Roadmap</a></p>'),
+        ("roadmap", "Learning Roadmap", roadmap_view(data)),
         ("coverage", "Existing Repository Coverage", coverage_view),
         ("teaching", "Teaching Plan", prose(sections["Teaching plan"])),
     )
     links = "\n".join(f'<a id="tab-{key}" href="#{key}">{name}</a>' for key, name, _ in tabs)
     panels = "\n".join(f'<section class="panel" id="{key}"><h2>{name}</h2>\n{content}\n</section>'
                        for key, name, content in tabs)
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+    roadmap_script = ROADMAP_SCRIPT.read_text(encoding="utf-8")
     return f'''<!doctype html>
 <!-- Generated from MASTER_CURRICULUM.md by docs/generate_master_curriculum.py. -->
 <html lang="en">
@@ -326,7 +485,7 @@ def render(title, sections, stages):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{escape(title)}</title>
-<style>{CSS}</style>
+<style>{CSS}{ROADMAP_CSS}</style>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to curriculum</a>
@@ -340,7 +499,12 @@ def render(title, sections, stages):
   <nav id="tabs" aria-label="Curriculum views">{links}</nav>
   {panels}
 </main>
-<script>{SCRIPT}</script>
+<script id="roadmap-data" type="application/json">{payload}</script>
+<script>
+const portableCurriculum = "<!doctype html>\\n" + document.documentElement.outerHTML;
+{SCRIPT}
+{roadmap_script}
+</script>
 </body>
 </html>
 '''
@@ -495,6 +659,71 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
 }
 """
 
+ROADMAP_CSS = """
+#roadmap > h2 { margin-bottom:.5rem; }
+#roadmap-app > p { max-width:75ch; }
+.road-controls { display:grid; grid-template-columns:2fr 1fr 1.35fr 1fr; gap:.65rem; align-items:start; }
+.road-search { position:relative; }
+.road-results { position:absolute; z-index:2; top:100%; width:max(100%, min(24rem, 90vw)); max-height:22rem;
+  overflow:auto; padding:.35rem .55rem .55rem; background:white; border:1px solid var(--line);
+  border-radius:.45rem; box-shadow:0 6px 22px #142e4526; }
+.road-results p { margin:.25rem .4rem; color:var(--muted); font-size:.86rem; }
+.road-legend { display:flex; flex-wrap:wrap; gap:.3rem 1rem; padding:0; margin:.9rem 0 .65rem; list-style:none; }
+.road-legend li { display:inline-flex; align-items:center; gap:.34rem; margin:0; color:#344b5c; font-size:.85rem; }
+.road-stage-key { width:.85rem; height:.85rem; border:1px solid var(--key-ink); border-radius:.2rem; background:var(--key); }
+.road-edge-key { width:1.45rem; border-top:2px solid #254f71; }
+.road-edge-recommended { border-top-style:dashed; border-color:#66448c; }
+.road-edge-conditional { border-top-style:dotted; border-color:#8a4715; }
+.road-workspace { display:grid; grid-template-columns:minmax(0, 2.7fr) minmax(17rem,1fr); gap:.75rem; }
+.road-workspace:has(#road-clear[hidden]) { grid-template-columns:1fr; }
+.road-board, .road-inspector { min-width:0; background:#fff; border:1px solid var(--line); border-radius:.65rem; }
+.road-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem .55rem; padding:.6rem; }
+.road-toolbar button { padding:.28rem .55rem; }
+.road-toolbar output { min-width:3rem; text-align:center; font-variant-numeric:tabular-nums; }
+.road-toolbar label { display:inline-flex; gap:.32rem; align-items:center; font-size:.84rem; font-weight:600; }
+.road-toolbar input { display:inline; width:1rem; height:1rem; min-height:0; accent-color:var(--accent); }
+#road-jump { margin-left:auto; font-size:.84rem; }
+#road-viewport { height:clamp(23rem,58vh,40rem); position:relative; overflow:hidden; cursor:grab;
+  touch-action:none; border-block:1px solid var(--line); background:#f8fafc; }
+#road-viewport.panning { cursor:grabbing; user-select:none; }
+#road-viewport > svg { position:absolute; top:0; left:0; max-width:none; transform-origin:0 0; }
+#road-viewport [data-node] { cursor:pointer; text-decoration:none; }
+#road-viewport [data-node]:hover rect, #road-viewport [data-node]:focus-visible rect { stroke:#086f9c; stroke-width:3.5; }
+#road-help { font-size:.86rem; color:var(--muted); margin:.45rem .72rem .6rem; }
+.road-inspector { padding:.8rem; max-height:calc(clamp(23rem,58vh,40rem) + 6rem); overflow:auto; }
+.road-inspector-head { display:flex; gap:.65rem; align-items:start; justify-content:space-between; }
+.road-inspector h3 { margin:0; line-height:1.3; }
+.road-inspector h4 { margin-top:.95rem; font-size:.92rem; }
+.road-inspector p { margin:.36rem 0; font-size:.89rem; }
+#road-estimate { font-weight:700; color:#19553a; }
+.road-list { margin:.25rem 0; padding:0; list-style:none; }
+.road-list li { margin:.2rem 0; }
+.road-item { display:flex; align-items:baseline; gap:.45rem; width:100%; padding:.3rem .4rem; border:0; text-align:left;
+  font-size:.86rem; font-weight:500; line-height:1.4; }
+.road-item strong { color:#245377; white-space:nowrap; }
+.road-inspector .road-condition { margin:.15rem .4rem .45rem; color:#784113; }
+.road-empty { color:var(--muted); }
+.road-route { margin-top:.9rem; }
+.road-route summary { padding:.45rem .55rem; font-size:.9rem; }
+.road-route ol { margin:.25rem .3rem .6rem; padding-left:1.5rem; font-size:.85rem; }
+.road-route-hours { margin-left:.4rem; color:var(--muted); }
+.road-downloads { display:flex; flex-wrap:wrap; align-items:end; gap:.55rem; margin-top:.85rem; }
+.road-downloads output { flex:1 1 100%; font-size:.87rem; color:var(--muted); }
+@media (max-width:850px) {
+  .road-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .road-workspace { grid-template-columns:1fr; }
+  .road-inspector { max-height:none; }
+}
+@media (max-width:440px) {
+  .road-controls { grid-template-columns:1fr; }
+  .road-results { width:100%; }
+  #road-viewport { height:22rem; }
+}
+@media print {
+  #roadmap { display:none !important; }
+}
+"""
+
 SCRIPT = """
 "use strict";
 
@@ -520,6 +749,7 @@ function activate(tab) {
     item.tabIndex = selected ? 0 : -1;
     panels[index].hidden = !selected;
   });
+  document.dispatchEvent(new CustomEvent("curriculum-tab", {detail: tab.hash}));
 }
 
 document.getElementById("tabs").setAttribute("role", "tablist");
@@ -609,7 +839,8 @@ document.addEventListener("click", event => {
       event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   if (followHash(true)) event.preventDefault();
 });
-activate(tabs[0]);
+const preferredTab = document.documentElement.dataset.initialTab;
+activate(tabs.find(tab => tab.hash === "#" + preferredTab) || tabs[0]);
 applyFilters();
 followHash(false);
 
@@ -638,6 +869,7 @@ function updateProgress() {
     label.textContent = Math.round(done * 100 / moduleMenus.length) + "% complete";
     label.hidden = false;
   });
+  document.dispatchEvent(new Event("curriculum-progress"));
 }
 
 try {

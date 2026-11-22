@@ -10,7 +10,7 @@ Start with concepts and explicit decision criteria, then build a small Python sc
 
 ### Sequence and time estimates
 
-Core progression spans Beginner, Intermediate, Advanced and Production. Specialized / Expert modules are electives that can be studied independently after their listed prerequisites. Topic records give the minimum preparation for focused study. Module prerequisites are the recommended sequence for a learner completing the whole module. Each stage ends with a reviewable artifact, and the capstone brings those artifacts together.
+Core progression spans Beginner, Intermediate, Advanced and Production. Specialized / Expert modules are electives that can be studied independently after their listed prerequisites. Topic records give the minimum preparation for focused study. The recommended module order provides a complete beginner route. Required study for an individual module is computed from the prerequisites of its topics. Each stage ends with a reviewable artifact, and the capstone brings those artifacts together.
 
 Times are planning estimates in hours. Each topic lists theory, guided hands-on implementation, independent experiments and interpretation, exercises and assessment, total learner time, and instructor-led classroom time. Instructor-led hours are a separate delivery estimate for explanation, demonstration and supervised practice. Preparation, breaks, and optional provider work are outside that estimate. Plan extra preparation for a first teaching run.
 
@@ -41,29 +41,55 @@ Choose Langfuse for linked LLM traces, observations and scores. It depends on th
 
 ## Learning paths
 
-### Complete beginner
+### Preparation / Getting Started
 
-**Prerequisites.** Basic computer use. A simple Python and JSON warm-up is included in the preparation guidance. No previous LLM evaluation, statistics or model account required.
+Allow **7 learner hours** if all six readiness skills are new. Skip any row once you can demonstrate its checkpoint. Practice locally with synthetic files and saved responses. No model downloads or API credentials are needed. Preparation hours are separate from all path and curriculum totals.
 
-**Entry checkpoint.** Open a saved response and identify the question, answer and evidence. Progress through [M01](#m01)–[M03](#m03), [M04](#m04)–[M07](#m07), then the advanced and production modules in order. After M03, explain a false pass and show the fixture scorer distinguishes a transport error from a model failure.
+| ID | Readiness skill | Learning objective and practice | Readiness checkpoint | Learner hours |
+|---|---|---|---|---:|
+| P01 | Files, folders and the terminal | Navigate a sample project with `pwd`, `cd` and a directory listing. Recognize absolute and relative paths and save into a new output file. | From the project root, locate a fixture and explain where a relative output path will be written. | 1 |
+| P02 | Basic Python for evaluation | Read strings, numbers, lists and dictionaries. Use a loop, a conditional, a small function and an assertion to count outcomes. | Given three saved outcomes, return the number that pass and verify an empty input. | 1.5 |
+| P03 | Run Python scripts | Confirm the Python version, run a local script from the right directory, pass it a file path and read standard output and a traceback. | Run a supplied script and fix a deliberately mistyped input path. | 1 |
+| P04 | JSON and JSONL | Read and write JSON objects and arrays. Read a JSONL file one record at a time with Python and distinguish syntax errors from missing fields. | Convert three sample cases to JSONL and identify the invalid line in a second fixture. | 1.5 |
+| P05 | API requests and responses | Read a saved HTTP request and response. Identify method, endpoint, headers, body, status and timeout. Keep sample credentials out of fixtures. | Explain the difference between a successful request with a wrong answer and an unsuccessful request. | 1 |
+| P06 | Numerical reasoning | Calculate rates, percentages, means and percentage-point changes on a small score sheet. Identify the denominator and how an excluded row changes it. | Explain why 8 of 10 scored cases and 8 of 12 attempted cases make different claims. | 1 |
 
-### Intermediate engineer
+### Paths A–G
 
-**Prerequisites.** Python, terminal and JSON familiarity, and the ability to explain a normalized rule and a reference answer.
+| Path | Name | Targets | Topics | Learner hours |
+|---|---|---|---:|---:|
+| A | Complete Beginner | Core | 44 | 238 |
+| B | LLM Evaluation Fundamentals | [M01-T01](#m01-t01), [M02-T03](#m02-t03), [M03-T01](#m03-t01), [M03-T02](#m03-t02), [M03-T03](#m03-t03), [M05-T01](#m05-t01) | 8 | 34 |
+| C | LLM-as-a-Judge Specialist | [M06](#m06) | 7 | 34.5 |
+| D | RAG Evaluation Specialist | [M08](#m08) | 5 | 28 |
+| E | Agent Evaluation Specialist | [M10](#m10) | 5 | 27 |
+| F | Production Evaluation Engineer | [M13](#m13), [M14](#m14) | 15 | 78 |
+| G | Complete Expert | All | 53 | 292.5 |
 
-**Entry checkpoint.** Given one labeled case, implement a check, identify an unsupported conclusion and explain how you would save the response and score. If successful, enter at [M04](#m04). Review [M03](#m03) for structured checks and rubrics where needed. Complete [M07](#m07) before making comparative performance claims.
+- **A — Complete Beginner.** Use the preparation checkpoints first, then follow the full core in curriculum order. Start at [M01](#m01). The capstone verifies a reproducible release decision.
+- **B — LLM Evaluation Fundamentals.** Start with the objective and references, then learn deterministic and structured checks, human review and overlap metrics. Exit by scoring a small frozen set and explaining a false pass.
+- **C — LLM-as-a-Judge Specialist.** Complete the required reference, schema and rubric topics, then pointwise scoring, calibration and comparisons in [M06](#m06). Extend with [advanced judge design](#m18-t01) if needed. Embeddings and RAG can be skipped.
+- **D — RAG Evaluation Specialist.** Start with objectives and references, then work through [M08](#m08). The ranked-list and claim exercises use supplied fixtures. Take embeddings or judge setup only for the extensions that require them.
+- **E — Agent Evaluation Specialist.** Learn JSON schema and evaluation objectives, then study [M10](#m10). The required labs use mock tools and saved traces. Study retrieval only for the document-tool extension.
+- **F — Production Evaluation Engineer.** Follow the minimum route to [release gates](#m13) and [production monitoring](#m14). The route includes versioned cases, sample design and uncertainty. RAG, agent and defensive assessment topics are optional for this path unless they apply to the release under review.
+- **G — Complete Expert.** Complete core and the electives. Choose the preparation rows you need and add their hours if applicable.
 
-### Advanced engineer
+### Using the dependency roadmap
 
-**Prerequisites.** Versioned cases, anchored evaluator or judge, paired comparison, and the relevant architecture. Start from the topic cards when your prior experience satisfies the listed prerequisites.
+Open **Learning Roadmap** and select a module or topic by name or ID. The required route includes the target and every transitive mandatory topic, each counted once, in suggested study order. Selecting a module uses every topic in that module as a target. Recommended preparation adds context and may be skipped. A conditional link applies only to the exercise named beside it. Implementation readiness describes skills or tool setup you can demonstrate independently, so those notes and preparation hours sit outside the academic dependency graph. A dash means that category has no prerequisite.
 
-**Entry checkpoint.** Explain one evaluator false pass and one case where offline evidence cannot justify a release. Enter at [M08](#m08) for RAG, [M10](#m10) for agents, [M12](#m12) for defensive assessment, or [M13](#m13) for production gates. Take any of [M16](#m16)–[M18](#m18) after their required modules.
+[M01-T01](#m01-t01), [M02-T01](#m02-t01) and [M03-T02](#m03-t02) have no mandatory course prerequisites. Start with M01-T01 for a first look at model behavior, M02-T01 for evaluation design, or M03-T02 if you already know basic Python and JSON and want to validate structured outputs.
+
+- **I want to learn RAG evaluation.** Select [M08](#m08) or Path D. Check the reference-answer prerequisites first. For an interpretation-only refresher, select [M08-T02](#m08-t02). Use the conditional notes before changing a dense encoder or adding a judge.
+- **I already know Python and deterministic evaluation.** Verify the preparation checkpoints and use Path B's fixture as a diagnostic. Mark familiar topics completed only when you can demonstrate their stated result. For structured data and provenance, enter at [M04-T01](#m04-t01) once its prerequisites are met.
+- **I only want to learn LLM-as-a-Judge.** Select [M06-T01](#m06-t01) for pointwise scoring, or Path C to add calibration and pairwise ranking. Use optional extensions as needed.
+- **I want to become a complete evaluation engineer.** Use Path A through the production capstone, then choose specialization topics or Path G. A short route establishes the advertised skills for its target. Course-wide competency requires the broader assessments and capstone.
+
+Use the module overview to orient yourself and the topic view to inspect exact links. Arrows point to the topic or module that uses the prerequisite. The unlocked list uses your saved completion status and identifies topics that would become available by completing the current target. Use **Export graph** to share the full module or topic diagram, or choose a target or path and export its required route. Image downloads use the full graph for that scope regardless of pan and zoom. The standalone HTML download opens on the roadmap and supports offline interaction.
 
 ### Instructor preparation
 
-**Prerequisites.** Be able to complete the learner assessment and explain both expected and unexpected results. Verify the teaching environment and exact inputs, code, labels and outputs for the demonstration.
-
-**Entry checkpoint.** Replay the chosen lab offline, grade a good submission and a borderline one, and prepare a fallback when any live extension fails. Use the Teaching Plan, the individual topic demonstrations and assessments, and the module completion criteria. For a first class, teach [M01](#m01)–[M03](#m03) and pilot the fixture timings before planning further sessions.
+Replay the chosen lab offline and grade a good submission and a borderline one. Verify the topic's requirements, exact fixtures, code and expected outcomes before teaching. Prepare a demonstration fallback for any live extension. Pilot the preparation checkpoints and required route timings with your class before planning further sessions.
 
 ## Repository coverage
 
@@ -123,13 +149,13 @@ At least one teaching variant for core labs should use standard-library Python a
 
 ### Maintenance, versioning and regeneration
 
-Curriculum revision 1.0.
+Curriculum revision 1.1.
 
 Use stable module and topic IDs. Edit titles and passages in place. Allocate new IDs for new learning objectives and preserve old IDs in a deprecation record when retiring a topic. Increment the curriculum revision when changing expected competencies, prerequisites or coverage. Version datasets, prompts, model snapshots and evaluator definitions independently and link those versions from lesson materials.
 
 Update the per-topic mapping whenever a lesson or experiment changes. Review all dependent topics when a prerequisite changes. A topic is ready for implementation sign-off when the lesson follows the standard, an instructor has replayed it, a learner can verify its output and the audit-linked corrections are resolved or documented. Re-estimate time after actual pilots, and record scope changes with the relevant IDs.
 
-The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` from the repository root with Python 3.10 or newer to regenerate the standalone HTML. Use `python3 docs/generate_master_curriculum.py --check` to verify the checked-in artifact matches exactly. Edit the structured Markdown fields and rerun the generator. Use explicit anchors for IDs, comma-separated linked prerequisites, and the fixed time column order. The generator validates finding IDs against the audit when that file is present. The HTML is a portable view of the plan. Repository lesson links require the companion lesson files. Progress is stored in the browser for the current device and may depend on file URL and privacy settings.
+The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` from the repository root with Python 3.10 or newer to regenerate the standalone HTML. Use `python3 docs/generate_master_curriculum.py --check` to verify the checked-in artifact matches exactly. Edit the structured Markdown fields and rerun the generator. Use explicit anchors for IDs, comma-separated mandatory and recommended topic links, and the fixed time column order. Use a link followed by an em dash and a named exercise for each conditional prerequisite, with slash-separated entries when needed. Update the Paths A–G table when a target or required dependency changes. The generator validates finding IDs against the audit when that file is present. The HTML is a portable view of the plan. Repository lesson links require the companion lesson files. Progress is stored in the browser for the current device and may depend on file URL and privacy settings.
 
 ## Detailed curriculum
 
@@ -144,10 +170,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Foundations
 - **Description.** Follow a request from user input to model output. Learn which settings and components can change the evidence an evaluator sees.
 - **Objectives.** Trace a generation request, explain output variability, and locate failure boundaries in a model-backed application.
-- **Prerequisites.** None
 - **Labs.** Replay a fictional bank help request as plain text, then read its saved request and result envelopes.
 - **Competencies.** Label the request, model configuration, response and failure stage in a fresh replay.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a labeled request/response trace. Mark message roles, missing context and one failure boundary. Compare your labels to the supplied replay key. A submission fails if a transport error is labeled a wrong model answer.
 - **Hours.** 3 / 4 / 2.5 / 1.5 / 11 / 7.5
 
 <a id="m01-t01"></a>
@@ -156,7 +181,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** Missing evidence or truncation can look like a reasoning failure.
 - **Concepts.** Tokens versus words, system and user roles, context budget, truncation, input/output limits and message ordering.
-- **Prerequisites.** None
+- **Mandatory prerequisites.** —
+- **Recommended prerequisites.** —
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Read a short text fixture. The optional Python replay uses P01 and P03.
 - **Demonstration.** Compare two saved prompts that differ only in whether the fee schedule fits in the supplied context.
 - **Exercise and assessment.** Mark which evidence the model saw and predict when the reply should abstain.
 - **Hours.** 1 / 1 / 1 / 0.5 / 3.5 / 2.5
@@ -173,7 +201,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** A fixed prompt can yield different responses, and generation errors need their own outcome.
 - **Concepts.** Next-token sampling, temperature, top-p, seed limits, maximum output tokens, stop conditions and model snapshots.
-- **Prerequisites.** [M01-T01](#m01-t01)
+- **Mandatory prerequisites.** [M01-T01](#m01-t01)
+- **Recommended prerequisites.** —
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Read a table of saved completions. Live comparisons use P03 and P05 plus a prepared local model.
 - **Demonstration.** Inspect repeated saved completions and compare a changed setting with repeated runs under one setting.
 - **Exercise and assessment.** Explain which difference the dataset can support and what metadata it lacks.
 - **Hours.** 1 / 1.5 / 1 / 0.5 / 4 / 2.5
@@ -190,7 +221,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** A working request establishes connectivity and enables stage-specific diagnosis.
 - **Concepts.** Client, prompt assembly, inference server, retrieval, tools, post-processing, transport errors and end-to-end elapsed time.
-- **Prerequisites.** [M01-T01](#m01-t01)
+- **Mandatory prerequisites.** [M01-T01](#m01-t01)
+- **Recommended prerequisites.** [M01-T02](#m01-t02)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P01, P03 and P04 for Python replay. The optional local request also uses P05.
 - **Demonstration.** Follow a frozen request through a tiny Python fixture reader. Optionally compare with a single local model call after setup.
 - **Exercise and assessment.** Classify timeout, malformed output and plausible-but-wrong response, then name which stage owns each.
 - **Hours.** 1 / 1.5 / 0.5 / 0.5 / 3.5 / 2.5
@@ -209,10 +243,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Foundations
 - **Description.** Translate a user goal and potential harm into an evaluation contract with cases, acceptance criteria and decisions.
 - **Objectives.** Select an evaluation unit, define outcomes, and explain when to use offline and online evidence.
-- **Prerequisites.** [M01](#m01)
 - **Labs.** Draft a one-page evaluation contract for fictional fee and account-support questions.
 - **Competencies.** Given an ambiguous feature, specify intended behavior, cases, labels, failure categories and a decision owner.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit an evaluation contract with a unit, two quality dimensions, expected behavior and a decision owner. Match one reference and one unanswerable case to the contract in a peer walkthrough. A score with no decision or acceptance criterion fails.
 - **Hours.** 3 / 3.5 / 3 / 2.5 / 12 / 8
 
 <a id="m02-t01"></a>
@@ -221,7 +254,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** A score helps only if it answers a decision the team can act on.
 - **Concepts.** Correctness, completeness, relevance, groundedness, usability, safety, cost, latency, evaluation units and error versus failure.
-- **Prerequisites.** [M01-T03](#m01-t03)
+- **Mandatory prerequisites.** —
+- **Recommended prerequisites.** [M01-T03](#m01-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Read and label saved outputs. This discussion and worksheet need no Python.
 - **Demonstration.** Classify saved fee answers that are incorrect, incomplete, unsupported or unavailable due to infrastructure.
 - **Exercise and assessment.** Write one measurable requirement and matching counterexample for each of three dimensions.
 - **Hours.** 1 / 1.5 / 1 / 1 / 4.5 / 3
@@ -238,7 +274,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** Valid answers can differ in wording, and some cases require abstention or multiple acceptable labels.
 - **Concepts.** Gold evidence, reference answer sets, expected behavior, benchmark validity, dataset rows and uncertain or unanswerable examples.
-- **Prerequisites.** [M02-T01](#m02-t01)
+- **Mandatory prerequisites.** [M02-T01](#m02-t01)
+- **Recommended prerequisites.** [M01-T01](#m01-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Read policy records and benchmark rows. P04 helps when inspecting JSON directly.
 - **Demonstration.** Inspect a saved extractive QA example and a synthetic banking record with two acceptable answers.
 - **Exercise and assessment.** Write a case with a source, acceptable answers, an abstention label and one known false positive.
 - **Hours.** 1 / 1 / 1 / 1 / 4 / 2.5
@@ -255,7 +294,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** Offline quality estimates and live user outcomes answer different questions.
 - **Concepts.** Development replay, shadow evaluation, canary, online experiments, regression suites, incident feedback and release evidence.
-- **Prerequisites.** [M02-T01](#m02-t01)
+- **Mandatory prerequisites.** [M02-T01](#m02-t01)
+- **Recommended prerequisites.** [M01-T03](#m01-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use the supplied lifecycle worksheet and offline scenario.
 - **Demonstration.** Follow a fictional fee-policy failure from labeled case to offline gate, monitored release and incident review.
 - **Exercise and assessment.** Classify evidence sources for an offline bug, a silent production failure and a user outcome metric.
 - **Hours.** 1 / 1 / 1 / 0.5 / 3.5 / 2.5
@@ -274,10 +316,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Techniques
 - **Description.** Build the first evaluator from frozen outputs and learn where human judgment adds evidence.
 - **Objectives.** Implement stable assertions, validate structured data and explain a disagreement using a rubric.
-- **Prerequisites.** [M02](#m02)
 - **Labs.** Score one fixture containing a correct answer, good paraphrase, incorrect close answer, correct abstention, over-refusal and execution error.
 - **Competencies.** Submit a runnable fixture scorer and a reviewed answer sheet that identifies false passes and false fails.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a Python scorer, frozen known-answer cases and a blind rating sheet. Reproduce the expected pass, fail and unscorable outcomes and explain a substring false pass. Run the answer key and inspect one rubric disagreement. A parser or transport error counted as a model failure fails.
 - **Hours.** 3 / 4.5 / 3 / 3 / 13.5 / 9
 
 <a id="m03-t01"></a>
@@ -286,7 +327,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** String matches are fast and inspectable but can miss valid aliases and accept wrong claims.
 - **Concepts.** Exact match, case and whitespace normalization, Unicode caution, regex boundaries, canonical aliases, numeric checks, precision and recall.
-- **Prerequisites.** [M02-T02](#m02-t02)
+- **Mandatory prerequisites.** [M02-T02](#m02-t02)
+- **Recommended prerequisites.** —
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P01–P04 for normalization and assertions in Python. The first truth table can be done on paper.
 - **Demonstration.** Implement normalized matches and a typed fee check in Python. Compare with a substring baseline.
 - **Exercise and assessment.** Write a truth table for punctuation, negation, an amount mismatch and an acceptable paraphrase.
 - **Hours.** 1 / 1.5 / 1 / 1 / 4.5 / 3
@@ -303,7 +347,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** Valid JSON can still contain invalid field values or unsafe business outcomes.
 - **Concepts.** Parsing, types, required and nullable fields, enums, ranges, schema versions, cross-field invariants and invalid-output handling.
-- **Prerequisites.** [M03-T01](#m03-t01)
+- **Mandatory prerequisites.** —
+- **Recommended prerequisites.** [M03-T01](#m03-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P01–P04 to parse and check JSON. The lab introduces schema concepts with self-contained examples.
 - **Demonstration.** Read mock fee replies using Python and apply explicit field and domain checks after parsing.
 - **Exercise and assessment.** Write fixtures for missing, malformed, invalid and business-correct records.
 - **Hours.** 1 / 1.5 / 1 / 1 / 4.5 / 3
@@ -320,7 +367,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Beginner
 - **Why it matters.** Human scores vary when criteria, inputs and evidence are underspecified.
 - **Concepts.** Anchored ordinal scales, binary decisions, blind review, N/A, evidence notes and response IDs.
-- **Prerequisites.** [M02-T02](#m02-t02), [M03-T01](#m03-t01)
+- **Mandatory prerequisites.** [M02-T02](#m02-t02)
+- **Recommended prerequisites.** [M03-T01](#m03-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Inspect full saved replies and fill a worksheet. Python is optional for summarizing labels.
 - **Demonstration.** Blind-score several saved full replies using one criterion at a time and discuss disagreements.
 - **Exercise and assessment.** Submit a revised rubric with a low, middle and high anchor and justify one disputed case.
 - **Hours.** 1 / 1.5 / 1 / 1 / 4.5 / 3
@@ -341,10 +391,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Dataset Engineering
 - **Description.** Build data with documented coverage, adjudicated labels, and a defensible separation between development and final evaluation.
 - **Objectives.** Design a golden dataset schema, curate inputs and labels, and manage sampling and updates.
-- **Prerequisites.** [M03](#m03)
 - **Labs.** Publish a versioned miniature banking dataset with a manifest, slices and isolated holdout.
 - **Competencies.** Another learner can validate the schema, reproduce the split and trace each label to evidence.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a validated JSONL dataset with a manifest, split and adjudication note. Reproduce the split and trace a label to evidence. Check unique IDs and group isolation. Shared source groups across the holdout or missing provenance fail.
 - **Hours.** 4 / 5 / 4 / 3 / 16 / 10.5
 
 <a id="m04-t01"></a>
@@ -353,7 +402,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** A score cannot be reproduced if cases, labels and outputs drift independently.
 - **Concepts.** Stable case and response IDs, data contracts, task metadata, source references, append-only runs, version manifests and validation.
-- **Prerequisites.** [M02-T02](#m02-t02), [M03-T02](#m03-t02)
+- **Mandatory prerequisites.** [M02-T02](#m02-t02), [M03-T02](#m03-t02)
+- **Recommended prerequisites.** [M03-T01](#m03-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P01–P04. The workbook slice is supplied in a format readable without spreadsheet software.
 - **Demonstration.** Convert a workbook slice to JSONL and validate field types, unique IDs and references.
 - **Exercise and assessment.** Create a revision that changes a label and generate a manifest explaining the effect on previous results.
 - **Hours.** 1 / 1.5 / 1 / 1 / 4.5 / 3
@@ -370,7 +422,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Synthetic breadth is useful when human review and source-backed validation preserve label quality.
 - **Concepts.** Annotation instructions, independent labels, disagreement and arbitration, structured generation from policy, review and rejection, provenance and license.
-- **Prerequisites.** [M03-T03](#m03-t03), [M04-T01](#m04-t01)
+- **Mandatory prerequisites.** [M03-T03](#m03-t03)
+- **Recommended prerequisites.** [M04-T01](#m04-t01)
+- **Conditional prerequisites.** [M04-T01](#m04-t01) — required when publishing reviewed rows to the versioned dataset
+- **Implementation readiness.** A spreadsheet or text worksheet suffices for manual labels. Live synthetic generation is an optional P05 extension.
 - **Demonstration.** Review synthetic policy examples with two readers, adjudicate disagreements and quarantine ambiguous rows.
 - **Exercise and assessment.** Submit a label guide, one disagreement record and a synthetic-data acceptance rule.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -387,7 +442,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Aggregate gains may hide weak slices or reflect tuning on the evaluation set.
 - **Concepts.** Representative and stratified sampling, rare-case oversampling, adversarial edge cases, grouped splits, deduplication, train/test contamination, dataset refresh and retirement.
-- **Prerequisites.** [M04-T01](#m04-t01), [M04-T02](#m04-t02)
+- **Mandatory prerequisites.** [M04-T01](#m04-t01)
+- **Recommended prerequisites.** [M04-T02](#m04-t02)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02, P04 and P06 to group cases and compute coverage.
 - **Demonstration.** Split cases by document family, detect near-duplicates, and compare representative coverage with policy-weighted stress coverage.
 - **Exercise and assessment.** Explain how to handle a new policy release without exposing or silently changing the holdout.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -406,10 +464,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Techniques
 - **Description.** Use several fast scorers on the same answers and investigate divergent results before setting a threshold.
 - **Objectives.** Compute overlap and semantic similarity, compare error patterns, and design a hybrid decision rule.
-- **Prerequisites.** [M03](#m03), [M04](#m04)
 - **Labs.** Build a Python scorecard for factual banking answers, paraphrases and unsupported claims.
 - **Competencies.** Explain a false positive and false negative for each proxy and defend a held-out decision rule.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit an overlap, embedding and hybrid scorecard with a held-out decision rule. Recompute a hand-scored case and demonstrate a valid paraphrase and a high-overlap wrong answer. An unqualified claim that cosine proves correctness fails.
 - **Hours.** 4 / 4.5 / 4 / 3 / 15.5 / 10.5
 
 <a id="m05-t01"></a>
@@ -418,7 +475,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Surface overlap offers a useful baseline for bounded tasks and can penalize correct paraphrases.
 - **Concepts.** Token precision/recall/F1, n-grams, BLEU brevity and smoothing, sentence versus corpus BLEU, ROUGE-N and ROUGE-L, multiple references and optional chrF.
-- **Prerequisites.** [M03-T01](#m03-t01), [M04-T01](#m04-t01)
+- **Mandatory prerequisites.** [M02-T02](#m02-t02)
+- **Recommended prerequisites.** [M03-T01](#m03-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02 and P06 for counts and fractions. The library extension needs the prepared metric environment.
 - **Demonstration.** Count overlap by hand and in Python, then compare with sacreBLEU and rouge-score on frozen summaries.
 - **Exercise and assessment.** Rank a paraphrase and a false high-overlap answer, state the metric scale and explain the mismatch.
 - **Hours.** 1.5 / 1.5 / 1 / 1 / 5 / 3.5
@@ -435,7 +495,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Cosine can find paraphrases while giving high scores to changed amounts or opposite meanings.
 - **Concepts.** Vectors, cosine, embeddings from pretrained encoders, model/version effects, threshold calibration and triage.
-- **Prerequisites.** [M04-T03](#m04-t03), [M05-T01](#m05-t01)
+- **Mandatory prerequisites.** [M02-T02](#m02-t02)
+- **Recommended prerequisites.** [M05-T01](#m05-t01), [M04-T03](#m04-t03)
+- **Conditional prerequisites.** [M04-T03](#m04-t03) — required when building your own held-out split for threshold tuning
+- **Implementation readiness.** Use P02 and P06 for cosine on supplied vectors. Use cached weights only for the optional live encoder.
 - **Demonstration.** Compute cosine on toy vectors, then compare cached embedding results for near-miss answers.
 - **Exercise and assessment.** Evaluate two thresholds on held-out data and explain which factual errors go to deterministic checks.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -452,7 +515,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** An aggregate can hide an unacceptable error or an evaluator failure.
 - **Concepts.** Hard gates, rule plus proxy cascades, metric applicability, score vectors, disagreement, human escalation and threshold trade-offs.
-- **Prerequisites.** [M04-T03](#m04-t03), [M05-T01](#m05-t01), [M05-T02](#m05-t02)
+- **Mandatory prerequisites.** [M03-T01](#m03-t01), [M03-T03](#m03-t03)
+- **Recommended prerequisites.** [M05-T01](#m05-t01), [M05-T02](#m05-t02)
+- **Conditional prerequisites.** [M05-T02](#m05-t02) — required when tuning a semantic triage threshold instead of consuming supplied proxy scores
+- **Implementation readiness.** Use P02 for ordered checks and P06 for counts and rates.
 - **Demonstration.** Apply a numeric gate, semantic triage and human review to one fixture and compare with a single averaged score.
 - **Exercise and assessment.** Propose and defend an escalation rule with coverage and error counts.
 - **Hours.** 1 / 1.5 / 1.5 / 1 / 5 / 3.5
@@ -471,10 +537,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Judges
 - **Description.** Validate judge evidence with human labels before delegating consequential decisions to an evaluator.
 - **Objectives.** Build pointwise and comparative rubrics, measure inter-rater agreement and diagnose judge bias.
-- **Prerequisites.** [M04](#m04), [M05](#m05)
 - **Labs.** Evaluate identical, frozen responses with human raters, a local or replayed judge and a deterministic baseline.
 - **Competencies.** Produce a held-out judge report with valid verdict coverage, per-class errors, agreement and bias checks.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a frozen-response judge report with coverage, class errors, agreement and pairwise order checks. Match human and model verdicts by response ID and replicate a swapped pair. Treating malformed verdicts as substantive agreement or comparing different responses fails.
 - **Hours.** 4.5 / 5 / 4.5 / 3 / 17 / 11
 
 <a id="m06-t01"></a>
@@ -483,7 +548,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** A model can scale rubric application while producing confident but unsupported labels.
 - **Concepts.** Criterion isolation, pointwise scoring, anchors, reference-guided versus reference-free evaluation, evidence spans, schema validation and fallback.
-- **Prerequisites.** [M03-T02](#m03-t02), [M04-T02](#m04-t02), [M05-T03](#m05-t03)
+- **Mandatory prerequisites.** [M03-T02](#m03-t02), [M03-T03](#m03-t03)
+- **Recommended prerequisites.** [M04-T02](#m04-t02), [M05-T03](#m05-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02 and P04 for structured verdict replay. A live judge needs P05 and an approved local or hosted setup.
 - **Demonstration.** Compare a structured saved judge verdict with a human adjudication on the exact same response.
 - **Exercise and assessment.** Reject malformed, out-of-range and unsupported verdicts and record why each was unscorable.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -500,7 +568,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Human and model disagreements identify ambiguous rubrics, default preferences and systematic miss rates.
 - **Concepts.** Percent agreement, confusion matrices, Cohen's kappa intuition, prevalence effects, repeat judge consistency, verbosity/style and model self-preference, held-out calibration.
-- **Prerequisites.** [M04-T02](#m04-t02), [M04-T03](#m04-t03), [M06-T01](#m06-t01)
+- **Mandatory prerequisites.** [M06-T01](#m06-t01)
+- **Recommended prerequisites.** [M04-T02](#m04-t02), [M04-T03](#m04-t03)
+- **Conditional prerequisites.** [M04-T03](#m04-t03) — required when constructing your own calibration and holdout sets
+- **Implementation readiness.** Use P02 and P06 to produce a confusion matrix from fixed labels.
 - **Demonstration.** Compare independent human and judge labels on a frozen table using Python and inspect disagreement by slice.
 - **Exercise and assessment.** Recalibrate on anchors and report held-out error rates, sample sizes and unresolved disagreements.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -517,7 +588,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Comparative judgments can simplify preference assessment and are sensitive to order and tie policy.
 - **Concepts.** Blind randomization, position swaps, tie and abstain policies, win rates, Bradley–Terry intuition, nontransitivity and multi-model uncertainty.
-- **Prerequisites.** [M06-T01](#m06-t01), [M06-T02](#m06-t02)
+- **Mandatory prerequisites.** [M03-T03](#m03-t03)
+- **Recommended prerequisites.** [M06-T01](#m06-t01), [M06-T02](#m06-t02)
+- **Conditional prerequisites.** [M06-T01](#m06-t01) — required when adding a live model judge to the comparative lab
+- **Implementation readiness.** Use P02 and P06 to count wins, ties and order reversals.
 - **Demonstration.** Score the same answer pairs in reversed order and construct a win/tie table from saved judgments.
 - **Exercise and assessment.** Detect an order-sensitive pair and justify whether the evidence supports a ranking.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -536,10 +610,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Statistics
 - **Description.** Start with visual and intuitive examples, then write small Python analyses on frozen cases.
 - **Objectives.** Explain variability, quantify paired uncertainty, choose sample sizes and detect regressions.
-- **Prerequisites.** [M04](#m04), [M06](#m06)
 - **Labs.** Compare two fictional banking configurations using repeated responses, case-level aggregation and Python resampling.
 - **Competencies.** Reproduce the report from a manifest and reach a defensible improvement, regression or inconclusive decision.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a reproducible paired comparison with case counts, effect size, interval and decision. Rerun from the manifest and explain an inconclusive result. Resampling repeated draws as independent cases or reporting only a point estimate fails.
 - **Hours.** 5 / 5.5 / 4.5 / 3 / 18 / 12
 
 <a id="m07-t01"></a>
@@ -548,7 +621,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Repeated draws from the same case measure variation within that case and do not add independent case coverage.
 - **Concepts.** Analysis units, between/within-case variance, seeds and effective config, repeated measures, macro/micro means, slice weights, denominators and missingness.
-- **Prerequisites.** [M01-T02](#m01-t02), [M04-T03](#m04-t03), [M05-T03](#m05-t03)
+- **Mandatory prerequisites.** [M02-T01](#m02-t01)
+- **Recommended prerequisites.** [M01-T02](#m01-t02), [M04-T03](#m04-t03), [M05-T03](#m05-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02 and P06 for grouped counts and aggregation. Supplied observations replace live generation.
 - **Demonstration.** Plot saved repeated outcomes in a case-by-setting table, change slice weights and observe a reversed aggregate.
 - **Exercise and assessment.** Report attempted, valid and scorable rates separately and explain what would reproduce the result.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -565,7 +641,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** Small apparent differences can be sampling noise or too small to matter operationally.
 - **Concepts.** Effect size, confidence interval intuition, paired case bootstrap, permutation test intuition, practical significance, power/sample planning and multiplicity.
-- **Prerequisites.** [M07-T01](#m07-t01)
+- **Mandatory prerequisites.** [M07-T01](#m07-t01)
+- **Recommended prerequisites.** [M04-T03](#m04-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02 and P06 to resample paired records. The lesson introduces interval and significance concepts.
 - **Demonstration.** Resample whole case pairs in Python and compare the interval with an independent-sample calculation.
 - **Exercise and assessment.** Vary sample size or minimum effect and explain why a result is inconclusive without overclaiming equivalence.
 - **Hours.** 2 / 2 / 1.5 / 1 / 6.5 / 4.5
@@ -582,7 +661,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Intermediate
 - **Why it matters.** A regression decision depends on what changed, what was held fixed and which risks matter.
 - **Concepts.** Paired offline experiments, locked baselines, key slices, noninferiority margins, guardrails, offline versus randomized online A/B effects and regression reporting.
-- **Prerequisites.** [M02-T03](#m02-t03), [M07-T02](#m07-t02)
+- **Mandatory prerequisites.** [M02-T03](#m02-t03), [M07-T02](#m07-t02)
+- **Recommended prerequisites.** [M04-T03](#m04-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02 and P06 for paired comparisons and simulated exposure logs.
 - **Demonstration.** Compare frozen prompt versions on the same case IDs, then simulate a user-randomized A/B with exposure logs.
 - **Exercise and assessment.** Write a rollout recommendation with effect size, uncertainty, guardrails, confounds and stopping criteria.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -603,10 +685,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** RAG
 - **Description.** Evaluate retrieval and generation independently before judging end-to-end answers.
 - **Objectives.** Measure ranked retrieval, score claims and citations, and isolate the failing pipeline stage.
-- **Prerequisites.** [M05](#m05), [M06](#m06), [M07](#m07)
 - **Labs.** Reuse fictional policy guides and create one labeled replay from query through citations.
 - **Competencies.** Diagnose a held-out failure and verify a targeted change against retrieval and answer metrics.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a labeled retrieval and claim report with a citation check and one diagnosis. Verify a hand-computed rank metric, then repeat a controlled oracle comparison. A report that hides a wrong answer behind an average or omits support for a citation fails.
 - **Hours.** 5.5 / 6 / 5 / 3 / 19.5 / 13.5
 
 <a id="m08-t01"></a>
@@ -615,7 +696,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A generator cannot reliably cite supporting evidence that the retriever missed.
 - **Concepts.** Parsing, chunking and overlap, source IDs, sparse/dense/hybrid retrieval, top-k, gold relevance, Precision@k, Recall@k, MRR, nDCG and unlabeled passages.
-- **Prerequisites.** [M04-T01](#m04-t01), [M05-T02](#m05-t02), [M07-T01](#m07-t01)
+- **Mandatory prerequisites.** [M02-T02](#m02-t02)
+- **Recommended prerequisites.** [M04-T01](#m04-t01), [M05-T02](#m05-t02)
+- **Conditional prerequisites.** [M05-T02](#m05-t02) — required when modifying the dense retrieval encoder or interpreting its similarity values
+- **Implementation readiness.** Use P02 and P06 for metrics on supplied rankings. Chunking uses local text files.
 - **Demonstration.** Hand-score two ranked lists and reproduce metrics in Python before changing chunks in a replay.
 - **Exercise and assessment.** Add a graded relevance judgment and explain a case where MRR and Recall@k disagree.
 - **Hours.** 2 / 2 / 1.5 / 1 / 6.5 / 4.5
@@ -632,7 +716,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Answers may be correct without supporting evidence or faithfully repeat stale information.
 - **Concepts.** Context relevance versus sufficiency, claim correctness, groundedness/faithfulness, hallucination, citation validity/entailment/completeness, answerability and abstention.
-- **Prerequisites.** [M06-T01](#m06-t01), [M08-T01](#m08-t01)
+- **Mandatory prerequisites.** [M08-T01](#m08-t01)
+- **Recommended prerequisites.** [M03-T03](#m03-t03), [M06-T01](#m06-t01)
+- **Conditional prerequisites.** [M06-T01](#m06-t01) — required when replacing manual claim review with a model judge
+- **Implementation readiness.** Use a manual claim-to-evidence worksheet. Use P04 to inspect saved retrieved chunks as JSON.
 - **Demonstration.** Annotate claims and source IDs for four examples, including a supported but wrong answer and a valid abstention.
 - **Exercise and assessment.** Grade a fabricated citation, an unsupported correct answer and an unwarranted refusal separately.
 - **Hours.** 2 / 2 / 1.5 / 1 / 6.5 / 4.5
@@ -649,7 +736,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A better response score does not show whether retrieval or generation improved.
 - **Concepts.** Oracle retrieval, controlled context swaps, distractors, stale and conflicting sources, held-out slices, threshold tuning and regression gates.
-- **Prerequisites.** [M07-T03](#m07-t03), [M08-T01](#m08-t01), [M08-T02](#m08-t02)
+- **Mandatory prerequisites.** [M08-T02](#m08-t02)
+- **Recommended prerequisites.** [M07-T01](#m07-t01), [M07-T03](#m07-t03)
+- **Conditional prerequisites.** [M07-T02](#m07-t02) — required when reporting confidence intervals for a comparative result
+- **Implementation readiness.** Replay fixed cases using P02 and P04. Live reranking needs the prepared local retrieval stack.
 - **Demonstration.** Score one baseline against oracle passage and one retrieval change using the same tasks and answer rubric.
 - **Exercise and assessment.** Identify the root cause for a replayed failure and specify a regression test with a failure-stage assertion.
 - **Hours.** 1.5 / 2 / 2 / 1 / 6.5 / 4.5
@@ -668,10 +758,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Frameworks
 - **Description.** Apply commercial and open tooling through a neutral evaluation contract and compare definitions on matched inputs.
 - **Objectives.** Map case objects and metrics, explain assumptions and select an adapter based on evidence and operational needs.
-- **Prerequisites.** [M06](#m06), [M07](#m07), [M08](#m08)
 - **Labs.** Use one fixture set to compare a hand-computed scorer and two adapter result shapes.
 - **Competencies.** Show per-case parity where metrics match and explain one intentional divergence.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit one neutral case mapped to two adapter outputs and a tool-choice memo. Verify one matched metric against a hand calculation and explain a divergence or N/A. Comparing incompatible scores as parity or discarding adapter errors fails.
 - **Hours.** 4 / 5 / 3.5 / 3 / 15.5 / 10.5
 
 <a id="m09-t01"></a>
@@ -680,7 +769,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Portable contracts keep experiments reproducible when a framework or judge changes.
 - **Concepts.** Case/response IDs, metric intent and input schema, results with valid/error/N/A, provenance, offline runner versus hosted service, cost, telemetry and capability fit.
-- **Prerequisites.** [M04-T01](#m04-t01), [M05-T03](#m05-t03), [M07-T03](#m07-t03)
+- **Mandatory prerequisites.** [M04-T01](#m04-t01)
+- **Recommended prerequisites.** [M05-T03](#m05-t03), [M07-T03](#m07-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P04 to inspect case and result schemas. Adapter assessment can run from saved input and output records.
 - **Demonstration.** Map one frozen evaluation record to candidate adapter inputs and verify a known score against Python.
 - **Exercise and assessment.** Write a tool-choice memo covering local replay, lockfile/platform, data boundary and migration cost.
 - **Hours.** 1 / 1.5 / 1 / 1 / 4.5 / 3
@@ -697,7 +789,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Named metrics can answer different questions and require different labels or model calls.
 - **Concepts.** DeepEval test cases, contextual relevance, faithfulness and thresholds. RAGAS variants for context precision, faithfulness and response relevance, reference requirements and judge/embedding calls. Choose DeepEval for Python assertions and RAGAS for retrieval/generation metric suites when prerequisites match.
-- **Prerequisites.** [M08-T02](#m08-t02), [M09-T01](#m09-t01)
+- **Mandatory prerequisites.** [M08-T02](#m08-t02), [M09-T01](#m09-t01)
+- **Recommended prerequisites.** [M06-T01](#m06-t01)
+- **Conditional prerequisites.** [M06-T01](#m06-t01) — required when configuring a custom judge rather than reading recorded adapter results
+- **Implementation readiness.** Use P04 for replay. A live run needs the pinned framework, its compatible model or embedding setup, and P05 if hosted.
 - **Demonstration.** Walk one saved record through both adapters and compare which passages, claims and answers drive scores. Verify known zero, N/A and timeout cases.
 - **Exercise and assessment.** Explain one matched-input metric disagreement, required reference, expected runtime and optional hosted cost.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -714,7 +809,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Declarative and hosted runs can support review workflows once score meaning is understood.
 - **Concepts.** promptfoo for declarative prompt/provider matrices and assertions. OpenAI Evals for evaluation definitions, datasets and grader/runs in an OpenAI-centered workflow. Compare portability, supported graders, spend, data visibility and versioning.
-- **Prerequisites.** [M09-T01](#m09-t01)
+- **Mandatory prerequisites.** [M09-T01](#m09-t01)
+- **Recommended prerequisites.** [M06-T01](#m06-t01), [M07-T03](#m07-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P03 and P04 to inspect declarative specs. The managed variant uses P05 only if explicitly enabled.
 - **Demonstration.** Translate two frozen prompts and one deterministic grading rule into declarative and hosted-style evaluation specs. Inspect mock results locally.
 - **Exercise and assessment.** Recommend a tool for a CI matrix and another for a team using managed grading, with limits and a fixture fallback.
 - **Hours.** 1.5 / 1.5 / 1 / 1 / 5 / 3.5
@@ -733,10 +831,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Agents
 - **Description.** Evaluate what a workflow does, what state it leaves behind and how it recovers under controlled failures.
 - **Objectives.** Measure calls, arguments, outputs, observable planning, task completion and recovery within budgets.
-- **Prerequisites.** [M05](#m05), [M06](#m06), [M07](#m07), [M08](#m08)
 - **Labs.** Replay frozen traces for fictional account and policy tasks against mock tool results and state.
 - **Competencies.** Score alternative valid paths and reject a plausible answer that leaves an incorrect or unauthorized state.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a trace replay scorecard covering arguments, tool results, termination and final state. Pass two equivalent valid paths and reject a wrong-state trace with a plausible answer. An exact-path check alone or an unexplained duplicate action fails.
 - **Hours.** 4.5 / 6 / 4.5 / 3 / 18 / 12
 
 <a id="m10-t01"></a>
@@ -745,7 +842,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Tool response quality and authorization can fail independently of language quality.
 - **Concepts.** Agent loop, action schemas, tool selection, typed arguments, tool outputs, permissions, required/optional calls, refusals and step limits.
-- **Prerequisites.** [M03-T02](#m03-t02), [M05-T03](#m05-t03), [M08-T01](#m08-t01)
+- **Mandatory prerequisites.** [M03-T02](#m03-t02)
+- **Recommended prerequisites.** [M01-T03](#m01-t03), [M05-T03](#m05-t03)
+- **Conditional prerequisites.** [M08-T01](#m08-t01) — required only for the document-retrieval tool extension
+- **Implementation readiness.** Use P02 and P04 to validate saved calls against a mock tool contract.
 - **Demonstration.** Validate two calls to a read-only mock bank tool and compare traces for an unnecessary call and a useful clarification.
 - **Exercise and assessment.** Identify an incorrect argument and verify the corresponding result, action and trust boundary.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -762,7 +862,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A path may look plausible while the task remains incomplete, and multiple paths may satisfy the same goal.
 - **Concepts.** State invariants, event/order constraints, task completion, alternative plans, trace-grounding, stop reasons, partial success and judgment N/A.
-- **Prerequisites.** [M06-T01](#m06-t01), [M10-T01](#m10-t01)
+- **Mandatory prerequisites.** [M02-T01](#m02-t01), [M10-T01](#m10-t01)
+- **Recommended prerequisites.** [M03-T03](#m03-t03), [M06-T01](#m06-t01)
+- **Conditional prerequisites.** [M06-T01](#m06-t01) — required when adding judge-scored trajectories
+- **Implementation readiness.** Use P02 and P04 to inspect saved events and verify state predicates.
 - **Demonstration.** Replay a trace with a missing second step and another with a different valid path. Compare state checks and qualitative judgments.
 - **Exercise and assessment.** Explain why a perfect trajectory score can hide missed behavior and defend an outcome-first rubric.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -779,7 +882,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Retries may improve success while increasing cost, delay or duplicated side effects.
 - **Concepts.** Scripted faults, timeouts, retry budgets, idempotency, interrupted state, recoverability, success per cost and latency versus task completion.
-- **Prerequisites.** [M07-T01](#m07-t01), [M10-T02](#m10-t02)
+- **Mandatory prerequisites.** [M10-T02](#m10-t02)
+- **Recommended prerequisites.** [M07-T01](#m07-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02 and P06 to compare retries, budgets and final states with synthetic timings.
 - **Demonstration.** Replay a bounded transient failure and compare retry policy, end state and cost from simulated timings.
 - **Exercise and assessment.** Demonstrate a safe retry, then choose a threshold for recovery within budget.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -798,10 +904,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Safety
 - **Description.** Establish a safety measurement plan that covers risky outcomes and permitted use.
 - **Objectives.** Classify risk, evaluate refusal and over-refusal, audit fairness and privacy, and verify safety regressions.
-- **Prerequisites.** [M04](#m04), [M06](#m06), [M07](#m07)
 - **Labs.** Score a synthetic safety set against a fictional bank policy and document uncertain labels.
 - **Competencies.** Produce a risk matrix, slice report and explicit release criteria with review paths for severe or ambiguous cases.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a risk matrix and scorecard with labeled appropriate refusals, over-refusals and one matched subgroup check. Recompute counts and assess a severe case. An undisaggregated mean or unspecified policy boundary fails.
 - **Hours.** 4.5 / 5 / 4.5 / 3 / 17 / 11
 
 <a id="m11-t01"></a>
@@ -810,7 +915,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Safety depends on intended policy and on continuing to answer permissible requests.
 - **Concepts.** Severity, toxic or harmful output categories, policy versus factual correctness, appropriate refusal, over-refusal and safe alternatives.
-- **Prerequisites.** [M04-T02](#m04-t02), [M05-T03](#m05-t03), [M06-T02](#m06-t02)
+- **Mandatory prerequisites.** [M03-T03](#m03-t03)
+- **Recommended prerequisites.** [M04-T02](#m04-t02), [M05-T03](#m05-t03), [M06-T02](#m06-t02)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use the supplied fictional policy and label worksheet. No live model is needed.
 - **Demonstration.** Label fixed benign assessment fixtures as answer, abstain, refuse or escalate with expected behavior and reason.
 - **Exercise and assessment.** Report correct refusals and false refusals with their own denominators and adjudicate a borderline case.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -827,7 +935,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A global metric can hide subgroup harms, and observability can increase unnecessary data exposure.
 - **Concepts.** Counterfactual and matched-slice tests, label and population bias, disparate error rates, consent, data minimization and synthetic sensitive-data checks.
-- **Prerequisites.** [M04-T03](#m04-t03), [M07-T02](#m07-t02), [M11-T01](#m11-t01)
+- **Mandatory prerequisites.** [M11-T01](#m11-t01)
+- **Recommended prerequisites.** [M04-T03](#m04-t03), [M07-T02](#m07-t02)
+- **Conditional prerequisites.** [M07-T02](#m07-t02) — required when quantifying uncertainty for a subgroup estimate
+- **Implementation readiness.** Use P06 for matched rates and synthetic privacy-control records.
 - **Demonstration.** Compare matched fictional customers and inspect privacy controls with dummy records.
 - **Exercise and assessment.** Explain confounds and identify what evidence and review are needed before a fairness or privacy claim.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -844,7 +955,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A high benchmark average can hide severe edge cases, instability or a new false refusal.
 - **Concepts.** Perturbation controls, held-out safety sets, stress versus representative evaluation, repeated runs, false-pass severity, escalation and lockboxes.
-- **Prerequisites.** [M07-T03](#m07-t03), [M11-T01](#m11-t01), [M11-T02](#m11-t02)
+- **Mandatory prerequisites.** [M11-T01](#m11-t01)
+- **Recommended prerequisites.** [M07-T03](#m07-t03), [M11-T02](#m11-t02)
+- **Conditional prerequisites.** [M11-T02](#m11-t02) — required for fairness and privacy slices in an expanded safety suite
+- **Implementation readiness.** Use P02 and P06 to replay a fixed rubric and compare severity slices.
 - **Demonstration.** Apply harmless formatting and paraphrase variants to a frozen safety set, then compare a policy update by severity.
 - **Exercise and assessment.** Design a slice-sensitive safety gate and state what the benchmark cannot establish.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -863,10 +977,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Red Teaming
 - **Description.** Plan and assess authorized defensive tests of isolated fictional systems using fixed benign scenarios, synthetic records and mock tools.
 - **Objectives.** Identify trust boundaries, measure observed policy violations and verify mitigations on matched evidence.
-- **Prerequisites.** [M08](#m08), [M10](#m10), [M11](#m11)
 - **Labs.** Evaluate canned outcomes from a fictional bank with document and tool trust boundaries, then write a mitigation regression report.
 - **Competencies.** Explain what was measured, what was in scope, which fixes held and what evidence remains uncertain.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a defensive assessment memo scoped to the fictional system. Verify control and mitigation outcomes on fixed, harmless fixtures and report match counts and false refusals. Unscoped testing or an unverified mitigation claim fails.
 - **Hours.** 4.5 / 5 / 4.5 / 3 / 17 / 11
 
 <a id="m12-t01"></a>
@@ -875,7 +988,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A clear threat model links input channels and assets to the defensive behavior expected of the system.
 - **Concepts.** Direct and indirect prompt injection as threat categories, jailbreaks, protected assets, trust boundaries, authorized test scope, containment and harmless fixtures.
-- **Prerequisites.** [M08-T03](#m08-t03), [M10-T01](#m10-t01), [M11-T03](#m11-t03)
+- **Mandatory prerequisites.** [M11-T01](#m11-t01)
+- **Recommended prerequisites.** [M08-T01](#m08-t01), [M10-T01](#m10-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Inspect a provided trust-boundary diagram and benign fixtures. No scanner or live target is used.
 - **Demonstration.** Diagram user, document and tool trust boundaries. Inspect inert labels for prepared policy-conflict cases.
 - **Exercise and assessment.** Specify assets, failure outcomes, negative controls, test boundaries and responsible reporting.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -892,7 +1008,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Untrusted content, permission mistakes and exposure can occur even when an assistant response sounds appropriate.
 - **Concepts.** Indirect document trust, RAG provenance, mock-tool authorization, least privilege, synthetic exposure markers, attack-success denominators and matched normal cases.
-- **Prerequisites.** [M10-T02](#m10-t02), [M11-T02](#m11-t02), [M12-T01](#m12-t01)
+- **Mandatory prerequisites.** [M12-T01](#m12-t01)
+- **Recommended prerequisites.** [M08-T02](#m08-t02), [M10-T02](#m10-t02), [M11-T02](#m11-t02)
+- **Conditional prerequisites.** [M10-T01](#m10-t01) — required when independently interpreting raw mock-tool arguments in the agent extension
+- **Implementation readiness.** Use P04 and P06 to read stored synthetic outcomes and calculate rates on supplied controls.
 - **Demonstration.** Compare saved control-off and control-on records from an isolated mock system. Check the simulated authorization decision and whether a dummy marker reached the output.
 - **Exercise and assessment.** Calculate observed violation rate by scenario and distinguish authorization failures from correct refusals and unavailable evidence.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -909,7 +1028,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A change needs independent evidence on fixed cases, unseen controls and ordinary permitted behavior.
 - **Concepts.** Re-test protocols, severity and reproducible evidence, reporting and ownership. Garak and PyRIT report vocabulary and scope constraints. Static contract and replay checks for targeted controls.
-- **Prerequisites.** [M12-T02](#m12-t02)
+- **Mandatory prerequisites.** [M12-T02](#m12-t02)
+- **Recommended prerequisites.** [M11-T03](#m11-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Review fixed offline report excerpts. The lab uses synthetic evidence and does not run scanners.
 - **Demonstration.** Read prepared Garak and PyRIT report excerpts and reconcile their labels with a manually scored, held-out synthetic fixture.
 - **Exercise and assessment.** Write a red-team finding and verification memo with coverage, confirmed failures, false refusals, remediation and remaining risk.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -930,10 +1052,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Production Engineering
 - **Description.** Turn evaluation evidence into reliable checks and release decisions while preserving diagnostic artifacts.
 - **Objectives.** Design a versioned pipeline, define CI/CD quality gates, and decide when to pause or roll back.
-- **Prerequisites.** [M07](#m07), [M09](#m09), [M10](#m10), [M12](#m12)
 - **Labs.** Turn the bank fixture suite into an offline CI run with immutable candidate artifacts and a release decision.
 - **Competencies.** Demonstrate pass, fail and insufficient evidence paths and replay the report from its manifest.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a fixture-driven gate, a reproducible manifest and a release decision. Replay pass, fail and insufficient-evidence outcomes and explain a rollback trigger. Treating infrastructure errors as passes or allowing a critical failure through an aggregate fails.
 - **Hours.** 4.5 / 5.5 / 4.5 / 3 / 17.5 / 11.5
 
 <a id="m13-t01"></a>
@@ -942,7 +1063,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A run must be attributable to one prompt, model, dataset, scorer and configuration.
 - **Concepts.** Build and score separation, immutable run metadata, fixtures and live tiers, parallelism, caching, secure config, evaluator error taxonomy and artifact integrity.
-- **Prerequisites.** [M04-T01](#m04-t01), [M07-T01](#m07-t01), [M09-T01](#m09-t01)
+- **Mandatory prerequisites.** [M03-T01](#m03-t01), [M04-T01](#m04-t01)
+- **Recommended prerequisites.** [M07-T01](#m07-t01), [M09-T01](#m09-t01)
+- **Conditional prerequisites.** [M09-T01](#m09-t01) — required when adding an external framework adapter
+- **Implementation readiness.** Use P01–P04 to replay a local pipeline and inspect its run manifest.
 - **Demonstration.** Build a fixture-driven pipeline design with preflight, case selection, outputs, version tags and safe report rendering.
 - **Exercise and assessment.** Reconstruct a run manifest and classify invalid input, evaluator timeout and valid failure.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -959,7 +1083,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A flaky or underpowered gate can block safe changes or let critical regressions through.
 - **Concepts.** Stable baselines, fast and slow tiers, absolute and relative thresholds, uncertainty, critical-slice gates, retry policy, artifact review and exceptions.
-- **Prerequisites.** [M07-T03](#m07-t03), [M11-T03](#m11-t03), [M13-T01](#m13-t01)
+- **Mandatory prerequisites.** [M07-T02](#m07-t02), [M13-T01](#m13-t01)
+- **Recommended prerequisites.** [M07-T03](#m07-t03), [M11-T03](#m11-t03)
+- **Conditional prerequisites.** [M11-T03](#m11-t03) — required when defining a separate safety-benchmark gate
+- **Implementation readiness.** Use P02, P03 and P06 for a simulated CI gate. A hosted CI service is optional.
 - **Demonstration.** Simulate candidate releases with performance regressions and metric failures, using the same locked fixtures.
 - **Exercise and assessment.** Implement a three-way decision and justify how a critical regression overrides aggregate improvement.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -976,7 +1103,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A release requires ownership, explicit risk acceptance and a reversible decision backed by evidence.
 - **Concepts.** Version sign-off, model and prompt change management, canary/shadow comparison, kill criteria, rollback, approval trail and evidence retention.
-- **Prerequisites.** [M02-T03](#m02-t03), [M12-T03](#m12-t03), [M13-T02](#m13-t02)
+- **Mandatory prerequisites.** [M02-T03](#m02-t03), [M13-T02](#m13-t02)
+- **Recommended prerequisites.** [M12-T03](#m12-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use the release worksheet and simulated rollout. No service credentials are needed.
 - **Demonstration.** Write a release packet and run a tabletop rollback after a synthetic severe-slice regression.
 - **Exercise and assessment.** Present the owner, decision, rollback trigger, evidence link and follow-up dataset change.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -995,10 +1125,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Production Engineering
 - **Description.** Follow live-style evidence from a trace into triage, labeling, drift detection and regression checks.
 - **Objectives.** Instrument traces, sample responsibly, define alerts and understand cost, latency and operational reliability.
-- **Prerequisites.** [M07](#m07), [M10](#m10), [M11](#m11), [M13](#m13)
 - **Labs.** Simulate a bank support incident using synthetic traces, a dashboard export and an offline score pipeline.
 - **Competencies.** Explain which signal moved, identify the cause and turn it into a versioned regression case with a traceable owner.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a trace-based incident brief and new regression case. Correlate a synthetic event, justify a sampling or alert decision and recompute a tail latency or cost measure. Confusing telemetry loss with behavior drift or retaining unnecessary payloads fails.
 - **Hours.** 4.5 / 6 / 4 / 3 / 17.5 / 12
 
 <a id="m14-t01"></a>
@@ -1007,7 +1136,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Observability makes eval context inspectable across stages and repeated incidents.
 - **Concepts.** Trace/span/generation concepts, correlation IDs, tags, scored observations, telemetry loss and redaction. Choose Langfuse for inspectable LLM traces and scores with suitable deployment/data controls. Consider OpenTelemetry for cross-service context, with application-specific quality scoring elsewhere.
-- **Prerequisites.** [M11-T02](#m11-t02), [M13-T01](#m13-t01)
+- **Mandatory prerequisites.** [M02-T03](#m02-t03)
+- **Recommended prerequisites.** [M04-T01](#m04-t01), [M11-T02](#m11-t02), [M13-T01](#m13-t01)
+- **Conditional prerequisites.** [M11-T02](#m11-t02) — required when designing privacy controls for your own trace pipeline
+- **Implementation readiness.** Use P04 to read saved traces. The optional dashboard needs local Docker and Langfuse configured.
 - **Demonstration.** Follow a bank request through a saved trace and associate outcome, case ID, model and latency. Optionally reproduce with local Langfuse.
 - **Exercise and assessment.** Annotate a trace and show which fields to retain, redact or drop before collection.
 - **Hours.** 1.5 / 2 / 1 / 1 / 5.5 / 4
@@ -1024,7 +1156,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Trace populations, user feedback and evaluator behavior can change independently.
 - **Concepts.** Representative trace sampling, consent and retention, label delays, human-in-the-loop triage, selection bias, input/answer/evaluator drift, control charts and alert triage.
-- **Prerequisites.** [M04-T03](#m04-t03), [M07-T02](#m07-t02), [M14-T01](#m14-t01)
+- **Mandatory prerequisites.** [M04-T03](#m04-t03), [M07-T02](#m07-t02), [M14-T01](#m14-t01)
+- **Recommended prerequisites.** [M11-T02](#m11-t02), [M13-T03](#m13-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02, P04 and P06 to inspect sampled synthetic traces and delayed labels.
 - **Demonstration.** Compare synthetic weeks with changing traffic mix and delayed labels. Produce an alert and review queue.
 - **Exercise and assessment.** Distinguish drift from instrumentation loss and promote reviewed cases into an offline suite.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1041,7 +1176,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Per-call averages can hide long waits, retry spend and the cost of an evaluation pipeline itself.
 - **Concepts.** TTFT, TPOT, duration, latency percentiles, tokens, cost per valid case, concurrency, error budget, SLOs and degradation modes.
-- **Prerequisites.** [M07-T01](#m07-t01), [M10-T03](#m10-t03), [M14-T01](#m14-t01)
+- **Mandatory prerequisites.** [M07-T01](#m07-t01), [M14-T01](#m14-t01)
+- **Recommended prerequisites.** [M10-T03](#m10-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02 and P06 for percentiles and per-outcome costs. All timings and rates are supplied.
 - **Demonstration.** Compute p50/p95 and cost per valid outcome from a trace export that includes warm-ups, retries and judge calls.
 - **Exercise and assessment.** Defend a cost and latency budget and diagnose an incident where quality improved but reliability worsened.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1060,10 +1198,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Production Engineering
 - **Description.** Demonstrate ownership of evaluation from goals and annotated data to release evidence and incident follow-up.
 - **Objectives.** Integrate a release-quality suite, explain decision trade-offs and defend results in a teaching demonstration.
-- **Prerequisites.** [M08](#m08), [M09](#m09), [M10](#m10), [M11](#m11), [M12](#m12), [M13](#m13), [M14](#m14)
 - **Labs.** Submit a replayable evaluation package for one fictional feature spanning chatbot, RAG or agent behavior and production evidence.
 - **Competencies.** A peer can reproduce the result, challenge the decision and rerun a regression after a simulated incident.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a replayable evaluation package, incident diagnosis and a release defense for the chosen feature. A peer must reproduce scores, reproduce the regression and observe an evidence-backed decision. An unreproducible report or no clear response to risk fails.
 - **Hours.** 2 / 3.5 / 4 / 3.5 / 13 / 8
 
 <a id="m15-t01"></a>
@@ -1072,7 +1209,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** A clear evidence plan lets teammates challenge a metric before the implementation hides its assumptions.
 - **Concepts.** Acceptance criteria, risk assessment, golden set versions, independent rubric review, paired baselines and environment constraints.
-- **Prerequisites.** [M08-T03](#m08-t03), [M09-T01](#m09-t01), [M10-T03](#m10-t03), [M11-T03](#m11-t03), [M13-T02](#m13-t02)
+- **Mandatory prerequisites.** [M13-T02](#m13-t02)
+- **Recommended prerequisites.** [M08-T03](#m08-t03), [M09-T01](#m09-t01), [M10-T03](#m10-t03), [M11-T03](#m11-t03)
+- **Conditional prerequisites.** [M08-T03](#m08-t03) — required for the RAG capstone variant / [M10-T03](#m10-t03) — required for the agent capstone variant
+- **Implementation readiness.** Use the offline harness and one assessed track. The FAQ capstone uses the mandatory route.
 - **Demonstration.** Draft the contract, choose a track and have a peer run your frozen evaluation plan.
 - **Exercise and assessment.** Submit a verified manifest and a suite containing good, incorrect, ambiguous and unscorable cases.
 - **Hours.** 1 / 2 / 2 / 1.5 / 6.5 / 4
@@ -1089,7 +1229,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Advanced
 - **Why it matters.** Releasing and teaching an evaluation requires explaining what evidence can support under uncertainty.
 - **Concepts.** Decision memo, incident diagnosis, drift or regression, ownership, release/hold/rollback, credible evidence and peer feedback.
-- **Prerequisites.** [M12-T03](#m12-t03), [M13-T03](#m13-t03), [M14-T02](#m14-t02), [M14-T03](#m14-t03), [M15-T01](#m15-t01)
+- **Mandatory prerequisites.** [M13-T03](#m13-t03), [M14-T02](#m14-t02), [M15-T01](#m15-t01)
+- **Recommended prerequisites.** [M12-T03](#m12-t03), [M14-T03](#m14-t03)
+- **Conditional prerequisites.** [M12-T03](#m12-t03) — required for the defensive-assessment incident variant
+- **Implementation readiness.** Use the synthetic incident packet, report template and peer verification.
 - **Demonstration.** Diagnose a scripted incident, add a regression test and teach one evaluation failure with a reproducible demonstration.
 - **Exercise and assessment.** Defend the release decision and show a peer can verify the corrected outcome from the submitted artifacts.
 - **Hours.** 1 / 1.5 / 2 / 2 / 6.5 / 4
@@ -1110,10 +1253,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Specialization
 - **Description.** Adapt data and rubrics when text quality measures fail to capture language, visual or long-context requirements.
 - **Objectives.** Design slice-aware metrics and evidence for three settings with different failure modes.
-- **Prerequisites.** [M04](#m04), [M05](#m05), [M07](#m07), [M08](#m08)
 - **Labs.** Build a small, domain-specific slice on top of the bank case contract and calibrate it.
 - **Competencies.** Demonstrate why a baseline score changes meaning and validate a revised rubric on held-out cases.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a modality or locale-specific slice for each studied topic and a revised rubric. Verify an evidence label and one held-out counterexample per slice. Score-only comparisons with no domain evidence or incomparable samples fail.
 - **Hours.** 4.5 / 5.5 / 4.5 / 3 / 17.5 / 11.5
 
 <a id="m16-t01"></a>
@@ -1122,7 +1264,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** Translation coverage and native-language correctness can diverge, especially for domain terms.
 - **Concepts.** Native annotations, locale and register, code-switching, script normalization, multilingual embeddings and stratified comparisons.
-- **Prerequisites.** [M04-T03](#m04-t03), [M05-T02](#m05-t02), [M07-T02](#m07-t02)
+- **Mandatory prerequisites.** [M04-T03](#m04-t03), [M07-T02](#m07-t02)
+- **Recommended prerequisites.** [M05-T02](#m05-t02)
+- **Conditional prerequisites.** [M05-T02](#m05-t02) — required when interpreting multilingual embedding scores
+- **Implementation readiness.** Use P02 and P06 and provide reviewed language labels for the selected locale.
 - **Demonstration.** Compare translated and native fictional FAQ cases against language-specific policies and evaluate normalization choices.
 - **Exercise and assessment.** Produce a per-locale scorecard and identify translation leakage and subgroup uncertainty.
 - **Hours.** 1.5 / 1.5 / 1.5 / 1 / 5.5 / 3.5
@@ -1139,7 +1284,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** A fluent answer can hallucinate a visual detail or attach the right explanation to the wrong region.
 - **Concepts.** OCR/chart and image QA, visual evidence, modality-specific metrics, region grounding, abstention and accessibility.
-- **Prerequisites.** [M04-T01](#m04-t01), [M05-T03](#m05-t03), [M08-T02](#m08-t02)
+- **Mandatory prerequisites.** [M02-T02](#m02-t02), [M03-T03](#m03-t03)
+- **Recommended prerequisites.** [M04-T01](#m04-t01), [M08-T02](#m08-t02)
+- **Conditional prerequisites.** [M08-T02](#m08-t02) — required for the retrieval-backed visual citation extension
+- **Implementation readiness.** Use supplied accessible charts and evidence regions. No vision model is needed for replay.
 - **Demonstration.** Score answers to fictional fee charts using annotated cells, regions and text references.
 - **Exercise and assessment.** Identify unsupported claims and report errors by modality and extraction stage.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1156,7 +1304,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** More context can degrade evidence use or change which policy applies.
 - **Concepts.** Position sensitivity, interference, distractors, multi-document synthesis, recency, context budget and memory consistency.
-- **Prerequisites.** [M01-T01](#m01-t01), [M07-T03](#m07-t03), [M08-T03](#m08-t03)
+- **Mandatory prerequisites.** [M01-T01](#m01-t01), [M07-T01](#m07-t01)
+- **Recommended prerequisites.** [M07-T03](#m07-t03), [M08-T03](#m08-t03)
+- **Conditional prerequisites.** [M08-T03](#m08-t03) — required when experimenting with reranked retrieval context
+- **Implementation readiness.** Use P02 and P04 to inspect saved context variants.
 - **Demonstration.** Use saved prompts with the same evidence in different positions and label unsupported conclusions.
 - **Exercise and assessment.** Report controlled position and context-length effects across slices.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1175,10 +1326,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Specialization
 - **Description.** Verify outcomes for typed extraction, generated code and collaboration between agents.
 - **Objectives.** Choose precise task outcomes and analyze errors hidden by generic text scores.
-- **Prerequisites.** [M03](#m03), [M07](#m07), [M10](#m10), [M11](#m11)
 - **Labs.** Apply the case contract to one specialization and verify outcomes with deterministic fixtures.
 - **Competencies.** Submit a domain-specific failure taxonomy and reproducible scorecard against examples that defeat a generic judge.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit outcome fixtures and a failure taxonomy for the specialized output or workflow. Replay at least one hard negative per topic and explain why a generic judge misses it. Missing field checks, unisolated code execution or unverifiable final state fails.
 - **Hours.** 4.5 / 6 / 4.5 / 3 / 18 / 12
 
 <a id="m17-t01"></a>
@@ -1187,7 +1337,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** A document can produce correct fields with wrong entities or invalid records.
 - **Concepts.** Field and record scoring, strict/normalized matches, null/unknown, span alignment, type and value checks, confidence and per-class error.
-- **Prerequisites.** [M03-T02](#m03-t02), [M04-T02](#m04-t02), [M07-T01](#m07-t01)
+- **Mandatory prerequisites.** [M03-T02](#m03-t02), [M05-T01](#m05-t01)
+- **Recommended prerequisites.** [M04-T02](#m04-t02), [M07-T01](#m07-t01)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02, P04 and P06 to compute field and record scores.
 - **Demonstration.** Score synthetic form extraction against typed fields and entity IDs with Python.
 - **Exercise and assessment.** Explain how micro F1 hides a critical rare-field miss and add a matching gate.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1204,7 +1357,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** Generated code needs evidence from compilation, behavior, safety and resource bounds.
 - **Concepts.** Functional tests, cases and hidden tests, pass@k intuition, runtime/error categorization, resource controls, offline isolation and static review.
-- **Prerequisites.** [M03-T02](#m03-t02), [M07-T01](#m07-t01), [M11-T03](#m11-t03)
+- **Mandatory prerequisites.** [M03-T02](#m03-t02), [M07-T01](#m07-t01)
+- **Recommended prerequisites.** [M11-T03](#m11-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P02, P03 and P06 to inspect fixed outcomes for benign pure functions. Use a prepared isolated runner for optional execution.
 - **Demonstration.** Evaluate canned benign pure functions against fixed inputs and captured results in a restricted teaching runner.
 - **Exercise and assessment.** Distinguish a compilation failure, wrong answer and timeout and interpret pass@k assumptions.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1221,7 +1377,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** A successful individual reply can hide lost handoffs or inconsistent shared state.
 - **Concepts.** Role boundaries, coordination and handoff metrics, shared state, conflict resolution, redundancy, team-level success and coordination overhead.
-- **Prerequisites.** [M10-T02](#m10-t02), [M10-T03](#m10-t03), [M11-T03](#m11-t03)
+- **Mandatory prerequisites.** [M10-T02](#m10-t02)
+- **Recommended prerequisites.** [M10-T03](#m10-t03), [M11-T03](#m11-t03)
+- **Conditional prerequisites.** —
+- **Implementation readiness.** Use P04 to trace fictional handoff events and verify shared state.
 - **Demonstration.** Replay a mock support handoff where one agent omits a required state field. Compare with a valid delegated workflow.
 - **Exercise and assessment.** Verify global invariants, handoff quality and team cost from saved events.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1240,10 +1399,9 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Subject.** Specialization
 - **Description.** Keep scores meaningful as evaluators, datasets and deployed models change.
 - **Objectives.** Stress-test evaluators, manage model migration, identify contamination risk and assess emerging methods.
-- **Prerequisites.** [M06](#m06), [M07](#m07), [M12](#m12), [M13](#m13), [M14](#m14)
 - **Labs.** Audit an evaluator and recommend a replacement strategy using anchors, holdout tests and monitored deployment evidence.
 - **Competencies.** Deliver a reproducible audit with known limits and an evidence-based tool or research recommendation.
-- **Completion.** Complete all topic assessments and submit the module artifact described above for peer or instructor replay.
+- **Completion.** Submit a method audit and migration or replacement memo. Verify one controlled anchor result, one uncertainty claim and a preserved holdout. Unchecked judge agreement or repeated tuning on the evaluation holdout fails.
 - **Hours.** 5.5 / 5.5 / 5 / 3 / 19 / 12.5
 
 <a id="m18-t01"></a>
@@ -1252,7 +1410,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** Judge ensembles and better prompts remain vulnerable to common correlated errors.
 - **Concepts.** Evidence-conditioned judgments, multi-judge agreement versus accuracy, selective review, style perturbations, evaluator drift and defensive handling of untrusted inputs.
-- **Prerequisites.** [M06-T02](#m06-t02), [M06-T03](#m06-t03), [M12-T03](#m12-t03)
+- **Mandatory prerequisites.** [M06-T02](#m06-t02)
+- **Recommended prerequisites.** [M06-T03](#m06-t03), [M12-T03](#m12-t03)
+- **Conditional prerequisites.** [M06-T03](#m06-t03) — required for the pairwise ensemble variant
+- **Implementation readiness.** Use P02 and P06 to analyze stored judge outputs.
 - **Demonstration.** Compare judge configurations on fixed ambiguous and transformed answers, then estimate reliability and review rates.
 - **Exercise and assessment.** Justify a human escalation boundary and explain one shared judge blind spot.
 - **Hours.** 2 / 2 / 1.5 / 1 / 6.5 / 4.5
@@ -1269,7 +1430,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** Benchmarks can overstate capability and model swaps can change outputs, costs and judge behavior simultaneously.
 - **Concepts.** Time/source holdouts, contamination and benchmark overfitting, matched migration suites, rating comparability, shadowing and rollback.
-- **Prerequisites.** [M04-T03](#m04-t03), [M07-T03](#m07-t03), [M13-T03](#m13-t03)
+- **Mandatory prerequisites.** [M04-T03](#m04-t03), [M07-T03](#m07-t03)
+- **Recommended prerequisites.** [M13-T03](#m13-t03)
+- **Conditional prerequisites.** [M13-T03](#m13-t03) — required for the live rollout governance extension
+- **Implementation readiness.** Use P04 and P06 and compare fixed public-style and private fictional data.
 - **Demonstration.** Compare public-style versus private synthetic holdouts, then simulate migration with old/new model and fixed/judge variants.
 - **Exercise and assessment.** Identify confounds and defend a migration plan for rare and severe slices.
 - **Hours.** 1.5 / 2 / 1.5 / 1 / 6 / 4
@@ -1286,7 +1450,10 @@ The Markdown is authoritative. Run `python3 docs/generate_master_curriculum.py` 
 - **Difficulty.** Expert
 - **Why it matters.** Evaluation methods need a testable hypothesis and comparisons against simpler baselines.
 - **Concepts.** Active evaluation and adaptive sampling, preference modeling, redacted behavioral simulations, living benchmarks, measure validity and reproducible method reviews.
-- **Prerequisites.** [M06-T03](#m06-t03), [M07-T03](#m07-t03), [M14-T02](#m14-t02)
+- **Mandatory prerequisites.** [M04-T03](#m04-t03), [M07-T02](#m07-t02)
+- **Recommended prerequisites.** [M06-T03](#m06-t03), [M14-T02](#m14-t02)
+- **Conditional prerequisites.** [M06-T03](#m06-t03) — required for a preference-ranking method review
+- **Implementation readiness.** Use P02 and P06 for a simulated adaptive sampling comparison.
 - **Demonstration.** Simulate risk-aware active case selection, then compare estimates and label costs with uniform sampling.
 - **Exercise and assessment.** Write a method card with construct, assumptions, evidence limits and a replication plan.
 - **Hours.** 2 / 1.5 / 2 / 1 / 6.5 / 4
