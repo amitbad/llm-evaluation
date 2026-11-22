@@ -5,10 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GenAI Evaluation — Concepts Reference</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
-    rel="stylesheet">
-  <style>
+
+<style>
     :root {
       --bg: #0d0d0f;
       --surface: #141417;
@@ -472,9 +470,13 @@
       }
     }
   </style>
+  <link rel="icon" href="assets/branding/favicon.ico">
+  <link rel="apple-touch-icon" href="assets/branding/icon-180.png">
+  <link rel="stylesheet" href="assets/academy.css">
+  <script src="assets/academy.js" defer></script>
 </head>
 
-<body>
+<body class="academy-lesson academy-reference">
 
   <!-- ── Side Navigation ─────────────────────────────────────────────────────── -->
   <nav>
@@ -508,76 +510,68 @@
 
     <div class="nav-section">
       <div class="nav-section-label">Hallucination Sub-types</div>
-      <a href="#confabulation">
-        🔴 Confabulation
-        <span class="tag tag-hall">danger</span>
-      </a>
-      <a href="#false-grounding">🟠 False Grounding</a>
-      <a href="#context-fabrication">🟡 Context Fabrication</a>
-      <a href="#financial-confabulation">
-        ☠️ Financial Confabulation
-        <span class="tag tag-hall">critical</span>
-      </a>
+      <a href="#hallucination">🔴 Confabulation
+        <span class="tag tag-hall">danger</span></a>
+      <a href="#hallucination">🟠 False Grounding</a>
+      <a href="#hallucination">🟡 Context Fabrication</a>
+      <a href="#hallucination">☠️ Financial Confabulation
+        <span class="tag tag-hall">critical</span></a>
     </div>
 
     <div class="nav-section">
       <div class="nav-section-label">Speed Metrics</div>
-      <a href="#ttft">
-        ⚡ TTFT
-        <span class="tag tag-speed">perf</span>
-      </a>
-      <a href="#tpot">
-        ⏱ TPOT
-        <span class="tag tag-speed">perf</span>
-      </a>
+      <a href="master-curriculum.html#m14-t03">⚡ TTFT
+        <span class="tag tag-speed">perf</span> · Curriculum topic</a>
+      <a href="master-curriculum.html#m14-t03">⏱ TPOT
+        <span class="tag tag-speed">perf</span> · Curriculum topic</a>
     </div>
 
     <div class="nav-section">
       <div class="nav-section-label">Semantic Evaluation</div>
-      <a href="#semantic-similarity">🔵 Semantic Similarity</a>
-      <a href="#sentence-embeddings">📐 Sentence Embeddings</a>
+      <a href="test6.html">🔵 Semantic Similarity</a>
+      <a href="test6.html">📐 Sentence Embeddings</a>
     </div>
 
     <div class="nav-section">
       <div class="nav-section-label">Groundedness</div>
-      <a href="#groundedness">🎯 Groundedness Scoring</a>
-      <a href="#reference-contamination">☠️ Reference Contamination</a>
-      <a href="#evaluation-rubric">📏 Evaluation Rubric Design</a>
-      <a href="#answer-faithfulness">🔬 Answer Faithfulness</a>
+      <a href="test7.html">🎯 Groundedness Scoring</a>
+      <a href="master-curriculum.html#m04-t03">☠️ Reference Contamination · Curriculum topic</a>
+      <a href="master-curriculum.html#m03-t03">📏 Evaluation Rubric Design · Curriculum topic</a>
+      <a href="master-curriculum.html#m08-t02">🔬 Answer Faithfulness · Curriculum topic</a>
     </div>
 
     <div class="nav-section">
       <div class="nav-section-label">Evaluation Thinking</div>
-      <a href="#test-case-design">🎯 Test Case Design</a>
-      <a href="#evidence-documentation">📋 Evidence Documentation</a>
-      <a href="#coverage-thinking">🗺 Coverage Thinking</a>
-      <a href="#evaluation-validity">⚖️ Evaluation Validity</a>
-      <a href="#disaggregated-evaluation">📊 Disaggregated Evaluation</a>
+      <a href="test4.html">🎯 Test Case Design</a>
+      <a href="master-curriculum.html#m04-t01">📋 Evidence Documentation · Curriculum topic</a>
+      <a href="master-curriculum.html#m04-t03">🗺 Coverage Thinking · Curriculum topic</a>
+      <a href="master-curriculum.html#m02-t01">⚖️ Evaluation Validity · Curriculum topic</a>
+      <a href="master-curriculum.html#m07-t01">📊 Disaggregated Evaluation · Curriculum topic</a>
     </div>
 
     <div class="nav-section">
       <div class="nav-section-label">Model Configuration</div>
-      <a href="#temperature">🌡️ Temperature</a>
-      <a href="#non-determinism">🎲 Non-Determinism</a>
+      <a href="test8.html">🌡️ Temperature</a>
+      <a href="test8.html">🎲 Non-Determinism</a>
     </div>
 
     <div class="nav-section">
       <span class="sub-label">Agents &amp; Evaluation</span>
-      <a href="#" onclick="return goAnchor('concepts.html','trajectory-evaluation')">🔁 Trajectory Evaluation</a>
-      <a href="#" onclick="return goAnchor('concepts.html','tool-selection-correctness')">🧭 Tool Selection
+      <a href="#trajectory-evaluation">🔁 Trajectory Evaluation</a>
+      <a href="#tool-selection-correctness">🧭 Tool Selection
         Correctness</a>
-      <a href="#" onclick="return goAnchor('concepts.html','tool-argument-correctness')">🧩 Tool Argument
+      <a href="#tool-argument-correctness">🧩 Tool Argument
         Correctness</a>
-      <a href="#" onclick="return goAnchor('concepts.html','tool-overuse-underuse')">⚖️ Tool Overuse / Underuse</a>
-      <a href="#" onclick="return goAnchor('concepts.html','clarification-correct-behavior')">❓ Clarification as
+      <a href="#tool-overuse-underuse">⚖️ Tool Overuse / Underuse</a>
+      <a href="#clarification-correct-behavior">❓ Clarification as
         Correct Behavior</a>
-      <a href="#" onclick="return goAnchor('concepts.html','action-schema-reliability')">🧱 Action Schema
+      <a href="#action-schema-reliability">🧱 Action Schema
         Reliability</a>
-      <a href="#" onclick="return goAnchor('concepts.html','judge-vs-binary')">⚖️ Judge Scoring vs Binary
+      <a href="#judge-vs-binary">⚖️ Judge Scoring vs Binary
         Matching</a>
-      <a href="#" onclick="return goAnchor('concepts.html','trajectory-groundedness')">� Trajectory
+      <a href="#trajectory-groundedness">� Trajectory
         Groundedness</a>
-      <a href="#" onclick="return goAnchor('concepts.html','two-layer-evaluation')">� Two-Layer Evaluation
+      <a href="#two-layer-evaluation">� Two-Layer Evaluation
         Pipeline</a>
     </div>
 

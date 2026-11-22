@@ -1,0 +1,111 @@
+<!doctype html>
+<!-- Generated from MASTER_CURRICULUM.md and docs/templates/academy-home.html. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Learn practical LLM evaluation with focused study paths, a complete curriculum, and hands-on examples.">
+<title>TestNeural LLM Academy · LLM Evaluation Engineering</title>
+@BRAND_ICONS@
+<link rel="canonical" href="https://llmacademy.testneural.in/docs/">
+<link rel="stylesheet" href="assets/academy.css">
+<script src="assets/academy.js" defer></script>
+</head>
+<body class="academy-site">
+<a class="academy-skip" href="#main">Skip to learning options</a>
+@HEADER@
+<div class="academy-wrap academy-layout">
+  <details class="academy-sidebar" open>
+    @MENU@
+    <nav aria-label="Academy navigation">
+      @NAVIGATION@
+    </nav>
+  </details>
+  <main class="academy-main" id="main" tabindex="-1">
+    <section class="academy-intro" aria-labelledby="course">
+      <div>
+        <p class="course-label">Featured course</p>
+        <h1 id="course">LLM Evaluation Engineering</h1>
+        <p class="intro-copy">Learn to design evaluations, diagnose failures, and turn test results into decisions about prompts, retrieval, agents, and production releases.</p>
+        <div class="academy-actions">
+          <a class="academy-button" href="#journey">Choose a learning journey</a>
+          <a class="academy-button secondary" href="master-curriculum.html#roadmap-full">Explore the roadmap</a>
+        </div>
+      </div>
+      <div class="academy-logo-panel">@BANNER@</div>
+    </section>
+
+    <section class="academy-section" id="journey" aria-labelledby="journey-title">
+      <h2 id="journey-title">Choose Your Learning Journey</h2>
+      <div class="academy-grid two">
+        <article class="academy-card quick">
+          <h3>Quick Learning</h3>
+          <p><strong>Learn what you need. Skip what you don't.</strong></p>
+          <p>Choose a goal. Follow its required topics, practice with the exercises, and verify your work against the checkpoints.</p>
+          <a class="academy-button" href="master-curriculum.html#quick">Explore Quick Learning</a>
+        </article>
+        <article class="academy-card complete">
+          <h3>Complete Course</h3>
+          <p><strong>From beginner to advanced evaluation engineering.</strong></p>
+          <p>Follow @CORE@ of core study through foundations, practical evaluation, and production. Add @ELECTIVE@ of electives if they fit your goals.</p>
+          <a class="academy-button" href="master-curriculum.html#detail">Explore Complete Course</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="academy-section" aria-labelledby="paths-title">
+      <h2 id="paths-title">Choose a focused path</h2>
+      <p>Estimates include required topics. Recommended extensions are listed separately in each plan.</p>
+      <div class="academy-grid">@PATHS@</div>
+    </section>
+
+    <section class="academy-section" id="start" aria-labelledby="start-title">
+      <h2 id="start-title">Start with the foundations</h2>
+      <div class="academy-grid two">
+        <article class="academy-card">
+          <h3>New to Python or evaluation?</h3>
+          <p>Use the optional preparation checklist (@PREP@) for Python, JSON, API basics, and scoring, then work through the beginner topics.</p>
+          <a class="academy-button secondary" href="master-curriculum.html#preparation">Begin with preparation</a>
+        </article>
+        <article class="academy-card">
+          <h3>See how the course fits together</h3>
+          <p>Review the curriculum, prerequisites, and completion criteria. Topic entries distinguish available examples from planned teaching material.</p>
+          <a class="academy-button secondary" href="master-curriculum.html#overview">View curriculum overview</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="academy-section" id="library" aria-labelledby="library-title">
+      <h2 id="library-title">Practical materials</h2>
+      <p>Browse the existing examples, then run Python exercises separately in a local environment.</p>
+      <div class="academy-actions">
+        <a class="academy-button secondary" href="test0.html">Open the first available example</a>
+        <a class="academy-button secondary" href="../phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx" download>Download RAG test cases</a>
+        <a class="academy-button secondary" href="https://github.com/amitbad/llm-evaluation">Open the GitHub repository</a>
+      </div>
+      <details class="academy-library">
+        <summary>Browse all published examples</summary>
+        <ul>
+          <li><a href="test0.html">Test 0 · Basics and SQuAD</a></li>
+          <li><a href="test1.html">Test 1 · Basic model test</a></li>
+          <li><a href="test2.html">Test 2 · Full evaluations</a></li>
+          <li><a href="test3.html">Test 3 · BLEU and ROUGE</a></li>
+          <li><a href="test4.html">Test 4 · Deterministic evaluation</a></li>
+          <li><a href="test5.html">Test 5 · LLM-as-a-Judge</a></li>
+          <li><a href="test6.html">Test 6 · Semantic similarity</a></li>
+          <li><a href="test7.html">Test 7 · Groundedness</a></li>
+          <li><a href="test8.html">Test 8 · Temperature sensitivity</a></li>
+          <li><a href="test9.html">Test 9 · RAG evaluation</a></li>
+          <li><a href="test11.html">Test 11 · DeepEval</a></li>
+          <li><a href="test12.html">Test 12 · Agent evaluation</a></li>
+          <li><a href="test13.html">Test 13 · Trajectory evaluation</a></li>
+          <li><a href="test14.html">Test 14 · Langfuse</a></li>
+          <li><a href="concepts.html">Concepts reference</a></li>
+        </ul>
+      </details>
+    </section>
+  </main>
+</div>
+@FOOTER@
+</body>
+</html>

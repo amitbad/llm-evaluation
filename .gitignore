@@ -49,6 +49,11 @@ logs/
 print_folders_struct.py
 # others/
 
+# Production deployment files belong outside the public checkout.
+/scripts/llm-evaluation.deploy.sh
+/scripts/llmacademy.nginx-bootstrap.conf
+/scripts/llmacademy.nginx-https.conf
+
 # ── Local-only learning artifacts ────────────────────────────────────
 docs/genai_eval_learning_plan.xlsx
 docs/.~lock.genai_eval_learning_plan.xlsx#

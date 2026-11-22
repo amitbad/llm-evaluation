@@ -5,10 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test 13 — Trajectory Evaluation with Judge Model</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
-    rel="stylesheet">
-  <style>
+
+<style>
     :root {
       --bg: #0d0d0f;
       --surface: #141417;
@@ -294,9 +292,13 @@
       font-family: 'JetBrains Mono', monospace;
     }
   </style>
+  <link rel="icon" href="assets/branding/favicon.ico">
+  <link rel="apple-touch-icon" href="assets/branding/icon-180.png">
+  <link rel="stylesheet" href="assets/academy.css">
+  <script src="assets/academy.js" defer></script>
 </head>
 
-<body>
+<body class="academy-lesson">
 
   <div class="phase-badge">Phase 5 — Production Eval</div>
   <h1>Test 13: Trajectory Evaluation with Judge Model</h1>
@@ -310,8 +312,7 @@
     style="background:#1a1510;border:1px solid #4a3a20;border-left:4px solid #f7a06a;border-radius:10px;padding:14px 18px;margin-bottom:28px;font-size:13.5px;line-height:1.7;color:#c8c890">
     ⚠️ <strong style="color:#f7a06a">Read Test 12 before this page.</strong> Test 13 scores trajectories that Test 12
     produced. The four scoring dimensions here only make sense once you understand what a trajectory is, why the agent
-    is constrained to emit JSON actions, and what the expected tool paths looked like. If you have not read <a href="#"
-      onclick="parent.go('test12.html','nav-t12');return false;" style="color:#f7a06a">Test 12</a> yet, start there.
+    is constrained to emit JSON actions, and what the expected tool paths looked like. If you have not read <a href="test12.html" style="color:#f7a06a">Test 12</a> yet, start there.
   </div>
 
   <h2>Why Test 13 Exists</h2>

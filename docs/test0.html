@@ -5,10 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test 0 — Phase 0 Foundations</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap"
-    rel="stylesheet">
-  <style>
+
+<style>
     :root {
       --bg: #0d0d0f;
       --surface: #141417;
@@ -300,9 +298,13 @@
       font-family: 'JetBrains Mono', monospace;
     }
   </style>
+  <link rel="icon" href="assets/branding/favicon.ico">
+  <link rel="apple-touch-icon" href="assets/branding/icon-180.png">
+  <link rel="stylesheet" href="assets/academy.css">
+  <script src="assets/academy.js" defer></script>
 </head>
 
-<body>
+<body class="academy-lesson">
 
   <div class="phase-badge">Phase 0 · Foundations</div>
   <h1>Test 0 — Basics &amp;<br>Benchmark Data</h1>
@@ -356,9 +358,9 @@
         at all — the check would fail. That failure mode is called <strong>Topic Drift</strong>.
       </div>
       <div class="concept-ref-row">
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','quality-failure');return false;">⚠️ Quality Failure</a>
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','topic-drift');return false;">🌊 Topic Drift</a>
+        <a class="concept-chip" href="concepts.html#keyword-check">🔑 Keyword Check</a>
+        <a class="concept-chip" href="concepts.html#quality-failure">⚠️ Quality Failure</a>
+        <a class="concept-chip" href="concepts.html#topic-drift">🌊 Topic Drift</a>
       </div>
     </div>
 
@@ -401,9 +403,9 @@
         no extra invented content. PASS.
       </div>
       <div class="concept-ref-row">
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','topic-drift');return false;">🌊 Topic Drift</a>
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','hallucination');return false;">🌀 Hallucination</a>
+        <a class="concept-chip" href="concepts.html#keyword-check">🔑 Keyword Check</a>
+        <a class="concept-chip" href="concepts.html#topic-drift">🌊 Topic Drift</a>
+        <a class="concept-chip" href="concepts.html#hallucination">🌀 Hallucination</a>
       </div>
     </div>
 
@@ -447,8 +449,8 @@
         regex validators, and eventually LLM judges that evaluate meaning rather than exact text.
       </div>
       <div class="concept-ref-row">
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
-        <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','gold-answer');return false;">🥇 Gold Answer</a>
+        <a class="concept-chip" href="concepts.html#keyword-check">🔑 Keyword Check</a>
+        <a class="concept-chip" href="concepts.html#gold-answer">🥇 Gold Answer</a>
       </div>
     </div>
   </div>
@@ -474,10 +476,10 @@
       <li><strong>Groundedness (Test 7)</strong> — is the answer traceable to source material?</li>
     </ul>
     <div class="concept-ref-row">
-      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','quality-failure');return false;">⚠️ Quality Failure</a>
-      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','topic-drift');return false;">🌊 Topic Drift</a>
-      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','keyword-check');return false;">🔑 Keyword Check</a>
-      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','hallucination');return false;">🌀 Hallucination</a>
+      <a class="concept-chip" href="concepts.html#quality-failure">⚠️ Quality Failure</a>
+      <a class="concept-chip" href="concepts.html#topic-drift">🌊 Topic Drift</a>
+      <a class="concept-chip" href="concepts.html#keyword-check">🔑 Keyword Check</a>
+      <a class="concept-chip" href="concepts.html#hallucination">🌀 Hallucination</a>
     </div>
   </div>
 
@@ -536,9 +538,9 @@
       (Test 9): the retriever returns a chunk, the model must answer from that chunk without drifting outside it.</p>
 
     <div class="concept-ref-row">
-      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','gold-answer');return false;">🥇 Gold Answer</a>
-      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','benchmark-dataset');return false;">📚 Benchmark Dataset</a>
-      <a class="concept-chip" href="#" onclick="parent.goAnchor('concepts.html','groundedness');return false;">🎯 Groundedness Scoring</a>
+      <a class="concept-chip" href="concepts.html#gold-answer">🥇 Gold Answer</a>
+      <a class="concept-chip" href="concepts.html#benchmark-dataset">📚 Benchmark Dataset</a>
+      <a class="concept-chip" href="test7.html">🎯 Groundedness Scoring</a>
     </div>
   </div>
 

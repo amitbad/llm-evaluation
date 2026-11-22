@@ -1,6 +1,7 @@
 """Validate MASTER_CURRICULUM.md and render its standalone course browser."""
 
 import argparse
+from base64 import b64encode
 from collections import Counter
 from html import escape
 from html.parser import HTMLParser
@@ -14,12 +15,20 @@ from urllib.parse import quote
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "MASTER_CURRICULUM.md"
 OUTPUT = ROOT / "docs/master-curriculum.html"
+HOME = ROOT / "docs/index.html"
+HOME_TEMPLATE = ROOT / "docs/templates/academy-home.html"
+ASSETS = ROOT / "docs/assets"
+BRANDING = ASSETS / "branding"
+BRAND_FILES = ("academy-logo-banner.png", "icon-48.png", "favicon.ico", "icon-32.png", "icon-180.png")
 ROADMAP_SCRIPT = ROOT / "docs/learning_roadmap.js"
+MODES_SCRIPT = ROOT / "docs/learning_modes.js"
+PROGRESS_SCRIPT = ROOT / "docs/learning_progress.js"
 STAGES = ("Beginner", "Intermediate", "Advanced", "Production", "Specialized / Expert")
 SECTIONS = ("Course overview", "Learning paths", "Repository coverage", "Teaching plan", "Detailed curriculum")
 STATUSES = ("Reusable", "Needs Improvement", "Needs Correction", "New", "Not Assessed")
 DIFFICULTIES = ("Beginner", "Intermediate", "Advanced", "Expert")
-TIME_LABELS = ("Theory", "Guided hands-on", "Experiments", "Exercises", "Learner total", "Instructor-led")
+TIME_LABELS = ("Theory (hrs)", "Guided (hrs)", "Experiment (hrs)", "Exercises (hrs)",
+               "Learner total (hrs)", "Instructor-led (hrs)")
 MODULE_FIELDS = (
     "Difficulty", "Track", "Subject", "Description", "Objectives",
     "Labs", "Competencies", "Completion", "Hours",
@@ -210,6 +219,22 @@ def roadmap_data(stages, learning_paths, source):
                 and float(hours) == sum(topics[topic]["hours"] for topic in closure), f"Stale totals for path {key}")
         result[key] = {"id": key, "title": name, "roots": [topic for topic in topics if topic in roots], "closure": closure,
                        "hours": float(hours)}
+    goals = table_rows(next((block for block in blocks if block.startswith("| Path | Audience |")), ""))
+    require(len(goals) == len(result) + 1 and [row[0] for row in goals[1:]] == list(result),
+            "Expected a goal and checkpoint for each learning path")
+    for row in goals[1:]:
+        require(len(row) == 6 and all(row), "Each path needs an audience, goal, outcome, checkpoint and extensions")
+        key, audience, goal, outcome, checkpoint, extensions = row
+        path = result[key]
+        suggested = {edge["id"] for edge in linked_ids(extensions, f"path {key} extensions")}
+        require(suggested <= topics.keys() and not suggested.intersection(path["closure"]),
+                f"Invalid optional extension in path {key}")
+        recommended = {edge["id"] for topic in path["closure"] for edge in topics[topic]["recommended"]}
+        optional = (suggested | recommended).difference(path["closure"])
+        path.update(
+            audience=audience, goal=goal, outcome=outcome, checkpoint=checkpoint,
+            recommended=[topic for topic in topics if topic in optional],
+        )
     revision = re.search(r"^Curriculum revision (\d+(?:\.\d+)+)\.$", source, re.M)
     require(revision, "A curriculum revision is required for roadmap exports")
     return {"modules": modules, "topics": topics, "paths": result, "stages": STAGES,
@@ -309,6 +334,12 @@ def table(headers, rows, caption):
             f"<table><caption>{escape(caption)}</caption><thead><tr>{headings}</tr></thead><tbody>{body}</tbody></table></div>")
 
 
+def duration(hours):
+    total = round(float(hours) * 60)
+    whole, minutes = divmod(total, 60)
+    return f"{whole}h" + (f" {minutes}m" if minutes else "")
+
+
 def prose(markdown):
     parts = []
     for block in markdown.strip().split("\n\n"):
@@ -316,7 +347,14 @@ def prose(markdown):
             parts.append(f"<h3>{inline(block[4:])}</h3>")
         elif block.startswith("|"):
             header, *rows = table_rows(block)
-            caption = {"Path": "Learning path estimates", "ID": "Preparation skills"}.get(header[0], "Course hours by track")
+            caption = {"Path": "Learning path goals" if header[1] == "Audience" else "Learning path estimates",
+                       "ID": "Preparation skills"}.get(header[0], "Course hours by track")
+            if header[0] == "Strand":
+                header[3:] = TIME_LABELS
+                rows = [row[:3] + [duration(value) for value in row[3:]] for row in rows]
+            elif header[-1] == "Learner hours":
+                header[-1] = "Learner total (hrs)"
+                rows = [row[:-1] + [duration(row[-1])] for row in rows]
             parts.append(table(header, rows, caption))
         elif block.startswith("- ") or re.match(r"\d+\. ", block):
             tag = "ul" if block.startswith("- ") else "ol"
@@ -329,7 +367,7 @@ def prose(markdown):
 
 def time_cards(hours):
     return '<dl class="time-list" aria-label="Time estimates in hours">' + "".join(
-        f"<div><dt>{label}</dt><dd>{value:g} h</dd></div>"
+        f"<div><dt>{label}</dt><dd>{duration(value)}</dd></div>"
         for label, value in zip(TIME_LABELS, hours, strict=True)
     ) + "</dl>"
 
@@ -349,7 +387,7 @@ def html_topic(topic, module):
     return f'''<details class="topic" id="{anchor}" data-topic="{topic['id']}" data-difficulty="{fields['Difficulty']}"
 data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Status']}" data-track="{module['fields']['Track']}">
   <summary><span class="item-title"><span class="item-id">{topic['id']}</span> {escape(topic['title'])}</span>
-    <span class="topic-meta">{fields['Status']} · {topic['hours'][4]:g} h</span></summary>
+    <span class="topic-meta">{fields['Status']} · {duration(topic['hours'][4])}</span></summary>
   <div class="topic-body">
     <div class="topic-controls"><p>{fields['Difficulty']} · {module['fields']['Track']}</p>
       <label class="js-control" hidden for="progress-{anchor}">Progress <select id="progress-{anchor}" data-progress>{options}</select></label>
@@ -369,7 +407,7 @@ def html_module(module):
     topics = "\n".join(html_topic(topic, module) for topic in module["topics"])
     return f'''<details class="module" id="{anchor}">
   <summary><span class="item-title"><span class="item-id">{module['id']}</span> {escape(module['title'])}</span>
-    <span class="topic-meta">{len(module['topics'])} topics · {module['hours'][4]:g} h</span>
+    <span class="topic-meta">{len(module['topics'])} topics · {duration(module['hours'][4])}</span>
     <span class="module-progress" hidden data-module-progress></span></summary>
   <div class="module-body">
     <p class="track">{fields['Difficulty']} · {fields['Track']} · {escape(fields['Subject'])}</p>
@@ -386,7 +424,7 @@ def html_stages(stages):
         hours = sum_hours(modules)
         content = "\n".join(map(html_module, modules))
         result.append(f'''<details class="stage" {"open" if name == "Beginner" else ""}>
-  <summary><span class="stage-title">{name}</span><span class="topic-meta">{len(modules)} modules · {hours[4]:g} h</span></summary>
+  <summary><span class="stage-title">{name}</span><span class="topic-meta">{len(modules)} modules · {duration(hours[4])}</span></summary>
   <div class="stage-body">{content}</div>
 </details>''')
     return "\n".join(result)
@@ -396,7 +434,7 @@ def roadmap_view(data):
     paths = "".join(f'<option value="{path["id"]}">{path["id"]} — {escape(path["title"])}</option>'
                     for path in data["paths"].values())
     stages = "".join(f'<option value="{index}">{escape(stage)}</option>' for index, stage in enumerate(data["stages"]))
-    return f'''<noscript><p>The interactive roadmap uses JavaScript. The Learning Paths and Detailed Curriculum sections list the same prerequisites and estimates.</p></noscript>
+    return f'''<noscript><p>The interactive roadmap uses JavaScript. Learning Paths under Quick Learning and the Complete Course list the same prerequisites and estimates.</p></noscript>
 <div id="roadmap-app" hidden>
   <p>Select a module or topic to see the required study and its estimated hours. Dotted links apply to the exercise named in the selection panel.</p>
   <div class="road-controls">
@@ -444,10 +482,272 @@ def roadmap_view(data):
 </div>'''
 
 
+def topic_link(topic, title=False):
+    name = f'{topic["id"]} — {topic["title"]}' if title else topic["id"]
+    return f'<a href="#{topic["id"].lower()}">{escape(name)}</a>'
+
+
+def quick_plan(path, data):
+    key = path["id"].lower()
+    topics = data["topics"]
+    closure = path["closure"]
+    required = [topic for topic in closure if topic not in path["roots"]]
+    steps = []
+    for code in closure:
+        topic = topics[code]
+        parents = ", ".join(topic_link(topics[edge["id"]]) for edge in topic["mandatory"]) or "None"
+        steps.append(f'''<li class="plan-step" data-step="{code}">
+  <div class="plan-step-heading"><h4>{topic_link(topic, title=True)}</h4><span>{duration(topic["hours"])}</span></div>
+  <p><strong>Complete first</strong> {parents}</p>
+  <p><strong>Exercise and checkpoint</strong> {inline(topic["outcome"])}</p>
+  <label class="plan-check" hidden><input type="checkbox" data-complete="{code}" aria-label="Mark {code} complete"> Completed</label>
+</li>''')
+    optional = "".join(f'<li>{topic_link(topics[code], title=True)} · {duration(topics[code]["hours"])}</li>'
+                       for code in path["recommended"])
+    outside = [code for code in topics if code not in closure and code not in path["recommended"]]
+    skipped = "".join(f'<li>{topic_link(topics[code], title=True)}</li>' for code in outside)
+    return f'''<article class="quick-plan" id="quick-{key}" data-quick-plan="{path["id"]}">
+  <p><a href="#quick">← All Quick Learning paths</a></p>
+  <h3 tabindex="-1">{escape(path["title"])}</h3>
+  <p class="path-metrics">{len(closure)} topics · {duration(path["hours"])} learner time</p>
+  <p>{inline(path["goal"])}</p>
+  <dl class="plan-brief">
+    <div><dt>Who this is for</dt><dd>{inline(path["audience"])}</dd></div>
+    <div><dt>Practical outcome</dt><dd>{inline(path["outcome"])}</dd></div>
+    <div><dt>Required foundations included</dt><dd>{", ".join(topic_link(topics[code]) for code in required) or "The route includes all its required foundations."}</dd></div>
+  </dl>
+  <div class="plan-resume" data-plan-progress="{path["id"]}" hidden>
+    <p role="status" data-plan-status></p><a class="mode-action" data-plan-next href="#{closure[0].lower()}">Start here</a>
+  </div>
+  <div class="plan-tools">
+    <a href="#roadmap-{key}">Open path in Learning Roadmap</a>
+    <button type="button" data-plan-download="html" hidden>Download Learning Plan</button>
+    <button type="button" data-plan-download="svg" hidden>Download Roadmap SVG</button>
+    <button type="button" data-plan-download="png" hidden>Download Roadmap PNG</button>
+    <button type="button" data-plan-share hidden>Copy path link</button>
+  </div>
+  <p class="plan-share-note" data-plan-sharing></p><p role="status" data-plan-message></p>
+  <input type="url" data-plan-url hidden readonly aria-label="Shareable learning path URL">
+  <details class="plan-visual" data-plan-visual hidden><summary>Dependency diagram</summary><div></div></details>
+  <h4>Learn these topics in order</h4>
+  <p>Open a topic to use the same material as Complete Course. Mark it complete after you can verify the checkpoint.</p>
+  <ol class="plan-steps">{"".join(steps)}</ol>
+  <section class="plan-finish"><h4>Verify your understanding</h4><p>{inline(path["checkpoint"])}</p></section>
+  <details><summary>Recommended extensions ({len(path["recommended"])})</summary>
+    <p>These topics are optional for this goal. Their hours are separate from the required route.</p>
+    {f"<ul>{optional}</ul>" if optional else "<p>There are no additional recommended topics for this path.</p>"}
+  </details>
+  <details><summary>Other topics you can skip for this goal ({len(outside)})</summary>
+    {f"<ul>{skipped}</ul>" if skipped else "<p>This route covers every other topic or lists it above as an extension.</p>"}
+  </details>
+</article>'''
+
+
+def quick_view(data, learning_paths):
+    cards = []
+    plans = []
+    for key, path in data["paths"].items():
+        href = "#quick-" + key.lower()
+        foundations = [topic_link(data["topics"][code]) for code in path["closure"] if code not in path["roots"]]
+        cards.append(f'''<article class="path-card">
+  <h3><a href="{href}">{escape(path["title"])}</a></h3>
+  <p class="path-metrics">{len(path["closure"])} topics · {duration(path["hours"])} learner time</p>
+  <p>{inline(path["goal"])}</p><p><strong>For</strong> {inline(path["audience"])}</p>
+  <p><strong>What you’ll build</strong> {inline(path["outcome"])}</p>
+  <details><summary>Prerequisites and checkpoint</summary>
+    <p><strong>Required foundations included</strong> {", ".join(foundations) or "See the ordered plan for the required topics."}</p>
+    <p><strong>Final checkpoint</strong> {inline(path["checkpoint"])}</p>
+  </details>
+  <a class="mode-action" href="{href}" aria-label="Open {escape(path["title"])} learning plan">Open learning plan</a>
+</article>''')
+        plans.append(quick_plan(path, data))
+    reference = prose(learning_paths.replace("**Complete Learning**", "**Complete Course**")).replace(
+        "<h3>Preparation / Getting Started</h3>", '<h3 id="preparation" tabindex="-1">Preparation / Getting Started</h3>')
+    return f'''<div id="quick-catalog">
+  <p class="mode-tagline">Learn what you need. Skip what you don't.</p>
+  <p>Choose a goal for a route with every required topic and checkpoint. Plans use the full topic material and share your progress with Complete Course.</p>
+  <p><a href="#paths">Compare all learning paths and preparation options</a></p>
+  <div class="path-grid">{"".join(cards[1:-1])}</div>
+  <h3>Broader plans</h3><div class="path-grid">{"".join(cards[:1] + cards[-1:])}</div>
+  <details id="paths" class="course-reference">
+    <summary>Learning Paths and preparation</summary>
+    {reference}
+    <p><a href="#roadmap">Open the Learning Roadmap</a></p>
+  </details>
+</div>
+{"".join(plans)}'''
+
+
+def complete_view(data, detailed):
+    core, all_topics = data["paths"]["A"], data["paths"]["G"]
+    elective = all_topics["hours"] - core["hours"]
+    return f'''<p class="mode-tagline">From beginner to advanced evaluation engineering.</p>
+<div class="complete-strands">
+  <a href="#preparation"><strong>Optional preparation</strong><span>{duration(data["preparation"])} · readiness exercises</span></a>
+  <a href="#m01"><strong>Core curriculum</strong><span>{duration(core["hours"])} · {len(core["closure"])} topics · foundations to production</span></a>
+  <a href="#m16"><strong>Optional electives</strong><span>{duration(elective)} · {len(all_topics["closure"]) - len(core["closure"])} specialized topics</span></a>
+</div>
+<div class="plan-resume" data-plan-progress="A" hidden>
+  <p role="status" data-plan-status></p><a class="mode-action" data-plan-next href="#m01-t01">Start core curriculum</a>
+</div>
+<p><a href="#roadmap-full">Open the full dependency roadmap</a></p>
+<p id="return-to-plan" hidden><a href="#quick">Return to Quick Learning</a></p>
+{detailed}'''
+
+
+def branding_ready():
+    return all((BRANDING / name).is_file() for name in BRAND_FILES)
+
+
+def brand_uri(name):
+    return "data:image/png;base64," + b64encode((BRANDING / name).read_bytes()).decode("ascii")
+
+
+def brand_links(embedded=False):
+    if not branding_ready():
+        return ""
+    ico = brand_uri("icon-48.png") if embedded else "assets/branding/favicon.ico"
+    icon32 = brand_uri("icon-32.png") if embedded else "assets/branding/icon-32.png"
+    touch = brand_uri("icon-180.png") if embedded else "assets/branding/icon-180.png"
+    return (f'<link rel="icon" href="{ico}">\n<link rel="icon" type="image/png" sizes="32x32" href="{icon32}">\n'
+            f'<link rel="apple-touch-icon" sizes="180x180" href="{touch}">')
+
+
+def academy_header(embedded=False):
+    icon = ""
+    if branding_ready():
+        source = brand_uri("icon-48.png") if embedded else "assets/branding/icon-48.png"
+        icon = f'<img src="{source}" width="32" height="32" alt="">'
+    prefix = "" if embedded else "master-curriculum.html"
+    return f'''<header class="academy-top"><div class="academy-wrap">
+  <a class="academy-brand" href="index.html">{icon}<span>TestNeural LLM Academy</span></a>
+  <div class="academy-top-actions">
+    <nav class="academy-top-modes" aria-label="Learning modes">
+      <a href="{prefix}#quick">Quick Learning</a>
+      <a href="{prefix}#detail">Complete Course</a>
+    </nav>
+    <button type="button" data-theme-toggle aria-pressed="false">Dark theme</button>
+  </div>
+</div></header>'''
+
+
+ACADEMY_MENU = '''<summary><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="menu-label">Course navigation</span></summary>'''
+ACADEMY_FOOTER = '''<footer class="academy-wrap academy-footer">
+  <span>TestNeural LLM Academy · Learn • Evaluate • Build</span><span>Developed by: Amit Baderia</span>
+</footer>'''
+ACADEMY_NAVIGATION = (
+    ("quick", "Quick Learning", "zap", "M13 2 4 14h7l-1 8 10-12h-7V2Z"),
+    ("detail", "Complete Course", "book-open",
+     "M12 7c-2-2-5-3-10-2v14c5-1 8 0 10 2 2-2 5-3 10-2V5c-5-1-8 0-10 2Zm0 0v14"),
+    ("roadmap", "Learning Roadmap", "map", "M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3V6Zm6-3v15m6-12v15"),
+    ("overview", "About the Course", "graduation-cap",
+     "m2 9 10-5 10 5-10 5-10-5Zm4 2v5c3 3 9 3 12 0v-5m4-2v7"),
+    ("resources", "Resources", "folder-open",
+     "M3 20V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v2M3 20h16l3-10H6L3 20Z"),
+)
+
+
+def academy_navigation(homepage=False):
+    links = []
+    for key, label, icon, path in ACADEMY_NAVIGATION:
+        fragment = "roadmap-full" if homepage and key == "roadmap" else key
+        href = f"master-curriculum.html#{fragment}" if homepage else f"#{fragment}"
+        link_id = "" if homepage else f' id="tab-{key}"'
+        links.append(
+            f'<a{link_id} href="{href}"><svg class="academy-nav-icon" data-icon="{icon}" '
+            'viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" '
+            'fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" '
+            f'stroke-linejoin="round"><path d="{path}"/></svg>{label}</a>'
+        )
+    return "\n".join(links)
+
+
+def render_home(data):
+    cards = []
+    for key in "BCDEF":
+        path = data["paths"][key]
+        link = "#quick-" + key.lower()
+        cards.append(f'''<article class="academy-card">
+          <h3>{escape(path["title"])}</h3>
+          <p class="card-time">{duration(path["hours"])} learner time · {len(path["closure"])} topics</p>
+          <p>{inline(path["goal"])}</p>
+          <a class="academy-button secondary" href="master-curriculum.html{link}">Open learning plan</a>
+        </article>''')
+    banner = ('<img src="assets/branding/academy-logo-banner.png" width="2172" height="724" '
+              'alt="TestNeural LLM Academy. Learn, Evaluate, Build. Developed by Amit Baderia.">') if branding_ready() else (
+                  "<strong>TestNeural LLM Academy · Learn • Evaluate • Build</strong>")
+    tokens = {
+        "BRAND_ICONS": brand_links(), "HEADER": academy_header(), "MENU": ACADEMY_MENU,
+        "NAVIGATION": academy_navigation(homepage=True),
+        "BANNER": banner, "PATHS": "".join(cards), "FOOTER": ACADEMY_FOOTER,
+        "CORE": duration(data["paths"]["A"]["hours"]), "PREP": duration(data["preparation"]),
+        "ELECTIVE": duration(data["paths"]["G"]["hours"] - data["paths"]["A"]["hours"]),
+    }
+    return re.sub(r"@([A-Z_]+)@", lambda match: tokens[match[1]], HOME_TEMPLATE.read_text(encoding="utf-8"))
+
+
+def overview_view(section, data):
+    blocks = section.strip().split("\n\n")
+    reading = prose("\n\n".join(block for block in blocks if not block.startswith("| Strand |")))
+    hours_table = prose(next(block for block in blocks if block.startswith("| Strand |")))
+    core, full = data["paths"]["A"], data["paths"]["G"]
+    return f'''<div class="overview-grid">
+  <div class="overview-reading">{reading}</div>
+  <aside class="overview-support" aria-label="Course summary and progress">
+    <section class="overview-card">
+      <h3>Course at a glance</h3>
+      <dl class="overview-stats">
+        <div><dt>Modules</dt><dd>{len(data["modules"])}</dd></div>
+        <div><dt>Topics</dt><dd>{len(data["topics"])}</dd></div>
+        <div><dt>Core study</dt><dd>{duration(core["hours"])}</dd></div>
+        <div><dt>Electives</dt><dd>{duration(full["hours"] - core["hours"])}</dd></div>
+      </dl>
+      <p><a href="#course-hours">See the time breakdown</a></p>
+    </section>
+    <section class="overview-card">
+      <h3>First time here?</h3>
+      <p>Check your readiness before starting the foundations.</p>
+      <p><a href="#preparation">Optional preparation · {duration(data["preparation"])}</a></p>
+    </section>
+    <section class="overview-card" id="course-progress" aria-labelledby="course-progress-title" hidden>
+      <h3 id="course-progress-title">Your learning progress</h3>
+      <p id="progress-label"></p>
+      <progress id="progress-bar" max="{len(data["topics"])}" value="0" aria-labelledby="progress-label"></progress>
+      <div class="overview-resume" data-plan-progress="selected" hidden>
+        <p data-resume-path></p>
+        <p role="status" data-plan-status></p>
+        <a class="mode-action" data-plan-next href="#m01-t01">Continue Learning</a>
+      </div>
+      <p id="storage-note">Progress stays in this browser. Export a backup to move it to another device.</p>
+      <details class="progress-tools">
+        <summary>Manage progress</summary>
+        <button type="button" id="export-progress">Export JSON</button>
+        <label for="import-progress">Import progress JSON</label>
+        <input id="import-progress" type="file" accept=".json,application/json">
+        <p id="import-status" role="status"></p>
+        <fieldset id="import-preview" hidden>
+          <legend>Review import</legend>
+          <label><input type="radio" name="import-mode" value="merge" checked> Merge with current progress</label>
+          <label><input type="radio" name="import-mode" value="replace"> Replace current progress</label>
+          <p id="import-summary" aria-live="polite"></p>
+          <button type="button" id="apply-import">Apply import</button>
+          <button type="button" id="cancel-import">Cancel</button>
+        </fieldset>
+        <button type="button" id="reset-progress">Reset progress</button>
+      </details>
+    </section>
+  </aside>
+</div>
+<section id="course-hours" aria-labelledby="course-hours-title">
+  <h3 id="course-hours-title">Course time breakdown</h3>
+  {hours_table}
+</section>'''
+
+
 def render(title, sections, stages, data):
     modules = [module for group in stages.values() for module in group]
     topics = [topic for module in modules for topic in module["topics"]]
-    hours = sum_hours(modules)
     coverage = Counter(topic["fields"]["Status"] for topic in topics)
     rows = []
     for module in modules:
@@ -455,55 +755,82 @@ def render(title, sections, stages, data):
             fields = topic["fields"]
             rows.append([f"[{topic['id']} — {topic['title']}](#{topic['id'].lower()})",
                          fields["Status"], fields["Existing files"], fields["Audit findings"]])
-    progress = f'''<div class="course-progress" id="course-progress" hidden>
-  <p id="progress-label" aria-live="polite"></p>
-  <progress id="progress-bar" max="{len(topics)}" value="0" aria-labelledby="progress-label"></progress>
-  <p id="storage-note">Progress is saved in this browser on this device. It does not synchronize across devices.</p>
-  <button type="button" id="reset-progress">Reset progress</button>
-</div>'''
     detailed = filters(modules) + html_stages(stages)
     coverage_view = (prose(sections["Repository coverage"])
                      + '<ul class="status-counts">' + "".join(f"<li>{status} <strong>{coverage[status]}</strong></li>" for status in STATUSES)
                      + "</ul>" + table(("Topic", "Status", "Existing files", "Audit findings"), rows, "Coverage by topic"))
-    tabs = (
-        ("overview", "Curriculum Overview", prose(sections["Course overview"]) + progress),
-        ("detail", "Detailed Curriculum", detailed),
-        ("paths", "Learning Paths", prose(sections["Learning paths"]) + '<p><a href="#roadmap">Open the Learning Roadmap</a></p>'),
-        ("roadmap", "Learning Roadmap", roadmap_view(data)),
-        ("coverage", "Existing Repository Coverage", coverage_view),
-        ("teaching", "Teaching Plan", prose(sections["Teaching plan"])),
-    )
-    links = "\n".join(f'<a id="tab-{key}" href="#{key}">{name}</a>' for key, name, _ in tabs)
-    panels = "\n".join(f'<section class="panel" id="{key}"><h2>{name}</h2>\n{content}\n</section>'
-                       for key, name, content in tabs)
-    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+    views = {
+        "quick": quick_view(data, sections["Learning paths"]),
+        "detail": complete_view(data, detailed),
+        "roadmap": roadmap_view(data),
+        "overview": overview_view(sections["Course overview"], data),
+        "resources": f'''<p><a href="index.html#library">Published examples and downloads</a> ·
+  <a href="concepts.html">Concepts reference</a></p>
+<section aria-labelledby="instructor-resources-title">
+  <h3 id="instructor-resources-title">Instructor Resources</h3>
+  <details id="coverage" class="course-reference" open>
+    <summary>Existing Repository Coverage</summary>
+    {coverage_view}
+  </details>
+  <details id="teaching" class="course-reference">
+    <summary>Teaching Plan</summary>
+    {prose(sections["Teaching plan"])}
+  </details>
+</section>''',
+    }
+    panels = "\n".join(f'<section class="panel" id="{key}"><h2>{label}</h2>\n{views[key]}\n</section>'
+                       for key, label, _, _ in ACADEMY_NAVIGATION)
+    branded_data = {**data, "brandIcon": brand_uri("icon-48.png") if branding_ready() else ""}
+    payload = json.dumps(branded_data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
     roadmap_script = ROADMAP_SCRIPT.read_text(encoding="utf-8")
+    modes_script = MODES_SCRIPT.read_text(encoding="utf-8")
+    progress_script = PROGRESS_SCRIPT.read_text(encoding="utf-8")
+    academy_css = (ASSETS / "academy.css").read_text(encoding="utf-8")
+    academy_js = (ASSETS / "academy.js").read_text(encoding="utf-8")
     return f'''<!doctype html>
 <!-- Generated from MASTER_CURRICULUM.md by docs/generate_master_curriculum.py. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{escape(title)}</title>
-<style>{CSS}{ROADMAP_CSS}</style>
+<title>{escape(title)} · TestNeural LLM Academy</title>
+{brand_links(embedded=True)}
+<link rel="canonical" href="https://llmacademy.testneural.in/docs/master-curriculum.html">
+<style>{CSS}{ROADMAP_CSS}{MODES_CSS}{academy_css}</style>
 </head>
-<body>
+<body class="academy-page">
 <a class="skip-link" href="#main">Skip to curriculum</a>
-<header class="hero">
-  <div class="shell">
-    <h1>{escape(title)}</h1>
-    <p>{len(modules)} modules · {len(topics)} topics · {hours[4]:g} learner hours · {hours[5]:g} instructor-led hours</p>
-  </div>
-</header>
-<main id="main" class="shell" tabindex="-1">
-  <nav id="tabs" aria-label="Curriculum views">{links}</nav>
+{academy_header(embedded=True)}
+<div class="academy-wrap academy-layout">
+  <details class="academy-sidebar" open>
+    {ACADEMY_MENU}
+    <nav id="tabs" aria-label="Curriculum views">{academy_navigation()}</nav>
+  </details>
+<main id="main" class="academy-main" tabindex="-1">
+  <header class="curriculum-heading">
+    <h1>LLM Evaluation Engineering</h1>
+    <p>{len(modules)} modules · {len(topics)} topics · {duration(data["paths"]["A"]["hours"])} core study · <a href="#course-progress">Your progress</a></p>
+  </header>
+  <section class="mode-picker" aria-labelledby="mode-heading">
+    <h2 id="mode-heading">Choose Your Learning Journey</h2>
+    <div class="mode-grid">
+      <a href="#quick"><strong>Quick Learning</strong><span>Learn what you need. Skip what you don't.</span></a>
+      <a href="#detail"><strong>Complete Course</strong><span>From beginner to advanced evaluation engineering.</span></a>
+    </div>
+  </section>
   {panels}
 </main>
+</div>
+{ACADEMY_FOOTER}
 <script id="roadmap-data" type="application/json">{payload}</script>
 <script>
 const portableCurriculum = "<!doctype html>\\n" + document.documentElement.outerHTML;
+{progress_script}
 {SCRIPT}
 {roadmap_script}
+{modes_script}
+LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);
+{academy_js}
 </script>
 </body>
 </html>
@@ -539,14 +866,20 @@ def main():
     parser.add_argument("--check", action="store_true", help="Verify the current output without writing files")
     args = parser.parse_args()
     try:
-        generated = render(*parse(SOURCE.read_text(encoding="utf-8")))
+        curriculum = parse(SOURCE.read_text(encoding="utf-8"))
+        outputs = {OUTPUT: render(*curriculum), HOME: render_home(curriculum[-1])}
+        if not branding_ready():
+            missing = ", ".join(name for name in BRAND_FILES if not (BRANDING / name).is_file())
+            print(f"Using text branding. Missing assets: {missing}")
+        for path, content in outputs.items():
+            if args.check:
+                require(path.is_file() and path.read_bytes() == content.encode("utf-8"),
+                        f"{path.name} is stale. Run python3 docs/generate_master_curriculum.py.")
+            else:
+                path.write_bytes(content.encode("utf-8"))
+                print(f"Generated {path.relative_to(ROOT)}.")
         if args.check:
-            require(OUTPUT.is_file() and OUTPUT.read_bytes() == generated.encode("utf-8"),
-                    "Generated HTML is stale. Run python3 docs/generate_master_curriculum.py.")
-            print("Curriculum source and generated HTML match.")
-        else:
-            OUTPUT.write_bytes(generated.encode("utf-8"))
-            print(f"Generated {OUTPUT.relative_to(ROOT)}.")
+            print("Curriculum and homepage match their sources.")
     except (OSError, ValueError) as error:
         parser.exit(1, f"Curriculum validation failed: {error}\n")
 
@@ -724,6 +1057,64 @@ ROADMAP_CSS = """
 }
 """
 
+MODES_CSS = """
+.mode-picker { margin:1.7rem 0 .6rem; }
+.mode-picker h2 { font-size:clamp(1.5rem,3.7vw,2rem); }
+.mode-grid,.path-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
+.mode-grid a { text-decoration:none; display:grid; gap:.2rem; padding:1rem 1.15rem;
+  border:1px solid #b2cbbf; border-radius:.75rem; background:#e9f4ee; color:#184c3e; }
+.mode-grid a:nth-child(2) { background:#eaf0fa; color:#24436a; border-color:#bacce5; }
+.mode-grid a:hover { box-shadow:0 0 0 2px currentColor; }
+.mode-grid strong { font-size:1.12rem; }
+.mode-tagline { font-size:1.13rem; font-weight:700; }
+.path-card,.quick-plan,.plan-resume,.complete-strands a { background:#fff; border:1px solid var(--line); border-radius:.7rem; }
+.path-card { display:flex; align-items:start; flex-direction:column; padding:1rem; border-top:4px solid #43886c; }
+.path-card:nth-child(3n+2) { border-top-color:#6c68a3; }
+.path-card:nth-child(3n) { border-top-color:#377498; }
+.path-card h3,.quick-plan h3 { margin:0; }
+.path-card h3 a { text-underline-offset:.25em; }
+.path-card p { margin:.35rem 0; }
+.path-card details { width:100%; margin:.45rem 0; background:#f6f8fa; }
+.path-card details p { margin:.4rem .7rem; }
+.path-card .mode-action { margin-top:auto; }
+.mode-action { display:inline-block; padding:.35rem .7rem; background:#075a51; color:white; font-weight:700;
+  border-radius:.38rem; text-decoration:none; }
+.mode-action:hover { background:#06483f; }
+.path-metrics { font-weight:750; color:#174e44; }
+.quick-plan { padding:clamp(.8rem,3vw,1.45rem); margin:1rem 0; scroll-margin-top:1rem; }
+.quick-plan > h3 { font-size:clamp(1.35rem,3vw,1.85rem); }
+.plan-brief dt { font-weight:700; }
+.plan-brief dd { margin:0 0 .5rem; }
+.plan-tools { display:flex; align-items:center; flex-wrap:wrap; gap:.55rem .75rem; }
+.plan-tools a { font-weight:700; }
+.plan-tools button { padding:.35rem .6rem; }
+.plan-share-note { color:var(--muted); font-size:.9rem; }
+.plan-resume { padding:.6rem .75rem; margin:.7rem 0; background:#eff7f3; }
+.plan-resume p { margin:.15rem 0 .45rem; font-weight:650; }
+.plan-steps { padding-left:1.6rem; }
+.plan-step { padding:.75rem .85rem; border-bottom:1px solid var(--line); }
+.plan-step.is-complete { background:#f1f8f2; }
+.plan-step p { margin:.25rem 0; }
+.plan-step-heading { display:flex; flex-wrap:wrap; gap:.3rem 1rem; justify-content:space-between; align-items:baseline; }
+.plan-step-heading h4 { margin:0; }
+.plan-step-heading span { font-weight:700; white-space:nowrap; }
+.plan-check { display:inline-flex; align-items:center; gap:.4rem; min-height:2.25rem; }
+.plan-check input { width:1.1rem; min-height:0; height:1.1rem; accent-color:var(--accent); }
+.plan-finish { padding:.65rem .85rem; margin:.8rem 0; background:#eaf0fa; border-radius:.5rem; }
+.plan-finish h4 { margin:0; }
+.quick-plan details { margin:.6rem 0; }
+.quick-plan details > p { margin:.4rem .8rem; }
+.plan-visual > div { overflow:auto; }
+.plan-visual svg { display:block; max-width:100%; min-width:42rem; height:auto; }
+.complete-strands { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
+.complete-strands a { display:grid; padding:.65rem .8rem; }
+.complete-strands span { text-decoration:none; color:var(--ink); font-size:.91rem; }
+@media(max-width:640px) { .mode-grid,.path-grid,.complete-strands { grid-template-columns:1fr; } }
+@media print {
+  .mode-picker,.plan-resume,.plan-tools,.plan-check { display:none !important; }
+}
+"""
+
 SCRIPT = """
 "use strict";
 
@@ -752,6 +1143,11 @@ function activate(tab) {
   document.dispatchEvent(new CustomEvent("curriculum-tab", {detail: tab.hash}));
 }
 
+function openTab(tab) {
+  activate(tab);
+  if (location.hash !== tab.hash) location.hash = tab.hash;
+}
+
 document.getElementById("tabs").setAttribute("role", "tablist");
 tabs.forEach((tab, index) => {
   tab.setAttribute("role", "tab");
@@ -762,17 +1158,17 @@ tabs.forEach((tab, index) => {
   tab.addEventListener("click", event => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    activate(tab);
+    openTab(tab);
   });
   tab.addEventListener("keydown", event => {
     const offsets = {ArrowLeft: -1, ArrowRight: 1, Home: -index, End: tabs.length - 1 - index};
     if (event.key === " ") {
       event.preventDefault();
-      activate(tab);
+      openTab(tab);
     } else if (Object.hasOwn(offsets, event.key)) {
       const next = tabs[(index + offsets[event.key] + tabs.length) % tabs.length];
       event.preventDefault();
-      activate(next);
+      openTab(next);
       next.focus();
     }
   });
@@ -817,16 +1213,27 @@ for (const [id, open] of [["expand", true], ["collapse", false]]) {
   });
 }
 
-function followHash(focus) {
-  const target = document.getElementById(location.hash.slice(1));
+function followHash(focus, hash = location.hash) {
+  const roadRoute = /^#roadmap-(?:[a-g]|full)$/.test(hash);
+  const target = document.getElementById(roadRoute ? "roadmap" : hash.slice(1));
   if (!target) return false;
   const panel = target.closest(".panel");
   if (!panel) return false;
   activate(tabs[panels.indexOf(panel)]);
+  document.dispatchEvent(new CustomEvent("curriculum-route", {detail: hash}));
+  if (target.matches(".topic, .module") && target.hidden) clearFilters();
+  for (let disclosure = target.closest("details"); disclosure; disclosure = disclosure.parentElement.closest("details")) {
+    disclosure.open = true;
+  }
   if (target.matches(".topic, .module")) {
-    if (target.hidden) clearFilters();
-    for (let details = target; details; details = details.parentElement.closest("details")) details.open = true;
     if (focus) target.querySelector("summary").focus({preventScroll: true});
+    target.scrollIntoView({block: "start"});
+  } else if (target.matches(".quick-plan, #preparation, #paths, #teaching, #coverage, #course-progress")) {
+    if (focus) {
+      const heading = target.querySelector("h3, summary") || target;
+      if (heading.tagName !== "SUMMARY") heading.tabIndex = -1;
+      heading.focus({preventScroll: true});
+    }
     target.scrollIntoView({block: "start"});
   }
   return true;
@@ -835,22 +1242,23 @@ function followHash(focus) {
 window.addEventListener("hashchange", () => followHash(true));
 document.addEventListener("click", event => {
   const link = event.target.closest('a[href^="#"]');
-  if (!link || link.hash !== location.hash || link.getAttribute("role") === "tab" ||
+  if (event.defaultPrevented || !link || link.hash !== location.hash || link.getAttribute("role") === "tab" ||
       event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   if (followHash(true)) event.preventDefault();
 });
 const preferredTab = document.documentElement.dataset.initialTab;
-activate(tabs.find(tab => tab.hash === "#" + preferredTab) || tabs[0]);
+const initialRoute = location.hash || (preferredTab ? "#" + preferredTab : "#overview");
+activate(tabs[0]);
 applyFilters();
-followHash(false);
+followHash(false, initialRoute);
 
-const storageKey = "llm-evaluation-master-curriculum-progress-v1";
-const choices = new Set(["Not Started", "In Progress", "Completed"]);
+const curriculum = JSON.parse(document.getElementById("roadmap-data").textContent);
 const menus = new Map(topics.map(topic => [topic.dataset.topic, topic.querySelector("[data-progress]")]));
 const progressBar = document.getElementById("progress-bar");
 const progressLabel = document.getElementById("progress-label");
 const storageNote = document.getElementById("storage-note");
 const defaultStorageNote = storageNote.textContent;
+let selectedPath = null;
 
 function reportStorage(available) {
   storageNote.textContent = available ? defaultStorageNote
@@ -872,41 +1280,64 @@ function updateProgress() {
   document.dispatchEvent(new Event("curriculum-progress"));
 }
 
-try {
-  const saved = JSON.parse(localStorage.getItem(storageKey));
-  for (const [id, menu] of menus) {
-    if (saved && Object.hasOwn(saved, id) && choices.has(saved[id])) menu.value = saved[id];
-  }
-} catch (error) {
-  if (!(error instanceof SyntaxError)) reportStorage(false);
+function readProgress() {
+  return {
+    statuses: Object.fromEntries(Array.from(menus)
+      .filter(([, menu]) => menu.value !== "Not Started").map(([id, menu]) => [id, menu.value])),
+    selectedPath,
+  };
 }
 
-for (const menu of menus.values()) {
-  menu.addEventListener("change", () => {
-    updateProgress();
-    const selected = Array.from(menus).filter(([, item]) => item.value !== "Not Started");
-    const progress = Object.fromEntries(selected.map(([id, item]) => [id, item.value]));
+function setProgress(current, persist) {
+  selectedPath = current.selectedPath;
+  for (const [id, menu] of menus) menu.value = current.statuses[id] || "Not Started";
+  if (persist) {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(progress));
+      LearningProgress.writeLocal(localStorage, current);
       reportStorage(true);
     } catch {
       reportStorage(false);
     }
-  });
-}
-document.getElementById("reset-progress").addEventListener("click", () => {
-  if (!window.confirm("Reset progress for all topics in this browser?")) return;
-  for (const menu of menus.values()) menu.value = "Not Started";
+  }
   updateProgress();
-  try {
-    localStorage.removeItem(storageKey);
-    reportStorage(true);
-  } catch {
-    reportStorage(false);
+}
+
+try {
+  setProgress(LearningProgress.readLocal(localStorage, curriculum.topics, curriculum.paths), false);
+} catch {
+  reportStorage(false);
+}
+const progressState = {
+  topics: curriculum.topics, paths: curriculum.paths, current: readProgress,
+  apply(current) { setProgress(current, true); },
+  select(key) {
+    if (Object.hasOwn(curriculum.paths, key) && key !== selectedPath) {
+      this.apply({...readProgress(), selectedPath: key});
+    }
+  },
+};
+for (const menu of menus.values()) menu.addEventListener("change", () => progressState.apply(readProgress()));
+function selectQuickPath(hash) {
+  const match = /^#quick-([a-g])$/.exec(hash);
+  if (match) progressState.select(match[1].toUpperCase());
+}
+document.addEventListener("curriculum-route", event => selectQuickPath(event.detail));
+document.addEventListener("curriculum-path-selected", event => {
+  progressState.select(event.detail);
+});
+selectQuickPath(initialRoute);
+window.addEventListener("storage", event => {
+  if (event.key === null || event.key?.startsWith("llm-evaluation-master-curriculum-")) {
+    try {
+      setProgress(LearningProgress.readLocal(localStorage, curriculum.topics, curriculum.paths), false);
+    } catch {
+      reportStorage(false);
+    }
   }
 });
 updateProgress();
 document.getElementById("course-progress").hidden = false;
+if (initialRoute === "#course-progress") followHash(false, initialRoute);
 
 let printState;
 window.addEventListener("beforeprint", () => {

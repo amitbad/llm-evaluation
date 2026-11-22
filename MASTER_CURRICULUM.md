@@ -41,6 +41,8 @@ Choose Langfuse for linked LLM traces, observations and scores. It depends on th
 
 ## Learning paths
 
+**Quick Learning** sequences the required topics for a specific goal. **Complete Learning** follows the full core in order and offers elective topics separately. Both use the same topic material and completion checkpoints. A learning plan describes the intended exercises and links to the existing material where it is available.
+
 ### Preparation / Getting Started
 
 Allow **7 learner hours** if all six readiness skills are new. Skip any row once you can demonstrate its checkpoint. Practice locally with synthetic files and saved responses. No model downloads or API credentials are needed. Preparation hours are separate from all path and curriculum totals.
@@ -74,6 +76,18 @@ Allow **7 learner hours** if all six readiness skills are new. Skip any row once
 - **F — Production Evaluation Engineer.** Follow the minimum route to [release gates](#m13) and [production monitoring](#m14). The route includes versioned cases, sample design and uncertainty. RAG, agent and defensive assessment topics are optional for this path unless they apply to the release under review.
 - **G — Complete Expert.** Complete core and the electives. Choose the preparation rows you need and add their hours if applicable.
 
+### Path goals and checkpoints
+
+| Path | Audience | Learning goal | Practical outcome | Final completion checkpoint | Suggested extensions |
+|---|---|---|---|---|---|
+| A | Learners seeking a structured foundation and a production portfolio piece | Design, run and defend an end-to-end evaluation. | Produce a versioned evaluator, replayable run, incident diagnosis and release recommendation. | Have a peer reproduce the scores and the incident regression, then defend the release decision with evidence. | — |
+| B | New evaluators, QA engineers and developers adding a first evaluation | Translate an evaluation goal into checks, references and human review. | Build a small deterministic scorer and compare its results with human labels and overlap metrics. | Score a frozen set, distinguish execution errors from wrong answers and explain a false pass and a false fail. | [M05-T02](#m05-t02) |
+| C | Engineers evaluating open-ended responses or introducing a model judge | Design and calibrate pointwise and pairwise judges on the same saved answers. | Produce a judge report that measures coverage, agreement, class errors and order sensitivity. | Reproduce a swapped pair, reject an unscorable verdict and justify what the judge can reliably decide. | [M18-T01](#m18-t01) |
+| D | Engineers evaluating systems that retrieve documents before answering | Measure retrieval, source support and answer correctness separately. | Build a labeled retrieval and claim report with citation checks and a controlled comparison using known-good passages. | Verify a ranking metric by hand, then show which stage caused a held-out failure and how to detect its return. | [M05-T02](#m05-t02), [M06-T01](#m06-t01), [M09-T02](#m09-t02) |
+| E | Engineers testing tool calls or multi-step workflows | Evaluate tool use, task completion, final state and recovery from saved traces. | Create a trace replay scorecard that accepts equivalent valid workflows and detects wrong state. | Pass two valid traces, reject a plausible wrong-state trace and explain the recovery and cost trade-off. | [M08-T01](#m08-t01), [M06-T01](#m06-t01), [M17-T03](#m17-t03) |
+| F | Engineers owning evaluation pipelines, release gates or production monitoring | Turn reproducible evaluation evidence into ongoing release and monitoring decisions. | Build a versioned gate and use synthetic traces to diagnose an incident and add a regression case. | Replay pass, fail and insufficient-evidence outcomes. Verify the trace diagnosis and justify a rollback trigger. | [M11-T03](#m11-t03), [M09-T03](#m09-t03) |
+| G | Learners seeking the whole curriculum plus specialized evaluation practice | Complete the core and extend evaluation to the expert domains. | Produce the core capstone and specialized evidence such as a field-level scorecard, coordinated workflow audit or migration assessment. | Reproduce the core capstone and defend the evidence and limits of the expert module submissions. | — |
+
 ### Using the dependency roadmap
 
 Open **Learning Roadmap** and select a module or topic by name or ID. The required route includes the target and every transitive mandatory topic, each counted once, in suggested study order. Selecting a module uses every topic in that module as a target. Recommended preparation adds context and may be skipped. A conditional link applies only to the exercise named beside it. Implementation readiness describes skills or tool setup you can demonstrate independently, so those notes and preparation hours sit outside the academic dependency graph. A dash means that category has no prerequisite.
@@ -86,6 +100,8 @@ Open **Learning Roadmap** and select a module or topic by name or ID. The requir
 - **I want to become a complete evaluation engineer.** Use Path A through the production capstone, then choose specialization topics or Path G. A short route establishes the advertised skills for its target. Course-wide competency requires the broader assessments and capstone.
 
 Use the module overview to orient yourself and the topic view to inspect exact links. Arrows point to the topic or module that uses the prerequisite. The unlocked list uses your saved completion status and identifies topics that would become available by completing the current target. Use **Export graph** to share the full module or topic diagram, or choose a target or path and export its required route. Image downloads use the full graph for that scope regardless of pan and zoom. The standalone HTML download opens on the roadmap and supports offline interaction.
+
+In **Quick Learning**, use **Download Learning Plan** to share an offline copy that opens on the selected path. Hosted path links use fragments such as `#quick-d`. For a local copy, share the downloaded HTML file. A local file address only works on the machine where that file is stored. Completion marks belong to the browser and are excluded from the shared plan.
 
 ### Instructor preparation
 

@@ -1,5 +1,64 @@
 # LLM Evaluation for Engineers — Hands-On, No Maths, No Fluff
 
+
+## TestNeural LLM Academy
+
+The [academy dashboard](docs/index.html) is the starting point for **LLM Evaluation Engineering**. **Quick Learning** gives each focused goal its required topics, hours, exercises and checkpoints. It also contains the Learning Paths comparison and preparation checklist. **Complete Course** follows the core sequence and lists optional preparation and electives separately. **Learning Roadmap** shows dependencies, supports pan and zoom, and offers SVG, PNG and standalone HTML downloads. **About the Course** shows the overview, hours and progress. **Resources** links to reference material and groups Existing Repository Coverage and the Teaching Plan under Instructor Resources. Published examples and planned teaching material are distinguished in the curriculum.
+
+### Required project tracking
+
+- Read [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) and [PROGRESS.md](PROGRESS.md) before starting development.
+- Update [PROGRESS.md](PROGRESS.md) after every meaningful milestone. Record what was implemented, tested, manually verified, and what is still pending.
+- Update [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) when architecture, requirements, or major decisions change. Preserve the decision history and explain why a decision was superseded.
+- Update [BUG_TRACKER.md](BUG_TRACKER.md) when an issue is discovered, fixed, or reopened.
+- Keep these documents aligned with the implementation and the checks actually performed.
+
+### Design and local preview
+
+- The approved V1 branding lives in [docs/assets/branding](docs/assets/branding/README.md). The dashboard uses the supplied banner. Navigation uses the compact mark, with a favicon and Apple touch icon. The generated curriculum embeds its branding and interface resources for offline sharing.
+- The dashboard template lives in [docs/templates/academy-home.html](docs/templates/academy-home.html). Both the dashboard and standalone curriculum are generated from [MASTER_CURRICULUM.md](MASTER_CURRICULUM.md) by the same Python script. Light and dark theme selection is local to the browser, as is progress.
+- Open `docs/index.html` directly with the companion files, or run `python3 -m http.server 8000 --bind 127.0.0.1` **from the repository root** and visit `http://127.0.0.1:8000/docs/`. This keeps sibling paths usable for the workbook and example report. Lessons load without a model or API key. Python exercises run separately in a local environment.
+- A downloaded plan is self-contained for its topics, progress controls and roadmap. Links to separate examples require their companion files. Browser local storage and downloads can be restricted for file URLs.
+- The desktop overview pairs reading with a smaller support column. On tablets and phones the columns stack. Wide tables scroll inside their own region. Durations are shown as hours and minutes. The source totals remain decimal hours.
+
+### Saving and moving progress
+
+**Continue Learning** opens the first unfinished required topic in order. About the Course uses the last selected path, or the beginner path by default. Opening a topic leaves its status unchanged. Both learning modes use the same progress.
+
+Under **About the Course → Your learning progress → Manage progress**, export a JSON backup or choose one to import. A preview lists completed topics added or removed, in-progress marks cleared, and the resulting path. Merge keeps existing marks unless the backup marks the same topic complete. Replace keeps only completed topics listed in the backup. Apply the import after reviewing it, or cancel to keep current progress. Reset requires confirmation.
+
+The version-1 JSON contains only a format identifier, version, completed topic IDs, optional selected path ID, and export timestamp. Invalid files and unknown topic IDs are rejected without changing progress. The browser stores progress locally and does not synchronize it across devices.
+
+```json
+{
+  "format": "testneural-academy-progress",
+  "version": 1,
+  "completedTopicIds": ["M01-T01"],
+  "selectedPath": "A",
+  "exportedAt": "2026-01-01T00:00:00.000Z"
+}
+```
+
+### Manual browser checklist
+
+1. Open the local academy and check the five navigation items at 375, 768, 1366, 1440 and 1920 pixels. Try both themes. Check that the About overview stacks on narrower screens and that the wide hours table scrolls independently.
+2. Open a Quick Learning path, mark a topic complete and check that Continue Learning advances in order. Reload and check the same topic in Complete Course.
+3. Export a backup and import it in another browser profile. Preview and cancel first, then try merge and replace. Try an invalid topic ID and check that current progress remains intact.
+4. Open Learning Paths from Quick Learning and check all seven paths. In Resources, open Existing Repository Coverage and Teaching Plan under Instructor Resources. Pan and zoom the roadmap, download a plan, and open its HTML offline.
+
+### Required HTML synchronization
+
+After any curriculum, generator, template, or embedded interface change, regenerate and check both generated pages before reviewing or committing them. Then validate the public release file set.
+
+```bash
+python3 docs/generate_master_curriculum.py
+python3 docs/generate_master_curriculum.py --check
+python3 scripts/validate_static_site.py
+```
+
+See the [static hosting notes](docs/DEPLOYMENT.md) for the public file boundary and release checks. The production runbook and service files are maintained outside this repository.
+
+
 A hands-on, structured learning journey for evaluating Large Language Models (LLMs) and GenAI systems.
 
 Built for **anyone who needs to test and evaluate LLM-based systems** — QA Engineers, Test Engineers, developers, or anyone at any stage of building or validating a GenAI product. No data science background required.
@@ -164,7 +223,7 @@ llm-evaluation/
 ├── model_client.py              ← universal caller: ollama / openai / anthropic / gemini
 ├── .env.example                 ← copy to .env, fill in API keys
 │
-├── docs/                        ← all documentation (serve with python3 -m http.server 8000)
+├── docs/                        ← website and lesson documentation
 │   ├── index.html               ← OPEN THIS — navigation hub
 │   ├── home.html                ← phase overview and status
 │   ├── test1.html – test14.html ← one file per test: results, learnings, findings
@@ -213,9 +272,9 @@ If you are new to GenAI evaluation, do not start by reading code files randomly.
 
 2. Open the documentation hub:
    ```bash
-   cd docs && python3 -m http.server 8000
+   python3 -m http.server 8000 --bind 127.0.0.1
    ```
-   Open **http://localhost:8000** in your browser.
+   Open **http://127.0.0.1:8000/docs/** from a server started at the repository root.
 
 3. Read in this order:
    - `docs/home.html` — overview of all phases
