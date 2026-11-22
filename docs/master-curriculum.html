@@ -407,18 +407,38 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .guided-progress { display:flex; flex-wrap:wrap; align-items:center; gap:.15rem .45rem;
   color:var(--secondary); font-size:.85rem; line-height:1.35; }
 #guided-progress { inline-size:clamp(3.5rem,12vw,8rem); height:.35rem; accent-color:var(--cyan); }
-.lesson-reader { margin-block:.45rem .65rem; color:var(--text); font-size:.875rem; line-height:1.35; }
+.lesson-layout > * { min-inline-size:0; }
+.lesson-reader { margin-block:0 .65rem; color:var(--text); font-size:.875rem; line-height:1.35; }
+.lesson-reader-disclosure { border:1px solid var(--stroke); border-radius:.5rem; background:var(--panel); }
+.lesson-reader-disclosure > summary { cursor:pointer; padding:.45rem .65rem; font-weight:700; }
+.lesson-reader-content { padding:.5rem .65rem; }
+.lesson-reader-heading { display:none; margin:0 0 .45rem; font-size:1rem; }
 .lesson-reader-controls,.lesson-reader-controls label { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem .5rem; }
 .lesson-reader-controls button,.lesson-reader-controls select {
   width:auto; max-width:100%; min-height:2.25rem; padding:.25rem .45rem; border:1px solid var(--stroke);
   border-radius:.35rem; background:var(--surface); color:var(--text); font:inherit;
 }
-.lesson-reader-controls label { min-width:0; max-width:100%; }
+.lesson-reader-controls label,.lesson-reader-controls select { min-inline-size:0; max-inline-size:100%; }
 .lesson-reader-controls button:disabled { color:var(--secondary); opacity:.65; cursor:default; }
 .lesson-reader-controls button:hover:enabled { background:var(--blue-wash); }
 .lesson-reader-controls :focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
-.lesson-reader .lesson-reader-status { display:flex; flex-wrap:wrap; gap:.15rem .55rem;
-  margin:.2rem 0 0; color:var(--secondary); font-size:.8rem; }
+.lesson-reader .lesson-reader-status { margin:0; color:var(--secondary); font-size:.8rem; }
+.lesson-reader .lesson-reader-status:not(:empty) { margin-block-start:.35rem; }
+@media screen and (min-width:75rem) {
+  .lesson-layout:has(> .lesson-reader:not([hidden])) {
+    display:grid; grid-template-columns:minmax(0,1fr) clamp(14rem,18vw,16rem); gap:1rem;
+  }
+  .lesson-layout > :not(.lesson-reader) { grid-column:1; grid-row:1; }
+  .lesson-layout > .lesson-reader {
+    grid-column:2; grid-row:1; position:sticky; inset-block-start:5rem; align-self:start;
+    max-block-size:calc(100vh - 5.75rem); overflow:auto; padding:.25rem; margin:0;
+  }
+  .lesson-layout .lesson-reader-disclosure > summary { display:none; }
+  .lesson-layout .lesson-reader-heading { display:block; }
+  .lesson-layout .lesson-reader-controls label:has([data-reading-section],[data-reading-voice]) {
+    display:grid; flex:0 0 100%;
+  }
+}
 .lesson-reading .is-being-read,.academy-lesson .is-being-read {
   background:var(--blue-wash); color:var(--text); box-shadow:inset .15rem 0 var(--blue); border-radius:.2rem;
 }
@@ -488,7 +508,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 @media(width > 960px) {
   .academy-page .academy-wrap { width:min(94vw,120rem); }
   .academy-page .academy-layout { grid-template-columns:12.5rem minmax(0,1fr); }
-  .guided-header,.lesson-reading { inline-size:88%; }
+  .guided-header { inline-size:88%; }
   .topic-controls select { min-height:2.25rem; padding-block:.22rem; }
   .academy-layout:has(> .academy-sidebar-column > .academy-sidebar:not([open])) { grid-template-columns:2.85rem minmax(0,1fr); }
   .academy-sidebar-column { position:sticky; inset-block-start:5rem; display:flex; flex-direction:column; gap:.55rem; }
@@ -1499,8 +1519,10 @@ stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></s
       <progress id="guided-progress" value="0" aria-labelledby="guided-progress-label"></progress>
     </div>
   </header>
-  <div class="lesson-reader" data-guided-reader hidden></div>
-  <div id="guided-material"></div>
+  <div class="lesson-layout">
+    <aside class="lesson-reader" data-guided-reader aria-label="Listen" hidden></aside>
+    <div id="guided-material"></div>
+  </div>
   <p id="guided-status" role="status"></p>
   <nav class="guided-actions" aria-label="Lesson actions">
     <a id="guided-previous" href="#quick" hidden>Previous Lesson</a>
@@ -1580,56 +1602,60 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m01-t01">Progress <select id="progress-m01-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m01-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m01-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m01-t01">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Explain how a language model receives text as tokens and why token counts affect capacity and cost.</li><li>Label the parts of a saved conversation and put the messages in the right order.</li><li>Calculate how much room is available for input and output in a model request.</li><li>Trace which evidence was kept or dropped and judge whether a reply is supported.</li><li>Run an offline diagnostic that distinguishes missing evidence from an input that cannot fit.</li></ul>
 <h4>Why This Lesson Matters</h4>
-<p>Imagine calling your bank and asking about a fee. The person on the phone says, “I can’t confirm that from the information I have.” The answer may be in the bank’s handbook. Did anyone give them the right page?</p>
-<p>The same thing can happen in a chat. A customer asks Harbor Leaf Bank for the Standard Savings minimum. The bank’s policy says ₹5,000, but the assistant can’t confirm it. Before rewriting the assistant’s answer, check what it received. Did the app leave out the page the assistant needed?</p>
-<p>The chat assistant uses an <strong>LLM</strong>, short for large language model. It can write a reply based on the information it receives. In this lesson, you’ll follow that information into a request and see what happens when some of it is left out.</p>
-<p>Harbor Leaf is fictional. Its policy sets a ₹5,000 minimum and a ₹100 monthly fee when the balance is below ₹5,000. These are teaching examples, not financial advice. The lab’s counts, limits, and prices are made up so you can check the arithmetic yourself.</p>
+<p>A customer asks Harbor Leaf Bank how much money they need to keep in Standard Savings. The bank’s policy says ₹5,000. The chat assistant says it can’t confirm the amount.</p>
+<p>Think about what you would do if a colleague gave that answer. You might ask, “Did you have the policy in front of you?” If they didn’t, giving them the right page would help more than telling them to try harder. You can ask the same question about a chat assistant.</p>
+<p>An LLM, short for large language model, is the part of this assistant that writes a reply from the information it receives. We’ll follow what the bank sends it. By the end, you’ll be able to tell the difference between a reply that gets the policy wrong and an app that never gives the assistant the policy.</p>
+<p>Harbor Leaf is fictional. Its Standard Savings policy sets a ₹5,000 minimum and charges ₹100 per month when the balance is below ₹5,000. The amounts, model limits, and prices are for practice.</p>
 <h5>Plan your study session</h5>
-<p>Set aside about 3.5 hours for the full lesson. Spend an hour on the concepts and worked demonstrations, an hour following the Python snippets, an hour trying the changes and completing the assignment, and half an hour checking your answers. Start with the explanations and try the arithmetic by hand before running the code. You can follow the worked demonstrations even if you are new to Python.</p>
+<p>The course sets aside 3.5 hours for this lesson. Read the explanations and try the small examples on paper first. Then work through the seven short programs, change one thing at a time, and use the practice questions and assignment to check what you can explain on your own.</p>
 <h4>Beginner Explanation</h4>
-<h5>1. What a token represents</h5>
-<p>Say you want to count the words in “balance ₹5,000.” You might point to two groups separated by a space. A model works with smaller pieces of text called <strong>tokens</strong>. A piece might be a word, part of a word, a punctuation mark, or a piece that includes a space.</p>
-<p>The program that splits text and gives each piece a number from its vocabulary is a <strong>tokenizer</strong>. The model works with those numbers. When it writes a reply, the numbers it generates can be turned back into text.</p>
-<p>Try splitting “balance ₹5,000” into “balance”, “ ₹”, “5”, “,”, and “000”. That’s five pieces for two space-separated groups. This is a made-up split. A real tokenizer may split it another way. Try picturing a name you’ve never seen or the same phrase with extra spaces. Spelling, language, and formatting can all change where the pieces fall. Different tokenizers may also count the same text differently.</p>
-<p>Why care about the split? Counting the pieces tells you how much information will fit and can help you estimate what a request costs. The splitting and numbering process is called <strong>tokenization</strong>.</p>
-<p>A word count is only a rough guide. For a real request, use the model’s tokenizer or the service’s measured usage if you have it. Write down how you got the count. In the lab, you’ll use counts we supplied. Neither Python’s character count nor splitting on spaces can reproduce a model’s tokenizer by itself.</p>
-<p>Think of the request and reply as two entries on a bill. <strong>Input tokens</strong> count the pieces sent to the model. <strong>Output tokens</strong> count the pieces it generates.</p>
-<p>Suppose input costs 2 paise per token and output costs 6. Sending 42 input tokens costs 84 paise. Generating a six-token reply costs another 36. That’s 120 paise, or ₹1.20. The arithmetic is 42 × 2 plus 6 × 6. Room you leave unused for a longer reply is capacity. Our pretend bill charges for tokens processed or generated. Real billing depends on the service and features in use.</p>
-<p>If you want to spend less, start by looking for text the assistant doesn’t need. Removing the policy might save a few tokens and leave the assistant without the answer.</p>
-<h5>2. Conversations are ordered records</h5>
-<p>Imagine reading a chat transcript where every line starts with the speaker’s name. You need to know who said what. In an app, each entry is a <strong>message</strong>. Its <strong>role</strong> tells you where it came from, and its <strong>content</strong> holds the text or other data.</p>
-<p>When the customer asks a question, the app gathers the information it will send. That package is the <strong>request</strong>. What comes back is the <strong>reply</strong>. We’ll call one exchange a <strong>turn</strong>. The chat on your screen may show more history than the app sends on that turn.</p>
-<p>Here are five role names you may see in an application. APIs differ in the roles they expose and how they represent instructions and tool calls. These descriptions explain the purpose of each role in the examples.</p>
-<ul><li><strong>System.</strong> Model-facing instructions for how the assistant should act. In this lesson the system message says it is Harbor Leaf Bank&#x27;s support assistant.</li><li><strong>Developer.</strong> Instructions from the application builder. Here the developer says to use approved policy evidence and to say when an answer cannot be confirmed.</li><li><strong>User.</strong> What the customer asks or supplies. “What is the Standard Savings minimum?” is a user message. If the user guesses ₹10,000, their guess is still user input. It has no policy authority.</li><li><strong>Assistant.</strong> Text or a structured request produced by the assistant. A prior reply can appear as an assistant message in later requests. Its claim is evidence of what was said in the past. You still need a policy to establish whether the claim is accurate.</li><li><strong>Tool.</strong> Data returned by a program the assistant or application used. In the example a lookup tool returns an approved policy excerpt. A lookup result can also contain a draft, an error, or text from an untrusted source. Review what it contains and where it came from.</li></ul>
-<p>Suppose the assistant asks a lookup program for the savings policy. That request to a program is a <strong>tool call</strong>. The excerpt the program sends back is a <strong>tool result</strong>. A real service interface, or <strong>API</strong>, may use an ID to match the result with the right call. The lab uses short records you can read by eye. Nothing runs a lookup.</p>
-<p>Could you file a receipt against the right order if the order number were missing? A program needs the same kind of link between a lookup and its result.</p>
-<p>Look at the <strong>message order</strong>, the sequence in which the records appear. In our example, you’ll see the instructions, the customer’s question, the assistant asking for a lookup, then the tool result. The assistant can use that result to answer. On the next turn, the app may include the earlier exchange with the new question.</p>
-<p>If the result comes first, belongs to a different call, or is missing, the request can be rejected or the wrong evidence can be used. When you investigate, keep the request or a <strong>trace</strong>, a record that shows what happened.</p>
-<h5>3. Context windows and token budgets</h5>
-<p>Imagine packing one bag for an outbound trip and leaving space to bring something home. The things you pack and the things you bring back have to fit in the same bag.</p>
-<p>In this lesson the shared space is the <strong>context window</strong>, the capacity for information the model can work with in a request and its generation. Instructions, messages, tool results, and the current question take up input space. So can extra pieces used to mark roles or organize a message. We call those extra tokens <strong>overhead</strong>. The reply takes up output space.</p>
-<p>Some model interfaces impose a separate <strong>input limit</strong> or <strong>output limit</strong>. An output limit is the largest reply the interface allows. The lab also uses an <strong>output reserve</strong>, the room the application decides to leave for the upcoming reply. Choose a reserve inside the output limit. Actual interfaces differ in how they enforce limits or reserve space. Use their documented rules for real requests.</p>
-<p>Let’s check a request before sending it. The model in our example has a 60-token window. Its separate limits are 54 input tokens and 16 output tokens. You leave 12 for the reply.</p>
-<p>First subtract the 12 reserved tokens from the 60-token window. That leaves 48. The input has to fit under both 48 and 54, so you have an <strong>input budget</strong> of 48. The unused part of that budget is the <strong>headroom</strong>. With 52 tokens of input, the headroom is 48 − 52 = −4. You need at least four more tokens of room.</p>
-<p>You could remove some input, leave a smaller reserve if the answer can still fit, or stop before sending the request. A smaller reserve makes room for input. It can also leave the assistant with too little room for a useful reply.</p>
-<p>What can an app do when a conversation is too long? It can drop part of the history to make the request fit. This is called <strong>truncation</strong>. Our example keeps the instructions and the latest question and removes the oldest history it’s allowed to drop first. Other apps might summarize, pick the most useful evidence, or stop. The rule you see here belongs to this fictional app. Check what a real app actually keeps or removes.</p>
-<p>Try the budget with three piles of input. The protected pile takes 28 tokens. An older exchange contains the policy and takes 14. Recent small talk takes 10. That’s 52, with room for only 48.</p>
-<p>If you remove the oldest pile, you’ll have 38 tokens left and no policy. What if you remove the small talk instead? You’ll have 42 tokens left and still have the answer. Check the order of the kept conversation too. When a lookup call and its result belong together, keep or drop them as a group.</p>
-<h5>4. Diagnose a failure at the stage where it happened</h5>
-<p>Put yourself in the reviewer’s chair. First ask, “What could the assistant see?” If it had the approved excerpt and said ₹10,000, you can point to a contradiction. If it never received the excerpt and said it couldn’t confirm the amount, the reply followed the instruction to <strong>abstain</strong>, or decline to make a factual claim without enough evidence.</p>
-<p>In that second run, the customer still didn’t get the answer. Look at how the app gathered or trimmed the policy before changing the assistant’s wording.</p>
-<p>Keep three pieces of information together. Save the intended request and its token budget. Save the messages actually sent or the list of groups dropped before sending. Save the reply and whether it met the expected behavior for that input. This distinguishes a request construction problem from a problem in the reply. It also prevents an old assistant answer or a customer&#x27;s guess from becoming the policy you grade against.</p>
+<h5>1. Read the chat the way a reviewer would</h5>
+<p>Start with two lines you might see on the screen.</p>
+<p><strong>Customer.</strong> “What is the Standard Savings minimum?”</p>
+<p><strong>Assistant.</strong> “I think it’s ₹10,000.”</p>
+<p>Those lines tell you what each person said. They don’t tell you which amount the bank actually requires. That’s why we keep track of where each line came from. Each entry is a <strong>message</strong>. Its <strong>role</strong> tells you who or what supplied it. Its <strong>content</strong> is what it says or carries. Here, the roles are <strong>user</strong> and <strong>assistant</strong>.</p>
+<p>Try swapping the speakers. If the customer wrote “I think it’s ₹10,000,” that would be a user guess. If the assistant wrote it, it would be a claim you could check. In neither case would it become bank policy.</p>
+<p>There may be instructions the customer never sees. In our example, an instruction saying “You are Harbor Leaf Bank’s assistant” belongs to the <strong>system</strong> role. Another instruction from the people building the app says to use approved policy and speak up if it can’t confirm an answer. We’ll label that one <strong>developer</strong>. Mark these two lines as instructions before you look for the policy. They tell the assistant what to do. Neither gives it the amount.</p>
+<h5>2. Follow the bank policy into the conversation</h5>
+<p>The assistant can ask a lookup program for the bank’s policy. A program it can use this way is called a <strong>tool</strong>. The assistant’s “Look up the Standard Savings policy” is the <strong>tool call</strong>. The line “Approved Standard Savings minimum: ₹5,000” that comes back is the <strong>tool result</strong>. That result gets the tool role. Its content carries the excerpt. A result could also carry an old draft or an error, so check what the program returned before treating it as evidence.</p>
+<p>Put the instructions, the customer’s question, the lookup call, and the result in order on paper. Put the call before the result. If you had two lookups, you’d also need to know which result belonged to which call. A real model service may use a matching ID. Its <strong>API</strong>, the agreed way the app communicates with the service, specifies the roles and any matching fields it expects. The examples here are simplified records you can read by eye.</p>
+<p>Now follow what happens when the customer sends a message. The app gathers the instructions and relevant entries and sends them to the model as a <strong>request</strong>. The answer that comes back is the <strong>reply</strong>. We’ll call one such exchange a <strong>turn</strong>. A chat screen can show previous turns that the app leaves out of the new request. You can see the whole conversation on screen without knowing which parts the model saw.</p>
+<p>The <strong>message order</strong> is the sequence the app sent. If the result comes before its call, an interface that requires that pairing may reject the request. If the wrong result is attached, the assistant may get the wrong policy. Save the actual ordered entries and what happened when the app sent them. That saved record is a <strong>trace</strong>. In Step 1 you’ll swap two lines of a trace and see why being able to read or print it tells you little about whether a service would accept it.</p>
+<h5>3. Count the pieces the model can use</h5>
+<p>Look at “balance ₹5,000.” On paper you might mark two groups separated by a space. Try marking five pieces instead. Put boundaries around “balance”, “ ₹”, “5”, “,”, and “000”. The original text is still there. You’ve divided it differently.</p>
+<p>A language model works with numbered pieces of text. Each piece is called a <strong>token</strong>, and the program that divides the text and looks up the number for each piece is a <strong>tokenizer</strong>. When the model writes a reply, the numbers it generates can be turned back into text.</p>
+<p>Our split is made up to show why words and tokens can have different counts. A real tokenizer can keep a whole word together, split an unfamiliar name, or attach a space to the next piece. Two tokenizers can split the same sentence differently. Try dividing “₹5,000” a different way and keeping every character. You’ll get a different number of pieces without changing the amount.</p>
+<p>The splitting and numbering process is called <strong>tokenization</strong>. When a team needs a real count, it uses the tokenizer for the actual model or checks the service’s measured usage. The lab gives you invented counts so you can practice adding them. A word count or a character count in Python doesn’t tell you how this model split the text.</p>
+<h5>4. Leave room for the reply</h5>
+<p>Suppose the app is ready to send a question that takes eight tokens. It also needs to send instructions and the policy, and it wants the assistant to write an answer. All those pieces have to fit. The total space the model can use for what goes in and what it generates is its <strong>context window</strong>.</p>
+<p>The material sent to the model uses <strong>input tokens</strong>. There can be extra tokens for how the request represents messages and roles. We’ll call those extras <strong>overhead</strong>. The text the model generates uses <strong>output tokens</strong>.</p>
+<p>Work through one limit at a time. Our teaching model’s window is 60 tokens. Leave 12 for the reply. That planned space is the <strong>output reserve</strong>, and it leaves 48 tokens for input. The model’s separate maximum for output is 16, so reserving 12 fits within it.</p>
+<p>Now check the separate <strong>input limit</strong>, which is 54. The app must satisfy both limits, so use the smaller number, 48. That’s the <strong>input budget</strong> for this request. If the material you want to send takes 52 tokens, subtract 52 from 48. The result is −4. This subtraction gives you the <strong>headroom</strong>, or room left for input. A negative result tells you how much you’re over.</p>
+<p>Try reserving eight instead of 12. The shared window leaves 52 for input, so the request fits with no input room to spare. The assistant also has less room to answer. In a real service, check how it applies its limits before you choose a reserve. If you need the larger reserve, you can shorten the input or stop before sending.</p>
+<h5>5. Decide what to leave out</h5>
+<p>Keep the 12-token reserve. The app needs 28 input tokens for its instructions, the current question, and overhead. It has two other groups it could remove. An older exchange contains the policy and takes 14. Some recent small talk takes 10. Together the input takes 52, and you can send only 48.</p>
+<p>Try crossing out the older exchange first. You have 38 input tokens left, but you crossed out the policy. Removing older messages to make a request fit is one example of <strong>truncation</strong>. Our app makes this choice because it removes the oldest group first. Other apps might choose what to keep by relevance, summarize earlier turns, or stop when the request is too large.</p>
+<p>Now cross out the small talk instead. You have 42 input tokens left, and you still have the policy. So which shortened request would you send? You need to make two checks. It must fit, and it must contain the information that answers the question. Keep the lookup call and its result together when you trim, and keep the remaining messages in their proper order.</p>
+<h5>6. Work out what actually went wrong</h5>
+<p>With the policy in the request, the assistant can give the approved amount. If it says ₹10,000 even after seeing ₹5,000, you have a contradiction to investigate. Now compare that with a request that lost the policy. “I can’t confirm the minimum” follows the instruction to say when the evidence is missing. Declining to make a claim in that situation is called <strong>abstaining</strong>.</p>
+<p>Try making a note for each run. Write what the app meant to send, what it actually sent, and what the assistant said. Where does the bank need to make a change? In the second run, check why the policy was dropped before asking the assistant to reply differently. Keeping the trace makes it possible for someone else to follow your decision.</p>
+<h5>7. Separate space you reserve from tokens you use</h5>
+<p>Go back to the version that keeps the policy and sends 42 input tokens. The app reserves 12 tokens for the reply, and the reply uses six. Suppose the input costs 2 paise per token and the generated output costs 6 paise per token.</p>
+<p>The input costs 42 × 2 = 84 paise. The reply costs 6 × 6 = 36 paise. The total is 120 paise, or ₹1.20. We charged for six generated tokens in this practice bill. The other six tokens were room the app left available. Real billing depends on the service and features in use.</p>
+<p>Try the same bill with a ten-token reply. You still had room for it in the same reserve. The extra four output tokens add 24 paise. If the team wants to cut costs, it can measure actual use and remove unnecessary text while checking that the policy is still present.</p>
 <h4>Worked Demonstration</h4>
 <h5>Example 1. The policy fits and the answer is supported</h5>
 <p class="lesson-evidence"><strong>User question.</strong> <span>“What minimum balance should I maintain for Standard Savings?”</span></p>
 <p class="lesson-evidence"><strong>Approved reference.</strong> <span>The approved Harbor Leaf policy requires ₹5,000. The application retains that policy and drops recent small talk, leaving 42 input tokens under an effective budget of 48.</span></p>
 <p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>“The minimum required balance for Standard Savings is ₹5,000.”</span></p>
-<p class="lesson-evidence"><strong>Assessment.</strong> <span>Find the lookup call, then the result that follows it. Does the result name Standard Savings? It does, and ₹5,000 matches the reply. There are six input tokens of room left. The extra room tells you the request fits. The excerpt tells you why you can accept the amount.</span></p>
+<p>Before reading the assessment, check whether 42 fits under 48. Then find the line that supports ₹5,000.</p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The result follows the lookup call and names Standard Savings. Its ₹5,000 matches the reply. There are six input tokens of room left, so the request fits. The excerpt tells you why you can accept the amount.</span></p>
 <p class="lesson-evidence"><strong>Failure classification.</strong> <span>No failure is observed on this case. Record the kept policy group so a later run can use the same evidence.</span></p>
 <h5>Example 2. A tool result appears in the wrong order</h5>
 <p class="lesson-evidence"><strong>User question.</strong> <span>“Does Harbor Leaf charge a fee below the minimum?”</span></p>
@@ -1645,52 +1671,25 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
 <p class="lesson-evidence"><strong>Failure classification.</strong> <span>Missing policy evidence in the request. Keep the same question and try trimming recent chat first. Then compare the next saved reply with the retained policy.</span></p>
 <p>Try the fee question as a second replay. Ask “What fee applies below the minimum?” in both saved requests. Keep the instructions unchanged. In the request that retains the fee schedule, check for ₹100 per month below ₹5,000. In the request that loses it, expect the assistant to say it cannot confirm the fee. A reply that confidently guesses the right fee still lacks support from that second request.</p>
 <h4>Hands-On Python Exercise</h4>
-<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
-<p>Use Python 3.10 or newer. Each step is complete on its own. The lab uses only standard Python, fictional saved data, and illustrative token counts. Running it needs no model, credentials, package installation, or network access.</p>
-<p><strong>Online editor.</strong> Use a Python 3 editor that runs without an account. Choose <strong>Copy Code</strong> on a Python block, paste it into the editor, and choose <strong>Run</strong>. Compare the output with the transcript. For the experiment, edit the stated line or value and run it again. Start each new step by replacing all the editor contents. The editor itself may need a connection to load.</p>
-<p><strong>Local terminal.</strong> A terminal is a window where you run commands and read their results. Copy the Python block into a plain-text file named <code>m01_t01_step.py</code>. Save it in UTF-8 so that the rupee symbol displays correctly. Open Terminal or PowerShell in the same folder. Check the version once and use the file command after each change. For the next step, replace the contents of the same file with the new block.</p>
-<div class="lesson-code">
-  <div class="lesson-copy-toolbar" hidden>
-    <span class="lesson-copy-status" role="status"></span>
-    <button type="button" class="lesson-copy-button">Copy Code</button>
-  </div>
-  <pre><code class="language-bash">python3 --version
-python3 m01_t01_step.py
-</code></pre>
-</div>
-<p>Use these commands on Windows if you have the Python launcher.</p>
-<div class="lesson-code">
-  <div class="lesson-copy-toolbar" hidden>
-    <span class="lesson-copy-status" role="status"></span>
-    <button type="button" class="lesson-copy-button">Copy Code</button>
-  </div>
-  <pre><code class="language-bash">py -3 --version
-py -3 m01_t01_step.py
-</code></pre>
-</div>
-<p>Use the Python block for running and the transcript for comparison. If your terminal cannot find the file, check its folder and filename. If Python reports an indentation error, copy the whole block again while preserving the spaces at the start of its lines.</p>
-</div></details>
+<h5>Run your first example</h5>
+<p>You can start with the code on this page. Each Python block includes everything it uses, including the sample data. The examples use Python 3.10 or newer and need no extra packages.</p>
+<ol><li>Select <strong>Copy Code</strong> beside the Python block.</li><li>Select <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>. It opens a new tab, so you can keep this lesson nearby.</li><li>Paste the copied code into the editor. If there’s already an example there, select it all and replace it. The link opens the editor without sending your code.</li><li>Select <strong>Run</strong> in the editor. Compare what appears below the editor with the Academy’s <strong>Expected output</strong>.</li><li>Try the change described under <strong>Experiment</strong>. Predict what will happen, then run it again and compare the new output.</li></ol>
+<p>Start each step with a fresh copy of its whole block. Use the fictional examples provided. Leave the spaces at the start of lines as you found them. If you get an error after editing, copy the original block again, run it once, and try the change on its own.</p>
 <h5>Step 1 — Store and inspect the messages</h5>
-<p>Let’s print the saved chat in order so you can spot a missing or misplaced record before judging the reply. Start with <code>messages = ...</code>. The name <code>messages</code> is a <strong>variable</strong>, and <code>=</code> gives that name the value on its right. The square brackets hold a <strong>list</strong>, a collection that keeps its items in order.</p>
-<p>Inside the list, each pair of braces holds a <strong>dictionary</strong>, a record with named fields. Text in quotation marks is a <strong>string</strong>. The names <code>&quot;role&quot;</code> and <code>&quot;content&quot;</code> are <strong>keys</strong>. A colon joins each key to its value, and commas separate fields and records.</p>
-<p>Now read <code>for message in messages:</code> as “take each saved message in order and call the current one <code>message</code>.” The colon starts the loop’s body. The spaces on the left, called <strong>indentation</strong>, keep the print line inside that body.</p>
-<p>On each pass, <code>message[&quot;role&quot;]</code> and <code>message[&quot;content&quot;]</code> look up the two fields. <code>print()</code> displays the values inside its parentheses. You give it three items separated by commas, so it places a space around the dash.</p>
-<p>Copy this block, paste it into the editor or local file, and run it.</p>
+<p>You’ll put a saved conversation on the screen in the order it happened. This gives you something you can read from top to bottom before you decide whether each line belongs there.</p>
+<p>Each line starts with <code>print()</code>. It shows the text inside its parentheses. The double quotes mark where the text starts and ends. Python calls a piece of text a <strong>string</strong>. It uses the quotes to read the string and leaves them off when it shows the result.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and run it. Follow the two lines at the end.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
-  <pre><code class="language-python">messages = [
-    {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are Harbor Leaf Bank&#x27;s assistant.&quot;},
-    {&quot;role&quot;: &quot;developer&quot;, &quot;content&quot;: &quot;Use the approved policy as evidence.&quot;},
-    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;What is the Standard Savings minimum?&quot;},
-    {&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;Look up the Standard Savings policy.&quot;},
-    {&quot;role&quot;: &quot;tool&quot;, &quot;content&quot;: &quot;Approved Standard Savings minimum: ₹5,000.&quot;},
-]
-
-for message in messages:
-    print(message[&quot;role&quot;], &quot;-&quot;, message[&quot;content&quot;])
+  <pre><code class="language-python">print(&quot;system - You are Harbor Leaf Bank&#x27;s assistant.&quot;)
+print(&quot;developer - Use the approved policy as evidence.&quot;)
+print(&quot;user - What is the Standard Savings minimum?&quot;)
+print(&quot;assistant - Look up the Standard Savings policy.&quot;)
+print(&quot;tool - Approved Standard Savings minimum: ₹5,000.&quot;)
 </code></pre>
 </div>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">system - You are Harbor Leaf Bank&#x27;s assistant.
@@ -1699,23 +1698,25 @@ user - What is the Standard Savings minimum?
 assistant - Look up the Standard Savings policy.
 tool - Approved Standard Savings minimum: ₹5,000.
 </code></pre></details>
-<p>This is a saved request up to the lookup result. The assistant record describes the lookup request. There is no generated customer answer yet.</p>
-<p><strong>Experiment.</strong> Swap the last two dictionary lines, keeping both commas. Run it again.</p>
+<p>The fourth line asks for the policy. The fifth gives the result of that lookup. At this point the assistant hasn’t sent an answer to the customer. Python prints those two lines in that order because that’s how they’re written.</p>
+<p><strong>Experiment.</strong> Move the last <code>print(...)</code> line above the one beginning <code>print(&quot;assistant</code>. Run it again. The result now appears before the request that produced it.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">system - You are Harbor Leaf Bank&#x27;s assistant.
 developer - Use the approved policy as evidence.
 user - What is the Standard Savings minimum?
 tool - Approved Standard Savings minimum: ₹5,000.
 assistant - Look up the Standard Savings policy.
 </code></pre></details>
-<p><strong>Checkpoint.</strong> Why did printing still work even though the new trace is suspect? The loop displays any list order it receives. The application&#x27;s request-order check must verify that the result follows the call.</p>
+<p><strong>Checkpoint.</strong> Why does the changed program still run? <code>print()</code> can show any text you give it. Python hasn’t checked whether it makes sense as a conversation. If you were sending it to a model service, you’d need a separate check that the lookup comes before its matching result.</p>
 <h5>Step 2 — Estimate a token budget</h5>
-<p>Imagine adding the amount on each line of a receipt. Here the items are request groups, and their amounts are <strong>illustrative token counts</strong>. Put the four extra tokens from <code>overhead</code> into <code>input_tokens</code> first. Digits without quotes, like <code>4</code>, are numbers Python can add.</p>
-<p>The loop prints one group and adds <code>group[&quot;tokens&quot;]</code> to the running total. The <code>+</code> sign does the addition. After the loop, the program prints the input total, then adds the reply reserve on the final line. That last sum tells you how much shared space you’re asking for.</p>
-<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<p>You’ll add up the pieces of a request before sending it. Start with one line from the program, <code>{&quot;name&quot;: &quot;system instructions&quot;, &quot;tokens&quot;: 8}</code>. It stores the name and its count together. A set of named values inside braces is called a <strong>dictionary</strong>. A name like <code>&quot;tokens&quot;</code> is a <strong>key</strong>. A colon joins the key to its value, and commas separate the pairs. Because <code>8</code> has no quotes, Python treats it as a number it can add.</p>
+<p>The square brackets hold the five rows in order. This is a <strong>list</strong>. Read <code>groups = [...]</code> as “give this list the name <code>groups</code>.” A name that refers to a value is a <strong>variable</strong>. The sign <code>=</code> gives the name on the left the value on the right. The same pattern sets <code>overhead</code> to four and starts <code>input_tokens</code> at that amount.</p>
+<p>Read <code>for group in groups:</code> as “take one row at a time and call it <code>group</code>.” That’s a <strong>loop</strong>. The colon starts the work to repeat, and the spaces on the left, called <strong>indentation</strong>, keep the two lines inside it. <code>group[&quot;tokens&quot;]</code> looks up the number in that row. On the first pass, Python prints the row and adds its eight tokens to the four already counted. The <code>+</code> sign adds, and <code>=</code> saves the new total. Commas between items in <code>print()</code> tell Python to show them with spaces between them.</p>
+<p>Replace the editor’s contents with this block using <strong>Copy Code</strong>, then select <strong>Run</strong>.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">groups = [
     {&quot;name&quot;: &quot;system instructions&quot;, &quot;tokens&quot;: 8},
@@ -1746,8 +1747,8 @@ Overhead: 4
 Input total: 52
 Input plus reserved output: 64
 </code></pre></details>
-<p>The five groups take 48 tokens. Add four overhead tokens for an input of 52. Reserving 12 more would require 64 tokens of shared space.</p>
-<p><strong>Experiment.</strong> Change only recent chat&#x27;s count from <code>10</code> to <code>6</code> to represent a shorter history. Run again.</p>
+<p>Read the last three lines of the output. The five groups added up to 48. The running total already includes four extra tokens, so it prints 52 for input. The final line adds the 12-token reply reserve, bringing the space requested to 64. The program only adds the counts supplied in the list.</p>
+<p><strong>Experiment.</strong> In the row named <code>recent chat</code>, change the number <code>10</code> to <code>6</code>. Run again. Removing four tokens reduces the input total to 48 and brings input plus the reserve down to 60.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">system instructions 8
 developer instructions 8
 approved policy exchange 14
@@ -1759,13 +1760,14 @@ Input plus reserved output: 60
 </code></pre></details>
 <p><strong>Checkpoint.</strong> Did this program discover the token count by reading the policy text? It added the counts you assigned to the groups. Use the correct model tokenizer or measured usage for real counts.</p>
 <h5>Step 3 — Calculate remaining context capacity</h5>
-<p>Will this request fit? Start with the four numbers at the top of the program. In <code>context_window - reserve</code>, <code>-</code> subtracts the room you want for the reply. <code>min()</code> picks the smaller of that allowance and the separate input limit, because you have to meet both.</p>
-<p>Next, subtract <code>input_tokens</code> from that budget to find <code>headroom</code>. Read the two print lines as “what fits?” and “how much room is left?” A negative result means you need to free space.</p>
-<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<p>You know the request wants 52 input tokens. Before sending it, work out what the model will allow. In <code>context_window - reserve</code>, <code>-</code> subtracts the room held for the reply. That gives you 48.</p>
+<p><code>min()</code> picks the smaller of the two numbers inside its parentheses. Here it compares the input limit of 54 with the 48 tokens left in the window. Once you have the smaller number, the next line subtracts what the request uses. That leaves the room available, or the amount you’re over if the result is negative.</p>
+<p>Copy this block into the editor and select <strong>Run</strong>. Compare the two lines with your calculation.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">context_window = 60
 input_limit = 54
@@ -1783,20 +1785,21 @@ print(&quot;Input headroom:&quot;, headroom)
 Input headroom: -4
 </code></pre></details>
 <p>With a 12-token reserve, the shared budget allows only 48 input tokens. The saved input needs four more than that.</p>
-<p><strong>Experiment.</strong> Change only <code>reserve</code> from <code>12</code> to <code>8</code> and rerun. Assume the fictional model permits both output settings.</p>
+<p><strong>Experiment.</strong> Change only <code>reserve</code> from <code>12</code> to <code>8</code> and rerun. Both reserves are allowed in this example. Leaving four fewer tokens for the reply makes the input fit exactly.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input budget: 52
 Input headroom: 0
 </code></pre></details>
 <p><strong>Checkpoint.</strong> What does zero headroom tell you? The input uses its entire allowance. The eight-token output reserve remains available. Any extra input would need to displace something or increase the budget.</p>
 <h5>Step 4 — Simulate dropping old history</h5>
-<p>Suppose you have to make the request smaller. First, add up the protected 28 tokens and the two history groups. The old lookup and its result are one group, so removing them won’t leave an unmatched tool record.</p>
-<p>Read <code>while input_tokens &gt; input_budget and history:</code> as “keep doing this while the input is too large and there are still groups to try.” A <strong>while loop</strong> repeats while its condition is true. <code>&gt;</code> means “greater than,” <code>and</code> requires both checks to hold, and a list used this way counts as true when it has items.</p>
-<p>The dot in <code>history.pop(0)</code> gives you an operation on the list. <code>pop(0)</code> takes the first item out, at position zero, and hands it back. Save it as <code>removed</code> so you can subtract its tokens and print its name. At the end, read the new total and the names in the list that remains. This lets you see what you gave up to fit the budget.</p>
-<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<p>You’ll make the request smaller and see what the app gives up. The first loop adds the two history groups to the protected 28 tokens. The lookup and its result are one group, so they can’t be separated by the trim.</p>
+<p>Start the next loop by asking whether 52 is greater than 48. The sign <code>&gt;</code> asks that question. <code>and</code> means both checks have to hold, and here <code>history</code> counts as true when it still has items. A <code>while</code> loop keeps trying its indented steps as long as the checks hold.</p>
+<p><code>history.pop(0)</code> takes out the first item. Python numbers list positions from zero. The dot gives you an operation that belongs to the list, and <code>pop(0)</code> hands back the row it took out. Save it under <code>removed</code> so you can print its name and subtract its tokens. The next time through, the input fits, so there’s nothing more to remove.</p>
+<p>Copy the block into the editor and select <strong>Run</strong>. Read what was dropped as well as the new count.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">protected = 28
 input_budget = 48
@@ -1826,7 +1829,7 @@ Input sent: 38
 History kept: recent chat
 </code></pre></details>
 <p>The oldest group is removed as a unit. Removing all 14 tokens leaves more room than the four needed to make the request fit. It also removes the approved amount. “Input sent” describes what the simulated application would send. The program only prints the report.</p>
-<p><strong>Experiment.</strong> Change only <code>input_budget</code> to <code>52</code>. Run again.</p>
+<p><strong>Experiment.</strong> Change only <code>input_budget</code> to <code>52</code>. Run again. The first check in the <code>while</code> line is now false, so both groups remain.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Before trimming: 52
 Input sent: 52
 History kept: approved policy exchange
@@ -1834,13 +1837,14 @@ History kept: recent chat
 </code></pre></details>
 <p><strong>Checkpoint.</strong> Does a smaller input count prove that the trim preserved the important evidence? Check the kept group names. The 38-token run fits and still loses the policy.</p>
 <h5>Step 5 — See how missing evidence changes evaluation</h5>
-<p>What if you keep the reply the same and change only what the assistant could read? The first row has the policy. The second lost it. <code>True</code> and <code>False</code> mean yes and no here.</p>
-<p>The first <code>if</code> runs its indented block when the policy is present. Its <code>else</code> gives you the expected reply when the policy is missing. The second <code>if</code> uses <code>==</code> to compare the saved reply with the expected text, then prints a label with the case name. For these exact, pre-reviewed replies, a text comparison is enough to let you practice reading the two results. A policy check that needs to accept new wording would need to look at meaning.</p>
-<p>Copy this block into a fresh editor or replace the previous file, then run it.</p>
+<p>Read the two saved replies first. Both say ₹5,000. The difference is what the assistant received. The first row has the policy and marks <code>policy_present</code> as <code>True</code>, which means yes. The second lost it and marks it <code>False</code>, or no.</p>
+<p>The program makes two decisions for each row. First, <code>if</code> runs its indented lines when the policy is present. <code>else</code>, which means “otherwise,” chooses the expected reply for a missing policy. That gives the name <code>expected</code> a value. Next <code>==</code> asks whether the saved reply exactly matches that expected text. One equals sign assigns a value. Two equals signs ask whether values are equal.</p>
+<p>Copy this block into the editor and select <strong>Run</strong>. Look for the row whose answer sounds right but fails the check.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cases = [
     {
@@ -1871,19 +1875,20 @@ for case in cases:
 Trimmed request - FAIL
 </code></pre></details>
 <p>Notice what stayed the same. Both saved replies say ₹5,000. The first passes because the evidence backs it up. In the second row, the number still happens to be correct, but the policy isn’t in the request. The scoring guide, also called a rubric, expects the assistant to say it can’t confirm the amount for that row.</p>
-<p><strong>Experiment.</strong> Change only the reply in the Trimmed request to <code>&quot;I can&#x27;t confirm that from the supplied policy.&quot;</code>. Run again.</p>
+<p><strong>Experiment.</strong> Change only the reply in the Trimmed request to <code>&quot;I can&#x27;t confirm that from the supplied policy.&quot;</code>. Run again. This time the reply matches what we expect when the policy is missing. The app still hasn’t supplied the policy.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Full request - PASS
 Trimmed request - PASS
 </code></pre></details>
 <p><strong>Checkpoint.</strong> Does the edited result prove the system answered the customer&#x27;s question? It shows that the answer handled missing evidence honestly under this rubric. You can record the application&#x27;s loss of the policy separately. In a broader test, review equivalent answers by meaning rather than requiring these exact strings. M02-T01 and M02-T02 develop those checks.</p>
 <h5>Step 6 — Compare used tokens with reserved space</h5>
-<p>Put the request and reply on separate lines of the pretend bill. Keeping the policy and removing small talk leaves 42 input tokens. The reserve is 12, but this reply actually uses six.</p>
+<p>Write two lines on the pretend bill, one for the request and one for the reply. The version that kept the policy sent 42 input tokens. The reply had space for 12 but used six. In this example, only those six get charged at the output rate.</p>
 <p>The <code>*</code> sign multiplies the used count by the price for that kind of token. <code>input_cost</code> holds the input charge and <code>output_cost</code> holds the reply charge. Add them in the last print line. We use whole paise in this example. There are 100 paise in a rupee.</p>
-<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<p>Copy the block into the editor and select <strong>Run</strong>. Find the reserved amount and the used amount before looking at the total.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">input_tokens = 42
 reserved_output = 12
@@ -1906,7 +1911,7 @@ Output used: 6
 Illustrative cost in paise: 120
 </code></pre></details>
 <p>The input costs 84 paise and the reply costs 36. The reserved space could have held more output. The simulated bill counts the six tokens actually generated.</p>
-<p><strong>Experiment.</strong> Change only <code>generated_tokens</code> to <code>10</code> and run again.</p>
+<p><strong>Experiment.</strong> Change only <code>generated_tokens</code> to <code>10</code> and run again. The reserve stays at 12. Four more tokens at six paise each add 24 paise to the total.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input tokens: 42
 Output reserved: 12
 Output used: 10
@@ -1914,15 +1919,17 @@ Illustrative cost in paise: 144
 </code></pre></details>
 <p><strong>Checkpoint.</strong> Why did the bill rise while the reserved capacity stayed the same? The reply used four additional tokens. At six paise each they add 24 paise. The application had room for them in the same reserve.</p>
 <h5>Step 7 — Build an offline context-budget diagnostic</h5>
-<p>Let’s put the budget checks in one place so you can try new values without rewriting the checks. A <strong>function</strong> is a named block you can run whenever you need it. <code>def</code> defines it. The names between the parentheses are <strong>parameters</strong>, the names it uses for the values you give it. The lines indented after the colon belong to the function.</p>
-<p>Python saves those instructions when it reads them. The <code>diagnose(...)</code> line at the bottom actually runs them with this example’s numbers and history. A plain <code>return</code> ends the current run of the function early, which is useful when the request can’t fit.</p>
+<p>You can now count the pieces, make room, and check that the policy is still there. This program runs those checks together so you can try a different request without rewriting them. Start with the numbers at the bottom. <code>diagnose(...)</code> sends those values into the part of the program that does the work.</p>
+<p>A named set of instructions like this is a <strong>function</strong>. At the top, <code>def</code> gives it the name <code>diagnose</code>. The names between the parentheses are <strong>parameters</strong>, the names it gives the values you pass in. The colon and indented lines show which instructions belong to it. Those lines run when you call <code>diagnose(...)</code> at the bottom. <code>return</code> ends the run early when there’s no useful trim to try.</p>
 <p>Read the function from the top. <code>reserve &lt; 1</code> checks for fewer than one reserved token. <code>or</code> means either check can trigger the stop. A reserve above the output limit also stops the run. The next stop protects the required input. If that much won’t fit, trimming history can’t fix it.</p>
-<p>If both checks pass, <code>history.copy()</code> makes a separate list. Removing entries from it leaves the original list alone. We don’t edit the dictionaries inside either list. As the loop trims, <code>dropped.append(...)</code> adds each removed name to the end of the report list. The last loop checks each kept group’s <code>approved_policy</code> flag. The function reports whether the request still has the evidence, as well as whether it fits.</p>
-<p>Copy the whole block into a fresh editor or replace the previous file, then run it.</p>
+<p>If both checks pass, <code>history.copy()</code> makes a separate list. Removing entries from it leaves the original list alone. We don’t edit the dictionaries inside either list. Start with <code>[]</code>, an empty list for the removed names. As the loop trims, <code>dropped.append(...)</code> adds each removed name to the end of that list.</p>
+<p>Start <code>policy_kept</code> at <code>False</code>, meaning no policy has been found in the kept list yet. The last loop checks <code>approved_policy</code> on each remaining row and changes <code>policy_kept</code> to <code>True</code> if it finds the policy. This lets the final lines show both whether the request fits and whether it still has the evidence.</p>
+<p>Copy the whole block into the editor and select <strong>Run</strong>. Read the dropped groups and the final evidence line together.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">def diagnose(window, input_limit, output_limit, reserve, protected, history):
     if reserve &lt; 1 or reserve &gt; output_limit:
@@ -1980,7 +1987,7 @@ Input headroom: 10
 Evidence: missing approved policy; expect abstention
 </code></pre></details>
 <p>The report prints a list of removed names, in square brackets, so you can inspect the trim. The request fits with ten tokens of input room after dropping the group. It has lost the evidence. The diagnostic tells you what to expect under the evidence rule. It does not generate a reply or certify that a real model would follow that rule.</p>
-<p><strong>Experiment.</strong> Change only <code>reserve</code> from <code>12</code> to <code>8</code>. Run again.</p>
+<p><strong>Experiment.</strong> Change only <code>reserve</code> from <code>12</code> to <code>8</code>. Run again. The input can now use 52 tokens. No group needs to go, so the last line says the policy is still there.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input budget: 52
 Dropped groups: []
 Input sent: 52
@@ -2016,7 +2023,7 @@ Evidence: approved policy retained
 <ol><li><strong>They may split the text differently.</strong> Tokenizers use different learned sets and splitting rules. Use the model-specific tokenizer or measured usage for real numbers.</li><li><strong>It remains a user message.</strong> The customer supplied that text. Check the approved policy for the account and date to establish the amount.</li><li><strong>Call first, result second.</strong> The result should correspond to the call that requested it. Keep the pairing when you include or drop a tool exchange.</li><li><strong>48 input tokens.</strong> Subtract the reserve from the context window for 48, then apply the lower of that allowance and the separate 54-token cap.</li><li><strong>A simple trim rule may rank age ahead of relevance.</strong> Inspect the actual selection and whether a necessary instruction or policy was lost.</li><li><strong>It establishes that the request is within the chosen size budget.</strong> Verify whether the actual input still supports the answer. The policy evidence check is independent of the arithmetic.</li><li><strong>Six output tokens.</strong> Capacity reserved for output and usage in this exercise are separate quantities. Real billing follows the applicable service rules.</li><li><strong>Check the request that reached the model and the expected behavior for it.</strong> If the policy was unavailable and the instructions require abstention, the wording may be appropriate. Record any evidence loss in request assembly separately.</li></ol>
 </div></details>
 <h4>Independent Assignment</h4>
-<p>Start with an unedited copy of Step 7. Your task is to keep the evidence under the original 12-token reserve. Record which groups the diagnostic drops, which input limits apply, and what reply behavior is appropriate. Use the strings and numbers already in the script.</p>
+<p>Return to Step 7 and select <strong>Copy Code</strong>. Paste that whole block into the online editor to start fresh. Your task is to keep the policy while reserving 12 tokens for the reply. Record which group is dropped, which input limit applies, and what you would expect the assistant to say with the evidence it has.</p>
 <ol><li><strong>Prioritize the policy.</strong> Swap the two dictionaries in <code>history</code> so that recent chat is the first group eligible for removal. Keep <code>window = 60</code> and all other values unchanged. Predict the report before running the program. Explain how this list models trim priority. A production application can choose which groups to keep while preserving the actual chronological order of the messages it sends.</li><li><strong>Trigger a stop.</strong> Leave that order in place and change only <code>window</code> to <code>37</code>. Predict whether the protected input can fit, run the program, and explain why dropping more history cannot help.</li></ol>
 <h5>Check your assignment</h5>
 <p>With the original window, the budget is 48. The report drops <code>recent chat</code>, sends 42 tokens with six tokens of headroom, and says <code>Evidence: approved policy retained</code>. The reply can use the approved amount, ₹5,000. You would still need to evaluate the actual reply.</p>
@@ -2031,6 +2038,7 @@ Evidence: approved policy retained
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m01-t02" data-topic="M01-T02" data-difficulty="Beginner"
@@ -2047,8 +2055,9 @@ data-subject="Foundations" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m01-t02">Progress <select id="progress-m01-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m01-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m01-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m01-t02">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Trace how a language model turns a saved request into a reply one piece at a time.</li><li>Explain how temperature and top-p change the choices available when a reply is written.</li><li>Use a seed to repeat a classroom simulation and explain why a real service may still give different answers.</li><li>Tell a completed answer, an answer cut short, and a request that never returned an answer apart.</li><li>Design a fair comparison using repeated runs, saved settings, and separate counts for different outcomes.</li></ul>
 <h4>Why This Lesson Matters</h4>
@@ -2144,6 +2153,7 @@ py -3 m01_t02_step.py
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">pieces = [&quot;The&quot;, &quot; minimum&quot;, &quot; is&quot;, &quot; ₹5,000&quot;, &quot;.&quot;]
 reply = &quot;&quot;
@@ -2176,6 +2186,7 @@ So far: The minimum is ₹10,000.
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">draw = 23
 
@@ -2208,6 +2219,7 @@ Next piece: balance
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">temperature = 0.5
 original = [0.60, 0.30, 0.10]
@@ -2245,6 +2257,7 @@ Chance: 10.0%
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cutoff = 80
 choices = [(&quot;is&quot;, 60), (&quot;balance&quot;, 30), (&quot;required&quot;, 10)]
@@ -2284,6 +2297,7 @@ required: 10.0%
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">import random
 
@@ -2340,6 +2354,7 @@ Seed: 8
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">budget = 8
 pieces = [&quot;The&quot;, &quot; minimum&quot;, &quot; is&quot;, &quot; ₹5,000&quot;, &quot;.&quot;, &quot;&lt;END&gt;&quot;]
@@ -2383,6 +2398,7 @@ Stop reason: length limit
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">snapshot = &quot;harbor-demo-v1&quot;
 top_p = 1.0
@@ -2523,6 +2539,7 @@ Wrong amount: 1 | Incomplete: 1 | Timeout: 0
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m01-t03" data-topic="M01-T03" data-difficulty="Beginner"
@@ -2539,8 +2556,9 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
       <label class="js-control" hidden for="progress-m01-t03">Progress <select id="progress-m01-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m01-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m01-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m01-t03">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Follow a question from the chat screen through the app and back to the customer.</li><li>Explain what each part does, including the policy lookup, instructions, model, and reply handling.</li><li>Write a small check with an expected result and compare it with what happened.</li><li>Use PASS, FAIL, and NEEDS REVIEW to report a correct reply, a wrong claim, missing information, or a technical problem.</li><li>Build an offline simulator and use its records to decide where to investigate a failure.</li></ul>
 <h4>Why This Lesson Matters</h4>
@@ -2632,6 +2650,7 @@ py -3 m01_t03_smoke.py
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">print(&quot;Customer: What is the minimum balance for a Standard Savings account?&quot;)
 print(&quot;Assistant: The minimum is ₹5,000.&quot;)
@@ -2654,6 +2673,7 @@ Assistant: The minimum is ₹10,000.
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">question = &quot;What is the minimum balance for a Standard Savings account?&quot;
 reference = &quot;Standard Savings requires a minimum of ₹5,000.&quot;
@@ -2690,6 +2710,7 @@ Elapsed: 400 ms
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">def answer(question):
     known_question = &quot;What is the minimum balance for a Standard Savings account?&quot;
@@ -2718,6 +2739,7 @@ print(&quot;Reply:&quot;, reply)
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">def answer(topic, policy):
     approved = policy.get(topic)
@@ -2749,6 +2771,7 @@ Reply: I can&#x27;t confirm that from the approved policy.
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">expected = &quot;The minimum is ₹5,000.&quot;
 actual = &quot;The minimum is ₹5,000.&quot;
@@ -2780,6 +2803,7 @@ Outcome: FAIL
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">minimum_question = &quot;What is the minimum balance for a Standard Savings account?&quot;
 atm_question = &quot;What is the daily ATM withdrawal limit?&quot;
@@ -2836,6 +2860,7 @@ S3 PASS | I can&#x27;t confirm that from the approved policy.
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">import json
 
@@ -2971,6 +2996,7 @@ NEEDS REVIEW: 1
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>0h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -2997,8 +3023,9 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m02-t01">Progress <select id="progress-m02-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m02-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m02-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m02-t01">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Write an evaluation objective that names the behavior, the unit you will judge, and the decision the evidence will support.</li><li>Turn a vague goal such as “give good answers” into observable pass criteria for at least three quality dimensions.</li><li>Use approved evidence to distinguish correctness from completeness and relevance from groundedness.</li><li>Assign more than one failure category to a response and distinguish an evaluator error from a product failure.</li><li>Run a short Python evaluation on saved responses, predict the effect of a change, and explain what its rules miss.</li><li>Design a small evaluation dataset and recommend what a fictional bank team should fix, review, or hold back.</li></ul>
 <h4>Why This Lesson Matters</h4>
@@ -3120,6 +3147,7 @@ py -3 m02_t01_step.py
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
 actual_amount = &quot;₹10,000&quot;
@@ -3146,6 +3174,7 @@ Assistant&#x27;s minimum: ₹5,000
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
 actual_amount = &quot;₹10,000&quot;
@@ -3170,6 +3199,7 @@ print(&quot;Exact text match:&quot;, same_text)
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
 actual_amount = &quot;₹10,000&quot;
@@ -3199,6 +3229,7 @@ Exact-text check: FAIL
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">expected_answer = &quot;The minimum is ₹5,000.&quot;
 responses = [
@@ -3238,6 +3269,7 @@ Exact text match: True
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">response = &quot;The minimum is ₹10,000. Please send your PIN.&quot;
 
@@ -3271,6 +3303,7 @@ Review: possible unsafe request
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">def minimum_signal(response, expected_amount):
     if expected_amount in response:
@@ -3301,6 +3334,7 @@ Minimum text found
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">def review_reply(response):
     flags = []
@@ -3413,6 +3447,7 @@ Reply: The minimum is ₹10,000. Keep your PIN private.
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m02-t02" data-topic="M02-T02" data-difficulty="Beginner"
@@ -3429,8 +3464,9 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
       <label class="js-control" hidden for="progress-m02-t02">Progress <select id="progress-m02-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m02-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m02-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m02-t02">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Separate an evidence-backed fact, a reference answer, and an evaluation label for a saved reply.</li><li>Choose the approved source for a question using its scope, authority, and effective dates.</li><li>Write several equally acceptable answers and a reference behavior for a question the policy cannot answer.</li><li>Build an eight-case benchmark with clear evidence, boundary cases, and unresolved cases.</li><li>Run a small offline benchmark and interpret PASS, FAIL, and NEEDS REVIEW.</li><li>Repair a faulty benchmark row while keeping earlier results reproducible.</li></ul>
 <h4>Why This Lesson Matters</h4>
@@ -3531,6 +3567,7 @@ py -3 m02_t02_step.py
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">question = &quot;What is the Standard Savings minimum?&quot;
 reference = &quot;The minimum is ₹5,000.&quot;
@@ -3556,6 +3593,7 @@ Approved reference: The minimum is ₹5,000.
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">reference = &quot;The minimum is ₹5,000.&quot;
 reply = &quot;The minimum is ₹5,000.&quot;
@@ -3578,6 +3616,7 @@ print(&quot;Exact match:&quot;, reply == reference)
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">accepted = [
     &quot;The minimum is ₹5,000.&quot;,
@@ -3603,6 +3642,7 @@ print(&quot;Known reference:&quot;, reply in accepted)
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">case = {
     &quot;id&quot;: &quot;B01&quot;,
@@ -3637,6 +3677,7 @@ Exact match: False
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cases = [
     {
@@ -3673,6 +3714,7 @@ B03 exact match: True
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">case = {
     &quot;source&quot;: &quot;SV-2&quot;,
@@ -3710,6 +3752,7 @@ NEEDS REVIEW: evidence is unresolved
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">def assess(case):
     if case[&quot;evidence&quot;] != &quot;resolved&quot;:
@@ -3864,6 +3907,7 @@ NEEDS REVIEW: 2
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m02-t03" data-topic="M02-T03" data-difficulty="Beginner"
@@ -3880,8 +3924,9 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m02-t03">Progress <select id="progress-m02-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m02-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m02-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m02-t03">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Design a repeatable offline evaluation using saved cases, approved evidence, and a scoring guide.</li><li>Compare a baseline and a candidate on the same cases and name the individual failures that changed.</li><li>Explain what live monitoring, user feedback, and controlled online experiments can each tell you.</li><li>Use a release gate to recommend approval, a block, or further investigation.</li><li>Investigate a production incident and turn it into a new test while preserving earlier results.</li></ul>
 <h4>Why This Lesson Matters</h4>
@@ -3970,6 +4015,7 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cases = [
     {&quot;id&quot;: &quot;B01&quot;, &quot;question&quot;: &quot;July 15 minimum?&quot;, &quot;source&quot;: &quot;SV-2&quot;},
@@ -3997,6 +4043,7 @@ B04 June 15 minimum? SV-2
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cases = [
     {
@@ -4035,6 +4082,7 @@ B06 FAIL
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">labels = [&quot;PASS&quot;, &quot;FAIL&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;FAIL&quot;, &quot;PASS&quot;]
 passes = 0
@@ -4075,6 +4123,7 @@ Decided: 5 of 6
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cases = [
     {&quot;id&quot;: &quot;B02&quot;, &quot;baseline&quot;: &quot;FAIL&quot;, &quot;candidate&quot;: &quot;PASS&quot;},
@@ -4105,6 +4154,7 @@ B07 PASS -&gt; PASS
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cases = [
     {&quot;id&quot;: &quot;B01&quot;, &quot;baseline&quot;: &quot;PASS&quot;, &quot;candidate&quot;: &quot;PASS&quot;},
@@ -4155,6 +4205,7 @@ B07 PENDING COMPARISON
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">cases = [
     {&quot;id&quot;: &quot;B01&quot;, &quot;label&quot;: &quot;PASS&quot;, &quot;safety&quot;: False},
@@ -4219,6 +4270,7 @@ Decision: INVESTIGATE - required case still under review
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
   </div>
   <pre><code class="language-python">offline_passes = 6
 offline_cases = 6
@@ -4329,6 +4381,7 @@ No confirmed issue in the sample; review pending records.
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -4355,8 +4408,9 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m03-t01">Progress <select id="progress-m03-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m03-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m03-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m03-t01">
   <p class="lesson-intro" data-lesson-search>String matches are fast and inspectable but can miss valid aliases and accept wrong claims.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4390,6 +4444,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m03-t02" data-topic="M03-T02" data-difficulty="Beginner"
@@ -4406,8 +4461,9 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m03-t02">Progress <select id="progress-m03-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m03-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m03-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m03-t02">
   <p class="lesson-intro" data-lesson-search>Valid JSON can still contain invalid field values or unsafe business outcomes.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4441,6 +4497,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m03-t03" data-topic="M03-T03" data-difficulty="Beginner"
@@ -4457,8 +4514,9 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m03-t03">Progress <select id="progress-m03-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m03-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m03-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m03-t03">
   <p class="lesson-intro" data-lesson-search>Human scores vary when criteria, inputs and evidence are underspecified.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4492,6 +4550,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -4521,8 +4580,9 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
       <label class="js-control" hidden for="progress-m04-t01">Progress <select id="progress-m04-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m04-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m04-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m04-t01">
   <p class="lesson-intro" data-lesson-search>A score cannot be reproduced if cases, labels and outputs drift independently.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4556,6 +4616,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m04-t02" data-topic="M04-T02" data-difficulty="Intermediate"
@@ -4572,8 +4633,9 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
       <label class="js-control" hidden for="progress-m04-t02">Progress <select id="progress-m04-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m04-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m04-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m04-t02">
   <p class="lesson-intro" data-lesson-search>Synthetic breadth is useful when human review and source-backed validation preserve label quality.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4607,6 +4669,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m04-t03" data-topic="M04-T03" data-difficulty="Intermediate"
@@ -4623,8 +4686,9 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m04-t03">Progress <select id="progress-m04-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m04-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m04-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m04-t03">
   <p class="lesson-intro" data-lesson-search>Aggregate gains may hide weak slices or reflect tuning on the evaluation set.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4658,6 +4722,7 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -4684,8 +4749,9 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m05-t01">Progress <select id="progress-m05-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m05-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m05-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m05-t01">
   <p class="lesson-intro" data-lesson-search>Surface overlap offers a useful baseline for bounded tasks and can penalize correct paraphrases.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4719,6 +4785,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m05-t02" data-topic="M05-T02" data-difficulty="Intermediate"
@@ -4735,8 +4802,9 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m05-t02">Progress <select id="progress-m05-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m05-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m05-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m05-t02">
   <p class="lesson-intro" data-lesson-search>Cosine can find paraphrases while giving high scores to changed amounts or opposite meanings.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4770,6 +4838,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m05-t03" data-topic="M05-T03" data-difficulty="Intermediate"
@@ -4786,8 +4855,9 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m05-t03">Progress <select id="progress-m05-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m05-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m05-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m05-t03">
   <p class="lesson-intro" data-lesson-search>An aggregate can hide an unacceptable error or an evaluator failure.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4821,6 +4891,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -4847,8 +4918,9 @@ data-subject="Judges" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m06-t01">Progress <select id="progress-m06-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m06-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m06-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m06-t01">
   <p class="lesson-intro" data-lesson-search>A model can scale rubric application while producing confident but unsupported labels.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4882,6 +4954,7 @@ data-subject="Judges" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m06-t02" data-topic="M06-T02" data-difficulty="Intermediate"
@@ -4898,8 +4971,9 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m06-t02">Progress <select id="progress-m06-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m06-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m06-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m06-t02">
   <p class="lesson-intro" data-lesson-search>Human and model disagreements identify ambiguous rubrics, default preferences and systematic miss rates.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4933,6 +5007,7 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m06-t03" data-topic="M06-T03" data-difficulty="Intermediate"
@@ -4949,8 +5024,9 @@ data-subject="Judges" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m06-t03">Progress <select id="progress-m06-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m06-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m06-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m06-t03">
   <p class="lesson-intro" data-lesson-search>Comparative judgments can simplify preference assessment and are sensitive to order and tie policy.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -4984,6 +5060,7 @@ data-subject="Judges" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -5010,8 +5087,9 @@ data-subject="Statistics" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m07-t01">Progress <select id="progress-m07-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m07-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m07-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m07-t01">
   <p class="lesson-intro" data-lesson-search>Repeated draws from the same case measure variation within that case and do not add independent case coverage.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5045,6 +5123,7 @@ data-subject="Statistics" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m07-t02" data-topic="M07-T02" data-difficulty="Intermediate"
@@ -5061,8 +5140,9 @@ data-subject="Statistics" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m07-t02">Progress <select id="progress-m07-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m07-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m07-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m07-t02">
   <p class="lesson-intro" data-lesson-search>Small apparent differences can be sampling noise or too small to matter operationally.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5096,6 +5176,7 @@ data-subject="Statistics" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m07-t03" data-topic="M07-T03" data-difficulty="Intermediate"
@@ -5112,8 +5193,9 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m07-t03">Progress <select id="progress-m07-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m07-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m07-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m07-t03">
   <p class="lesson-intro" data-lesson-search>A regression decision depends on what changed, what was held fixed and which risks matter.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5147,6 +5229,7 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -5176,8 +5259,9 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m08-t01">Progress <select id="progress-m08-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m08-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m08-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m08-t01">
   <p class="lesson-intro" data-lesson-search>A generator cannot reliably cite supporting evidence that the retriever missed.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5211,6 +5295,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m08-t02" data-topic="M08-T02" data-difficulty="Advanced"
@@ -5227,8 +5312,9 @@ data-subject="RAG" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m08-t02">Progress <select id="progress-m08-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m08-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m08-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m08-t02">
   <p class="lesson-intro" data-lesson-search>Answers may be correct without supporting evidence or faithfully repeat stale information.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5262,6 +5348,7 @@ data-subject="RAG" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m08-t03" data-topic="M08-T03" data-difficulty="Advanced"
@@ -5278,8 +5365,9 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m08-t03">Progress <select id="progress-m08-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m08-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m08-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m08-t03">
   <p class="lesson-intro" data-lesson-search>A better response score does not show whether retrieval or generation improved.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5313,6 +5401,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -5339,8 +5428,9 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m09-t01">Progress <select id="progress-m09-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m09-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m09-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m09-t01">
   <p class="lesson-intro" data-lesson-search>Portable contracts keep experiments reproducible when a framework or judge changes.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5374,6 +5464,7 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m09-t02" data-topic="M09-T02" data-difficulty="Advanced"
@@ -5390,8 +5481,9 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m09-t02">Progress <select id="progress-m09-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m09-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m09-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m09-t02">
   <p class="lesson-intro" data-lesson-search>Named metrics can answer different questions and require different labels or model calls.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5425,6 +5517,7 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m09-t03" data-topic="M09-T03" data-difficulty="Advanced"
@@ -5441,8 +5534,9 @@ data-subject="Frameworks" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m09-t03">Progress <select id="progress-m09-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m09-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m09-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m09-t03">
   <p class="lesson-intro" data-lesson-search>Declarative and hosted runs can support review workflows once score meaning is understood.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5476,6 +5570,7 @@ data-subject="Frameworks" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -5502,8 +5597,9 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m10-t01">Progress <select id="progress-m10-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m10-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m10-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m10-t01">
   <p class="lesson-intro" data-lesson-search>Tool response quality and authorization can fail independently of language quality.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5537,6 +5633,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m10-t02" data-topic="M10-T02" data-difficulty="Advanced"
@@ -5553,8 +5650,9 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m10-t02">Progress <select id="progress-m10-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m10-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m10-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m10-t02">
   <p class="lesson-intro" data-lesson-search>A path may look plausible while the task remains incomplete, and multiple paths may satisfy the same goal.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5588,6 +5686,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m10-t03" data-topic="M10-T03" data-difficulty="Advanced"
@@ -5604,8 +5703,9 @@ data-subject="Agents" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m10-t03">Progress <select id="progress-m10-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m10-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m10-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m10-t03">
   <p class="lesson-intro" data-lesson-search>Retries may improve success while increasing cost, delay or duplicated side effects.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5639,6 +5739,7 @@ data-subject="Agents" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -5665,8 +5766,9 @@ data-subject="Safety" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m11-t01">Progress <select id="progress-m11-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m11-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m11-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m11-t01">
   <p class="lesson-intro" data-lesson-search>Safety depends on intended policy and on continuing to answer permissible requests.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5700,6 +5802,7 @@ data-subject="Safety" data-status="Needs Correction" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m11-t02" data-topic="M11-T02" data-difficulty="Advanced"
@@ -5716,8 +5819,9 @@ data-subject="Safety" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m11-t02">Progress <select id="progress-m11-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m11-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m11-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m11-t02">
   <p class="lesson-intro" data-lesson-search>A global metric can hide subgroup harms, and observability can increase unnecessary data exposure.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5751,6 +5855,7 @@ data-subject="Safety" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m11-t03" data-topic="M11-T03" data-difficulty="Advanced"
@@ -5767,8 +5872,9 @@ data-subject="Safety" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m11-t03">Progress <select id="progress-m11-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m11-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m11-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m11-t03">
   <p class="lesson-intro" data-lesson-search>A high benchmark average can hide severe edge cases, instability or a new false refusal.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5802,6 +5908,7 @@ data-subject="Safety" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -5828,8 +5935,9 @@ data-subject="Red Teaming" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m12-t01">Progress <select id="progress-m12-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m12-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m12-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m12-t01">
   <p class="lesson-intro" data-lesson-search>A clear threat model links input channels and assets to the defensive behavior expected of the system.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5863,6 +5971,7 @@ data-subject="Red Teaming" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m12-t02" data-topic="M12-T02" data-difficulty="Advanced"
@@ -5879,8 +5988,9 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m12-t02">Progress <select id="progress-m12-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m12-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m12-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m12-t02">
   <p class="lesson-intro" data-lesson-search>Untrusted content, permission mistakes and exposure can occur even when an assistant response sounds appropriate.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5914,6 +6024,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m12-t03" data-topic="M12-T03" data-difficulty="Advanced"
@@ -5930,8 +6041,9 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m12-t03">Progress <select id="progress-m12-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m12-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m12-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m12-t03">
   <p class="lesson-intro" data-lesson-search>A change needs independent evidence on fixed cases, unseen controls and ordinary permitted behavior.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -5965,6 +6077,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -5994,8 +6107,9 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
       <label class="js-control" hidden for="progress-m13-t01">Progress <select id="progress-m13-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m13-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m13-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m13-t01">
   <p class="lesson-intro" data-lesson-search>A run must be attributable to one prompt, model, dataset, scorer and configuration.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6029,6 +6143,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m13-t02" data-topic="M13-T02" data-difficulty="Advanced"
@@ -6045,8 +6160,9 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m13-t02">Progress <select id="progress-m13-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m13-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m13-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m13-t02">
   <p class="lesson-intro" data-lesson-search>A flaky or underpowered gate can block safe changes or let critical regressions through.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6080,6 +6196,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m13-t03" data-topic="M13-T03" data-difficulty="Advanced"
@@ -6096,8 +6213,9 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m13-t03">Progress <select id="progress-m13-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m13-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m13-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m13-t03">
   <p class="lesson-intro" data-lesson-search>A release requires ownership, explicit risk acceptance and a reversible decision backed by evidence.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6131,6 +6249,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -6157,8 +6276,9 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
       <label class="js-control" hidden for="progress-m14-t01">Progress <select id="progress-m14-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m14-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m14-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m14-t01">
   <p class="lesson-intro" data-lesson-search>Observability makes eval context inspectable across stages and repeated incidents.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6192,6 +6312,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m14-t02" data-topic="M14-T02" data-difficulty="Advanced"
@@ -6208,8 +6329,9 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m14-t02">Progress <select id="progress-m14-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m14-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m14-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m14-t02">
   <p class="lesson-intro" data-lesson-search>Trace populations, user feedback and evaluator behavior can change independently.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6243,6 +6365,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m14-t03" data-topic="M14-T03" data-difficulty="Advanced"
@@ -6259,8 +6382,9 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
       <label class="js-control" hidden for="progress-m14-t03">Progress <select id="progress-m14-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m14-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m14-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m14-t03">
   <p class="lesson-intro" data-lesson-search>Per-call averages can hide long waits, retry spend and the cost of an evaluation pipeline itself.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6294,6 +6418,7 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -6320,8 +6445,9 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m15-t01">Progress <select id="progress-m15-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m15-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m15-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m15-t01">
   <p class="lesson-intro" data-lesson-search>A clear evidence plan lets teammates challenge a metric before the implementation hides its assumptions.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6355,6 +6481,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m15-t02" data-topic="M15-T02" data-difficulty="Advanced"
@@ -6371,8 +6498,9 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m15-t02">Progress <select id="progress-m15-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m15-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m15-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m15-t02">
   <p class="lesson-intro" data-lesson-search>Releasing and teaching an evaluation requires explaining what evidence can support under uncertainty.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6406,6 +6534,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>2h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -6435,8 +6564,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m16-t01">Progress <select id="progress-m16-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m16-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m16-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m16-t01">
   <p class="lesson-intro" data-lesson-search>Translation coverage and native-language correctness can diverge, especially for domain terms.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6470,6 +6600,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m16-t02" data-topic="M16-T02" data-difficulty="Expert"
@@ -6486,8 +6617,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m16-t02">Progress <select id="progress-m16-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m16-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m16-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m16-t02">
   <p class="lesson-intro" data-lesson-search>A fluent answer can hallucinate a visual detail or attach the right explanation to the wrong region.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6521,6 +6653,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m16-t03" data-topic="M16-T03" data-difficulty="Expert"
@@ -6537,8 +6670,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m16-t03">Progress <select id="progress-m16-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m16-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m16-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m16-t03">
   <p class="lesson-intro" data-lesson-search>More context can degrade evidence use or change which policy applies.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6572,6 +6706,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -6598,8 +6733,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m17-t01">Progress <select id="progress-m17-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m17-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m17-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m17-t01">
   <p class="lesson-intro" data-lesson-search>A document can produce correct fields with wrong entities or invalid records.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6633,6 +6769,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m17-t02" data-topic="M17-T02" data-difficulty="Expert"
@@ -6649,8 +6786,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m17-t02">Progress <select id="progress-m17-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m17-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m17-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m17-t02">
   <p class="lesson-intro" data-lesson-search>Generated code needs evidence from compilation, behavior, safety and resource bounds.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6684,6 +6822,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m17-t03" data-topic="M17-T03" data-difficulty="Expert"
@@ -6700,8 +6839,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m17-t03">Progress <select id="progress-m17-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m17-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m17-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m17-t03">
   <p class="lesson-intro" data-lesson-search>A successful individual reply can hide lost handoffs or inconsistent shared state.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6735,6 +6875,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -6761,8 +6902,9 @@ data-subject="Specialization" data-status="Needs Improvement" data-track="Electi
       <label class="js-control" hidden for="progress-m18-t01">Progress <select id="progress-m18-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m18-t01">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m18-t01">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m18-t01">
   <p class="lesson-intro" data-lesson-search>Judge ensembles and better prompts remain vulnerable to common correlated errors.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6796,6 +6938,7 @@ data-subject="Specialization" data-status="Needs Improvement" data-track="Electi
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m18-t02" data-topic="M18-T02" data-difficulty="Expert"
@@ -6812,8 +6955,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m18-t02">Progress <select id="progress-m18-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m18-t02">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m18-t02">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m18-t02">
   <p class="lesson-intro" data-lesson-search>Benchmarks can overstate capability and model swaps can change outputs, costs and judge behavior simultaneously.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6847,6 +6991,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
 <details class="topic" id="m18-t03" data-topic="M18-T03" data-difficulty="Expert"
@@ -6863,8 +7008,9 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m18-t03">Progress <select id="progress-m18-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m18-t03">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    <div class="topic-material lesson-reading" id="material-m18-t03">
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      <div class="topic-material lesson-reading" id="material-m18-t03">
   <p class="lesson-intro" data-lesson-search>Evaluation methods need a testable hypothesis and comparisons against simpler baselines.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -6898,6 +7044,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
 </div>
+    </div>
   </div>
 </details>
   </div>
@@ -8593,17 +8740,20 @@ followHash(false, initialRoute);
 (() => {
   "use strict";
 
-  const toolbar = '<div class="lesson-reader-controls" role="group" aria-label="Listen to this lesson">' +
-    '<strong>Listen to this lesson</strong>' +
+  const toolbar = '<details class="lesson-reader-disclosure"><summary>Listen</summary>' +
+    '<div class="lesson-reader-content"><h4 class="lesson-reader-heading">Listen</h4>' +
+    '<div class="lesson-reader-controls" role="group" aria-label="Listen to this lesson">' +
     '<label>Section <select data-reading-section><option>Entire lesson</option></select></label>' +
     '<button type="button" data-reading-start>Read Aloud</button>' +
     '<button type="button" data-reading-pause disabled>Pause</button>' +
     '<button type="button" data-reading-stop disabled>Stop</button>' +
-    '<label>Speed <select data-reading-speed>' +
+    '<label>Voice <select data-reading-voice title="Changing voice restarts the current paragraph." disabled>' +
+    '<option value="" disabled>No English voices listed</option></select></label>' +
+    '<button type="button" data-reading-preview disabled>Preview Voice</button>' +
+    '<label>Speed <select data-reading-speed title="Changing speed restarts the current paragraph.">' +
     '<option value="0.75">0.75×</option><option value="1" selected>1×</option>' +
     '<option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></label>' +
-    '</div><p class="lesson-reader-status"><span data-reading-status role="status"></span>' +
-    '<span data-reading-hint>Changing speed restarts the current paragraph.</span></p>';
+    '</div><p class="lesson-reader-status" data-reading-status role="status"></p></div></details>';
 
   const blocked = "[hidden], [aria-hidden=true], [data-reading-skip], details:not([open]), " +
     "nav, header, footer, script, style, button, input, select, textarea, label, progress, " +
@@ -8613,8 +8763,24 @@ followHash(false, initialRoute);
   const command = /^(?:\$\s|(?:cd|python[\d.]*|py|pip[\d.]*|ollama|docker(?:-compose)?)\s+\S)/;
   const supported = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
   const speech = supported ? window.speechSynthesis : null;
+  const storageKey = "testneural-academy-reading";
+  const speeds = ["0.75", "1", "1.25", "1.5"];
+  const views = [];
+  const preferences = {voice: "", speed: "1"};
   let active = null;
   let englishVoice;
+  let choices = new Map();
+
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(storageKey));
+    if (typeof saved?.voice === "string") preferences.voice = saved.voice;
+    if (speeds.includes(saved?.speed)) preferences.speed = saved.speed;
+  } catch { /* Storage may be unavailable. */ }
+
+  function savePreferences() {
+    try { window.localStorage.setItem(storageKey, JSON.stringify(preferences)); }
+    catch { /* Keep the preference for this visit. */ }
+  }
 
   function collect(roots) {
     const entries = [];
@@ -8669,19 +8835,97 @@ followHash(false, initialRoute);
     });
   }
 
-  function updateVoice() {
-    const voices = speech.getVoices();
-    englishVoice = voices.find(voice => voice.localService && /^en\b/i.test(voice.lang) && voice.default) ||
-      voices.find(voice => voice.localService && /^en\b/i.test(voice.lang));
+  function syncPreferences() {
+    const value = [...choices].find(([, voice]) => voice === englishVoice)?.[0] || "";
+    for (const view of views) {
+      view.voice.value = value;
+      view.speed.value = preferences.speed;
+    }
+  }
+
+  function updateVoices() {
+    const locale = voice => voice.lang.toLowerCase().replaceAll("_", "-");
+    // Browsers do not expose a quality or gender rating. Use only voice-name quality hints.
+    const quality = voice => Number(/\b(natural|neural|premium|enhanced|studio)\b/i.test(voice.name));
+    const voices = speech.getVoices().filter(voice => voice.name && /^en(?:-|$)/.test(locale(voice)));
+    voices.sort((a, b) => quality(b) - quality(a) ||
+      Number(Boolean(b.localService)) - Number(Boolean(a.localService)) ||
+      Number(Boolean(b.default)) - Number(Boolean(a.default)));
+    const id = voice => voice.voiceURI || voice.name + "|" + locale(voice);
+    const available = new Map();
+    const labels = new Set();
+    for (const voice of voices) {
+      const label = voice.name + "|" + locale(voice);
+      if (available.has(id(voice)) || labels.has(label)) continue;
+      available.set(id(voice), voice);
+      labels.add(label);
+    }
+
+    choices = new Map();
+    for (const [region, limit] of [["en-in", 2], ["en-us", 2], ["en-gb", 1]]) {
+      const regional = [...available.values()].filter(voice => locale(voice) === region);
+      for (const voice of regional.slice(0, limit)) choices.set(id(voice), voice);
+    }
+    for (const [key, voice] of available) {
+      if (choices.size === 5) break;
+      choices.set(key, voice);
+    }
+    const saved = available.get(preferences.voice);
+    if (saved && !choices.has(preferences.voice)) {
+      if (choices.size === 5) choices.delete([...choices.keys()].at(-1));
+      choices.set(preferences.voice, saved);
+    }
+    const options = [...choices.values()];
+    englishVoice = saved || options.find(voice => voice.localService && voice.default) ||
+      options.find(voice => voice.localService) || options[0];
+
+    for (const view of views) {
+      view.voice.length = 0;
+      for (const [key, voice] of choices) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = voice.name + " · " + voice.lang;
+        view.voice.append(option);
+      }
+      if (!choices.size) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "No English voices listed";
+        option.disabled = true;
+        view.voice.append(option);
+      }
+      view.voice.disabled = !choices.size;
+      view.preview.disabled = !englishVoice || Boolean(active);
+    }
+    syncPreferences();
+  }
+
+  function restartParagraph() {
+    const session = active;
+    if (!session) return;
+    if (session.preview) {
+      stop("Voice preview stopped.");
+      return;
+    }
+    const node = session.queue[session.index]?.node;
+    while (session.index > 0 && session.queue[session.index - 1]?.node === node) session.index -= 1;
+    session.utterance = null;
+    speech.cancel();
+    if (session.paused) showState(session.view, "Paused. Resume restarts this paragraph with your new settings.");
+    else {
+      showState(session.view, "Reading. Restarted this paragraph.");
+      speak(session);
+    }
   }
 
   function showState(view, message) {
     const session = active?.view === view ? active : null;
     view.start.textContent = view.section.selectedIndex > 0 ? "Read Section" : "Read Aloud";
     view.start.disabled = !supported || !view.hasText || session?.startSection === view.section.selectedIndex;
-    view.pause.disabled = !session;
+    view.pause.disabled = !session || session.preview;
     view.pause.textContent = session?.paused ? "Resume" : "Pause";
     view.stop.disabled = !session;
+    for (const reader of views) reader.preview.disabled = !englishVoice || Boolean(active);
     if (message !== undefined) view.status.textContent = message;
   }
 
@@ -8724,7 +8968,7 @@ followHash(false, initialRoute);
     if (!chunk) {
       active = null;
       clearHighlight(session);
-      showState(session.view, "Reading finished.");
+      showState(session.view, session.preview ? "Voice preview finished." : "Reading finished.");
       return;
     }
     if (session.highlight !== chunk.node) {
@@ -8735,7 +8979,7 @@ followHash(false, initialRoute);
     const utterance = new window.SpeechSynthesisUtterance(chunk.text);
     utterance.lang = englishVoice?.lang || "en";
     if (englishVoice) utterance.voice = englishVoice;
-    utterance.rate = Number(session.view.speed.value);
+    utterance.rate = Number(preferences.speed);
     session.utterance = utterance;
 
     const current = () => active === session && session.utterance === utterance;
@@ -8746,13 +8990,15 @@ followHash(false, initialRoute);
       if (!session.paused) speak(session);
     };
     utterance.onerror = () => {
-      if (current()) stop("Read Aloud could not continue. Select Read Aloud or Read Section to try again.");
+      if (current()) stop(session.preview ? "Voice preview could not play." :
+        "Read Aloud could not continue. Select Read Aloud or Read Section to try again.");
     };
     try {
       if (speech.paused) speech.resume();
       speech.speak(utterance);
     } catch {
-      if (current()) stop("Read Aloud could not start. Check your browser’s speech settings and try again.");
+      if (current()) stop(session.preview ? "Voice preview could not play." :
+        "Read Aloud could not start. Check your browser’s speech settings and try again.");
     }
   }
 
@@ -8774,6 +9020,10 @@ followHash(false, initialRoute);
   }
 
   function pause(session, message = "Paused. Select Resume to continue.") {
+    if (session.preview) {
+      stop("Voice preview stopped.");
+      return;
+    }
     session.paused = true;
     speech.pause();
     showState(session.view, message);
@@ -8783,8 +9033,10 @@ followHash(false, initialRoute);
     holder.innerHTML = toolbar;
     const find = name => holder.querySelector("[data-reading-" + name + "]");
     const view = {holder, source, heading, section: find("section"), start: find("start"),
-      pause: find("pause"), stop: find("stop"), speed: find("speed"), status: find("status")};
-    holder.querySelector("[data-reading-hint]").hidden = !supported;
+      pause: find("pause"), stop: find("stop"), speed: find("speed"), status: find("status"),
+      voice: find("voice"), preview: find("preview")};
+    views.push(view);
+    view.speed.value = preferences.speed;
     holder.hidden = false;
     view.start.addEventListener("click", () => start(view));
     view.section.addEventListener("change", () => showState(view));
@@ -8793,7 +9045,7 @@ followHash(false, initialRoute);
     });
     view.pause.addEventListener("click", () => {
       const session = active;
-      if (session?.view !== view || document.hidden) return;
+      if (session?.view !== view || session.preview || document.hidden) return;
       if (!session.paused) {
         pause(session);
         return;
@@ -8804,14 +9056,29 @@ followHash(false, initialRoute);
       else speak(session);
     });
     view.speed.addEventListener("change", () => {
-      const session = active;
-      if (session?.view !== view) return;
-      const node = session.queue[session.index]?.node;
-      while (session.index > 0 && session.queue[session.index - 1]?.node === node) session.index -= 1;
-      session.utterance = null;
-      speech.cancel();
-      if (session.paused) showState(view, "Paused. Resume starts this paragraph at the new speed.");
-      else speak(session);
+      if (!speeds.includes(view.speed.value) || view.speed.value === preferences.speed) return;
+      preferences.speed = view.speed.value;
+      savePreferences();
+      syncPreferences();
+      restartParagraph();
+    });
+    view.voice.addEventListener("change", () => {
+      const voice = choices.get(view.voice.value);
+      if (!voice) return;
+      const changed = englishVoice !== voice;
+      englishVoice = voice;
+      preferences.voice = view.voice.value;
+      savePreferences();
+      syncPreferences();
+      if (changed) restartParagraph();
+    });
+    view.preview.addEventListener("click", () => {
+      if (active || !englishVoice || document.hidden || !isVisible(view)) return;
+      const queue = [{node: null, text: "Hello. This is how your lessons will sound."}];
+      const session = {view, preview: true, queue, index: 0, paused: false, utterance: null, highlight: null};
+      active = session;
+      showState(view, "Playing voice preview.");
+      speak(session);
     });
     refresh(view);
     return view;
@@ -8827,6 +9094,16 @@ followHash(false, initialRoute);
     bind(holder, () => [holder.parentElement.querySelector(".topic-material")], "H4");
   }
   const guidedView = guided && bind(guided, () => [document.querySelector("#guided-material > .topic-material")], "H4");
+  const lessonReaders = guided ? [guided, ...complete] : complete;
+  if (lessonReaders.length) {
+    const wide = window.matchMedia("(min-width: 75rem)");
+    const disclosures = Array.from(lessonReaders, holder => holder.querySelector(".lesson-reader-disclosure"));
+    const applyLayout = () => {
+      for (const disclosure of disclosures) disclosure.open = wide.matches;
+    };
+    applyLayout();
+    wide.addEventListener("change", applyLayout);
+  }
   const subtitle = document.querySelector("body.academy-lesson:not(.academy-reference) > .subtitle");
   if (subtitle) {
     // The published experiments place their lesson directly between the subtitle and footer.
@@ -8839,8 +9116,8 @@ followHash(false, initialRoute);
   }
 
   if (!speech || !(guided || complete.length || subtitle)) return;
-  updateVoice();
-  speech.addEventListener?.("voiceschanged", updateVoice);
+  updateVoices();
+  speech.addEventListener?.("voiceschanged", updateVoices);
   document.addEventListener("curriculum-tab", () => stop());
   document.addEventListener("curriculum-route", () => {
     stop();

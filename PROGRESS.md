@@ -33,6 +33,9 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 | Inference and repeatability | [M01-T02](docs/lessons/m01-t02.md) introduces next-token selection, temperature, top-p, seeds, model snapshots, and stop reasons through Harbor Leaf Bank. It includes three worked demonstrations, a seven-step offline lab, four solved exercises, eight explained knowledge checks, and an independent comparison assignment. |
 | Application architecture and smoke testing | [M01-T03](docs/lessons/m01-t03.md) follows a Harbor Leaf Bank question through the app. Three worked demonstrations and a seven-step offline lab teach how to report PASS, FAIL, and NEEDS REVIEW and locate the stage to investigate. Four solved exercises, eight knowledge checks, and a fee-helper assignment complete the chapter. |
 | Lesson Read Aloud | The shared native-speech controller supports whole lessons and individual sections in Quick Learning, Complete Course, and 14 published experiments. It highlights each passage, offers four speeds, and stops when the learner changes lessons. |
+| Sticky Listen sidebar | Both curriculum modes keep Read Aloud in a desktop right column with a compact disclosure on narrow screens. The speed hint moved to the selector tooltip and playback feedback. |
+| Read Aloud voices | The shared reader lists up to five English voices reported by the browser, previews a voice while narration is idle, and remembers the voice and speed locally. An unavailable saved voice falls back to an available voice. |
+| Beginner Python reference chapter | M01-T01 now introduces concepts in the order a bank question encounters them and starts Python with printing before collections and loops. The first run uses Copy Code, an online editor, and the displayed output. The permanent execution standard is in [TEACHING_GUIDELINES.md](TEACHING_GUIDELINES.md). Completed lesson count is unchanged. |
 
 ## Tested
 
@@ -61,6 +64,9 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 - All seven M01-T02 examples and seven experiments matched the displayed output on Python 3.12.7. The independent assignment produced the expected counts for both settings. The chapter uses simulated draws and saved fictional answers. The four-hour study estimate still needs learner feedback.
 - All seven M01-T03 examples, seven experiments, and the assignment run matched their expected results on Python 3.12.7. The lab uses a fixed-rule stand-in and simulated transport failures. It does not exercise a live model or connection.
 - Read Aloud was tested with mocked speech synthesis and a non-browser DOM fixture. Tests cover playback, cancellation, stale callbacks, speed and visibility changes, content filtering, unavailable synthesis, and late-loading voices. Static validation includes the shared script as a public asset.
+- The sticky sidebar change passed generation, validation of 30 public files, and all 23 non-browser tests. The new test covers layout changes and confirms that collapsing the narrow disclosure keeps current narration playing.
+- Voice tests cover regional and quality preferences, duplicate filtering, preview, storage, late-loading and missing voices, and restarting only the current paragraph. Auditioning real voices and verifying availability across devices still requires browser review.
+- The revised M01-T01 passed 16 isolated Python runs in an empty directory, including all seven baseline examples, their seven edits, and two assignment variants. Generator synchronization, validation of 30 public files, and all 22 non-browser tests passed. Human review of the editor workflow and concept sequence is pending.
 
 ## Manually verified
 
@@ -71,8 +77,20 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 1. Restore the two public exercise URLs and consider redirects from old `/docs/` links. These are production follow-ups for the owner. The QA update did not deploy or change the VPS.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
-4. Ask a beginner to try a revised chapter and record where they pause or need help. Use that feedback and the [teaching guidelines](TEACHING_GUIDELINES.md) when expanding the remaining outlines. Check reading width, code-block scrolling, and disclosure controls in both themes.
-5. Develop M03-T01, **Exact match, normalization and rules**, next. Modules 1 and 2 are complete locally. Use the Harbor Leaf fee paraphrase to introduce false failures in text-based scoring.
-6. In Chrome and Safari, open an authored lesson in both learning modes. Test playback, pause and resume, Stop, speed, section boundaries, highlight contrast, code and solution skipping, and lesson switches. Check keyboard focus and wrapping on a narrow screen. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Native audio and OS voice behavior remain unverified.
+4. **M01-T01 teaching-quality approval is pending human review.** Ask a first-time learner to open the chapter, run a block using the editor link, and explain what changed after an experiment. Check that the revised order makes sense without help.
+5. **New lesson development is paused until M01-T01 is approved.** After approval, use the reference chapter to correct the beginner workflows identified below. M03-T01 remains the next unfinished topic.
+6. In Chrome and Safari, open an authored lesson in both learning modes. Scroll to verify the wide Listen sidebar stays below the site header. Check for page overflow with a long code line and a long section name. At a narrower width, verify that keyboard users can open and close Listen and that audio continues when the disclosure closes. Test speed, highlighting, and lesson switches in both themes. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Sticky positioning, visual wrapping, and native audio behavior remain unverified.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).
+
+## Beginner Python workflow audit
+
+The other completed lesson sources were inspected and left unchanged. Their examples supply their sample data. The friction is in the setup and execution directions.
+
+| Lesson | Instruction found | Why it can block a beginner | Correction after approval |
+| --- | --- | --- | --- |
+| M01-T02 | Save `m01_t02_step.py` as UTF-8 and use `cd` before running the command. | The learner has to name, encode, and find a file before trying a draw. | Lead with Copy Code and the editor link. Move local setup to optional guidance. |
+| M01-T03 | Create `m01_t03_smoke.py`, open a terminal, and check the interpreter. | The first response demo appears to require a configured command line. | Start with paste and Run. Keep version and launcher checks separate. |
+| M02-T01 | Open Terminal or PowerShell, then replace `m02_t01_step.py` in Step 1. | The section offers an editor, but the first step sends learners back to a file they must create. | Point each step at a fresh editor buffer and retain the copyable block. |
+| M02-T02 | Create `m02_t02_step.py` and check the folder and filename if the run fails. | Troubleshooting assumes the learner understands paths and a local interpreter. | Put the linked editor first and explain how to replace starter code or recover after an edit. |
+| M02-T03 | Lead with creating `m02_t03_lab.py`; mention online use only if the learner already has a suitable editor. | The learner has to choose or set up a tool before the first replay. | Start with the supplied editor link, Copy Code, and the expected output. |

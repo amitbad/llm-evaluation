@@ -275,7 +275,7 @@ test("refresh, completion, return links and version-one backups preserve shared 
 });
 
 test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
-  const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n  <\/div>\n<\/details>/g)];
+  const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
   assert.equal(new Set(sources.map(([, id]) => id)).size, 53);
   assert.equal([...html.matchAll(/id="module-objectives-m\d+"/g)].length, 18);
@@ -305,9 +305,12 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 7);
       assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 14);
       assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-output"><summary>Expected output<\/summary>/g)].length, 14);
-      assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement"(?: data-reading-skip)?>/g)].length, 3);
+      assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement"(?: data-reading-skip)?>/g)].length,
+        topic.id === "M01-T01" ? 2 : 3);
       assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, topic.id === "M02-T02" ? 12 : 15);
       if (topic.id === "M01-T01") {
+        assert.match(markup, /<h5>Run your first example<\/h5>[\s\S]*?<a href="https:\/\/www\.online-python\.com\/" target="_blank" rel="noopener noreferrer">Open Python Editor<\/a>/);
+        assert.doesNotMatch(markup, /language-bash|m01_t01_step\.py|PowerShell/);
         assert.match(markup, /<h4>Independent Assignment<\/h4>/);
         assert.match(markup, /<a href="#m01-t02">Inference, sampling and repeatability<\/a>/);
       }

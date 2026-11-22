@@ -8,7 +8,9 @@ const vm = require("node:vm");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const script = read("docs/assets/lesson-reader.js");
 const html = read("docs/master-curriculum.html");
-const controls = ["section", "start", "pause", "stop", "speed", "status", "hint"];
+const controls = ["section", "start", "pause", "stop", "speed", "status", "voice", "preview"];
+const preferenceKey = "testneural-academy-reading";
+const systemVoice = (name, lang, extra = {}) => ({name, lang, voiceURI: name, localService: true, ...extra});
 
 class Element extends EventTarget {
   constructor(tag, ...children) {
@@ -70,6 +72,10 @@ class Element extends EventTarget {
   set innerHTML(markup) {
     // The generated toolbar is static. Turn its marked controls into event targets.
     this.childNodes = [];
+    assert.match(markup, /^<details class="lesson-reader-disclosure"><summary>Listen<\/summary>/);
+    const disclosure = new Element("details", new Element("summary", "Listen"));
+    disclosure.classList.add("lesson-reader-disclosure");
+    this.append(disclosure);
     for (const key of controls) {
       const match = markup.match(new RegExp("<(\\w+)[^>]*data-reading-" + key + "\\b([^>]*)>"));
       assert(match, key);
@@ -80,7 +86,7 @@ class Element extends EventTarget {
         control.selectedIndex = 0;
         control.append(new Element("option", "Entire lesson"));
       } else if (key === "speed") control.value = "1";
-      this.append(control);
+      disclosure.append(control);
     }
   }
   set length(value) {
@@ -132,10 +138,20 @@ function holder(mark) {
   return view;
 }
 
-function fixture({available = true, legacy = false} = {}) {
+function fixture({available = true, legacy = false, storage = new Map(), voices = []} = {}) {
   const document = node("document");
   const window = new EventTarget();
+  const wide = Object.assign(new EventTarget(), {matches: true});
+  window.matchMedia = query => {
+    assert.equal(query, "(min-width: 75rem)");
+    return wide;
+  };
   const speaking = new Speech();
+  speaking.voices = voices;
+  window.localStorage = {
+    getItem: key => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, value),
+  };
   if (available) {
     window.speechSynthesis = speaking;
     window.SpeechSynthesisUtterance = Utterance;
@@ -183,6 +199,10 @@ function fixture({available = true, legacy = false} = {}) {
   const ui = view => Object.fromEntries(controls.map(key => [key, view.querySelector("[data-reading-" + key + "]")]));
   return {document, window, speaking, begin, paragraph, exercises, instruction, material, guided,
     complete, second, secondMaterial, oldTopic, newTopic, panel, subtitle, event, load, ui,
+    resize: matches => {
+      wide.matches = matches;
+      wide.dispatchEvent(new Event("change"));
+    },
     mount: content => {
       guidedMaterial = content;
       event("curriculum-route");
@@ -278,7 +298,7 @@ test("restarts the current paragraph at the new speed and keeps a paused session
   const f = fixture();
   f.paragraph.textContent = "Practice this idea. ".repeat(18).trim();
   f.load();
-  const {start, speed, pause} = f.ui(f.complete);
+  const {start, speed, pause, status} = f.ui(f.complete);
   click(start);
   f.speaking.finish();
   const first = f.speaking.current.text;
@@ -289,6 +309,7 @@ test("restarts the current paragraph at the new speed and keeps a paused session
   change(speed);
   assert.equal(f.speaking.current.text, first);
   assert.equal(f.speaking.current.rate, 1.5);
+  assert.match(status.textContent, /Restarted this paragraph/);
   reading(f.paragraph);
   click(pause);
   speed.value = "0.75";
@@ -349,9 +370,30 @@ test("disables controls and explains unavailable speech synthesis", () => {
   const f = fixture({available: false});
   f.load();
   const ui = f.ui(f.complete);
-  for (const control of ["start", "pause", "stop", "speed", "section"]) assert(ui[control].disabled, control);
+  for (const control of ["start", "pause", "stop", "speed", "section", "voice", "preview"]) {
+    assert(ui[control].disabled, control);
+  }
   assert.match(ui.status.textContent, /unavailable in this browser/);
-  assert(ui.hint.hidden);
+});
+
+test("discloses controls on narrow screens without interrupting current narration", () => {
+  const f = fixture();
+  f.load();
+  const guided = f.guided.querySelector(".lesson-reader-disclosure");
+  const complete = f.complete.querySelector(".lesson-reader-disclosure");
+  assert(guided.open && complete.open);
+  f.resize(false);
+  assert(!guided.open && !complete.open);
+  complete.open = true;
+  const ui = f.ui(f.complete);
+  click(ui.start);
+  const current = f.speaking.current;
+  complete.open = false;
+  f.event("toggle", complete);
+  assert.equal(f.speaking.current, current);
+  f.resize(true);
+  assert(guided.open && complete.open);
+  assert.equal(f.speaking.current, current);
 });
 
 test("recovers from an active speech error and uses a later system English voice", () => {
@@ -364,12 +406,138 @@ test("recovers from an active speech error and uses a later system English voice
   assert.equal(stop.disabled, true);
   reading(f.begin, false);
   assert.match(status.textContent, /could not continue/);
-  const voice = {lang: "en-GB", localService: true, default: true};
-  f.speaking.voices = [{lang: "en-US", localService: false, default: true}, voice];
+  const voice = systemVoice("UK English", "en-GB", {default: true});
+  f.speaking.voices = [systemVoice("US English", "en-US", {localService: false, default: true}), voice];
   f.speaking.dispatchEvent(new Event("voiceschanged"));
   click(start);
   assert.equal(f.speaking.current.voice, voice);
   assert.equal(f.speaking.current.lang, "en-GB");
+});
+
+test("lists up to five distinct browser English voices with regional and quality preferences", () => {
+  const voices = [
+    systemVoice("India regular", "en-IN"),
+    systemVoice("India Natural", "en-IN"),
+    systemVoice("India Premium", "en-IN"),
+    systemVoice("India Natural", "en-IN", {voiceURI: "duplicate"}),
+    systemVoice("US regular", "en-US"),
+    systemVoice("US Neural", "en-US", {localService: false}),
+    systemVoice("UK regular", "en-GB"),
+    systemVoice("UK Enhanced", "en-GB"),
+    systemVoice("French Natural", "fr-FR"),
+  ];
+  const f = fixture({voices});
+  f.load();
+  const list = f.ui(f.complete).voice;
+  assert.deepEqual(list.childNodes.map(option => option.textContent), [
+    "India Natural · en-IN", "India Premium · en-IN", "US Neural · en-US", "US regular · en-US", "UK Enhanced · en-GB",
+  ]);
+  assert.equal(list.disabled, false);
+});
+
+test("previews the chosen voice without highlighting and restores the idle controls", () => {
+  const voice = systemVoice("India Enhanced", "en-IN");
+  const f = fixture({voices: [voice]});
+  f.load();
+  const {preview, pause, stop, start, status} = f.ui(f.complete);
+  click(preview);
+  assert.equal(f.speaking.current.voice, voice);
+  assert.match(f.speaking.current.text, /how your lessons will sound/);
+  assert.equal(status.textContent, "Playing voice preview.");
+  reading(f.begin, false);
+  assert.equal(preview.disabled, true);
+  assert.equal(pause.disabled, true);
+  assert.equal(stop.disabled, false);
+  f.speaking.finish();
+  assert.equal(status.textContent, "Voice preview finished.");
+  assert.equal(preview.disabled, false);
+
+  click(preview);
+  const stale = f.speaking.current;
+  click(start);
+  assert.equal(f.speaking.current.text, "Introduction");
+  stale.onend();
+  assert.equal(f.speaking.current.text, "Introduction");
+  assert.equal(preview.disabled, true);
+  click(stop);
+  assert.equal(preview.disabled, false);
+});
+
+test("voice changes restart only the current paragraph and leave paused narration paused", () => {
+  const india = systemVoice("India Natural", "en-IN", {default: true});
+  const britain = systemVoice("UK Natural", "en-GB");
+  const f = fixture({voices: [india, britain]});
+  f.paragraph.textContent = "Practice this idea. ".repeat(18).trim();
+  f.load();
+  const ui = f.ui(f.complete);
+  click(ui.start);
+  f.speaking.finish();
+  const firstChunk = f.speaking.current.text;
+  f.speaking.finish();
+  assert.notEqual(f.speaking.current.text, firstChunk);
+  const cancelled = f.speaking.current;
+  ui.voice.value = britain.voiceURI;
+  change(ui.voice);
+  assert.equal(f.speaking.current.text, firstChunk);
+  assert.equal(f.speaking.current.voice, britain);
+  cancelled.onend();
+  assert.equal(f.speaking.current.text, firstChunk);
+  reading(f.paragraph);
+  click(ui.pause);
+  ui.voice.value = india.voiceURI;
+  change(ui.voice);
+  assert.equal(f.speaking.current, null);
+  assert.equal(ui.pause.textContent, "Resume");
+  click(ui.pause);
+  assert.equal(f.speaking.current.voice, india);
+  assert.equal(f.speaking.current.text, firstChunk);
+});
+
+test("persists voice and speed, uses an available fallback, and restores the saved voice when it appears", () => {
+  const storage = new Map();
+  const india = systemVoice("India Natural", "en-IN", {default: true});
+  const britain = systemVoice("UK Neural", "en-GB");
+  const f = fixture({storage, voices: [india, britain]});
+  f.load();
+  const ui = f.ui(f.complete);
+  ui.voice.value = britain.voiceURI;
+  change(ui.voice);
+  ui.speed.value = "1.25";
+  change(ui.speed);
+  assert.deepEqual(JSON.parse(storage.get(preferenceKey)), {voice: britain.voiceURI, speed: "1.25"});
+  assert.equal(f.ui(f.guided).voice.value, britain.voiceURI);
+  assert.equal(f.ui(f.guided).speed.value, "1.25");
+
+  const reloaded = fixture({storage, voices: [india]});
+  reloaded.load();
+  const next = reloaded.ui(reloaded.complete);
+  assert.equal(next.voice.value, india.voiceURI);
+  assert.equal(next.speed.value, "1.25");
+  assert.equal(JSON.parse(storage.get(preferenceKey)).voice, britain.voiceURI);
+  click(next.preview);
+  assert.equal(reloaded.speaking.current.voice, india);
+  assert.equal(reloaded.speaking.current.rate, 1.25);
+  reloaded.speaking.finish();
+  reloaded.speaking.voices = [india, britain];
+  reloaded.speaking.dispatchEvent(new Event("voiceschanged"));
+  assert.equal(next.voice.value, britain.voiceURI);
+  click(next.start);
+  assert.equal(reloaded.speaking.current.voice, britain);
+});
+
+test("keeps Read Aloud usable with an empty English voice list and unavailable storage", () => {
+  const f = fixture({voices: [systemVoice("French", "fr-FR")]});
+  Object.defineProperty(f.window, "localStorage", {get() { throw Error("Storage unavailable"); }});
+  f.load();
+  const {start, voice, preview, speed} = f.ui(f.complete);
+  assert(voice.disabled && preview.disabled);
+  assert(voice.childNodes[0].disabled);
+  speed.value = "0.75";
+  change(speed);
+  click(start);
+  assert.equal(f.speaking.current.lang, "en");
+  assert.equal(f.speaking.current.voice, undefined);
+  assert.equal(f.speaking.current.rate, 0.75);
 });
 
 test("reads educational text in order and excludes code, controls, hidden answers and navigation", () => {
@@ -408,8 +576,10 @@ test("reads standalone lesson content between its subtitle and footer", () => {
 test("generator includes the shared reader for the standalone curriculum and all published experiments", () => {
   assert(html.includes(script));
   const count = (pattern) => [...html.matchAll(pattern)].length;
-  assert.equal(count(/<div class="lesson-reader" data-lesson-reader hidden><\/div>/g), 53);
-  assert.equal(count(/<div class="lesson-reader" data-guided-reader hidden><\/div>/g), 1);
+  assert.equal(count(/<div class="lesson-layout">\s*<aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden><\/aside>\s*<div class="topic-material lesson-reading"/g), 53);
+  assert.equal(count(/<div class="lesson-layout">\s*<aside class="lesson-reader" data-guided-reader aria-label="Listen" hidden><\/aside>\s*<div id="guided-material"><\/div>/g), 1);
+  assert.match(script, /<select data-reading-speed title="Changing speed restarts the current paragraph\.">/);
+  assert.equal(count(/data-reading-hint/g), 0);
   assert.equal(count(/class="lesson-disclosure lesson-supplement" data-reading-skip/g), 12);
   for (const file of readdirSync(resolve(__dirname, "../docs")).filter(name => /^test\d+\.html$/.test(name))) {
     assert.match(read("docs/" + file), /<script src="assets\/lesson-reader.js" defer><\/script>/, file);

@@ -19,6 +19,19 @@ Follow this sequence for each new idea.
 9. **Keep the technical details accurate.** State what an analogy leaves out. Separate observations from guesses, real measurements from simulations, and evidence for one example from evidence for a broader claim.
 10. **Teach Python from zero.** Introduce each new symbol, operation, or structure before the learner needs it. Explain familiar syntax briefly when it does something new in the example.
 
+Review the order of ideas as well as the language. For each new term, identify the concrete thing the learner has already seen that gives it meaning. If the reader needs to understand several unfamiliar terms to follow a paragraph, split the demonstration and teach the missing idea first. Start the first Python program with the smallest operation that illustrates the lesson. Add another operation only after the learner knows what the first one does and can change its result.
+
+## Beginner Python Execution Standard
+
+Use an online Python editor as the default in every beginner lesson. Put the **Open Python Editor** link next to the practice instructions or the code. Use [Online Python](https://www.online-python.com/) as the recommended editor. Open it in a new tab with `rel="noopener noreferrer"`. Explain that learners paste the copied code themselves.
+
+Teach the workflow in this order. **Copy Code → Paste → Run → Observe → Understand → Experiment.** Before the code, say what the learner is trying to find out and why. Give the exact expected output. After the run, explain why it happened, then ask the learner to predict and verify one small change and answer a checkpoint.
+
+- Make every block runnable from an empty editor with Python 3.10+ and the standard library. Include its starting values, sample data, and any functions it calls. A previous step should never have to run first.
+- Keep file creation, repository checkout, directory navigation, encoding, and terminal commands out of the main beginner workflow. Local execution is optional and clearly separated when it is documented.
+- Give learners every file you ask them to open, edit, or run. Keep sample data inside beginner blocks. When a later lesson genuinely needs a file, link to the exact download and explain how to use it. Explain every dependency where it is introduced.
+- Keep the Academy's code and expected output available without the editor. Link to the editor as a separate site and leave the choice to open it with the learner.
+
 ## Lead the learner through the lab
 
 For each step, explain the goal and why it matters. Walk through the important lines in the order Python runs them, including what the names stand for, what changes, and why a branch is taken. Give the learner a complete snippet, clear instructions to run it, and the exact expected output. Read that output with them, then give them one change to predict, try, and explain. Finish with a checkpoint and its reasoning.
@@ -28,3 +41,5 @@ Keep worked examples, code, outputs, experiments, checkpoints, practice, solutio
 ## Review before publishing
 
 Read the lesson as a first-time learner. Check each term at its first use. Check each example and exercise for missing assumptions, each code block for unexplained syntax, and each result for what it actually establishes. Keep author-only notes in the curriculum or audit sources. Run any changed examples and experiments and check their transcripts. Regenerate the course and run the synchronization and static-site checks described in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+
+Have a person review the actual learning experience. Ask them to follow the link, paste code into an empty editor, predict a change, and explain one result in their own words. Record where they get stuck or need a term explained. Automated checks verify the examples and site wiring. Human review decides whether the sequence teaches the lesson.

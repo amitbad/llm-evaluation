@@ -16,6 +16,7 @@ SOURCE = ROOT / "MASTER_CURRICULUM.md"
 OUTPUT = ROOT / "docs/master-curriculum.html"
 HOME = ROOT / "docs/index.html"
 HOME_TEMPLATE = ROOT / "docs/templates/academy-home.html"
+PYTHON_EDITOR = "https://www.online-python.com/"
 ASSETS = ROOT / "docs/assets"
 BRANDING = ASSETS / "branding"
 BRAND_FILES = ("academy-logo-banner.png", "icon-48.png", "favicon.ico", "icon-32.png", "icon-180.png")
@@ -305,6 +306,8 @@ def inline(markdown):
         label, target, bold, code = match.groups()
         if label is not None:
             label = inline(label)
+            if target == PYTHON_EDITOR:
+                return f'<a href="{PYTHON_EDITOR}" target="_blank" rel="noopener noreferrer">{label}</a>'
             if not target.startswith("#"):
                 filename, separator, fragment = target.partition("#")
                 if not filename.startswith("docs/") or not filename.endswith(".html"):
@@ -387,7 +390,7 @@ def named_references(text, titles):
     return LINK.sub(lambda match: f"[{titles.get(match[1], match[1])}]({match[2]})", text)
 
 
-def authored_lesson(topic_id):
+def authored_lesson(topic_id, difficulty):
     source = ROOT / "docs/lessons" / f"{topic_id.lower()}.md"
     if not source.is_file():
         return None
@@ -396,6 +399,7 @@ def authored_lesson(topic_id):
     folded_headings = {"Setup and run", "Worked Solutions to Practice", "Knowledge Check Answers"}
     evidence_labels = {"User question.", "Approved reference.", "Actual LLM response.", "Assessment.",
                        "Failure classification."}
+    editor_link = inline(f"[Open Python Editor]({PYTHON_EDITOR})") if difficulty == "Beginner" else ""
     disclosure_level = None
 
     def render_text(chunk):
@@ -434,10 +438,11 @@ def authored_lesson(topic_id):
         if language == "text":
             block = f'<details class="lesson-disclosure lesson-output"><summary>Expected output</summary>{block}</details>'
         else:
+            editor = f"\n    {editor_link}" if language == "python" and editor_link else ""
             block = f'''<div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
-    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <button type="button" class="lesson-copy-button">Copy Code</button>{editor}
   </div>
   {block}
 </div>'''
@@ -459,7 +464,7 @@ def lesson_material(topic, titles):
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body">{definitions(prerequisites, prerequisites)}</div>
   </details>'''
-    chapter = authored_lesson(topic["id"])
+    chapter = authored_lesson(topic["id"], fields["Difficulty"])
     reading = "\n" + chapter + preparation if chapter is not None else f'''
   <p class="lesson-intro" data-lesson-search>{inline(fields["Why it matters"])}</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -511,8 +516,10 @@ data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Statu
       <label class="js-control" hidden for="progress-{anchor}">Progress <select id="progress-{anchor}" data-progress>{options}</select></label>
       <a class="topic-link" href="#{anchor}">Link to topic</a>
     </div>
-    <div class="lesson-reader" data-lesson-reader hidden></div>
-    {lesson_material(topic, titles)}
+    <div class="lesson-layout">
+      <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
+      {lesson_material(topic, titles)}
+    </div>
   </div>
 </details>'''
 
@@ -711,8 +718,10 @@ def quick_view(data, learning_paths, titles):
       <progress id="guided-progress" value="0" aria-labelledby="guided-progress-label"></progress>
     </div>
   </header>
-  <div class="lesson-reader" data-guided-reader hidden></div>
-  <div id="guided-material"></div>
+  <div class="lesson-layout">
+    <aside class="lesson-reader" data-guided-reader aria-label="Listen" hidden></aside>
+    <div id="guided-material"></div>
+  </div>
   <p id="guided-status" role="status"></p>
   <nav class="guided-actions" aria-label="Lesson actions">
     <a id="guided-previous" href="#quick" hidden>Previous Lesson</a>

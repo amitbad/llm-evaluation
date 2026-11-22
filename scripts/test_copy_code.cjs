@@ -99,6 +99,7 @@ test("generated curriculum adds buttons to executable blocks and leaves transcri
     [...read("docs/lessons/" + id + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]);
   const rendered = [...html.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)];
   const wrapped = [...html.matchAll(/<div class="lesson-code">([\s\S]*?)<\/pre>\n<\/div>/g)];
+  const editor = '<a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>';
   const escape = text => text.replace(/[&<>"']/g, char =>
     ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;"})[char]);
   assert.deepEqual(rendered.map(([, language, code]) => [language, code]),
@@ -108,5 +109,6 @@ test("generated curriculum adds buttons to executable blocks and leaves transcri
   for (const [, markup] of wrapped) {
     assert.match(markup, /role="status"/);
     assert.match(markup, /<button type="button" class="lesson-copy-button">Copy Code<\/button>/);
+    assert.equal(markup.includes(editor), markup.includes('class="language-python"'));
   }
 });
