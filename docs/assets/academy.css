@@ -18,6 +18,9 @@
 .academy-site *,.academy-page * { box-sizing:border-box; }
 .academy-wrap { width:min(94vw,112rem); margin-inline:auto; }
 .academy-site a,.academy-page a { color:var(--blue); text-underline-offset:.2em; }
+:where(.academy-top-modes,.academy-top-actions,.lesson-header nav,.study-breadcrumb,.guided-actions,
+  .plan-step-heading,.quick-plan details li,#paths td,.complete-strands,.path-card h3) a:not(:hover),
+.topic-controls .topic-link:not(:hover),#quick-catalog > p > a:not(:hover) { text-decoration:none; }
 .academy-site a:focus-visible,.academy-site button:focus-visible,.academy-site summary:focus-visible,
 .academy-page :focus-visible,.academy-lesson .lesson-header :focus-visible {
   outline:3px solid var(--focus); outline-offset:3px;
@@ -132,7 +135,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 
 /* Standalone curriculum also embeds these rules. */
 .academy-page { --ink:var(--text); --muted:var(--secondary); --paper:var(--page); --line:var(--stroke);
-  --accent:var(--blue); --soft:var(--blue-wash); --lesson-title-size:clamp(1.5rem,calc(1.2rem + 1vw),1.875rem); }
+  --accent:var(--blue); --soft:var(--blue-wash); --lesson-title-size:clamp(1.5rem,calc(1.25rem + .85vw),1.75rem); }
 .academy-page .academy-layout { padding-block:.75rem; }
 .academy-page #tabs { display:grid; gap:.17rem; margin:0; border-bottom:0; }
 .academy-page #tabs a { border-bottom:0; padding:.48rem .5rem; color:var(--secondary); }
@@ -164,19 +167,21 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .academy-page .road-inspector { max-height:calc(clamp(25rem,65vh,49rem) + 6rem); }
 .academy-page .mode-action { background:#224b9e; color:#fff; }
 .academy-page .mode-action:hover { background:#173576; }
-.study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.15rem .45rem; list-style:none; padding:0; margin:0 0 .3rem;
-  font-size:.9rem; line-height:1.4; }
+.study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.1rem .45rem; list-style:none; padding:0; margin:0 0 .2rem;
+  font-size:.9rem; line-height:1.35; }
 .study-breadcrumb li { margin:0; }
 .study-breadcrumb li + li::before { content:"›" / ""; margin-inline-end:.45rem; color:var(--secondary); }
 .guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem;
-  padding:.55rem clamp(.7rem,1.8vw,1.35rem) .85rem; scroll-margin-top:7rem; }
-.guided-header { margin-block:.4rem .75rem; }
+  padding:.4rem clamp(.7rem,1.8vw,1.35rem) .85rem; scroll-margin-top:7rem; }
+.guided-header { display:flex; flex-wrap:wrap; align-items:center; gap:.2rem .85rem; margin:0 0 .5rem; }
+#guided-title { flex:0 0 100%; min-inline-size:0; }
+.topic[open] > summary { padding-block:.4rem; }
 #guided-title,.topic[open] > summary > .item-title { margin:0; color:var(--text); font-size:var(--lesson-title-size);
   line-height:1.18; letter-spacing:-.02em; overflow-wrap:anywhere; }
-#guided-estimate { margin:.2rem 0 .35rem; font-size:.9rem; }
-.guided-progress { max-width:24rem; color:var(--secondary); font-size:.85rem; }
-.guided-progress label { display:block; margin-bottom:.15rem; }
-#guided-progress { height:.45rem; accent-color:var(--cyan); }
+#guided-estimate { margin:0; font-size:.9rem; line-height:1.35; }
+.guided-progress { display:flex; flex-wrap:wrap; align-items:center; gap:.15rem .45rem;
+  color:var(--secondary); font-size:.85rem; line-height:1.35; }
+#guided-progress { inline-size:clamp(3.5rem,12vw,8rem); height:.35rem; accent-color:var(--cyan); }
 .lesson-reading { min-inline-size:0; font-size:1.0625rem; line-height:1.6; overflow-wrap:anywhere; }
 .lesson-reading > * + * { margin-block-start:.8rem; }
 .lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1rem,1.4vw,1.125rem); }
@@ -241,6 +246,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
   .academy-page .academy-wrap { width:min(94vw,120rem); }
   .academy-page .academy-layout { grid-template-columns:12.5rem minmax(0,1fr); }
   .guided-header,.lesson-reading { inline-size:88%; }
+  .topic-controls select { min-height:2.25rem; padding-block:.22rem; }
   .academy-layout:has(> .academy-sidebar-column > .academy-sidebar:not([open])) { grid-template-columns:2.85rem minmax(0,1fr); }
   .academy-sidebar-column { position:sticky; inset-block-start:5rem; display:flex; flex-direction:column; gap:.55rem; }
   .academy-sidebar-column > .academy-sidebar { position:static; }

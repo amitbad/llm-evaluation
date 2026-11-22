@@ -1116,8 +1116,8 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
 .item-id { font-size:.85em; color:var(--accent); white-space:nowrap; margin-right:.2rem; }
 .topic-meta,.module-progress,.track { color:var(--muted); font-size:.9rem; }
 .module-progress { font-weight:500; }
-.topic-controls { display:flex; align-items:center; gap:.3rem .75rem; flex-wrap:wrap; border-top:1px solid var(--line); }
-.topic-controls p { margin-block:.3rem; }
+.topic-controls { display:flex; align-items:center; gap:.2rem .75rem; flex-wrap:wrap; border-top:1px solid var(--line); }
+.topic-controls p { margin:0; }
 .topic-controls label { display:inline-flex; align-items:center; gap:.45rem; }
 .topic-controls select { width:auto; }
 .topic-link { margin-left:auto; }
@@ -1228,7 +1228,6 @@ MODES_CSS = """
 .path-card:nth-child(3n+2) { border-top-color:#6c68a3; }
 .path-card:nth-child(3n) { border-top-color:#377498; }
 .path-card h3,.quick-plan h3 { margin:0; }
-.path-card h3 a { text-underline-offset:.25em; }
 .path-card p { margin:.35rem 0; }
 .path-card details { width:100%; margin:.45rem 0; background:#f6f8fa; }
 .path-card details p { margin:.4rem .7rem; }
@@ -1261,7 +1260,7 @@ MODES_CSS = """
 .plan-visual svg { display:block; max-width:100%; min-width:42rem; height:auto; }
 .complete-strands { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
 .complete-strands a { display:grid; padding:.65rem .8rem; }
-.complete-strands span { text-decoration:none; color:var(--ink); font-size:.91rem; }
+.complete-strands span { color:var(--ink); font-size:.91rem; }
 @media(max-width:640px) { .path-grid,.complete-strands { grid-template-columns:1fr; } }
 @media print {
   .study-mode-picker,.plan-resume,.plan-tools { display:none !important; }

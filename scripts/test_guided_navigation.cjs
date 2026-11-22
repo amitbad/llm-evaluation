@@ -8,7 +8,7 @@ const vm = require("node:vm");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const html = read("docs/master-curriculum.html");
 const data = JSON.parse(html.match(/<script id="roadmap-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
-const authoredLessons = new Set(["M01-T01", "M02-T01", "M02-T02"]);
+const authoredLessons = new Set(["M01-T01", "M02-T01", "M02-T02", "M02-T03"]);
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(read("docs/learning_roadmap.js"), "const CurriculumRoadmap = {};")
   .replace("LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);", "")
@@ -313,6 +313,10 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       if (topic.id === "M02-T02") {
         assert.match(markup, /<h4>Independent Assignment<\/h4>/);
         assert.match(markup, /<a href="#m02-t03">Offline, online and the evaluation lifecycle<\/a>/);
+      }
+      if (topic.id === "M02-T03") {
+        assert.match(markup, /<h4>Independent Assignment<\/h4>/);
+        assert.match(markup, /<a href="#m03-t01">Exact match, normalization and rules<\/a>/);
       }
     }
   }
