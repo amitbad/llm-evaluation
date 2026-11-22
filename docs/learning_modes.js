@@ -27,14 +27,22 @@ const guidedLearning = (() => {
   function restoreMaterial() {
     if (!mounted) return;
     for (const [link, href] of mounted.links) link.setAttribute("href", href);
+    mounted.objectiveHome.append(mounted.objective);
+    mounted.objectives.hidden = true;
     mounted.parent.append(mounted.node);
     mounted = null;
   }
 
   function mountMaterial(route) {
     const node = document.getElementById("material-" + route.topic.toLowerCase());
+    const moduleId = data.topics[route.topic].module.toLowerCase();
+    const objective = document.getElementById("module-objectives-" + moduleId);
+    const objectives = node.querySelector(".lesson-objectives");
+    const objectiveHome = objective.parentElement;
+    objectives.querySelector("[data-lesson-objectives]").append(objective);
+    objectives.hidden = false;
     const links = Array.from(node.querySelectorAll('a[href^="#m"]'), link => [link, link.getAttribute("href")]);
-    mounted = {node, links, parent: node.parentElement};
+    mounted = {node, links, parent: node.parentElement, objective, objectiveHome, objectives};
     for (const [link, href] of links) {
       const topic = href.slice(1).toUpperCase();
       if (route.path.closure.includes(topic)) link.setAttribute("href", lessonHash(route.path.id, topic));
@@ -89,6 +97,11 @@ const guidedLearning = (() => {
     if (active) {
       const status = statuses[active.topic];
       const complete = status === "Completed";
+      const progress = LearningProgress.routeProgress(active.path, data.topics, statuses);
+      const total = active.path.closure.length;
+      guided("progress").max = total;
+      guided("progress").value = progress.completed;
+      guided("progress-label").textContent = progress.completed + " of " + total + " lessons completed";
       guided("complete").setAttribute("aria-disabled", String(complete));
       guided("complete").textContent = complete ? "Completed" : "Mark as Completed";
       guided("status").textContent = "Lesson progress: " + (status || "Not Started");
@@ -118,7 +131,7 @@ const guidedLearning = (() => {
       guided("back").href = overview;
       guided("position").textContent = "Lesson " + (index + 1) + " of " + path.closure.length;
       guided("title").textContent = data.topics[topic].title;
-      guided("estimate").textContent = LearningProgress.duration(data.topics[topic].hours) + " estimated learner time";
+      guided("estimate").textContent = LearningProgress.duration(data.topics[topic].hours) + " estimated study time";
       for (const [control, relative] of [["previous", -1], ["next", 1]]) {
         const neighbor = path.closure[index + relative];
         guided(control).hidden = !neighbor;
@@ -207,5 +220,5 @@ const guidedLearning = (() => {
   for (const indicator of indicators) indicator.hidden = false;
   document.addEventListener("curriculum-progress", syncProgress);
   show("#quick", null);
-  return {resolve, show};
+  return {resolve, show, lessonHash};
 })();

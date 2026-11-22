@@ -22,6 +22,7 @@ BRANDING = ASSETS / "branding"
 BRAND_FILES = ("academy-logo-banner.png", "icon-48.png", "favicon.ico", "icon-32.png", "icon-180.png")
 ROADMAP_SCRIPT = ROOT / "docs/learning_roadmap.js"
 MODES_SCRIPT = ROOT / "docs/learning_modes.js"
+NAVIGATOR_SCRIPT = ROOT / "docs/learning_navigator.js"
 PROGRESS_SCRIPT = ROOT / "docs/learning_progress.js"
 STAGES = ("Beginner", "Intermediate", "Advanced", "Production", "Specialized / Expert")
 SECTIONS = ("Course overview", "Learning paths", "Repository coverage", "Teaching plan", "Detailed curriculum")
@@ -372,23 +373,71 @@ def time_cards(hours):
     ) + "</dl>"
 
 
-def definitions(fields, keys):
-    return "<dl class=\"field-list\">" + "".join(
-        f"<div><dt>{label}</dt><dd>{inline(fields[label])}</dd></div>" for label in keys
-    ) + "</dl>"
+def definitions(fields, keys, value_ids=None):
+    entries = []
+    for label in keys:
+        value = inline(fields[label])
+        if value_ids and label in value_ids:
+            value = f'<span id="{value_ids[label]}">{value}</span>'
+        entries.append(f"<div><dt>{label}</dt><dd>{value}</dd></div>")
+    return '<dl class="field-list">' + "".join(entries) + "</dl>"
 
 
 def named_references(text, titles):
     return LINK.sub(lambda match: f"[{titles.get(match[1], match[1])}]({match[2]})", text)
 
 
+def lesson_material(topic, titles):
+    fields = topic["fields"]
+    prerequisites = {key: named_references(fields[key], titles) for key in DEPENDENCIES if fields[key] != "—"}
+    preparation = ""
+    if prerequisites:
+        preparation = f'''
+  <details class="lesson-disclosure">
+    <summary>Prerequisites</summary>
+    <div class="lesson-disclosure-body">{definitions(prerequisites, prerequisites)}</div>
+  </details>'''
+    mapping = definitions(fields, TOPIC_FIELDS[11:])
+    return f'''<div class="topic-material lesson-reading" id="material-{topic['id'].lower()}">
+  <p class="lesson-intro" data-lesson-search>{inline(fields["Why it matters"])}</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <section class="lesson-section lesson-objectives" hidden>
+    <h4>Learning objectives</h4>
+    <h5>Module objectives</h5>
+    <p data-lesson-objectives></p>
+  </section>
+  <section class="lesson-section lesson-concepts">
+    <h4>Key concepts</h4>
+    <p data-lesson-search>{inline(fields["Concepts"])}</p>
+  </section>{preparation}
+  <section class="lesson-section lesson-example">
+    <h4>Demonstrations and examples</h4>
+    <p data-lesson-search>{inline(fields["Demonstration"])}</p>
+    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> {inline(fields["Implementation readiness"])}</p>
+  </section>
+  <section class="lesson-section lesson-exercise">
+    <h4>Practical exercise</h4>
+    <p data-lesson-search>{inline(fields["Exercise and assessment"])}</p>
+  </section>
+  <section class="lesson-section lesson-checkpoint">
+    <h4>Checkpoint</h4>
+    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
+  </section>
+  <details class="lesson-disclosure">
+    <summary>Detailed time estimates</summary>
+    <div class="lesson-disclosure-body">{time_cards(topic['hours'])}</div>
+  </details>
+  <details class="lesson-disclosure">
+    <summary>Technical Reference</summary>
+    <div class="lesson-disclosure-body">{mapping}</div>
+  </details>
+</div>'''
+
+
 def html_topic(topic, module, titles):
     fields = topic["fields"]
     anchor = topic["id"].lower()
     options = "".join(f"<option>{status}</option>" for status in ("Not Started", "In Progress", "Completed"))
-    description = definitions({**fields, **{key: named_references(fields[key], titles) for key in DEPENDENCIES}},
-                              TOPIC_FIELDS[1:9])
-    mapping = definitions(fields, TOPIC_FIELDS[11:])
     return f'''<details class="topic" id="{anchor}" data-topic="{topic['id']}" data-difficulty="{fields['Difficulty']}"
 data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Status']}" data-track="{module['fields']['Track']}">
   <summary><span class="item-title"><span class="item-id">{topic['id']}</span> {escape(topic['title'])}</span>
@@ -403,12 +452,7 @@ data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Statu
       <label class="js-control" hidden for="progress-{anchor}">Progress <select id="progress-{anchor}" data-progress>{options}</select></label>
       <a class="topic-link" href="#{anchor}">Link to topic</a>
     </div>
-    <div class="topic-material" id="material-{anchor}">
-      {description}
-      {time_cards(topic['hours'])}
-      <h4>Repository mapping</h4>
-      {mapping}
-    </div>
+    {lesson_material(topic, titles)}
   </div>
 </details>'''
 
@@ -423,7 +467,7 @@ def html_module(module, titles):
     <span class="module-progress" hidden data-module-progress></span></summary>
   <div class="module-body">
     <p class="track">{fields['Difficulty']} · {fields['Track']} · {escape(fields['Subject'])}</p>
-    {definitions(fields, MODULE_FIELDS[3:8])}
+    {definitions(fields, MODULE_FIELDS[3:8], {"Objectives": f"module-objectives-{anchor}"})}
     {time_cards(module['hours'])}
     {topics}
   </div>
@@ -599,8 +643,14 @@ def quick_view(data, learning_paths, titles):
     <li><a id="guided-path" href="#quick"></a></li>
     <li id="guided-position" aria-current="location"></li>
   </ol></nav>
-  <h3 id="guided-title" tabindex="-1" aria-describedby="guided-position"></h3>
-  <p id="guided-estimate" class="path-metrics"></p>
+  <header class="guided-header">
+    <h3 id="guided-title" tabindex="-1" aria-describedby="guided-position"></h3>
+    <p id="guided-estimate" class="path-metrics"></p>
+    <div class="guided-progress">
+      <label id="guided-progress-label" for="guided-progress"></label>
+      <progress id="guided-progress" value="0" aria-labelledby="guided-progress-label"></progress>
+    </div>
+  </header>
   <div id="guided-material"></div>
   <p id="guided-status" role="status"></p>
   <nav class="guided-actions" aria-label="Lesson actions">
@@ -609,6 +659,44 @@ def quick_view(data, learning_paths, titles):
     <a id="guided-next" href="#quick" hidden>Next Lesson</a>
     <a id="guided-back" href="#quick">Back to Learning Path</a>
   </nav>
+  <aside class="navigator-dock" aria-label="Learning Navigator" hidden>
+    <button type="button" id="navigator-launch" aria-label="Open Learning Navigator" aria-haspopup="dialog" aria-controls="navigator-dialog">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M6 6h5l3 6h4M6 18h5l3-6"/><circle cx="4" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="12" r="2"/>
+      </svg>
+      <span class="navigator-preview">
+        <strong>Learning Navigator</strong>
+        <span id="navigator-prerequisite" class="navigator-preview-node"></span>
+        <span id="navigator-current" class="navigator-preview-node"></span>
+        <span id="navigator-upcoming" class="navigator-preview-node"></span>
+      </span>
+    </button>
+    <button type="button" id="navigator-dismiss" aria-label="Close Learning Navigator preview">×</button>
+  </aside>
+  <dialog id="navigator-dialog" aria-labelledby="navigator-title" aria-describedby="navigator-help">
+    <header class="navigator-header">
+      <div><h2 id="navigator-title" tabindex="-1">Learning Navigator</h2><p id="navigator-path"></p></div>
+      <div class="navigator-controls">
+        <button type="button" id="navigator-minimize">Minimize</button>
+        <button type="button" id="navigator-close" aria-label="Close Learning Navigator">×</button>
+      </div>
+    </header>
+    <div class="navigator-controls">
+      <button type="button" id="navigator-zoom-out" aria-label="Zoom out">−</button>
+      <output id="navigator-zoom" aria-label="Zoom level">100%</output>
+      <button type="button" id="navigator-zoom-in" aria-label="Zoom in">+</button>
+      <button type="button" id="navigator-center">Find current lesson</button>
+    </div>
+    <p id="navigator-help">Scroll or drag the map to move around. When the map has focus, use arrow keys to pan and + or − to zoom. Select a lesson to open it.</p>
+    <ul class="navigator-legend" aria-label="Connection types">
+      <li class="navigator-order">Dashed line: lesson order</li>
+      <li class="navigator-required">Solid arrow: required prerequisite</li>
+      <li class="navigator-optional">Dotted arrow: recommended or conditional prerequisite</li>
+    </ul>
+    <div id="navigator-viewport" tabindex="0" role="region" aria-label="Learning path map">
+      <div id="navigator-surface"><div id="navigator-map"></div></div>
+    </div>
+  </dialog>
 </article>
 <noscript><p>Guided lesson links use JavaScript. Use <a href="#detail">Complete Course</a> to read the same topics.</p></noscript>'''
 
@@ -820,6 +908,7 @@ def render(title, sections, stages, data):
     payload = json.dumps(branded_data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
     roadmap_script = ROADMAP_SCRIPT.read_text(encoding="utf-8")
     modes_script = MODES_SCRIPT.read_text(encoding="utf-8")
+    navigator_script = NAVIGATOR_SCRIPT.read_text(encoding="utf-8")
     progress_script = PROGRESS_SCRIPT.read_text(encoding="utf-8")
     academy_css = (ASSETS / "academy.css").read_text(encoding="utf-8")
     academy_js = (ASSETS / "academy.js").read_text(encoding="utf-8")
@@ -866,6 +955,7 @@ const portableCurriculum = "<!doctype html>\\n" + document.documentElement.outer
 {SCRIPT}
 {roadmap_script}
 {modes_script}
+{navigator_script}
 LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);
 followHash(false, initialRoute);
 {academy_js}
@@ -1165,7 +1255,7 @@ const filterNames = ["difficulty", "subject", "status", "track"];
 const controls = filterNames.map(name => document.getElementById(name));
 const searchText = new Map(topics.map(topic => [topic, [
   topic.querySelector(".item-title").textContent,
-  ...Array.from(topic.querySelectorAll(".topic-body .field-list dd")).map(field => field.textContent)
+  ...Array.from(topic.querySelectorAll(".topic-material [data-lesson-search], .topic-material .field-list dd")).map(field => field.textContent)
 ].join(" ").toLocaleLowerCase()]));
 
 function activate(tab) {

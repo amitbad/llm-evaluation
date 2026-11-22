@@ -15,7 +15,7 @@ The academy uses static HTML, CSS, and vanilla JavaScript. A Python standard-lib
 | [docs/index.html](docs/index.html), [docs/home.html](docs/home.html) | Generated homepage and compatibility entry point |
 | [docs/master-curriculum.html](docs/master-curriculum.html), [homepage template](docs/templates/academy-home.html) | Standalone curriculum and homepage source template |
 | [docs/assets/](docs/assets/) | Shared academy styles, behavior, and approved V1 branding under `branding/` |
-| [Learning modes](docs/learning_modes.js), [roadmap](docs/learning_roadmap.js), [progress backups](docs/learning_progress.js) | JavaScript embedded in the generated curriculum |
+| [Learning modes](docs/learning_modes.js), [Learning Navigator](docs/learning_navigator.js), [roadmap](docs/learning_roadmap.js), [progress backups](docs/learning_progress.js) | JavaScript embedded in the generated curriculum |
 | [docs/COURSE_AUDIT_REPORT.md](docs/COURSE_AUDIT_REPORT.md), [concepts reference](docs/concepts.html) | Course audit and published reference material |
 | `docs/test*.html`, `phase-0-foundations/` through `phase-5-production-eval/` | Published example pages, existing lessons, and experiments |
 | [scripts/validate_static_site.py](scripts/validate_static_site.py), [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Public file validation and general static hosting guidance |
@@ -39,6 +39,10 @@ The homepage puts Quick Learning and Complete Course first. The homepage and cur
 5. **Resources** links to published examples and concepts. Instructor Resources groups Existing Repository Coverage and Teaching Plan.
 
 Both learning modes use the same topic IDs and content. Quick Learning links carry both the path and the topic in the URL fragment, so reload and browser history retain the exact lesson. The guided view temporarily moves the original topic material from Complete Course and restores it when the learner leaves. Required prerequisites appear in the lesson sequence. Complete Course keeps its existing topic links and provides module breadcrumbs.
+
+The shared reading layout presents the introduction, concepts, demonstrations, and exercise in study order. Guided lessons show the path, time estimate, and completion count beside the title. They reuse the authored module objectives and label them as module-wide goals. Detailed time estimates, nonempty prerequisites, and repository or audit material are collapsible. An outline notice distinguishes the current planning material from full lessons that still need to be written.
+
+The floating Learning Navigator appears on guided lessons and opens a native dialog. It uses the path order and the in-path prerequisite links from the curriculum data. Selecting a node opens the lesson in Quick Learning. The current lesson and completion badges use the existing route and progress state. Zoom and pan are retained per path while the page stays open. On narrower screens the launcher uses a compact icon, and a reserved side rail keeps it clear of lesson content.
 
 Continue Learning opens the first unfinished required topic in order. In Quick Learning and About the Course this opens a guided lesson, while Complete Course resumes in its own view. Progress is stored in the current browser's local storage when available. It does not synchronize across devices. The versioned JSON backup transfers completed topic IDs and the optional selected path. Imports require a preview and explicit apply, with merge or replace available. Reset requires confirmation.
 

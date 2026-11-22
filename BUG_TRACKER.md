@@ -11,11 +11,15 @@ Local fixes below are ready for review. Production checks were read-only against
 | QA-05 | Concepts Reference uses visual headings without a semantic page outline. The concepts and curriculum pages lack search descriptions. | Low | Fixed locally | Concepts Reference and curriculum generator | Added a heading hierarchy to Concepts Reference and page descriptions to both. |
 | QA-06 | The 14 individual lesson pages lack descriptions and canonical tags. The live sitemap and robots.txt routes return 404. | Low | Open | Lesson metadata and public search discovery | Add lesson-specific metadata and review sitemap and crawler policy against the working production URLs. |
 | QA-07 | Quick Learning topic and prerequisite links sent learners to Complete Course, where the path and lesson position were easy to lose. | High | Fixed locally | Guided navigation and progress | Use readable lesson titles, path-specific URLs, and breadcrumbs. Show the same topic material in both modes and keep a return link when switching modes. |
+| QA-08 | Viewing the dependency map required leaving the active guided lesson. | Medium | Fixed locally | Guided lessons and Learning Navigator | Open the current path map from the lesson, retain the map view on minimize, and open selected nodes in the same path. |
+| QA-09 | Guided lessons presented study prompts, empty prerequisite categories, and audit details as one specification block. | Medium | Fixed locally | Guided lesson reading layout | Present learning sections in study order, omit empty prerequisites, collapse secondary details, and label incomplete outlines. |
 
 ## Unverified behavior
 
 - Owner browser acceptance remains pending for mobile and desktop navigation, keyboard interaction, native progress persistence and file transfers, and roadmap visual rendering and exports.
 - Live VPS configuration, certificate renewal, and publish and rollback behavior were outside this QA.
 - Review the Complete Course disclosure hierarchy with a screen reader. Its repository mapping headings sit below topic summaries, which may make the heading list harder to navigate.
+- Check native dialog focus trapping and restoration, touch scrolling, and launcher clearance on small screens.
+- Verify reading width, long titles, disclosure focus, and progress-bar legibility in both themes on desktop and mobile.
 
 Record confirmed issues in the table when discovered. Update the same entry when fixed or reopened, and keep its resolution history.
