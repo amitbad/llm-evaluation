@@ -133,6 +133,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 /* Standalone curriculum also embeds these rules. */
 .academy-page { --ink:var(--text); --muted:var(--secondary); --paper:var(--page); --line:var(--stroke);
   --accent:var(--blue); --soft:var(--blue-wash); }
+.academy-page .academy-layout { padding-block:.75rem; }
 .academy-page #tabs { display:grid; gap:.17rem; margin:0; border-bottom:0; }
 .academy-page #tabs a { border-bottom:0; padding:.48rem .5rem; color:var(--secondary); }
 .academy-page #tabs [aria-selected=true] { color:var(--blue); }
@@ -160,29 +161,41 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.25rem .6rem; list-style:none; padding:0; margin:0 0 .65rem; }
 .study-breadcrumb li { margin:0; }
 .study-breadcrumb li + li::before { content:"›" / ""; margin-inline-end:.6rem; color:var(--secondary); }
-.guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem; padding:clamp(.8rem,3vw,1.45rem); scroll-margin-top:7rem; }
-.guided-header { max-width:72ch; margin-block:1rem 1.25rem; }
-#guided-title { margin:0; color:var(--text); font-size:clamp(1.55rem,3.8vw,2.75rem); line-height:1.12; letter-spacing:-.02em; overflow-wrap:anywhere; }
+.guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem; padding:clamp(.7rem,1.8vw,1.35rem); scroll-margin-top:7rem; }
+.guided-header { max-inline-size:76ch; margin-block:.65rem 1rem; }
+#guided-title { margin:0; color:var(--text); font-size:clamp(1.35rem,2.7vw,1.95rem); line-height:1.18; letter-spacing:-.02em; overflow-wrap:anywhere; }
 #guided-estimate { margin:.45rem 0 .75rem; font-size:.9rem; }
 .guided-progress { max-width:24rem; color:var(--secondary); font-size:.85rem; }
 .guided-progress label { display:block; margin-bottom:.3rem; }
 #guided-progress { height:.45rem; accent-color:var(--cyan); }
-.lesson-reading { max-width:68ch; line-height:1.65; overflow-wrap:anywhere; }
-.lesson-reading > * + * { margin-block-start:clamp(.85rem,2vw,1.4rem); }
+.lesson-reading { min-inline-size:0; line-height:1.6; overflow-wrap:anywhere; }
+.lesson-reading :is(p,ul,ol,dd) { max-inline-size:76ch; }
+.lesson-reading > * + * { margin-block-start:.8rem; }
 .lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1.02rem,1.65vw,1.22rem); }
 .lesson-section :is(h4,h5) { margin:0; line-height:1.25; color:var(--text); }
-.lesson-section h4 { font-size:clamp(1.08rem,1.9vw,1.36rem); }
-.lesson-section h5 { margin-top:.45rem; font-size:.88rem; color:var(--secondary); }
+.lesson-section h4 { font-size:clamp(1.12rem,1.8vw,1.38rem); }
+.lesson-section h5 { font-size:1.04rem; }
 .lesson-section p { margin:.4rem 0 0; }
+.lesson-chapter > h4 { padding-block-start:1rem; margin-block-start:1.45rem; border-block-start:1px solid var(--stroke); }
+.lesson-chapter > h4:first-child { padding-block-start:0; margin-block-start:0; border:0; }
+.lesson-chapter > h5 { margin-block-start:1.1rem; }
+.lesson-chapter :is(p,ul,ol) + :is(p,ul,ol) { margin-block-start:.6rem; }
+.lesson-reading .lesson-evidence {
+  display:grid; grid-template-columns:minmax(8rem,10.5rem) minmax(0,1fr); gap:.2rem .9rem; max-inline-size:none;
+  margin-block:.3rem 0; padding:.3rem 0; border-block-end:1px solid var(--stroke);
+}
+.lesson-evidence strong { color:var(--blue); font-size:.88rem; }
+.lesson-evidence span { max-inline-size:76ch; }
+.lesson-chapter > p:has(> strong:first-child) + .lesson-code { margin-block-start:.5rem; }
 .lesson-reading :is(ul,ol) { padding-inline-start:1.45rem; }
 .lesson-reading .lesson-note { color:var(--secondary); font-size:.9rem; }
 .lesson-example { padding-inline-start:.75rem; border-inline-start:.2rem solid var(--cyan); }
 .lesson-exercise { padding-block-start:.7rem; border-block-start:1px solid var(--stroke); }
 .lesson-checkpoint { padding:.65rem .8rem; border-inline-start:.2rem solid var(--violet); background:var(--violet-wash); }
 .lesson-reading code { background:var(--panel); color:var(--text); padding:.08em .2em; border-radius:.2em; }
-.lesson-reading pre { max-width:100%; overflow:auto; padding:.75rem; background:var(--panel); border:1px solid var(--stroke); }
-.lesson-reading pre code { padding:0; }
-.lesson-code { margin-block:1em; }
+.lesson-reading pre { max-inline-size:100%; overflow:auto; padding:.7rem .85rem; line-height:1.5; background:var(--panel); border:1px solid var(--stroke); }
+.lesson-reading pre code { padding:0; overflow-wrap:normal; }
+.lesson-code { margin-block:.65rem; }
 .lesson-reading .lesson-code pre { margin:0; }
 .lesson-copy-toolbar {
   position:sticky; top:4.25rem; z-index:1; display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:.35rem .65rem;
@@ -200,6 +213,9 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 }
 .lesson-disclosure summary { font-weight:650; padding:.5rem .65rem; }
 .lesson-disclosure-body { padding:.2rem .65rem .55rem; }
+.lesson-chapter :is(.lesson-supplement,.lesson-output) { margin-block:.5rem .7rem; }
+.lesson-supplement summary :is(h4,h5) { font-size:.96rem; }
+.lesson-output pre { margin:0; border:0; border-block-start:1px solid var(--stroke); }
 #guided-status { margin-block:1.2rem .65rem; color:var(--secondary); font-size:.9rem; }
 .guided-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .9rem; padding-top:.65rem; border-top:1px solid var(--stroke); }
 .guided-actions a { display:inline-flex; align-items:center; min-height:2.75rem; }
@@ -208,29 +224,33 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .plan-step .lesson-state { color:var(--secondary); font-size:.9rem; }
 .plan-step:has([aria-current=step]) { border-inline-start:.2rem solid var(--blue); }
 
-/* Reserve a side rail so the floating launcher stays off lesson content. */
-.guided-lesson:has(.navigator-dock:not([hidden])) { margin-inline-end:3rem; }
-.navigator-dock { position:fixed; inset-inline-end:max(.5rem,env(safe-area-inset-right)); bottom:max(.6rem,env(safe-area-inset-bottom)); z-index:7; }
-#navigator-launch { display:grid; place-items:center; width:2.75rem; min-height:2.75rem; padding:.45rem;
-  border:1px solid var(--stroke); border-radius:.75rem; background:var(--surface); color:var(--violet); box-shadow:var(--shadow); }
+.navigator-dock { margin-block-start:auto; }
+#navigator-launch { display:flex; align-items:center; justify-content:center; gap:.45rem; width:100%; min-height:2.75rem; padding:.45rem;
+  border:1px solid var(--stroke); border-radius:.6rem; background:var(--surface); color:var(--violet); font-size:.86rem; }
+#navigator-launch svg { flex:none; }
 #navigator-launch:hover { background:var(--violet-wash); }
-.navigator-preview,#navigator-dismiss { display:none; }
-@media(min-width:1100px) {
-  .guided-lesson:has(.navigator-dock:not([hidden]):not([data-state=closed])) { margin-inline-end:13.5rem; }
-  .navigator-dock:not([data-state=closed]) #navigator-launch { width:13rem; justify-items:stretch; text-align:start; padding:.6rem; }
-  .navigator-dock:not([data-state=closed]) #navigator-launch svg { display:none; }
-  .navigator-dock:not([data-state=closed]) .navigator-preview { display:grid; gap:.3rem; }
-  .navigator-preview > strong { padding-inline-end:1.5rem; font-size:.9rem; }
-  .navigator-preview-node { position:relative; display:block; padding:.3rem .4rem; border-inline-start:2px dashed var(--secondary);
-    background:var(--panel); color:var(--text); font-size:.73rem; line-height:1.35; }
-  #navigator-prerequisite { border-inline-start-style:solid; }
-  #navigator-current { font-weight:750; border-inline-start:3px solid var(--violet); background:var(--violet-wash); }
-  #navigator-prerequisite:not([hidden]) + #navigator-current::before,#navigator-upcoming::before {
-    content:""; position:absolute; height:.3rem; bottom:100%; inset-inline-start:.65rem; border-inline-start:2px solid var(--blue);
+@media(width > 960px) {
+  .academy-page .academy-wrap { width:min(94vw,120rem); }
+  .academy-page .academy-layout { grid-template-columns:12.5rem minmax(0,1fr); }
+  .academy-layout:has(> .academy-sidebar-column > .academy-sidebar:not([open])) { grid-template-columns:2.85rem minmax(0,1fr); }
+  .academy-sidebar-column { position:sticky; inset-block-start:5rem; display:flex; flex-direction:column; gap:.55rem; }
+  .academy-sidebar-column > .academy-sidebar { position:static; }
+  .academy-sidebar-column:has(> .navigator-dock:not([hidden])) {
+    height:calc(100vh - 6rem); height:calc(100dvh - 6rem);
   }
-  #navigator-upcoming::before { border-inline-start:2px dashed var(--secondary); }
-  .navigator-dock:not([data-state=closed]) #navigator-dismiss { display:grid; place-items:center; position:absolute;
-    inset-inline-end:.35rem; top:.35rem; min-width:1.6rem; min-height:1.6rem; padding:0; }
+  .academy-sidebar-column:has(> .navigator-dock:not([hidden])) > .academy-sidebar { min-block-size:0; overflow:auto; }
+  .academy-sidebar-column:has(> .academy-sidebar:not([open])) .navigator-label { display:none; }
+}
+@media(max-width:960px) {
+  .navigator-dock {
+    position:fixed; inset-inline-start:max(.625rem,env(safe-area-inset-left));
+    inset-block-end:max(.625rem,env(safe-area-inset-bottom)); z-index:7;
+  }
+  #navigator-launch { inline-size:2.75rem; }
+  .navigator-label { display:none; }
+  .academy-layout:has(.navigator-dock:not([hidden])) > .academy-main {
+    margin-inline-start:max(3rem,calc(2.75rem + env(safe-area-inset-left)));
+  }
 }
 #navigator-dialog { width:min(92vw,76rem); height:min(88vh,58rem); max-width:none; max-height:none; padding:clamp(.65rem,2vw,1rem);
   border:1px solid var(--stroke); border-radius:.85rem; background:var(--surface); color:var(--text); overflow:auto; }
@@ -290,6 +310,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 }
 @media(max-width:620px) {
   .academy-page :is(.panel,.quick-plan,.module,.topic,#preparation) { scroll-margin-top:7rem; }
+  .lesson-reading .lesson-evidence { grid-template-columns:minmax(0,1fr); }
   .academy-page .mode-grid { gap:.45rem; }
   .academy-page .mode-grid a { font-size:.86rem; }
   .academy-page .mode-grid strong { font-size:1rem; }

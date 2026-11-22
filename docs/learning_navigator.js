@@ -24,20 +24,9 @@
     return id === route.topic ? "Current · " + label : label;
   }
 
-  function preview(name, label, id, statuses) {
-    const node = el(name);
-    node.hidden = !id;
-    if (id) node.textContent = label + " · " + topics[id].title + " · " + state(id, statuses);
-  }
-
   function syncProgress() {
-    if (!route) return;
+    if (!route || model?.pathId !== route.path.id) return;
     const {statuses} = progressState.current();
-    const prerequisite = topics[route.topic].mandatory.filter(edge => route.path.closure.includes(edge.id)).at(-1);
-    preview("prerequisite", "Required first", prerequisite?.id, statuses);
-    preview("current", "Lesson " + (route.index + 1), route.topic, statuses);
-    preview("upcoming", "Next in order", route.path.closure[route.index + 1], statuses);
-    if (model?.pathId !== route.path.id) return;
     model.nodes.forEach(({id, button, badge, dependencyNames}) => {
       const labels = state(id, statuses);
       button.dataset.completed = String(statuses[id] === "Completed");
@@ -162,8 +151,6 @@
     if (model?.pathId !== route.path.id) draw(route.path);
     el("path").textContent = route.path.title;
     syncProgress();
-    dock.dataset.state = "preview";
-    launch.setAttribute("aria-label", "Open Learning Navigator");
     dialog.showModal();
     const saved = cameras.get(route.path.id);
     setScale(saved?.scale ?? 1);
@@ -172,21 +159,18 @@
     el("title").focus({preventScroll: true});
   }
 
-  function dismiss(state, restoreFocus = true) {
+  function dismiss(restoreFocus = true) {
     if (dialog.open) {
       cameras.set(model.pathId, {scale, left: viewport.scrollLeft, top: viewport.scrollTop});
       drag = null;
       dialog.close();
     }
-    dock.dataset.state = state;
-    launch.setAttribute("aria-label", state === "closed" ? "Reopen Learning Navigator" : "Open Learning Navigator");
     if (restoreFocus) launch.focus({preventScroll: true});
   }
 
   launch.addEventListener("click", open);
-  el("dismiss").addEventListener("click", () => dismiss("closed"));
-  el("minimize").addEventListener("click", () => dismiss("preview"));
-  el("close").addEventListener("click", () => dismiss("closed"));
+  el("minimize").addEventListener("click", () => dismiss());
+  el("close").addEventListener("click", () => dismiss());
   el("zoom-out").addEventListener("click", () => zoom(1 / 1.2));
   el("zoom-in").addEventListener("click", () => zoom(1.2));
   el("center").addEventListener("click", () => {
@@ -195,7 +179,7 @@
   });
   dialog.addEventListener("cancel", event => {
     event.preventDefault();
-    dismiss("preview");
+    dismiss();
   });
 
   viewport.addEventListener("keydown", event => {
@@ -228,7 +212,7 @@
     const id = event.target.closest("[data-lesson]")?.dataset.lesson;
     if (!route?.path.closure.includes(id)) return;
     const hash = guidedLearning.lessonHash(route.path.id, id);
-    dismiss("preview", false);
+    dismiss(false);
     if (location.hash === hash) followHash(true);
     else location.hash = hash;
   });
@@ -236,7 +220,7 @@
   document.addEventListener("curriculum-route", event => {
     const next = guidedLearning.resolve(event.detail);
     if (dialog.open && (next?.topic !== route?.topic || next?.path.id !== route?.path.id)) {
-      dismiss(dock.dataset.state || "preview", false);
+      dismiss(false);
     }
     route = next?.topic ? next : null;
     dock.hidden = !route;

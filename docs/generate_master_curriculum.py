@@ -393,23 +393,46 @@ def authored_lesson(topic_id):
         return None
     text = source.read_text(encoding="utf-8")
     rendered = []
+    folded_headings = {"Setup and run", "Worked Solutions to Practice", "Knowledge Check Answers"}
+    evidence_labels = {"User question.", "Approved reference.", "Actual LLM response.", "Assessment.",
+                       "Failure classification."}
+    disclosure_level = None
 
     def render_text(chunk):
+        nonlocal disclosure_level
         require("```" not in chunk, f"Invalid code fence in {source.name}")
         for block in chunk.strip().split("\n\n"):
             heading = re.fullmatch(r"(#{2,4}) (.+)", block)
             if heading:
                 level = len(heading[1]) + 2
-                rendered.append(f"<h{level}>{inline(heading[2])}</h{level}>")
+                if disclosure_level is not None and level <= disclosure_level:
+                    rendered.append("</div></details>")
+                    disclosure_level = None
+                label = heading[2]
+                markup = f"<h{level}>{inline(label)}</h{level}>"
+                if label in folded_headings:
+                    rendered.append(f'<details class="lesson-disclosure lesson-supplement"><summary>{markup}</summary>'
+                                    '<div class="lesson-disclosure-body">')
+                    disclosure_level = level
+                else:
+                    rendered.append(markup)
             elif block:
-                rendered.append(prose(block))
+                evidence = re.fullmatch(r"\*\*(.+?)\*\* (.+)", block)
+                if evidence and evidence[1] in evidence_labels:
+                    label, value = evidence.groups()
+                    rendered.append(f'<p class="lesson-evidence"><strong>{escape(label)}</strong>'
+                                    f' <span>{inline(value)}</span></p>')
+                else:
+                    rendered.append(prose(block))
 
     offset = 0
     for match in re.finditer(r"(?m)^```(bash|python|text)\n([\s\S]*?)^```[ \t]*$", text):
         render_text(text[offset:match.start()])
         language, code = match.groups()
         block = f'<pre><code class="language-{language}">{escape(code)}</code></pre>'
-        if language != "text":
+        if language == "text":
+            block = f'<details class="lesson-disclosure lesson-output"><summary>Expected output</summary>{block}</details>'
+        else:
             block = f'''<div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
@@ -420,7 +443,9 @@ def authored_lesson(topic_id):
         rendered.append(block)
         offset = match.end()
     render_text(text[offset:])
-    return '<div class="lesson-section" data-lesson-search>' + "\n".join(rendered) + "</div>"
+    if disclosure_level is not None:
+        rendered.append("</div></details>")
+    return '<div class="lesson-section lesson-chapter" data-lesson-search>' + "\n".join(rendered) + "</div>"
 
 
 def lesson_material(topic, titles):
@@ -697,20 +722,6 @@ def quick_view(data, learning_paths, titles):
     <a id="guided-next" href="#quick" hidden>Next Lesson</a>
     <a id="guided-back" href="#quick">Back to Learning Path</a>
   </nav>
-  <aside class="navigator-dock" aria-label="Learning Navigator" hidden>
-    <button type="button" id="navigator-launch" aria-label="Open Learning Navigator" aria-haspopup="dialog" aria-controls="navigator-dialog">
-      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M6 6h5l3 6h4M6 18h5l3-6"/><circle cx="4" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="12" r="2"/>
-      </svg>
-      <span class="navigator-preview">
-        <strong>Learning Navigator</strong>
-        <span id="navigator-prerequisite" class="navigator-preview-node"></span>
-        <span id="navigator-current" class="navigator-preview-node"></span>
-        <span id="navigator-upcoming" class="navigator-preview-node"></span>
-      </span>
-    </button>
-    <button type="button" id="navigator-dismiss" aria-label="Close Learning Navigator preview">×</button>
-  </aside>
   <dialog id="navigator-dialog" aria-labelledby="navigator-title" aria-describedby="navigator-help">
     <header class="navigator-header">
       <div><h2 id="navigator-title" tabindex="-1">Learning Navigator</h2><p id="navigator-path"></p></div>
@@ -966,10 +977,20 @@ def render(title, sections, stages, data):
 <a class="skip-link" href="#main">Skip to curriculum</a>
 {academy_header(embedded=True)}
 <div class="academy-wrap academy-layout">
-  <details class="academy-sidebar" open>
-    {ACADEMY_MENU}
-    <nav id="tabs" aria-label="Curriculum views">{academy_navigation()}</nav>
-  </details>
+  <div class="academy-sidebar-column">
+    <details class="academy-sidebar" open>
+      {ACADEMY_MENU}
+      <nav id="tabs" aria-label="Curriculum views">{academy_navigation()}</nav>
+    </details>
+    <aside class="navigator-dock" aria-label="Learning Navigator" hidden>
+      <button type="button" id="navigator-launch" aria-label="Learning Navigator" aria-haspopup="dialog" aria-controls="navigator-dialog">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M6 6h5l3 6h4M6 18h5l3-6"/><circle cx="4" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="12" r="2"/>
+        </svg>
+        <span class="navigator-label">Learning Navigator</span>
+      </button>
+    </aside>
+  </div>
 <main id="main" class="academy-main" tabindex="-1">
   <header class="curriculum-heading">
     <h1>LLM Evaluation Engineering</h1>
@@ -1507,8 +1528,9 @@ document.getElementById("course-progress").hidden = false;
 let printState;
 window.addEventListener("beforeprint", () => {
   if (printState) return;
-  printState = disclosures.map(details => [details, details.open, details.hidden]);
-  disclosures.forEach(details => {
+  const printable = [...disclosures, ...document.querySelectorAll(".lesson-supplement, .lesson-output")];
+  printState = printable.map(details => [details, details.open, details.hidden]);
+  printable.forEach(details => {
     details.hidden = false;
     details.open = true;
   });

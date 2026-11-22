@@ -77,8 +77,8 @@ function start(hash, storage = new Map()) {
   const el = id => ids.get(id);
   const dock = new Element({hidden: true});
   add("navigator-launch", {dock});
-  for (const name of ["dialog", "map", "surface", "viewport", "prerequisite", "current", "upcoming", "path",
-    "title", "zoom", "dismiss", "minimize", "close", "zoom-in", "zoom-out", "center"]) add("navigator-" + name);
+  for (const name of ["dialog", "map", "surface", "viewport", "path",
+    "title", "zoom", "minimize", "close", "zoom-in", "zoom-out", "center"]) add("navigator-" + name);
   el("guided-lesson").queries.h3 = el("guided-title");
   el("course-progress").panel = el("overview");
   add("roadmap-data", {textContent: JSON.stringify(data)});
@@ -120,7 +120,8 @@ function start(hash, storage = new Map()) {
     getElementById: el,
     createElement: tag => new Element({tag}),
     queries: {"#tabs a": tabs, ".topic": topics, "[data-quick-plan]": plans,
-      "[data-plan-progress]": [...Object.values(planActions), overviewAction, completeAction]},
+      "[data-plan-progress]": [...Object.values(planActions), overviewAction, completeAction],
+      ".lesson-supplement, .lesson-output": [add("print-lesson-disclosure", {open: false})]},
   });
   document.querySelector = selector => el(selector.slice(1));
   const window = new EventTarget();
@@ -228,8 +229,10 @@ test("refresh, completion, return links and version-one backups preserve shared 
   resumed.go(route);
   resumed.window.dispatchEvent(new Event("beforeprint"));
   assert.equal(resumed.el("guided-material").children.length, 0);
+  assert.equal(resumed.el("print-lesson-disclosure").open, true);
   resumed.window.dispatchEvent(new Event("afterprint"));
   assert.equal(resumed.el("guided-material").children.length, 1);
+  assert.equal(resumed.el("print-lesson-disclosure").open, false);
   resumed.run(`
     const backup = LearningProgress.parseBackup(JSON.stringify(LearningProgress.makeBackup(progressState.current())),
       curriculum.topics, curriculum.paths);
@@ -272,6 +275,9 @@ test("all lesson outlines render the reading sequence and show only relevant dis
         [1, 2, 3, 4, 5, 6, 7]);
       assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 7);
       assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 14);
+      assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-output"><summary>Expected output<\/summary>/g)].length, 14);
+      assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement">/g)].length, 3);
+      assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, 15);
     }
   }
 });
@@ -283,23 +289,21 @@ function send(element, name, values = {}) {
   return event;
 }
 
-test("navigator previews live progress and preserves its view through Escape, minimize, and close", () => {
+test("compact navigator shares live progress and preserves its view through Escape, minimize, and close", () => {
   const path = data.paths.D;
   const topic = path.closure[1];
   const ui = start(lessonHash(path.id, topic));
   const nav = name => ui.el("navigator-" + name);
   assert.equal(ui.dock.hidden, false);
-  assert(nav("current").textContent.includes(data.topics[topic].title));
-  assert(nav("upcoming").textContent.includes(data.topics[path.closure[2]].title));
-  assert(nav("prerequisite").textContent.startsWith("Required first"));
-  send(ui.el("guided-complete"), "click");
-  assert.match(nav("current").textContent, /Current · Completed$/);
+  assert.equal(Boolean(nav("dialog").open), false);
   send(nav("launch"), "click");
   assert.equal(nav("dialog").open, true);
   assert.equal(nav("title").focused, true);
   assert.deepEqual(nav("map").children.map(node => node.dataset.lesson), path.closure);
   const node = nav("map").children[1];
   assert.equal(node.getAttribute("aria-current"), "step");
+  assert.equal(node.dataset.completed, "false");
+  send(ui.el("guided-complete"), "click");
   assert.match(node.getAttribute("aria-label"), /Current · Completed.*Required first/);
   assert.equal(node.dataset.completed, "true");
 
@@ -318,7 +322,6 @@ test("navigator previews live progress and preserves its view through Escape, mi
   const position = [viewport.scrollLeft, viewport.scrollTop];
   assert.equal(send(nav("dialog"), "cancel").defaultPrevented, true);
   assert.equal(nav("dialog").open, false);
-  assert.equal(ui.dock.dataset.state, "preview");
   assert.equal(nav("launch").focused, true);
   viewport.scrollTo({left: 0, top: 0});
   send(nav("launch"), "click");
@@ -327,13 +330,11 @@ test("navigator previews live progress and preserves its view through Escape, mi
 
   send(nav("minimize"), "click");
   assert.equal(nav("dialog").open, false);
-  assert.equal(ui.dock.dataset.state, "preview");
-  send(nav("dismiss"), "click");
-  assert.equal(ui.dock.dataset.state, "closed");
-  assert.equal(nav("launch").getAttribute("aria-label"), "Reopen Learning Navigator");
+  assert.equal(ui.dock.hidden, false);
   send(nav("launch"), "click");
   send(nav("close"), "click");
-  assert.equal(ui.dock.dataset.state, "closed");
+  assert.equal(nav("dialog").open, false);
+  assert.equal(ui.dock.hidden, false);
   send(nav("launch"), "click");
   assert.equal(nav("dialog").open, true);
 
@@ -369,8 +370,10 @@ test("full map includes only path lessons, real dependency arrows, and separate 
   }
 
   const css = read("docs/assets/academy.css");
-  assert.match(css, /\.guided-lesson:has\(\.navigator-dock:not\(\[hidden\]\)\) \{ margin-inline-end:3rem/);
-  assert.match(css, /\.navigator-preview,#navigator-dismiss \{ display:none; \}\s*@media\(min-width:1100px\)/);
+  assert.match(css, /\.navigator-dock\s*\{\s*position:fixed; inset-inline-start:/);
+  assert.match(css, /\.academy-layout:has\(\.navigator-dock:not\(\[hidden\]\)\) > \.academy-main\s*\{\s*margin-inline-start:/);
+  assert.match(html, /<div class="academy-sidebar-column">[\s\S]*?<\/details>\s*<aside class="navigator-dock"[^>]* hidden>/);
+  assert.match(html, /<span class="navigator-label">Learning Navigator<\/span>/);
   assert.match(css, /@media\(max-width:620px\) \{\s*#navigator-dialog \{ width:calc\(100% - \.75rem\); height:94vh; height:94dvh/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
   assert.match(html, /<dialog id="navigator-dialog" aria-labelledby="navigator-title" aria-describedby="navigator-help">/);
