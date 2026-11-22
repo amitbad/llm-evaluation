@@ -23,6 +23,7 @@ ROADMAP_SCRIPT = ROOT / "docs/learning_roadmap.js"
 MODES_SCRIPT = ROOT / "docs/learning_modes.js"
 NAVIGATOR_SCRIPT = ROOT / "docs/learning_navigator.js"
 PROGRESS_SCRIPT = ROOT / "docs/learning_progress.js"
+READER_SCRIPT = ASSETS / "lesson-reader.js"
 STAGES = ("Beginner", "Intermediate", "Advanced", "Production", "Specialized / Expert")
 SECTIONS = ("Course overview", "Learning paths", "Repository coverage", "Teaching plan", "Detailed curriculum")
 STATUSES = ("Reusable", "Needs Improvement", "Needs Correction", "New", "Not Assessed")
@@ -410,7 +411,8 @@ def authored_lesson(topic_id):
                 label = heading[2]
                 markup = f"<h{level}>{inline(label)}</h{level}>"
                 if label in folded_headings:
-                    rendered.append(f'<details class="lesson-disclosure lesson-supplement"><summary>{markup}</summary>'
+                    skip = " data-reading-skip" if label != "Setup and run" else ""
+                    rendered.append(f'<details class="lesson-disclosure lesson-supplement"{skip}><summary>{markup}</summary>'
                                     '<div class="lesson-disclosure-body">')
                     disclosure_level = level
                 else:
@@ -453,7 +455,7 @@ def lesson_material(topic, titles):
     preparation = ""
     if prerequisites:
         preparation = f'''
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body">{definitions(prerequisites, prerequisites)}</div>
   </details>'''
@@ -484,7 +486,7 @@ def lesson_material(topic, titles):
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>'''
     return f'''<div class="topic-material lesson-reading" id="material-{topic['id'].lower()}">{reading}
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body">{time_cards(topic['hours'])}</div>
   </details>
@@ -509,6 +511,7 @@ data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Statu
       <label class="js-control" hidden for="progress-{anchor}">Progress <select id="progress-{anchor}" data-progress>{options}</select></label>
       <a class="topic-link" href="#{anchor}">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     {lesson_material(topic, titles)}
   </div>
 </details>'''
@@ -708,6 +711,7 @@ def quick_view(data, learning_paths, titles):
       <progress id="guided-progress" value="0" aria-labelledby="guided-progress-label"></progress>
     </div>
   </header>
+  <div class="lesson-reader" data-guided-reader hidden></div>
   <div id="guided-material"></div>
   <p id="guided-status" role="status"></p>
   <nav class="guided-actions" aria-label="Lesson actions">
@@ -939,6 +943,7 @@ def render(title, sections, stages, data):
     modes_script = MODES_SCRIPT.read_text(encoding="utf-8")
     navigator_script = NAVIGATOR_SCRIPT.read_text(encoding="utf-8")
     progress_script = PROGRESS_SCRIPT.read_text(encoding="utf-8")
+    reader_script = READER_SCRIPT.read_text(encoding="utf-8")
     academy_css = (ASSETS / "academy.css").read_text(encoding="utf-8")
     academy_js = (ASSETS / "academy.js").read_text(encoding="utf-8")
     return f'''<!doctype html>
@@ -994,6 +999,7 @@ const portableCurriculum = "<!doctype html>\\n" + document.documentElement.outer
 {navigator_script}
 LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);
 followHash(false, initialRoute);
+{reader_script}
 {academy_js}
 </script>
 </body>

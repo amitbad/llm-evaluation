@@ -407,6 +407,24 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .guided-progress { display:flex; flex-wrap:wrap; align-items:center; gap:.15rem .45rem;
   color:var(--secondary); font-size:.85rem; line-height:1.35; }
 #guided-progress { inline-size:clamp(3.5rem,12vw,8rem); height:.35rem; accent-color:var(--cyan); }
+.lesson-reader { margin-block:.45rem .65rem; color:var(--text); font-size:.875rem; line-height:1.35; }
+.lesson-reader-controls,.lesson-reader-controls label { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem .5rem; }
+.lesson-reader-controls button,.lesson-reader-controls select {
+  width:auto; max-width:100%; min-height:2.25rem; padding:.25rem .45rem; border:1px solid var(--stroke);
+  border-radius:.35rem; background:var(--surface); color:var(--text); font:inherit;
+}
+.lesson-reader-controls label { min-width:0; max-width:100%; }
+.lesson-reader-controls button:disabled { color:var(--secondary); opacity:.65; cursor:default; }
+.lesson-reader-controls button:hover:enabled { background:var(--blue-wash); }
+.lesson-reader-controls :focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+.lesson-reader .lesson-reader-status { display:flex; flex-wrap:wrap; gap:.15rem .55rem;
+  margin:.2rem 0 0; color:var(--secondary); font-size:.8rem; }
+.lesson-reading .is-being-read,.academy-lesson .is-being-read {
+  background:var(--blue-wash); color:var(--text); box-shadow:inset .15rem 0 var(--blue); border-radius:.2rem;
+}
+@media print {
+  .lesson-reader { display:none!important; }
+}
 .lesson-reading { min-inline-size:0; font-size:1.0625rem; line-height:1.6; overflow-wrap:anywhere; }
 .lesson-reading > * + * { margin-block-start:.8rem; }
 .lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1rem,1.4vw,1.125rem); }
@@ -1481,6 +1499,7 @@ stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></s
       <progress id="guided-progress" value="0" aria-labelledby="guided-progress-label"></progress>
     </div>
   </header>
+  <div class="lesson-reader" data-guided-reader hidden></div>
   <div id="guided-material"></div>
   <p id="guided-status" role="status"></p>
   <nav class="guided-actions" aria-label="Lesson actions">
@@ -1561,6 +1580,7 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m01-t01">Progress <select id="progress-m01-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m01-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m01-t01">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Explain how a language model receives text as tokens and why token counts affect capacity and cost.</li><li>Label the parts of a saved conversation and put the messages in the right order.</li><li>Calculate how much room is available for input and output in a model request.</li><li>Trace which evidence was kept or dropped and judge whether a reply is supported.</li><li>Run an offline diagnostic that distinguishes missing evidence from an input that cannot fit.</li></ul>
@@ -1980,7 +2000,7 @@ Evidence: approved policy retained
 <h5>Practice 4. Separate missing evidence from a wrong answer</h5>
 <p>You’re reviewing two saved attempts for the same ₹5,000 policy. In trace A, the assistant receives the approved policy and replies ₹10,000. In trace B, the app drops the policy to fit the request and the assistant says, “I can’t confirm the minimum from the supplied policy.” In both attempts the developer says to make only claims the supplied evidence supports.</p>
 <p>For each trace, write what the reply did and what, if anything, you can verify went wrong in the app. Then write the next check you’d run. Would you ask the same teammate to investigate both?</p>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
 <h5>Solution 1</h5>
 <p>The input costs 42 × 2 = 84 paise. The first reply costs 6 × 6 = 36, so its total is 120 paise. The second costs 10 × 6 = 60, so its total is 144 paise. The difference is 24 paise. The tokenizer decides how many pieces the model processes. Ordinary word counts do not establish measured token usage.</p>
 <h5>Solution 2</h5>
@@ -1992,7 +2012,7 @@ Evidence: approved policy retained
 </div></details>
 <h4>Knowledge Check</h4>
 <ol><li>Why can two tokenizers give different counts for the same sentence?</li><li>A customer types “I think the bank requires ₹10,000.” What role should that text have, and what determines the approved amount?</li><li>What order should a tool call and its corresponding result appear in?</li><li>A request has a 60-token window, 54-token input cap, and a 12-token output reserve. How many input tokens can it use?</li><li>Why might an application drop older information even though that information is relevant?</li><li>A context budget fits perfectly after a trim, but the assistant did not receive the approved policy. What does the fit establish?</li><li>If the application reserved 12 output tokens but the model generated six, how many output tokens does this lesson’s usage-based cost exercise charge for?</li><li>The assistant says it cannot confirm the minimum. What evidence should you review before calling that a failure?</li></ol>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
 <ol><li><strong>They may split the text differently.</strong> Tokenizers use different learned sets and splitting rules. Use the model-specific tokenizer or measured usage for real numbers.</li><li><strong>It remains a user message.</strong> The customer supplied that text. Check the approved policy for the account and date to establish the amount.</li><li><strong>Call first, result second.</strong> The result should correspond to the call that requested it. Keep the pairing when you include or drop a tool exchange.</li><li><strong>48 input tokens.</strong> Subtract the reserve from the context window for 48, then apply the lower of that allowance and the separate 54-token cap.</li><li><strong>A simple trim rule may rank age ahead of relevance.</strong> Inspect the actual selection and whether a necessary instruction or policy was lost.</li><li><strong>It establishes that the request is within the chosen size budget.</strong> Verify whether the actual input still supports the answer. The policy evidence check is independent of the arithmetic.</li><li><strong>Six output tokens.</strong> Capacity reserved for output and usage in this exercise are separate quantities. Real billing follows the applicable service rules.</li><li><strong>Check the request that reached the model and the expected behavior for it.</strong> If the policy was unavailable and the instructions require abstention, the wording may be appropriate. Record any evidence loss in request assembly separately.</li></ol>
 </div></details>
 <h4>Independent Assignment</h4>
@@ -2006,7 +2026,7 @@ Evidence: approved policy retained
 <h4>Lesson Summary and Next Step</h4>
 <p>You can now read a saved conversation, identify the role of each message, and calculate a budget for input and output. You can follow which message groups survived a trim and judge a reply using the evidence the model actually received. You also saw how used tokens affect a fictional bill and how to stop when required input cannot fit.</p>
 <p>The next topic in Module 1 is <a href="#m01-t02">Inference, sampling and repeatability</a>. Here you learned to account for what enters the model. Next you will study why the same request can produce different replies and how to make fair comparisons across runs. If you are in a focused path, use <strong>Next Lesson</strong> to follow that path&#x27;s sequence.</p></div>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
@@ -2027,6 +2047,7 @@ data-subject="Foundations" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m01-t02">Progress <select id="progress-m01-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m01-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m01-t02">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Trace how a language model turns a saved request into a reply one piece at a time.</li><li>Explain how temperature and top-p change the choices available when a reply is written.</li><li>Use a seed to repeat a classroom simulation and explain why a real service may still give different answers.</li><li>Tell a completed answer, an answer cut short, and a request that never returned an answer apart.</li><li>Design a fair comparison using repeated runs, saved settings, and separate counts for different outcomes.</li></ul>
@@ -2467,7 +2488,7 @@ Wrong amount: 1 | Incomplete: 1 | Timeout: 0
 <p>The policy says ₹5,000. You receive four records. A finishes with “Keep at least five thousand rupees.” B finishes with “The minimum is ₹10,000.” C stops at the length limit after “The minimum is”. D ends with a timeout and no text. Label each case. Give the number of correct replies out of all attempts and the number correct among replies you could judge. What would you check first for C and D?</p>
 <h5>Practice 4. Repair a comparison you can’t yet trust</h5>
 <p>A teammate ran one fee question at temperature 0.2 on Monday and at 0.8 on Friday. Monday’s reply said “A ₹100 monthly fee applies below ₹5,000.” Friday’s reply said “A ₹100 fee applies daily.” The log shows the same general model name, but no snapshot, the questions as displayed to the user, and no saved policy excerpts or seed setting. Write the narrow conclusion you can defend. Then plan a repeat with a fairer comparison. Specify what to hold fixed, how to schedule the runs, and what to record.</p>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
 <h5>Solution 1</h5>
 <p>Greedy selection picks “is” at 60%. Position 74 falls between 60 and 89, so the weighted draw gives “balance.” You could finish the first line with “The minimum is ₹5,000.” The second could say “The minimum balance is ₹5,000.” The earlier choice changes which pieces make sense next. Both completed sentences still express the approved minimum.</p>
 <h5>Solution 2</h5>
@@ -2480,7 +2501,7 @@ Wrong amount: 1 | Incomplete: 1 | Timeout: 0
 </div></details>
 <h4>Knowledge Check</h4>
 <ol><li>What is inference in the bank assistant example, and where does training fit?</li><li>Why can changing the first few tokens change the rest of the reply?</li><li>With chances of 60%, 30%, and 10%, can “required” appear under greedy selection? What about weighted sampling?</li><li>At temperature 1, what happens to the example chances before top-p? What can you conclude about answer quality?</li><li>At top-p 0.8, why do the kept choices cover 90% before you rescale?</li><li>Why is “we used the same seed” insufficient to explain whether two real model runs should match?</li><li>Which information helps you distinguish a length stop from a timeout with no reply? Why keep these separate from wrong amounts?</li><li>Your report shows two correct replies out of three assessable replies and four attempts. What should you say about the unassessed attempt?</li></ol>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
 <ol><li><strong>Using an existing model.</strong> Inference is what happens when the assistant uses the trained model to produce a reply. Training is the earlier process of adjusting the model using examples. This lesson varies how replies are generated from an existing model.</li><li><strong>The next choice depends on what came before.</strong> “The minimum is” can lead to an amount. “The minimum balance” may lead to “is” first. The model works out new chances with the chosen piece included.</li><li><strong>It can appear in the weighted draw.</strong> Greedy selection picks “is,” the strongest choice. The 10% choice occupies positions 90 through 99 in the toy draw, so it can win by sampling.</li><li><strong>The probabilities stay as they were.</strong> Dividing 1 by 1 gives an exponent of 1 in our sketch. That says nothing about whether the resulting text gives the correct amount. Check the answer against the policy.</li><li><strong>The second choice crosses the line.</strong> 60% alone falls short, and adding 30% takes the total to 90%. Keep the whole second choice, then rescale the two kept chances.</li><li><strong>The seed is one part of the setup.</strong> Save the actual request, model snapshot if available, and generation settings too. The service and its computations can also change. Check how consistently the system repeats under the conditions you can document.</li><li><strong>Read the stop reason and saved text.</strong> A length stop may leave part of the reply. A timeout with no reply leaves no text to judge. A wrong amount is a factual error you can show by comparing a claim against the policy.</li><li><strong>Keep both denominators.</strong> Two of four attempts delivered a correct reply. Two of three assessable replies were correct. There was one attempt without a factual judgment. Report the reason if known, such as a timeout or missing amount, so the attempt stays visible.</li></ol>
 </div></details>
 <h4>Independent Assignment</h4>
@@ -2493,11 +2514,11 @@ Wrong amount: 1 | Incomplete: 1 | Timeout: 0
 <h4>Lesson Summary and Next Step</h4>
 <p>You can now follow a reply as it grows, explain how temperature and top-p shape a sampled choice, and repeat a small simulation with a seed. You can read a set of saved attempts, tell a wording change from a wrong claim, and keep a cutoff or timeout visible when comparing settings.</p>
 <p>Next in Module 1 is <a href="#m01-t03">Application architecture and a first smoke test</a>. A <strong>smoke test</strong> is a quick check that the basic request path works. You’ll follow a request through the app and learn where to look when the failure happens before you have a reply to score. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a></dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
@@ -2518,6 +2539,7 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
       <label class="js-control" hidden for="progress-m01-t03">Progress <select id="progress-m01-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m01-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m01-t03">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Follow a question from the chat screen through the app and back to the customer.</li><li>Explain what each part does, including the policy lookup, instructions, model, and reply handling.</li><li>Write a small check with an expected result and compare it with what happened.</li><li>Use PASS, FAIL, and NEEDS REVIEW to report a correct reply, a wrong claim, missing information, or a technical problem.</li><li>Build an offline simulator and use its records to decide where to investigate a failure.</li></ul>
@@ -2914,7 +2936,7 @@ NEEDS REVIEW: 1
 <ul><li><strong>A.</strong> A readable reply gives ₹5,000 for Standard Savings.</li><li><strong>B.</strong> The screen shows an error and the log says the request timed out before any response arrived.</li><li><strong>C.</strong> The app receives the incomplete text <code>{&quot;reply&quot;:</code> and can’t parse it.</li><li><strong>D.</strong> An unsupported ATM question has a readable fallback. The checklist has no approved expectation for how to handle that question.</li></ul>
 <h5>Practice 4. Explain what the timing does and doesn’t say</h5>
 <p>A log says the app sent a question at 200 ms and the screen displayed a reply at 650 ms. The screen says ₹10,000. The saved server reply says ₹5,000, and the approved policy also says ₹5,000. Calculate the end-to-end elapsed time. Can you tell how long the model spent generating the reply? Where would you start investigating the changed amount, and what evidence would you keep?</p>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
 <h5>Solution 1</h5>
 <p>The question goes from the interface to the app. The app selects the correct policy, assembles the prompt, and sends it to the model. The model returns “I can’t confirm,” which the app shows. The first missing piece is the approved excerpt in the assembled prompt. Check how the app passes the selected policy into the prompt. See whether the assembled request contains the right excerpt before asking the model to answer again.</p>
 <h5>Solution 2</h5>
@@ -2927,7 +2949,7 @@ NEEDS REVIEW: 1
 </div></details>
 <h4>Knowledge Check</h4>
 <ol><li>What jobs does the chat screen do? Name one job it doesn’t establish was done correctly.</li><li>How can you change the prompt and still use the same model?</li><li>What’s the difference between finding the approved paragraph and assembling the prompt?</li><li>What does an HTTP success status tell you? What does a readable JSON reply tell you?</li><li>Why record a timeout separately from a wrong minimum balance?</li><li>An ATM question returns a fallback. When would you record PASS, and when would you record NEEDS REVIEW?</li><li>What can one passed smoke test tell you about other questions and repeated attempts?</li><li>Which records would help you tell whether an amount changed in the model reply or on the way to the screen?</li></ol>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
 <ol><li><strong>The screen handles the interaction.</strong> It lets the customer send a question and see a reply. The fact that text appears tells you nothing by itself about which policy the app chose or whether the amount agrees with it.</li><li><strong>Change what you send.</strong> You might add an instruction to say when there’s no approved information. That changes the input. The same trained model can answer both requests.</li><li><strong>Follow the evidence.</strong> Retrieval locates the paragraph. Prompt assembly puts it with the instructions and question. A program can find the right paragraph and still leave it out of the request.</li><li><strong>Check each layer.</strong> A success status indicates success at the HTTP request level. A readable JSON reply gives you structured information you can inspect. You still have to check for the reply field and judge the answer against the policy.</li><li><strong>Keep the failure boundary visible.</strong> A timeout with no response leaves no answer to check. A wrong minimum is a claim you can read and compare with the approved amount. These observations send you to different stages.</li><li><strong>Decide using the expectation.</strong> PASS if the case explicitly requires a fallback and receives it. NEEDS REVIEW if you got readable text but don’t yet know what the assistant should say for that case. Record why.</li><li><strong>Scope the result.</strong> A smoke test shows the checked path met its expectation on that attempt. Try more questions and repeat runs to learn how behavior varies, using the same evaluation rule where it applies.</li><li><strong>Compare both sides of the handoff.</strong> Keep the selected policy and the actual request, the raw model result, and the text the user saw. If the returned amount is right and the displayed amount differs, investigate reply handling.</li></ol>
 </div></details>
 <h4>Independent Assignment</h4>
@@ -2940,11 +2962,11 @@ NEEDS REVIEW: 1
 <h4>Lesson Summary and Next Step</h4>
 <p>You can now follow a question from the interface to the policy lookup, then through the prompt, response, and display. You can write an expected result before running a smoke test, record what came back, and tell a wrong answer from a missing or unreadable result.</p>
 <p>This completes Module 1. Next is <a href="#m02-t01">Objectives, dimensions and failure taxonomy</a>. You’ll decide what good answers should do across more than one case and give recurring problems consistent names. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t02">Inference, sampling and repeatability</a></dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>0h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
@@ -2975,6 +2997,7 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m02-t01">Progress <select id="progress-m02-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m02-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m02-t01">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Write an evaluation objective that names the behavior, the unit you will judge, and the decision the evidence will support.</li><li>Turn a vague goal such as “give good answers” into observable pass criteria for at least three quality dimensions.</li><li>Use approved evidence to distinguish correctness from completeness and relevance from groundedness.</li><li>Assign more than one failure category to a response and distinguish an evaluator error from a product failure.</li><li>Run a short Python evaluation on saved responses, predict the effect of a change, and explain what its rules miss.</li><li>Design a small evaluation dataset and recommend what a fictional bank team should fix, review, or hold back.</li></ul>
@@ -3357,7 +3380,7 @@ Reply: The minimum is ₹10,000. Keep your PIN private.
 <h5>Practice 4. Write an objective and build a small dataset</h5>
 <p>Imagine a teammate asks whether the Standard Savings assistant is ready for customers. You have a policy with a ₹5,000 minimum and a ₹100 monthly fee below it. The policy says nothing about ATM limits. It forbids asking for PINs and sends people who need account-specific help to approved support.</p>
 <p>Write the decision you’re trying to make and what you’ll judge as one item. Then make four test rows. Include a balance question, a two-part question, an unsupported question, and a sensitive or account-specific question. For each row, write the question, the evidence you’d give the assistant, what a good reply would do, and one problem to watch for. Which kind of failure would make you stop the release?</p>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
 <h5>Solution 1</h5>
 <p>Reply B fails correctness. “₹10,000” contradicts the approved ₹5,000 minimum, so label it Incorrect fact. It is still relevant because it directly addresses the minimum. Reply A meets both checks. You do not need an exact word-for-word match with the reference to accept A.</p>
 <h5>Solution 2</h5>
@@ -3371,7 +3394,7 @@ Reply: The minimum is ₹10,000. Keep your PIN private.
 </div></details>
 <h4>Knowledge Check</h4>
 <ol><li>The assistant writes a natural sentence with ₹10,000 while the reference says ₹5,000. Which check exposes the defect, and why does fluency not save it?</li><li>A reply gives the correct balance but omits the fee in a two-part question. How do you rate correctness and completeness?</li><li>The reference covers only balance. A reply mentions a fee waiver. Can you mark that claim grounded, and what would change your answer?</li><li>The same reply misstates the amount, requests a PIN, and digresses about insurance. How many responses and how many categories do you record?</li><li>The request times out. Which category applies, and what do you record for correctness?</li><li>The exact-token check flags “five thousand rupees” as missing ₹5,000. Is this enough to reject the answer?</li><li>A correct, safe response takes 3 seconds and costs ₹0.07. The fictional test limits are 2 seconds and ₹0.10. What can you conclude about this request?</li><li>Two reviewers disagree because one uses an older approved balance amount. What should they verify before calling the assistant wrong?</li></ol>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
 <ol><li><strong>Correctness.</strong> The numerical claim contradicts the approved evidence. Fluency only tells you the sentence reads naturally.</li><li><strong>Correct for what it says, incomplete for what was asked.</strong> The balance can pass while the required fee information is absent. Record the omission separately.</li><li><strong>Flag it as unsupported under the supplied reference.</strong> You need evidence available for the case that actually authorizes that waiver. A vague mention of fees is insufficient.</li><li><strong>One response with three failure categories.</strong> Record Incorrect fact, Unsafe request, and Irrelevant content. Counting three failed responses would misstate how many times users saw a bad reply.</li><li><strong>Operational failure.</strong> Record the attempt and timeout. Mark factual correctness N/A because there is no wording to evaluate.</li><li><strong>No.</strong> The literal rule found different wording. Both expressions can represent the same amount. Compare the amount to the reference before assigning a factual label.</li><li><strong>This request passes the cost limit and misses the latency limit.</strong> Nothing in that comparison overturns the quality result. Repeat timing measurements before making a general performance claim.</li><li><strong>Verify the policy version that governs the case and the excerpt actually supplied.</strong> A stale reference is a problem with the evaluation inputs. Rescore using the approved version for the stated objective.</li></ol>
 </div></details>
 <h4>Common Mistakes</h4>
@@ -3381,11 +3404,11 @@ Reply: The minimum is ₹10,000. Keep your PIN private.
 <p>Before moving on, take the answer “The minimum is ₹10,000,” state the objective you are testing, quote the approved evidence, assign the failure label, and name the first follow-up you would perform. If you can do that without glancing back, try a two-part question and describe which parts are correct and which are missing.</p>
 <p>The next topic in Module 2 is <a href="#m02-t02">Ground truth, references and benchmarks</a>. This chapter supplied a short approved source so you could focus on defining and judging behavior. The next topic asks how to choose reliable evidence, allow multiple acceptable answers, and handle questions for which the right behavior is to say you cannot confirm the answer.</p>
 <p>If your Quick Learning path has a different order, use <strong>Next Lesson</strong> to continue along that path.</p></div>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t03">Application architecture and a first smoke test</a></dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
@@ -3406,6 +3429,7 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
       <label class="js-control" hidden for="progress-m02-t02">Progress <select id="progress-m02-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m02-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m02-t02">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Separate an evidence-backed fact, a reference answer, and an evaluation label for a saved reply.</li><li>Choose the approved source for a question using its scope, authority, and effective dates.</li><li>Write several equally acceptable answers and a reference behavior for a question the policy cannot answer.</li><li>Build an eight-case benchmark with clear evidence, boundary cases, and unresolved cases.</li><li>Run a small offline benchmark and interpret PASS, FAIL, and NEEDS REVIEW.</li><li>Repair a faulty benchmark row while keeping earlier results reproducible.</li></ul>
@@ -3805,7 +3829,7 @@ NEEDS REVIEW: 2
 <h5>Practice 4. Correct a benchmark without losing history</h5>
 <p>Imagine opening a results sheet and finding two verdicts for the same reply. Version <code>HLB-SAV-1</code> has a July 15 minimum case linked to SV-2. One reviewer expected ₹4,000 and marked the ₹5,000 reply FAIL. Another reviewer accepted it. The guide only says “correct amount,” and the exported result has no date.</p>
 <p>Write a corrected benchmark row another reviewer can use. Keep a note showing the old judgment, the new one, and why it changed. Then explain how you’d compare two assistant versions after this correction.</p>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
 <h5>Solution 1</h5>
 <p>Reference “The Standard Savings minimum is ₹5,000.” Accept “Keep at least five thousand rupees in Standard Savings.” Cite SV-2 §2 and July 15, 2026, for both. Reject “The requirement is ₹10,000.” An exact match to the reference would reject the correct alternative. A rule that merely checks whether ₹5,000 occurs would accept “The minimum is ₹10,000, not ₹5,000,” even though it asserts the wrong requirement. Check what the sentence affirms.</p>
 <h5>Solution 2</h5>
@@ -3817,7 +3841,7 @@ NEEDS REVIEW: 2
 </div></details>
 <h4>Knowledge Check</h4>
 <ol><li>For the July 15 case, identify the fact, one reference answer, and the label for a reply giving ₹10,000.</li><li>Why might “You must maintain at least ₹5,000” pass a case whose reference uses “The minimum is ₹5,000”?</li><li>A draft created July 10 mentions ₹3,000, while approved SV-2 began July 1. Which source governs a July 15 answer?</li><li>Why is a fee question at exactly ₹5,000 valuable in a benchmark?</li><li>What label should the benchmark give a supported abstention for an ATM question and a factual answer under the unresolved August waiver conflict?</li><li>How can a checker miss the error in “₹100 charged every day” when the policy says ₹100 monthly?</li><li>How would putting the reserved release questions and answer key into the assistant&#x27;s tuning data affect the evaluation?</li><li>Two reported scores used different benchmark versions after a wrong reference was repaired. What comparison can you make next?</li></ol>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
 <ol><li><strong>Fact.</strong> The Standard Savings minimum was ₹5,000 on July 15 under SV-2. “The minimum is ₹5,000” is a reference answer. A ₹10,000 claim receives FAIL.</li><li><strong>Equivalent meaning.</strong> Both require at least ₹5,000 for the same account. The reference is a reviewed way to say it. An exact match can miss equally valid wording.</li><li><strong>SV-2.</strong> It is approved and effective for that date. The draft&#x27;s later edit time carries no policy authority.</li><li><strong>It separates below from at or below.</strong> A program that accidentally includes equality can pass easier cases above and below the threshold and still fail this boundary.</li><li><strong>PASS for the reviewed abstention, NEEDS REVIEW for the conflict.</strong> The bounded ATM case has known expected behavior. The waiver claim lacks a resolved source of truth.</li><li><strong>A keyword test can find the amount without checking its frequency.</strong> The reply’s policy claim converts a monthly charge to a daily charge. Review the relationship between the amount and the frequency.</li><li><strong>The score could exaggerate performance on fresh questions.</strong> The assistant may have seen the evaluation answers during tuning. Use held-out, independently reviewed cases and check for near-duplicates.</li><li><strong>Rerun both assistant versions on the same corrected benchmark.</strong> Preserve the older reports with their version IDs. A change in labels and case coverage can change a score even when the assistant&#x27;s behavior stays the same.</li></ol>
 </div></details>
 <h4>Independent Assignment</h4>
@@ -3831,11 +3855,11 @@ NEEDS REVIEW: 2
 <h4>Lesson Summary and Next Step</h4>
 <p>M02-T01 showed how to choose a useful objective and record what failed. You can now decide what evidence belongs to a case, prepare multiple reference answers, and explain why a reviewer may need to abstain or hold a label for review. You built a small versioned benchmark with different kinds of questions and used it to record outcomes and their reasons.</p>
 <p>The next topic in Module 2 is <a href="#m02-t03">Offline, online and the evaluation lifecycle</a>. You will decide where a saved benchmark fits before release, what real traffic can teach you afterward, and how to turn evidence into a release decision or follow-up. In a focused Quick Learning path, use <strong>Next Lesson</strong> to follow that path’s own sequence.</p></div>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t01">Objectives, dimensions and failure taxonomy</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a></dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
@@ -3856,6 +3880,7 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m02-t03">Progress <select id="progress-m02-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m02-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m02-t03">
 <div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
 <ul><li>Design a repeatable offline evaluation using saved cases, approved evidence, and a scoring guide.</li><li>Compare a baseline and a candidate on the same cases and name the individual failures that changed.</li><li>Explain what live monitoring, user feedback, and controlled online experiments can each tell you.</li><li>Use a release gate to recommend approval, a block, or further investigation.</li><li>Investigate a production incident and turn it into a new test while preserving earlier results.</li></ul>
@@ -4270,7 +4295,7 @@ No confirmed issue in the sample; review pending records.
 <p>Write the fraction of positive ratings and the fraction of decided reviews that passed. What can you learn from each? Under the rule that confirmed incorrect fee guidance pauses expansion, say what you’d do now. Name three details you would keep in a case record without saving personal information.</p>
 <h5>Practice 4. Build a regression case after an incident</h5>
 <p>On July 18, an assistant said “You owed a ₹100 monthly fee” to a question about holding exactly ₹4,000 in Standard Savings on June 30. The evidence log shows only SV-2 was supplied. The approved register says SV-1 applied through June 30 and charged ₹80 monthly only below ₹4,000. Write a saved case with an ID, a synthetic question, applicable evidence, expected behavior, a failing reply, and a likely point to investigate. State how to compare a fix fairly and how to preserve the previous release record.</p>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
 <h5>Solution 1</h5>
 <p>P1 is PASS. It gives the approved July minimum for the correct account. A literal match against the example reference would falsely fail that paraphrase. P2 is FAIL, wrong fee frequency. Weekly contradicts the required monthly period even though ₹100 is correct. One of two reviewed cases passed. The pass rate describes those two replies checked under the stated guide.</p>
 <h5>Solution 2</h5>
@@ -4282,7 +4307,7 @@ No confirmed issue in the sample; review pending records.
 </div></details>
 <h4>Knowledge Check</h4>
 <ol><li>A team scores last week&#x27;s approved, saved replies on a laptop. Is the scoring run offline or online, and where did the material come from?</li><li>Why must you retain the policy version and the date of an evaluation question?</li><li>A candidate fixes two wrong replies and breaks one previous pass. What should you report beyond the change in total passes?</li><li>A candidate passes 5 of 6 required cases and guesses an ATM limit in the sixth. What does this lesson&#x27;s gate say, and why?</li><li>What is the difference between a shadow test and a canary?</li><li>Why does a customer&#x27;s thumbs-up on a fee answer give little evidence that the fee is correct?</li><li>The canary sees more historical questions than the baseline, and the raw failure rate is higher. What extra evidence would help you attribute the difference?</li><li>After confirming the new June boundary failure, what should you save, and which versions should you compare?</li></ol>
-<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
 <ol><li><strong>Offline scoring of live observations.</strong> The replies came from production. The team is applying rules to a saved batch separately from live serving.</li><li><strong>Source selection.</strong> A July answer about June 15 may require SV-1. A date and policy version let another reviewer find the same evidence and reproduce the judgment.</li><li><strong>Paired changes and harm.</strong> Name both improvements and the regression by case. A single total hides the loss, and the broken behavior may be more serious than both improvements.</li><li><strong>Block.</strong> The 5 of 6 score clears 80%, but the confirmed unsupported limit is safety-critical in this exercise and takes priority.</li><li><strong>Who sees the answer.</strong> Shadow traffic exercises the candidate without showing its reply to the customer. A canary serves the candidate&#x27;s reply to a limited share of traffic and monitors what happens.</li><li><strong>Different measures.</strong> The rating may reflect convenience, politeness, or whether the response sounds plausible. Check the fee claim against the applicable evidence.</li><li><strong>A comparable comparison.</strong> Check case categories and relevant conditions, and compare like with like. A well-designed randomized online comparison with agreed measurement can help attribute effects to the version. Offline replay can show whether both versions handle the same historical cases differently.</li><li><strong>Versioned evidence.</strong> Save a minimized reproduction, the date and approved source, expected behavior, and the reason for the change. Keep the original run. Score baseline and candidate under the same new suite and rubric, then record the results as a new comparison.</li></ol>
 </div></details>
 <h4>Independent Assignment</h4>
@@ -4295,11 +4320,11 @@ No confirmed issue in the sample; review pending records.
 <h4>Lesson Summary and Next Step</h4>
 <p>Use offline evaluation to check and reproduce known cases. Use online evaluation to learn what happens on deployed traffic. Compare versions on the same saved cases, review serious failures individually, and make the release decision explicit. When production exposes a new failure, investigate the cause, preserve the original evidence, and extend the suite so you can test the fix before the next release.</p>
 <p>The next topic in the complete curriculum is <a href="#m03-t01">Exact match, normalization and rules</a>. It shows how to make small automated checks more reliable and recognize cases they still score incorrectly. In Quick Learning, use <strong>Next Lesson</strong> to follow your path&#x27;s sequence.</p></div>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t01">Objectives, dimensions and failure taxonomy</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t03">Application architecture and a first smoke test</a></dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
@@ -4330,6 +4355,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m03-t01">Progress <select id="progress-m03-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m03-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m03-t01">
   <p class="lesson-intro" data-lesson-search>String matches are fast and inspectable but can miss valid aliases and accept wrong claims.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4342,7 +4368,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Exact match, case and whitespace normalization, Unicode caution, regex boundaries, canonical aliases, numeric checks, precision and recall.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div></dl></div>
   </details>
@@ -4359,7 +4385,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
@@ -4380,6 +4406,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m03-t02">Progress <select id="progress-m03-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m03-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m03-t02">
   <p class="lesson-intro" data-lesson-search>Valid JSON can still contain invalid field values or unsafe business outcomes.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4392,7 +4419,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Parsing, types, required and nullable fields, enums, ranges, schema versions, cross-field invariants and invalid-output handling.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a></dd></div></dl></div>
   </details>
@@ -4409,7 +4436,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
@@ -4430,6 +4457,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m03-t03">Progress <select id="progress-m03-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m03-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m03-t03">
   <p class="lesson-intro" data-lesson-search>Human scores vary when criteria, inputs and evidence are underspecified.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4442,7 +4470,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Anchored ordinal scales, binary decisions, blind review, N/A, evidence notes and response IDs.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a></dd></div></dl></div>
   </details>
@@ -4459,7 +4487,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
@@ -4493,6 +4521,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
       <label class="js-control" hidden for="progress-m04-t01">Progress <select id="progress-m04-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m04-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m04-t01">
   <p class="lesson-intro" data-lesson-search>A score cannot be reproduced if cases, labels and outputs drift independently.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4505,7 +4534,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <h4>Key concepts</h4>
     <p data-lesson-search>Stable case and response IDs, data contracts, task metadata, source references, append-only runs, version manifests and validation.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a>, <a href="#m03-t02">Structured output and schema validation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a></dd></div></dl></div>
   </details>
@@ -4522,7 +4551,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
@@ -4543,6 +4572,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
       <label class="js-control" hidden for="progress-m04-t02">Progress <select id="progress-m04-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m04-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m04-t02">
   <p class="lesson-intro" data-lesson-search>Synthetic breadth is useful when human review and source-backed validation preserve label quality.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4555,7 +4585,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <h4>Key concepts</h4>
     <p data-lesson-search>Annotation instructions, independent labels, disagreement and arbitration, structured generation from policy, review and rejection, provenance and license.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a> — required when publishing reviewed rows to the versioned dataset</dd></div></dl></div>
   </details>
@@ -4572,7 +4602,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -4593,6 +4623,7 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m04-t03">Progress <select id="progress-m04-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m04-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m04-t03">
   <p class="lesson-intro" data-lesson-search>Aggregate gains may hide weak slices or reflect tuning on the evaluation set.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4605,7 +4636,7 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Representative and stratified sampling, rare-case oversampling, adversarial edge cases, grouped splits, deduplication, train/test contamination, dataset refresh and retirement.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a></dd></div></dl></div>
   </details>
@@ -4622,7 +4653,7 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -4653,6 +4684,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m05-t01">Progress <select id="progress-m05-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m05-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m05-t01">
   <p class="lesson-intro" data-lesson-search>Surface overlap offers a useful baseline for bounded tasks and can penalize correct paraphrases.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4665,7 +4697,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Token precision/recall/F1, n-grams, BLEU brevity and smoothing, sentence versus corpus BLEU, ROUGE-N and ROUGE-L, multiple references and optional chrF.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a></dd></div></dl></div>
   </details>
@@ -4682,7 +4714,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -4703,6 +4735,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m05-t02">Progress <select id="progress-m05-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m05-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m05-t02">
   <p class="lesson-intro" data-lesson-search>Cosine can find paraphrases while giving high scores to changed amounts or opposite meanings.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4715,7 +4748,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Vectors, cosine, embeddings from pretrained encoders, model/version effects, threshold calibration and triage.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a>, <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> — required when building your own held-out split for threshold tuning</dd></div></dl></div>
   </details>
@@ -4732,7 +4765,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -4753,6 +4786,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m05-t03">Progress <select id="progress-m05-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m05-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m05-t03">
   <p class="lesson-intro" data-lesson-search>An aggregate can hide an unacceptable error or an evaluator failure.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4765,7 +4799,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Hard gates, rule plus proxy cascades, metric applicability, score vectors, disagreement, human escalation and threshold trade-offs.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a>, <a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a>, <a href="#m05-t02">Embeddings and semantic similarity</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m05-t02">Embeddings and semantic similarity</a> — required when tuning a semantic triage threshold instead of consuming supplied proxy scores</dd></div></dl></div>
   </details>
@@ -4782,7 +4816,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -4813,6 +4847,7 @@ data-subject="Judges" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m06-t01">Progress <select id="progress-m06-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m06-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m06-t01">
   <p class="lesson-intro" data-lesson-search>A model can scale rubric application while producing confident but unsupported labels.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4825,7 +4860,7 @@ data-subject="Judges" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Criterion isolation, pointwise scoring, anchors, reference-guided versus reference-free evaluation, evidence spans, schema validation and fallback.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t02">Structured output and schema validation</a>, <a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a>, <a href="#m05-t03">Combining evaluators and handling uncertainty</a></dd></div></dl></div>
   </details>
@@ -4842,7 +4877,7 @@ data-subject="Judges" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -4863,6 +4898,7 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m06-t02">Progress <select id="progress-m06-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m06-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m06-t02">
   <p class="lesson-intro" data-lesson-search>Human and model disagreements identify ambiguous rubrics, default preferences and systematic miss rates.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4875,7 +4911,7 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Percent agreement, confusion matrices, Cohen&#x27;s kappa intuition, prevalence effects, repeat judge consistency, verbosity/style and model self-preference, held-out calibration.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a>, <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> — required when constructing your own calibration and holdout sets</dd></div></dl></div>
   </details>
@@ -4892,7 +4928,7 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -4913,6 +4949,7 @@ data-subject="Judges" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m06-t03">Progress <select id="progress-m06-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m06-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m06-t03">
   <p class="lesson-intro" data-lesson-search>Comparative judgments can simplify preference assessment and are sensitive to order and tie policy.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4925,7 +4962,7 @@ data-subject="Judges" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Blind randomization, position swaps, tie and abstain policies, win rates, Bradley–Terry intuition, nontransitivity and multi-model uncertainty.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a>, <a href="#m06-t02">Human agreement, calibration and bias</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a> — required when adding a live model judge to the comparative lab</dd></div></dl></div>
   </details>
@@ -4942,7 +4979,7 @@ data-subject="Judges" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -4973,6 +5010,7 @@ data-subject="Statistics" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m07-t01">Progress <select id="progress-m07-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m07-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m07-t01">
   <p class="lesson-intro" data-lesson-search>Repeated draws from the same case measure variation within that case and do not add independent case coverage.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -4985,7 +5023,7 @@ data-subject="Statistics" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Analysis units, between/within-case variance, seeds and effective config, repeated measures, macro/micro means, slice weights, denominators and missingness.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t01">Objectives, dimensions and failure taxonomy</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t02">Inference, sampling and repeatability</a>, <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m05-t03">Combining evaluators and handling uncertainty</a></dd></div></dl></div>
   </details>
@@ -5002,7 +5040,7 @@ data-subject="Statistics" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -5023,6 +5061,7 @@ data-subject="Statistics" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m07-t02">Progress <select id="progress-m07-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m07-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m07-t02">
   <p class="lesson-intro" data-lesson-search>Small apparent differences can be sampling noise or too small to matter operationally.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5035,7 +5074,7 @@ data-subject="Statistics" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Effect size, confidence interval intuition, paired case bootstrap, permutation test intuition, practical significance, power/sample planning and multiplicity.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div></dl></div>
   </details>
@@ -5052,7 +5091,7 @@ data-subject="Statistics" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
@@ -5073,6 +5112,7 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m07-t03">Progress <select id="progress-m07-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m07-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m07-t03">
   <p class="lesson-intro" data-lesson-search>A regression decision depends on what changed, what was held fixed and which risks matter.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5085,7 +5125,7 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Paired offline experiments, locked baselines, key slices, noninferiority margins, guardrails, offline versus randomized online A/B effects and regression reporting.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t03">Offline, online and the evaluation lifecycle</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div></dl></div>
   </details>
@@ -5102,7 +5142,7 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5136,6 +5176,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m08-t01">Progress <select id="progress-m08-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m08-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m08-t01">
   <p class="lesson-intro" data-lesson-search>A generator cannot reliably cite supporting evidence that the retriever missed.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5148,7 +5189,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Parsing, chunking and overlap, source IDs, sparse/dense/hybrid retrieval, top-k, gold relevance, Precision@k, Recall@k, MRR, nDCG and unlabeled passages.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a>, <a href="#m05-t02">Embeddings and semantic similarity</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m05-t02">Embeddings and semantic similarity</a> — required when modifying the dense retrieval encoder or interpreting its similarity values</dd></div></dl></div>
   </details>
@@ -5165,7 +5206,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
@@ -5186,6 +5227,7 @@ data-subject="RAG" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m08-t02">Progress <select id="progress-m08-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m08-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m08-t02">
   <p class="lesson-intro" data-lesson-search>Answers may be correct without supporting evidence or faithfully repeat stale information.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5198,7 +5240,7 @@ data-subject="RAG" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Context relevance versus sufficiency, claim correctness, groundedness/faithfulness, hallucination, citation validity/entailment/completeness, answerability and abstention.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m08-t01">Ingestion, chunking and ranked retrieval</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t03">Rubrics and a first human evaluation</a>, <a href="#m06-t01">Pointwise LLM-as-a-Judge</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a> — required when replacing manual claim review with a model judge</dd></div></dl></div>
   </details>
@@ -5215,7 +5257,7 @@ data-subject="RAG" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
@@ -5236,6 +5278,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m08-t03">Progress <select id="progress-m08-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m08-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m08-t03">
   <p class="lesson-intro" data-lesson-search>A better response score does not show whether retrieval or generation improved.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5248,7 +5291,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Oracle retrieval, controlled context swaps, distractors, stale and conflicting sources, held-out slices, threshold tuning and regression gates.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m08-t02">Context sufficiency, answer correctness and citations</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a>, <a href="#m07-t03">Comparing models, prompts and A/B variants</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m07-t02">Confidence intervals, significance and sample size</a> — required when reporting confidence intervals for a comparative result</dd></div></dl></div>
   </details>
@@ -5265,7 +5308,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
@@ -5296,6 +5339,7 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m09-t01">Progress <select id="progress-m09-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m09-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m09-t01">
   <p class="lesson-intro" data-lesson-search>Portable contracts keep experiments reproducible when a framework or judge changes.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5308,7 +5352,7 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Case/response IDs, metric intent and input schema, results with valid/error/N/A, provenance, offline runner versus hosted service, cost, telemetry and capability fit.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m05-t03">Combining evaluators and handling uncertainty</a>, <a href="#m07-t03">Comparing models, prompts and A/B variants</a></dd></div></dl></div>
   </details>
@@ -5325,7 +5369,7 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
@@ -5346,6 +5390,7 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m09-t02">Progress <select id="progress-m09-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m09-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m09-t02">
   <p class="lesson-intro" data-lesson-search>Named metrics can answer different questions and require different labels or model calls.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5358,7 +5403,7 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>DeepEval test cases, contextual relevance, faithfulness and thresholds. RAGAS variants for context precision, faithfulness and response relevance, reference requirements and judge/embedding calls. Choose DeepEval for Python assertions and RAGAS for retrieval/generation metric suites when prerequisites match.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m08-t02">Context sufficiency, answer correctness and citations</a>, <a href="#m09-t01">Common evaluator contract and framework selection</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a> — required when configuring a custom judge rather than reading recorded adapter results</dd></div></dl></div>
   </details>
@@ -5375,7 +5420,7 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5396,6 +5441,7 @@ data-subject="Frameworks" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m09-t03">Progress <select id="progress-m09-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m09-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m09-t03">
   <p class="lesson-intro" data-lesson-search>Declarative and hosted runs can support review workflows once score meaning is understood.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5408,7 +5454,7 @@ data-subject="Frameworks" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>promptfoo for declarative prompt/provider matrices and assertions. OpenAI Evals for evaluation definitions, datasets and grader/runs in an OpenAI-centered workflow. Compare portability, supported graders, spend, data visibility and versioning.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m09-t01">Common evaluator contract and framework selection</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a>, <a href="#m07-t03">Comparing models, prompts and A/B variants</a></dd></div></dl></div>
   </details>
@@ -5425,7 +5471,7 @@ data-subject="Frameworks" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -5456,6 +5502,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m10-t01">Progress <select id="progress-m10-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m10-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m10-t01">
   <p class="lesson-intro" data-lesson-search>Tool response quality and authorization can fail independently of language quality.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5468,7 +5515,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Agent loop, action schemas, tool selection, typed arguments, tool outputs, permissions, required/optional calls, refusals and step limits.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t02">Structured output and schema validation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t03">Application architecture and a first smoke test</a>, <a href="#m05-t03">Combining evaluators and handling uncertainty</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m08-t01">Ingestion, chunking and ranked retrieval</a> — required only for the document-retrieval tool extension</dd></div></dl></div>
   </details>
@@ -5485,7 +5532,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5506,6 +5553,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m10-t02">Progress <select id="progress-m10-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m10-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m10-t02">
   <p class="lesson-intro" data-lesson-search>A path may look plausible while the task remains incomplete, and multiple paths may satisfy the same goal.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5518,7 +5566,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>State invariants, event/order constraints, task completion, alternative plans, trace-grounding, stop reasons, partial success and judgment N/A.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t01">Objectives, dimensions and failure taxonomy</a>, <a href="#m10-t01">Execution model, structured calls and tool contracts</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t03">Rubrics and a first human evaluation</a>, <a href="#m06-t01">Pointwise LLM-as-a-Judge</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a> — required when adding judge-scored trajectories</dd></div></dl></div>
   </details>
@@ -5535,7 +5583,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5556,6 +5604,7 @@ data-subject="Agents" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m10-t03">Progress <select id="progress-m10-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m10-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m10-t03">
   <p class="lesson-intro" data-lesson-search>Retries may improve success while increasing cost, delay or duplicated side effects.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5568,7 +5617,7 @@ data-subject="Agents" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Scripted faults, timeouts, retry budgets, idempotency, interrupted state, recoverability, success per cost and latency versus task completion.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m10-t02">Trajectories, planning outcomes and final state</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div></dl></div>
   </details>
@@ -5585,7 +5634,7 @@ data-subject="Agents" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5616,6 +5665,7 @@ data-subject="Safety" data-status="Needs Correction" data-track="Core">
       <label class="js-control" hidden for="progress-m11-t01">Progress <select id="progress-m11-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m11-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m11-t01">
   <p class="lesson-intro" data-lesson-search>Safety depends on intended policy and on continuing to answer permissible requests.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5628,7 +5678,7 @@ data-subject="Safety" data-status="Needs Correction" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Severity, toxic or harmful output categories, policy versus factual correctness, appropriate refusal, over-refusal and safe alternatives.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a>, <a href="#m05-t03">Combining evaluators and handling uncertainty</a>, <a href="#m06-t02">Human agreement, calibration and bias</a></dd></div></dl></div>
   </details>
@@ -5645,7 +5695,7 @@ data-subject="Safety" data-status="Needs Correction" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -5666,6 +5716,7 @@ data-subject="Safety" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m11-t02">Progress <select id="progress-m11-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m11-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m11-t02">
   <p class="lesson-intro" data-lesson-search>A global metric can hide subgroup harms, and observability can increase unnecessary data exposure.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5678,7 +5729,7 @@ data-subject="Safety" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Counterfactual and matched-slice tests, label and population bias, disparate error rates, consent, data minimization and synthetic sensitive-data checks.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m11-t01">Risk taxonomy, harmful content and refusal</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m07-t02">Confidence intervals, significance and sample size</a> — required when quantifying uncertainty for a subgroup estimate</dd></div></dl></div>
   </details>
@@ -5695,7 +5746,7 @@ data-subject="Safety" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -5716,6 +5767,7 @@ data-subject="Safety" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m11-t03">Progress <select id="progress-m11-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m11-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m11-t03">
   <p class="lesson-intro" data-lesson-search>A high benchmark average can hide severe edge cases, instability or a new false refusal.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5728,7 +5780,7 @@ data-subject="Safety" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Perturbation controls, held-out safety sets, stress versus representative evaluation, repeated runs, false-pass severity, escalation and lockboxes.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m11-t01">Risk taxonomy, harmful content and refusal</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t03">Comparing models, prompts and A/B variants</a>, <a href="#m11-t02">Bias, fairness and privacy controls</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m11-t02">Bias, fairness and privacy controls</a> — required for fairness and privacy slices in an expanded safety suite</dd></div></dl></div>
   </details>
@@ -5745,7 +5797,7 @@ data-subject="Safety" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5776,6 +5828,7 @@ data-subject="Red Teaming" data-status="Needs Improvement" data-track="Core">
       <label class="js-control" hidden for="progress-m12-t01">Progress <select id="progress-m12-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m12-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m12-t01">
   <p class="lesson-intro" data-lesson-search>A clear threat model links input channels and assets to the defensive behavior expected of the system.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5788,7 +5841,7 @@ data-subject="Red Teaming" data-status="Needs Improvement" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Direct and indirect prompt injection as threat categories, jailbreaks, protected assets, trust boundaries, authorized test scope, containment and harmless fixtures.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m11-t01">Risk taxonomy, harmful content and refusal</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m08-t01">Ingestion, chunking and ranked retrieval</a>, <a href="#m10-t01">Execution model, structured calls and tool contracts</a></dd></div></dl></div>
   </details>
@@ -5805,7 +5858,7 @@ data-subject="Red Teaming" data-status="Needs Improvement" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -5826,6 +5879,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m12-t02">Progress <select id="progress-m12-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m12-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m12-t02">
   <p class="lesson-intro" data-lesson-search>Untrusted content, permission mistakes and exposure can occur even when an assistant response sounds appropriate.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5838,7 +5892,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Indirect document trust, RAG provenance, mock-tool authorization, least privilege, synthetic exposure markers, attack-success denominators and matched normal cases.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m12-t01">Threat modeling, scope and test design</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m08-t02">Context sufficiency, answer correctness and citations</a>, <a href="#m10-t02">Trajectories, planning outcomes and final state</a>, <a href="#m11-t02">Bias, fairness and privacy controls</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m10-t01">Execution model, structured calls and tool contracts</a> — required when independently interpreting raw mock-tool arguments in the agent extension</dd></div></dl></div>
   </details>
@@ -5855,7 +5909,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5876,6 +5930,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m12-t03">Progress <select id="progress-m12-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m12-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m12-t03">
   <p class="lesson-intro" data-lesson-search>A change needs independent evidence on fixed cases, unseen controls and ordinary permitted behavior.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5888,7 +5943,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Re-test protocols, severity and reproducible evidence, reporting and ownership. Garak and PyRIT report vocabulary and scope constraints. Static contract and replay checks for targeted controls.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m12-t02">Defensive checks for RAG, agents and data exposure</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m11-t03">Robustness, safety benchmarks and regression</a></dd></div></dl></div>
   </details>
@@ -5905,7 +5960,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -5939,6 +5994,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
       <label class="js-control" hidden for="progress-m13-t01">Progress <select id="progress-m13-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m13-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m13-t01">
   <p class="lesson-intro" data-lesson-search>A run must be attributable to one prompt, model, dataset, scorer and configuration.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -5951,7 +6007,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <h4>Key concepts</h4>
     <p data-lesson-search>Build and score separation, immutable run metadata, fixtures and live tiers, parallelism, caching, secure config, evaluator error taxonomy and artifact integrity.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a>, <a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a>, <a href="#m09-t01">Common evaluator contract and framework selection</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m09-t01">Common evaluator contract and framework selection</a> — required when adding an external framework adapter</dd></div></dl></div>
   </details>
@@ -5968,7 +6024,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -5989,6 +6045,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m13-t02">Progress <select id="progress-m13-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m13-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m13-t02">
   <p class="lesson-intro" data-lesson-search>A flaky or underpowered gate can block safe changes or let critical regressions through.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6001,7 +6058,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Stable baselines, fast and slow tiers, absolute and relative thresholds, uncertainty, critical-slice gates, retry policy, artifact review and exceptions.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m07-t02">Confidence intervals, significance and sample size</a>, <a href="#m13-t01">Evaluation pipelines and versioned run contracts</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t03">Comparing models, prompts and A/B variants</a>, <a href="#m11-t03">Robustness, safety benchmarks and regression</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m11-t03">Robustness, safety benchmarks and regression</a> — required when defining a separate safety-benchmark gate</dd></div></dl></div>
   </details>
@@ -6018,7 +6075,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6039,6 +6096,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m13-t03">Progress <select id="progress-m13-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m13-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m13-t03">
   <p class="lesson-intro" data-lesson-search>A release requires ownership, explicit risk acceptance and a reversible decision backed by evidence.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6051,7 +6109,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Version sign-off, model and prompt change management, canary/shadow comparison, kill criteria, rollback, approval trail and evidence retention.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t03">Offline, online and the evaluation lifecycle</a>, <a href="#m13-t02">CI/CD quality gates and regression evidence</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m12-t03">Mitigation verification, reporting and defensive tooling</a></dd></div></dl></div>
   </details>
@@ -6068,7 +6126,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -6099,6 +6157,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
       <label class="js-control" hidden for="progress-m14-t01">Progress <select id="progress-m14-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m14-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m14-t01">
   <p class="lesson-intro" data-lesson-search>Observability makes eval context inspectable across stages and repeated incidents.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6111,7 +6170,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <h4>Key concepts</h4>
     <p data-lesson-search>Trace/span/generation concepts, correlation IDs, tags, scored observations, telemetry loss and redaction. Choose Langfuse for inspectable LLM traces and scores with suitable deployment/data controls. Consider OpenTelemetry for cross-service context, with application-specific quality scoring elsewhere.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t03">Offline, online and the evaluation lifecycle</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a>, <a href="#m11-t02">Bias, fairness and privacy controls</a>, <a href="#m13-t01">Evaluation pipelines and versioned run contracts</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m11-t02">Bias, fairness and privacy controls</a> — required when designing privacy controls for your own trace pipeline</dd></div></dl></div>
   </details>
@@ -6128,7 +6187,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6149,6 +6208,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m14-t02">Progress <select id="progress-m14-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m14-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m14-t02">
   <p class="lesson-intro" data-lesson-search>Trace populations, user feedback and evaluator behavior can change independently.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6161,7 +6221,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Representative trace sampling, consent and retention, label delays, human-in-the-loop triage, selection bias, input/answer/evaluator drift, control charts and alert triage.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a>, <a href="#m14-t01">Traces, monitoring and Langfuse</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m11-t02">Bias, fairness and privacy controls</a>, <a href="#m13-t03">Release decisions, rollback and governance</a></dd></div></dl></div>
   </details>
@@ -6178,7 +6238,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6199,6 +6259,7 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
       <label class="js-control" hidden for="progress-m14-t03">Progress <select id="progress-m14-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m14-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m14-t03">
   <p class="lesson-intro" data-lesson-search>Per-call averages can hide long waits, retry spend and the cost of an evaluation pipeline itself.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6211,7 +6272,7 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
     <h4>Key concepts</h4>
     <p data-lesson-search>TTFT, TPOT, duration, latency percentiles, tokens, cost per valid case, concurrency, error budget, SLOs and degradation modes.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a>, <a href="#m14-t01">Traces, monitoring and Langfuse</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m10-t03">Recovery, reliability and efficiency</a></dd></div></dl></div>
   </details>
@@ -6228,7 +6289,7 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6259,6 +6320,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m15-t01">Progress <select id="progress-m15-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m15-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m15-t01">
   <p class="lesson-intro" data-lesson-search>A clear evidence plan lets teammates challenge a metric before the implementation hides its assumptions.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6271,7 +6333,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Acceptance criteria, risk assessment, golden set versions, independent rubric review, paired baselines and environment constraints.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m13-t02">CI/CD quality gates and regression evidence</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m08-t03">Failure attribution, optimization and RAG regression</a>, <a href="#m09-t01">Common evaluator contract and framework selection</a>, <a href="#m10-t03">Recovery, reliability and efficiency</a>, <a href="#m11-t03">Robustness, safety benchmarks and regression</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m08-t03">Failure attribution, optimization and RAG regression</a> — required for the RAG capstone variant / <a href="#m10-t03">Recovery, reliability and efficiency</a> — required for the agent capstone variant</dd></div></dl></div>
   </details>
@@ -6288,7 +6350,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6309,6 +6371,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
       <label class="js-control" hidden for="progress-m15-t02">Progress <select id="progress-m15-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m15-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m15-t02">
   <p class="lesson-intro" data-lesson-search>Releasing and teaching an evaluation requires explaining what evidence can support under uncertainty.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6321,7 +6384,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Key concepts</h4>
     <p data-lesson-search>Decision memo, incident diagnosis, drift or regression, ownership, release/hold/rollback, credible evidence and peer feedback.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m13-t03">Release decisions, rollback and governance</a>, <a href="#m14-t02">Production sampling, human feedback, drift and alerts</a>, <a href="#m15-t01">Design review and reproducible suite</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m12-t03">Mitigation verification, reporting and defensive tooling</a>, <a href="#m14-t03">Cost, tail latency and operational reliability</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m12-t03">Mitigation verification, reporting and defensive tooling</a> — required for the defensive-assessment incident variant</dd></div></dl></div>
   </details>
@@ -6338,7 +6401,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>2h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6372,6 +6435,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m16-t01">Progress <select id="progress-m16-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m16-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m16-t01">
   <p class="lesson-intro" data-lesson-search>Translation coverage and native-language correctness can diverge, especially for domain terms.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6384,7 +6448,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>Native annotations, locale and register, code-switching, script normalization, multilingual embeddings and stratified comparisons.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m05-t02">Embeddings and semantic similarity</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m05-t02">Embeddings and semantic similarity</a> — required when interpreting multilingual embedding scores</dd></div></dl></div>
   </details>
@@ -6401,7 +6465,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
@@ -6422,6 +6486,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m16-t02">Progress <select id="progress-m16-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m16-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m16-t02">
   <p class="lesson-intro" data-lesson-search>A fluent answer can hallucinate a visual detail or attach the right explanation to the wrong region.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6434,7 +6499,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>OCR/chart and image QA, visual evidence, modality-specific metrics, region grounding, abstention and accessibility.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a>, <a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a>, <a href="#m08-t02">Context sufficiency, answer correctness and citations</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m08-t02">Context sufficiency, answer correctness and citations</a> — required for the retrieval-backed visual citation extension</dd></div></dl></div>
   </details>
@@ -6451,7 +6516,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6472,6 +6537,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m16-t03">Progress <select id="progress-m16-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m16-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m16-t03">
   <p class="lesson-intro" data-lesson-search>More context can degrade evidence use or change which policy applies.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6484,7 +6550,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>Position sensitivity, interference, distractors, multi-document synthesis, recency, context budget and memory consistency.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a>, <a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t03">Comparing models, prompts and A/B variants</a>, <a href="#m08-t03">Failure attribution, optimization and RAG regression</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m08-t03">Failure attribution, optimization and RAG regression</a> — required when experimenting with reranked retrieval context</dd></div></dl></div>
   </details>
@@ -6501,7 +6567,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6532,6 +6598,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m17-t01">Progress <select id="progress-m17-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m17-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m17-t01">
   <p class="lesson-intro" data-lesson-search>A document can produce correct fields with wrong entities or invalid records.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6544,7 +6611,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>Field and record scoring, strict/normalized matches, null/unknown, span alignment, type and value checks, confidence and per-class error.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t02">Structured output and schema validation</a>, <a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a>, <a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div></dl></div>
   </details>
@@ -6561,7 +6628,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6582,6 +6649,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m17-t02">Progress <select id="progress-m17-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m17-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m17-t02">
   <p class="lesson-intro" data-lesson-search>Generated code needs evidence from compilation, behavior, safety and resource bounds.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6594,7 +6662,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>Functional tests, cases and hidden tests, pass@k intuition, runtime/error categorization, resource controls, offline isolation and static review.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t02">Structured output and schema validation</a>, <a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m11-t03">Robustness, safety benchmarks and regression</a></dd></div></dl></div>
   </details>
@@ -6611,7 +6679,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6632,6 +6700,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m17-t03">Progress <select id="progress-m17-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m17-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m17-t03">
   <p class="lesson-intro" data-lesson-search>A successful individual reply can hide lost handoffs or inconsistent shared state.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6644,7 +6713,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>Role boundaries, coordination and handoff metrics, shared state, conflict resolution, redundancy, team-level success and coordination overhead.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m10-t02">Trajectories, planning outcomes and final state</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m10-t03">Recovery, reliability and efficiency</a>, <a href="#m11-t03">Robustness, safety benchmarks and regression</a></dd></div></dl></div>
   </details>
@@ -6661,7 +6730,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6692,6 +6761,7 @@ data-subject="Specialization" data-status="Needs Improvement" data-track="Electi
       <label class="js-control" hidden for="progress-m18-t01">Progress <select id="progress-m18-t01" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m18-t01">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m18-t01">
   <p class="lesson-intro" data-lesson-search>Judge ensembles and better prompts remain vulnerable to common correlated errors.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6704,7 +6774,7 @@ data-subject="Specialization" data-status="Needs Improvement" data-track="Electi
     <h4>Key concepts</h4>
     <p data-lesson-search>Evidence-conditioned judgments, multi-judge agreement versus accuracy, selective review, style perturbations, evaluator drift and defensive handling of untrusted inputs.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m06-t02">Human agreement, calibration and bias</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t03">Pairwise comparisons and ranking</a>, <a href="#m12-t03">Mitigation verification, reporting and defensive tooling</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t03">Pairwise comparisons and ranking</a> — required for the pairwise ensemble variant</dd></div></dl></div>
   </details>
@@ -6721,7 +6791,7 @@ data-subject="Specialization" data-status="Needs Improvement" data-track="Electi
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
@@ -6742,6 +6812,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m18-t02">Progress <select id="progress-m18-t02" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m18-t02">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m18-t02">
   <p class="lesson-intro" data-lesson-search>Benchmarks can overstate capability and model swaps can change outputs, costs and judge behavior simultaneously.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6754,7 +6825,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>Time/source holdouts, contamination and benchmark overfitting, matched migration suites, rating comparability, shadowing and rollback.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t03">Comparing models, prompts and A/B variants</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m13-t03">Release decisions, rollback and governance</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m13-t03">Release decisions, rollback and governance</a> — required for the live rollout governance extension</dd></div></dl></div>
   </details>
@@ -6771,7 +6842,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -6792,6 +6863,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
       <label class="js-control" hidden for="progress-m18-t03">Progress <select id="progress-m18-t03" data-progress><option>Not Started</option><option>In Progress</option><option>Completed</option></select></label>
       <a class="topic-link" href="#m18-t03">Link to topic</a>
     </div>
+    <div class="lesson-reader" data-lesson-reader hidden></div>
     <div class="topic-material lesson-reading" id="material-m18-t03">
   <p class="lesson-intro" data-lesson-search>Evaluation methods need a testable hypothesis and comparisons against simpler baselines.</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -6804,7 +6876,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Key concepts</h4>
     <p data-lesson-search>Active evaluation and adaptive sampling, preference modeling, redacted behavioral simulations, living benchmarks, measure validity and reproducible method reviews.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t03">Pairwise comparisons and ranking</a>, <a href="#m14-t02">Production sampling, human feedback, drift and alerts</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t03">Pairwise comparisons and ranking</a> — required for a preference-ranking method review</dd></div></dl></div>
   </details>
@@ -6821,7 +6893,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
   </section>
-  <details class="lesson-disclosure">
+  <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
@@ -8518,6 +8590,280 @@ const guidedLearning = (() => {
 
 LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);
 followHash(false, initialRoute);
+(() => {
+  "use strict";
+
+  const toolbar = '<div class="lesson-reader-controls" role="group" aria-label="Listen to this lesson">' +
+    '<strong>Listen to this lesson</strong>' +
+    '<label>Section <select data-reading-section><option>Entire lesson</option></select></label>' +
+    '<button type="button" data-reading-start>Read Aloud</button>' +
+    '<button type="button" data-reading-pause disabled>Pause</button>' +
+    '<button type="button" data-reading-stop disabled>Stop</button>' +
+    '<label>Speed <select data-reading-speed>' +
+    '<option value="0.75">0.75×</option><option value="1" selected>1×</option>' +
+    '<option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></label>' +
+    '</div><p class="lesson-reader-status"><span data-reading-status role="status"></span>' +
+    '<span data-reading-hint>Changing speed restarts the current paragraph.</span></p>';
+
+  const blocked = "[hidden], [aria-hidden=true], [data-reading-skip], details:not([open]), " +
+    "nav, header, footer, script, style, button, input, select, textarea, label, progress, " +
+    "summary, pre, table, .lesson-output, .lesson-reader, .run-command, .file-tag, .concept-chip";
+  const blocks = "h1, h2, h3, h4, h5, h6, p, li, dt, dd, blockquote, div";
+  // Lesson prose can name code concepts. Skip inline shell invocations as well as command blocks.
+  const command = /^(?:\$\s|(?:cd|python[\d.]*|py|pip[\d.]*|ollama|docker(?:-compose)?)\s+\S)/;
+  const supported = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  const speech = supported ? window.speechSynthesis : null;
+  let active = null;
+  let englishVoice;
+
+  function collect(roots) {
+    const entries = [];
+    let owner;
+    let text = "";
+
+    function flush() {
+      const phrase = text.replace(/\s+/g, " ").trim();
+      if (phrase) entries.push({node: owner, text: phrase});
+      text = "";
+    }
+
+    function visit(node, block) {
+      if (node.nodeType === 3) {
+        if (!block) return;
+        if (owner !== block) flush();
+        owner = block;
+        text += node.textContent;
+        return;
+      }
+      if (node.nodeType !== 1 || node.matches(blocked)) return;
+      if (node.tagName === "CODE" && command.test(node.textContent.trim())) return;
+      if (node.tagName === "BR" && block) {
+        if (owner === block) text += " ";
+        return;
+      }
+      const nextBlock = node.matches(blocks) ? node : block;
+      if (nextBlock !== block) flush();
+      for (const child of node.childNodes) visit(child, nextBlock);
+      if (nextBlock !== block) flush();
+    }
+
+    for (const root of roots) {
+      if (root) visit(root, null);
+    }
+    return entries;
+  }
+
+  function speechChunks(entries) {
+    return entries.flatMap(({node, text}) => {
+      const chunks = [];
+      let remaining = text;
+      // Keep each utterance small. Split at a word boundary when possible.
+      while (remaining.length > 220) {
+        const boundary = remaining.lastIndexOf(" ", 220);
+        const end = boundary > 0 ? boundary : 220;
+        chunks.push({node, text: remaining.slice(0, end)});
+        remaining = remaining.slice(end).trimStart();
+      }
+      if (remaining) chunks.push({node, text: remaining});
+      return chunks;
+    });
+  }
+
+  function updateVoice() {
+    const voices = speech.getVoices();
+    englishVoice = voices.find(voice => voice.localService && /^en\b/i.test(voice.lang) && voice.default) ||
+      voices.find(voice => voice.localService && /^en\b/i.test(voice.lang));
+  }
+
+  function showState(view, message) {
+    const session = active?.view === view ? active : null;
+    view.start.textContent = view.section.selectedIndex > 0 ? "Read Section" : "Read Aloud";
+    view.start.disabled = !supported || !view.hasText || session?.startSection === view.section.selectedIndex;
+    view.pause.disabled = !session;
+    view.pause.textContent = session?.paused ? "Resume" : "Pause";
+    view.stop.disabled = !session;
+    if (message !== undefined) view.status.textContent = message;
+  }
+
+  function refresh(view) {
+    const entries = supported ? collect(view.source()) : [];
+    view.hasText = entries.length > 0;
+    view.headings = entries.filter(({node}) => node.tagName === view.heading).map(({node}) => node);
+    view.section.length = 1;
+    for (const [index, node] of view.headings.entries()) {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = node.textContent.trim();
+      view.section.append(option);
+    }
+    view.section.disabled = !view.headings.length;
+    view.speed.disabled = !supported || !view.hasText;
+    showState(view, supported ? "" : "Read Aloud is unavailable in this browser.");
+  }
+
+  function clearHighlight(session) {
+    session.highlight?.classList.remove("is-being-read");
+    session.highlight = null;
+  }
+
+  function stop(message = "Reading stopped.") {
+    if (!active) return;
+    const session = active;
+    active = null;
+    clearHighlight(session);
+    speech.cancel();
+    showState(session.view, message);
+  }
+
+  function speak(session) {
+    if (!isVisible(session.view)) {
+      stop();
+      return;
+    }
+    const chunk = session.queue[session.index];
+    if (!chunk) {
+      active = null;
+      clearHighlight(session);
+      showState(session.view, "Reading finished.");
+      return;
+    }
+    if (session.highlight !== chunk.node) {
+      clearHighlight(session);
+      session.highlight = chunk.node;
+      chunk.node.classList.add("is-being-read");
+    }
+    const utterance = new window.SpeechSynthesisUtterance(chunk.text);
+    utterance.lang = englishVoice?.lang || "en";
+    if (englishVoice) utterance.voice = englishVoice;
+    utterance.rate = Number(session.view.speed.value);
+    session.utterance = utterance;
+
+    const current = () => active === session && session.utterance === utterance;
+    utterance.onend = () => {
+      if (!current()) return;
+      session.utterance = null;
+      session.index += 1;
+      if (!session.paused) speak(session);
+    };
+    utterance.onerror = () => {
+      if (current()) stop("Read Aloud could not continue. Select Read Aloud or Read Section to try again.");
+    };
+    try {
+      if (speech.paused) speech.resume();
+      speech.speak(utterance);
+    } catch {
+      if (current()) stop("Read Aloud could not start. Check your browser’s speech settings and try again.");
+    }
+  }
+
+  function start(view) {
+    if (view.start.disabled || document.hidden || !isVisible(view)) return;
+    const entries = collect(view.source());
+    const startSection = view.section.selectedIndex;
+    const selected = view.headings[startSection - 1];
+    const first = selected ? entries.findIndex(({node}) => node === selected) : 0;
+    if (first < 0) return;
+    const end = selected ? entries.findIndex(({node}, i) => i > first && node.tagName === view.heading) : -1;
+    const queue = speechChunks(entries.slice(first, end < 0 ? undefined : end));
+    if (!queue.length) return;
+    stop();
+    const session = {view, startSection, queue, index: 0, paused: false, utterance: null, highlight: null};
+    active = session;
+    showState(view, "Reading.");
+    speak(session);
+  }
+
+  function pause(session, message = "Paused. Select Resume to continue.") {
+    session.paused = true;
+    speech.pause();
+    showState(session.view, message);
+  }
+
+  function bind(holder, source, heading) {
+    holder.innerHTML = toolbar;
+    const find = name => holder.querySelector("[data-reading-" + name + "]");
+    const view = {holder, source, heading, section: find("section"), start: find("start"),
+      pause: find("pause"), stop: find("stop"), speed: find("speed"), status: find("status")};
+    holder.querySelector("[data-reading-hint]").hidden = !supported;
+    holder.hidden = false;
+    view.start.addEventListener("click", () => start(view));
+    view.section.addEventListener("change", () => showState(view));
+    view.stop.addEventListener("click", () => {
+      if (active?.view === view) stop();
+    });
+    view.pause.addEventListener("click", () => {
+      const session = active;
+      if (session?.view !== view || document.hidden) return;
+      if (!session.paused) {
+        pause(session);
+        return;
+      }
+      session.paused = false;
+      showState(view, "Reading.");
+      if (session.utterance) speech.resume();
+      else speak(session);
+    });
+    view.speed.addEventListener("change", () => {
+      const session = active;
+      if (session?.view !== view) return;
+      const node = session.queue[session.index]?.node;
+      while (session.index > 0 && session.queue[session.index - 1]?.node === node) session.index -= 1;
+      session.utterance = null;
+      speech.cancel();
+      if (session.paused) showState(view, "Paused. Resume starts this paragraph at the new speed.");
+      else speak(session);
+    });
+    refresh(view);
+    return view;
+  }
+
+  function isVisible(view) {
+    return view.holder.isConnected && !view.holder.closest("[hidden], details:not([open])");
+  }
+
+  const guided = document.querySelector("[data-guided-reader]");
+  const complete = document.querySelectorAll("[data-lesson-reader]");
+  for (const holder of complete) {
+    bind(holder, () => [holder.parentElement.querySelector(".topic-material")], "H4");
+  }
+  const guidedView = guided && bind(guided, () => [document.querySelector("#guided-material > .topic-material")], "H4");
+  const subtitle = document.querySelector("body.academy-lesson:not(.academy-reference) > .subtitle");
+  if (subtitle) {
+    // The published experiments place their lesson directly between the subtitle and footer.
+    const roots = [];
+    for (let node = subtitle; node && node.tagName !== "FOOTER"; node = node.nextElementSibling) roots.push(node);
+    const holder = document.createElement("div");
+    holder.className = "lesson-reader";
+    subtitle.after(holder);
+    bind(holder, () => roots, "H2");
+  }
+
+  if (!speech || !(guided || complete.length || subtitle)) return;
+  updateVoice();
+  speech.addEventListener?.("voiceschanged", updateVoice);
+  document.addEventListener("curriculum-tab", () => stop());
+  document.addEventListener("curriculum-route", () => {
+    stop();
+    if (guidedView) refresh(guidedView);
+  });
+  document.addEventListener("toggle", event => {
+    const disclosure = event.target;
+    if (active && (!isVisible(active.view) ||
+      (disclosure.matches(".topic[open]") && disclosure !== active.view.holder.closest(".topic")))) stop();
+  }, true);
+  document.addEventListener("input", () => {
+    if (active && !isVisible(active.view)) stop();
+  });
+  document.addEventListener("change", () => {
+    if (active && !isVisible(active.view)) stop();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && active && !active.paused) pause(active, "Paused while this tab is hidden.");
+  });
+  window.addEventListener("pagehide", () => stop());
+  window.addEventListener("beforeprint", () => stop());
+})();
+
 (() => {
   const root = document.documentElement;
   const themeKey = "testneural-academy-theme";

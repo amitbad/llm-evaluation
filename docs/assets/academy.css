@@ -182,6 +182,24 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .guided-progress { display:flex; flex-wrap:wrap; align-items:center; gap:.15rem .45rem;
   color:var(--secondary); font-size:.85rem; line-height:1.35; }
 #guided-progress { inline-size:clamp(3.5rem,12vw,8rem); height:.35rem; accent-color:var(--cyan); }
+.lesson-reader { margin-block:.45rem .65rem; color:var(--text); font-size:.875rem; line-height:1.35; }
+.lesson-reader-controls,.lesson-reader-controls label { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem .5rem; }
+.lesson-reader-controls button,.lesson-reader-controls select {
+  width:auto; max-width:100%; min-height:2.25rem; padding:.25rem .45rem; border:1px solid var(--stroke);
+  border-radius:.35rem; background:var(--surface); color:var(--text); font:inherit;
+}
+.lesson-reader-controls label { min-width:0; max-width:100%; }
+.lesson-reader-controls button:disabled { color:var(--secondary); opacity:.65; cursor:default; }
+.lesson-reader-controls button:hover:enabled { background:var(--blue-wash); }
+.lesson-reader-controls :focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+.lesson-reader .lesson-reader-status { display:flex; flex-wrap:wrap; gap:.15rem .55rem;
+  margin:.2rem 0 0; color:var(--secondary); font-size:.8rem; }
+.lesson-reading .is-being-read,.academy-lesson .is-being-read {
+  background:var(--blue-wash); color:var(--text); box-shadow:inset .15rem 0 var(--blue); border-radius:.2rem;
+}
+@media print {
+  .lesson-reader { display:none!important; }
+}
 .lesson-reading { min-inline-size:0; font-size:1.0625rem; line-height:1.6; overflow-wrap:anywhere; }
 .lesson-reading > * + * { margin-block-start:.8rem; }
 .lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1rem,1.4vw,1.125rem); }

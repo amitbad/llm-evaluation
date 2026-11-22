@@ -12,7 +12,7 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 PAGE_DIR = ROOT / "docs"
 PUBLIC_ASSETS = (
-    "academy.css", "academy.js", "branding/academy-logo-banner.png",
+    "academy.css", "academy.js", "lesson-reader.js", "branding/academy-logo-banner.png",
     "branding/academy-logo-banner.svg", "branding/academy-icon.svg",
     "branding/icon-48.png", "branding/favicon.ico", "branding/icon-32.png",
     "branding/icon-180.png",

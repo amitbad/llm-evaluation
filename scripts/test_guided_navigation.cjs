@@ -12,6 +12,7 @@ const authoredLessons = new Set(["M01-T01", "M01-T02", "M01-T03", "M02-T01", "M0
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(read("docs/learning_roadmap.js"), "const CurriculumRoadmap = {};")
   .replace("LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);", "")
+  .replace(read("docs/assets/lesson-reader.js"), "")
   .replace(read("docs/assets/academy.js"), "");
 
 class Element extends EventTarget {
@@ -304,7 +305,7 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 7);
       assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 14);
       assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-output"><summary>Expected output<\/summary>/g)].length, 14);
-      assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement">/g)].length, 3);
+      assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement"(?: data-reading-skip)?>/g)].length, 3);
       assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, topic.id === "M02-T02" ? 12 : 15);
       if (topic.id === "M01-T01") {
         assert.match(markup, /<h4>Independent Assignment<\/h4>/);
