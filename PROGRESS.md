@@ -22,6 +22,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The fi
 | Lesson code copying | Generated executable fences have a shared Copy Code button with success and failure feedback. Console transcripts remain plain. |
 | Beginner Python tutorial | M02-T01 now builds from printing two saved amounts to a seven-step offline evaluation report. Each step includes an independent snippet, one edit to try, both expected outputs, and a checkpoint. |
 | Textbook layout | Both reading modes give code, tables, and examples more room while keeping prose line lengths readable. Setup, outputs, and solutions are collapsible. The guided Navigator opens from a compact control aligned to the left sidebar. |
+| Responsive lesson width | Replaced fixed character caps on lesson text with an 88% desktop reading column shared by prose, examples, code, and dividers. Narrow layouts continue to use the available width. |
 
 ## Tested
 
