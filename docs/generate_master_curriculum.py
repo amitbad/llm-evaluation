@@ -378,33 +378,45 @@ def definitions(fields, keys):
     ) + "</dl>"
 
 
-def html_topic(topic, module):
+def named_references(text, titles):
+    return LINK.sub(lambda match: f"[{titles.get(match[1], match[1])}]({match[2]})", text)
+
+
+def html_topic(topic, module, titles):
     fields = topic["fields"]
     anchor = topic["id"].lower()
     options = "".join(f"<option>{status}</option>" for status in ("Not Started", "In Progress", "Completed"))
-    description = definitions(fields, TOPIC_FIELDS[1:9])
+    description = definitions({**fields, **{key: named_references(fields[key], titles) for key in DEPENDENCIES}},
+                              TOPIC_FIELDS[1:9])
     mapping = definitions(fields, TOPIC_FIELDS[11:])
     return f'''<details class="topic" id="{anchor}" data-topic="{topic['id']}" data-difficulty="{fields['Difficulty']}"
 data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Status']}" data-track="{module['fields']['Track']}">
   <summary><span class="item-title"><span class="item-id">{topic['id']}</span> {escape(topic['title'])}</span>
     <span class="topic-meta">{fields['Status']} · {duration(topic['hours'][4])}</span></summary>
   <div class="topic-body">
+    <nav class="study-breadcrumb" aria-label="Topic location"><ol>
+      <li><a href="#detail">Complete Course</a></li>
+      <li><a href="#{module["id"].lower()}">{escape(module["title"])}</a></li>
+      <li aria-current="location">{escape(topic["title"])}</li>
+    </ol></nav>
     <div class="topic-controls"><p>{fields['Difficulty']} · {module['fields']['Track']}</p>
       <label class="js-control" hidden for="progress-{anchor}">Progress <select id="progress-{anchor}" data-progress>{options}</select></label>
       <a class="topic-link" href="#{anchor}">Link to topic</a>
     </div>
-    {description}
-    {time_cards(topic['hours'])}
-    <h4>Repository mapping</h4>
-    {mapping}
+    <div class="topic-material" id="material-{anchor}">
+      {description}
+      {time_cards(topic['hours'])}
+      <h4>Repository mapping</h4>
+      {mapping}
+    </div>
   </div>
 </details>'''
 
 
-def html_module(module):
+def html_module(module, titles):
     fields = module["fields"]
     anchor = module["id"].lower()
-    topics = "\n".join(html_topic(topic, module) for topic in module["topics"])
+    topics = "\n".join(html_topic(topic, module, titles) for topic in module["topics"])
     return f'''<details class="module" id="{anchor}">
   <summary><span class="item-title"><span class="item-id">{module['id']}</span> {escape(module['title'])}</span>
     <span class="topic-meta">{len(module['topics'])} topics · {duration(module['hours'][4])}</span>
@@ -418,11 +430,11 @@ def html_module(module):
 </details>'''
 
 
-def html_stages(stages):
+def html_stages(stages, titles):
     result = []
     for name, modules in stages.items():
         hours = sum_hours(modules)
-        content = "\n".join(map(html_module, modules))
+        content = "\n".join(html_module(module, titles) for module in modules)
         result.append(f'''<details class="stage" {"open" if name == "Beginner" else ""}>
   <summary><span class="stage-title">{name}</span><span class="topic-meta">{len(modules)} modules · {duration(hours[4])}</span></summary>
   <div class="stage-body">{content}</div>
@@ -482,86 +494,90 @@ def roadmap_view(data):
 </div>'''
 
 
-def topic_link(topic, title=False):
-    name = f'{topic["id"]} — {topic["title"]}' if title else topic["id"]
-    return f'<a href="#{topic["id"].lower()}">{escape(name)}</a>'
+def lesson_link(path_id, topic):
+    return f'<a href="#quick-{path_id.lower()}/{topic["id"].lower()}">{escape(topic["title"])}</a>'
+
+
+def course_topic_link(topic):
+    return f'<a href="#{topic["id"].lower()}">{escape(topic["title"])}</a>'
 
 
 def quick_plan(path, data):
     key = path["id"].lower()
     topics = data["topics"]
     closure = path["closure"]
-    required = [topic for topic in closure if topic not in path["roots"]]
     steps = []
     for code in closure:
         topic = topics[code]
-        parents = ", ".join(topic_link(topics[edge["id"]]) for edge in topic["mandatory"]) or "None"
         steps.append(f'''<li class="plan-step" data-step="{code}">
-  <div class="plan-step-heading"><h4>{topic_link(topic, title=True)}</h4><span>{duration(topic["hours"])}</span></div>
-  <p><strong>Complete first</strong> {parents}</p>
-  <p><strong>Exercise and checkpoint</strong> {inline(topic["outcome"])}</p>
-  <label class="plan-check" hidden><input type="checkbox" data-complete="{code}" aria-label="Mark {code} complete"> Completed</label>
+  <div class="plan-step-heading">{lesson_link(key, topic)}<span>{duration(topic["hours"])}</span></div>
+  <p class="lesson-state" data-lesson-state hidden></p>
 </li>''')
-    optional = "".join(f'<li>{topic_link(topics[code], title=True)} · {duration(topics[code]["hours"])}</li>'
+    optional = "".join(f'<li>{course_topic_link(topics[code])} · {duration(topics[code]["hours"])}</li>'
                        for code in path["recommended"])
     outside = [code for code in topics if code not in closure and code not in path["recommended"]]
-    skipped = "".join(f'<li>{topic_link(topics[code], title=True)}</li>' for code in outside)
+    skipped = "".join(f'<li>{course_topic_link(topics[code])}</li>' for code in outside)
     return f'''<article class="quick-plan" id="quick-{key}" data-quick-plan="{path["id"]}">
-  <p><a href="#quick">← All Quick Learning paths</a></p>
+  <nav class="study-breadcrumb" aria-label="Path location"><ol>
+    <li><a href="#quick">Quick Learning</a></li>
+    <li aria-current="location">{escape(path["title"])}</li>
+  </ol></nav>
   <h3 tabindex="-1">{escape(path["title"])}</h3>
-  <p class="path-metrics">{len(closure)} topics · {duration(path["hours"])} learner time</p>
+  <p class="path-metrics">{len(closure)} lessons · {duration(path["hours"])} learner time</p>
   <p>{inline(path["goal"])}</p>
-  <dl class="plan-brief">
-    <div><dt>Who this is for</dt><dd>{inline(path["audience"])}</dd></div>
-    <div><dt>Practical outcome</dt><dd>{inline(path["outcome"])}</dd></div>
-    <div><dt>Required foundations included</dt><dd>{", ".join(topic_link(topics[code]) for code in required) or "The route includes all its required foundations."}</dd></div>
-  </dl>
-  <div class="plan-resume" data-plan-progress="{path["id"]}" hidden>
-    <p role="status" data-plan-status></p><a class="mode-action" data-plan-next href="#{closure[0].lower()}">Start here</a>
+  <div class="plan-resume" data-plan-progress="{path["id"]}" data-guided hidden>
+    <a class="mode-action" data-plan-next href="#quick-{key}/{closure[0].lower()}">Start Learning</a>
+    <p role="status" data-plan-status></p>
   </div>
-  <div class="plan-tools">
-    <a href="#roadmap-{key}">Open path in Learning Roadmap</a>
-    <button type="button" data-plan-download="html" hidden>Download Learning Plan</button>
-    <button type="button" data-plan-download="svg" hidden>Download Roadmap SVG</button>
-    <button type="button" data-plan-download="png" hidden>Download Roadmap PNG</button>
-    <button type="button" data-plan-share hidden>Copy path link</button>
-  </div>
-  <p class="plan-share-note" data-plan-sharing></p><p role="status" data-plan-message></p>
-  <input type="url" data-plan-url hidden readonly aria-label="Shareable learning path URL">
-  <details class="plan-visual" data-plan-visual hidden><summary>Dependency diagram</summary><div></div></details>
-  <h4>Learn these topics in order</h4>
-  <p>Open a topic to use the same material as Complete Course. Mark it complete after you can verify the checkpoint.</p>
+  <h4>Lessons in order</h4>
+  <p>The list includes everything you need to study first. Open a lesson and mark it complete after its checkpoint.</p>
   <ol class="plan-steps">{"".join(steps)}</ol>
   <section class="plan-finish"><h4>Verify your understanding</h4><p>{inline(path["checkpoint"])}</p></section>
+  <details><summary>More Options</summary>
+    <dl class="plan-brief">
+      <div><dt>Who this is for</dt><dd>{inline(path["audience"])}</dd></div>
+      <div><dt>Practical outcome</dt><dd>{inline(path["outcome"])}</dd></div>
+    </dl>
+    <div class="plan-tools">
+      <a href="#roadmap-{key}">Open path in Learning Roadmap</a>
+      <button type="button" data-plan-download="html" hidden>Download Learning Plan</button>
+      <button type="button" data-plan-download="svg" hidden>Download Roadmap SVG</button>
+      <button type="button" data-plan-download="png" hidden>Download Roadmap PNG</button>
+      <button type="button" data-plan-share hidden>Copy path link</button>
+    </div>
+    <p class="plan-share-note" data-plan-sharing></p><p role="status" data-plan-message></p>
+    <input type="url" data-plan-url hidden readonly aria-label="Shareable learning path URL">
+    <details class="plan-visual" data-plan-visual hidden><summary>Dependency diagram</summary><div></div></details>
+  </details>
   <details><summary>Recommended extensions ({len(path["recommended"])})</summary>
-    <p>These topics are optional for this goal. Their hours are separate from the required route.</p>
+    <p>These optional links open Complete Course. Their hours are separate from this path.</p>
     {f"<ul>{optional}</ul>" if optional else "<p>There are no additional recommended topics for this path.</p>"}
   </details>
   <details><summary>Other topics you can skip for this goal ({len(outside)})</summary>
+    <p>These links open Complete Course.</p>
     {f"<ul>{skipped}</ul>" if skipped else "<p>This route covers every other topic or lists it above as an extension.</p>"}
   </details>
 </article>'''
 
 
-def quick_view(data, learning_paths):
+def quick_view(data, learning_paths, titles):
     cards = []
     plans = []
     for key, path in data["paths"].items():
         href = "#quick-" + key.lower()
-        foundations = [topic_link(data["topics"][code]) for code in path["closure"] if code not in path["roots"]]
         cards.append(f'''<article class="path-card">
   <h3><a href="{href}">{escape(path["title"])}</a></h3>
-  <p class="path-metrics">{len(path["closure"])} topics · {duration(path["hours"])} learner time</p>
+  <p class="path-metrics">{len(path["closure"])} lessons · {duration(path["hours"])} learner time</p>
   <p>{inline(path["goal"])}</p><p><strong>For</strong> {inline(path["audience"])}</p>
   <p><strong>What you’ll build</strong> {inline(path["outcome"])}</p>
   <details><summary>Prerequisites and checkpoint</summary>
-    <p><strong>Required foundations included</strong> {", ".join(foundations) or "See the ordered plan for the required topics."}</p>
+    <p>Required foundations are included in the lesson sequence.</p>
     <p><strong>Final checkpoint</strong> {inline(path["checkpoint"])}</p>
   </details>
   <a class="mode-action" href="{href}" aria-label="Open {escape(path["title"])} learning plan">Open learning plan</a>
 </article>''')
         plans.append(quick_plan(path, data))
-    reference = prose(learning_paths.replace("**Complete Learning**", "**Complete Course**")).replace(
+    reference = prose(named_references(learning_paths.replace("**Complete Learning**", "**Complete Course**"), titles)).replace(
         "<h3>Preparation / Getting Started</h3>", '<h3 id="preparation" tabindex="-1">Preparation / Getting Started</h3>')
     return f'''<div id="quick-catalog">
   <p class="mode-tagline">Learn what you need. Skip what you don't.</p>
@@ -571,11 +587,30 @@ def quick_view(data, learning_paths):
   <h3>Broader plans</h3><div class="path-grid">{"".join(cards[:1] + cards[-1:])}</div>
   <details id="paths" class="course-reference">
     <summary>Learning Paths and preparation</summary>
+    <p>Topic and module links in this comparison open Complete Course. Choose a path above to study in Quick Learning.</p>
     {reference}
     <p><a href="#roadmap">Open the Learning Roadmap</a></p>
   </details>
 </div>
-{"".join(plans)}'''
+{"".join(plans)}
+<article class="guided-lesson" id="guided-lesson" hidden>
+  <nav class="study-breadcrumb" aria-label="Lesson location"><ol>
+    <li><a href="#quick">Quick Learning</a></li>
+    <li><a id="guided-path" href="#quick"></a></li>
+    <li id="guided-position" aria-current="location"></li>
+  </ol></nav>
+  <h3 id="guided-title" tabindex="-1" aria-describedby="guided-position"></h3>
+  <p id="guided-estimate" class="path-metrics"></p>
+  <div id="guided-material"></div>
+  <p id="guided-status" role="status"></p>
+  <nav class="guided-actions" aria-label="Lesson actions">
+    <a id="guided-previous" href="#quick" hidden>Previous Lesson</a>
+    <button id="guided-complete" class="mode-action" type="button">Mark as Completed</button>
+    <a id="guided-next" href="#quick" hidden>Next Lesson</a>
+    <a id="guided-back" href="#quick">Back to Learning Path</a>
+  </nav>
+</article>
+<noscript><p>Guided lesson links use JavaScript. Use <a href="#detail">Complete Course</a> to read the same topics.</p></noscript>'''
 
 
 def complete_view(data, detailed):
@@ -714,7 +749,7 @@ def overview_view(section, data):
       <h3 id="course-progress-title">Your learning progress</h3>
       <p id="progress-label"></p>
       <progress id="progress-bar" max="{len(data["topics"])}" value="0" aria-labelledby="progress-label"></progress>
-      <div class="overview-resume" data-plan-progress="selected" hidden>
+      <div class="overview-resume" data-plan-progress="selected" data-guided hidden>
         <p data-resume-path></p>
         <p role="status" data-plan-status></p>
         <a class="mode-action" data-plan-next href="#m01-t01">Continue Learning</a>
@@ -755,12 +790,13 @@ def render(title, sections, stages, data):
             fields = topic["fields"]
             rows.append([f"[{topic['id']} — {topic['title']}](#{topic['id'].lower()})",
                          fields["Status"], fields["Existing files"], fields["Audit findings"]])
-    detailed = filters(modules) + html_stages(stages)
+    titles = {item["id"]: item["title"] for item in (*modules, *topics)}
+    detailed = filters(modules) + html_stages(stages, titles)
     coverage_view = (prose(sections["Repository coverage"])
                      + '<ul class="status-counts">' + "".join(f"<li>{status} <strong>{coverage[status]}</strong></li>" for status in STATUSES)
                      + "</ul>" + table(("Topic", "Status", "Existing files", "Audit findings"), rows, "Coverage by topic"))
     views = {
-        "quick": quick_view(data, sections["Learning paths"]),
+        "quick": quick_view(data, sections["Learning paths"], titles),
         "detail": complete_view(data, detailed),
         "roadmap": roadmap_view(data),
         "overview": overview_view(sections["Course overview"], data),
@@ -831,6 +867,7 @@ const portableCurriculum = "<!doctype html>\\n" + document.documentElement.outer
 {roadmap_script}
 {modes_script}
 LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);
+followHash(false, initialRoute);
 {academy_js}
 </script>
 </body>
@@ -1097,10 +1134,7 @@ MODES_CSS = """
 .plan-step.is-complete { background:#f1f8f2; }
 .plan-step p { margin:.25rem 0; }
 .plan-step-heading { display:flex; flex-wrap:wrap; gap:.3rem 1rem; justify-content:space-between; align-items:baseline; }
-.plan-step-heading h4 { margin:0; }
 .plan-step-heading span { font-weight:700; white-space:nowrap; }
-.plan-check { display:inline-flex; align-items:center; gap:.4rem; min-height:2.25rem; }
-.plan-check input { width:1.1rem; min-height:0; height:1.1rem; accent-color:var(--accent); }
 .plan-finish { padding:.65rem .85rem; margin:.8rem 0; background:#eaf0fa; border-radius:.5rem; }
 .plan-finish h4 { margin:0; }
 .quick-plan details { margin:.6rem 0; }
@@ -1112,7 +1146,7 @@ MODES_CSS = """
 .complete-strands span { text-decoration:none; color:var(--ink); font-size:.91rem; }
 @media(max-width:640px) { .mode-grid,.path-grid,.complete-strands { grid-template-columns:1fr; } }
 @media print {
-  .mode-picker,.plan-resume,.plan-tools,.plan-check { display:none !important; }
+  .mode-picker,.plan-resume,.plan-tools { display:none !important; }
 }
 """
 
@@ -1219,12 +1253,19 @@ for (const [id, open] of [["expand", true], ["collapse", false]]) {
 
 function followHash(focus, hash = location.hash) {
   const roadRoute = /^#roadmap-(?:[a-g]|full)$/.test(hash);
-  const target = document.getElementById(roadRoute ? "roadmap" : hash.slice(1));
+  const studyRoute = guidedLearning.resolve(hash);
+  const target = document.getElementById(roadRoute ? "roadmap" : studyRoute?.overview.slice(1) || hash.slice(1));
   if (!target) return false;
   const panel = target.closest(".panel");
   if (!panel) return false;
   activate(tabs[panels.indexOf(panel)]);
+  const lesson = guidedLearning.show(hash, studyRoute);
   document.dispatchEvent(new CustomEvent("curriculum-route", {detail: hash}));
+  if (lesson) {
+    if (focus) lesson.querySelector("h3").focus({preventScroll: true});
+    lesson.scrollIntoView({block: "start"});
+    return true;
+  }
   if (target.matches(".topic, .module") && target.hidden) clearFilters();
   for (let disclosure = target.closest("details"); disclosure; disclosure = disclosure.parentElement.closest("details")) {
     disclosure.open = true;
@@ -1254,7 +1295,6 @@ const preferredTab = document.documentElement.dataset.initialTab;
 const initialRoute = location.hash || (preferredTab ? "#" + preferredTab : "#overview");
 activate(tabs[0]);
 applyFilters();
-followHash(false, initialRoute);
 
 const curriculum = JSON.parse(document.getElementById("roadmap-data").textContent);
 const menus = new Map(topics.map(topic => [topic.dataset.topic, topic.querySelector("[data-progress]")]));
@@ -1321,15 +1361,9 @@ const progressState = {
   },
 };
 for (const menu of menus.values()) menu.addEventListener("change", () => progressState.apply(readProgress()));
-function selectQuickPath(hash) {
-  const match = /^#quick-([a-g])$/.exec(hash);
-  if (match) progressState.select(match[1].toUpperCase());
-}
-document.addEventListener("curriculum-route", event => selectQuickPath(event.detail));
 document.addEventListener("curriculum-path-selected", event => {
   progressState.select(event.detail);
 });
-selectQuickPath(initialRoute);
 window.addEventListener("storage", event => {
   if (event.key === null || event.key?.startsWith("llm-evaluation-master-curriculum-")) {
     try {
@@ -1341,7 +1375,6 @@ window.addEventListener("storage", event => {
 });
 updateProgress();
 document.getElementById("course-progress").hidden = false;
-if (initialRoute === "#course-progress") followHash(false, initialRoute);
 
 let printState;
 window.addEventListener("beforeprint", () => {

@@ -157,6 +157,18 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .academy-page .road-inspector { max-height:calc(clamp(25rem,65vh,49rem) + 6rem); }
 .academy-page .mode-action { background:#224b9e; color:#fff; }
 .academy-page .mode-action:hover { background:#173576; }
+.study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.25rem .6rem; list-style:none; padding:0; margin:0 0 .65rem; }
+.study-breadcrumb li { margin:0; }
+.study-breadcrumb li + li::before { content:"›" / ""; margin-inline-end:.6rem; color:var(--secondary); }
+.guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem; padding:clamp(.8rem,3vw,1.45rem); scroll-margin-top:7rem; }
+.guided-lesson h3 { margin-top:.3rem; font-size:clamp(1.35rem,3vw,1.85rem); }
+.guided-lesson .field-list dd { max-width:76ch; }
+.guided-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .9rem; padding-top:.65rem; border-top:1px solid var(--stroke); }
+.guided-actions a { display:inline-flex; align-items:center; min-height:2.75rem; }
+.academy-page .guided-actions button[aria-disabled=true] { background:var(--panel); color:var(--secondary); cursor:default; }
+.plan-step-heading a { font-weight:700; }
+.plan-step .lesson-state { color:var(--secondary); font-size:.9rem; }
+.plan-step:has([aria-current=step]) { border-inline-start:.2rem solid var(--blue); }
 .academy-page .stage:nth-of-type(2) { --soft:var(--cyan-wash); }
 .academy-page .stage:nth-of-type(3) { --soft:var(--violet-wash); }
 .academy-page .stage:nth-of-type(4) { --soft:var(--cyan-wash); }
@@ -179,10 +191,12 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
   .academy-page button { min-height:2.75rem; }
   .academy-page #road-viewport { height:24rem; }
   .academy-page .topic-controls select { max-width:100%; }
+  .guided-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media print {
   .academy-page .academy-wrap { width:100%; }
   .academy-page .panel[hidden] { display:block!important; }
+  .academy-page .guided-lesson { display:none!important; }
 }
 
 body.academy-lesson:not(.academy-reference) { padding:clamp(.8rem,3vw,2.5rem)!important; }

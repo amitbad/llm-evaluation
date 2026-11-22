@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated **2026-11-22**. The static academy is live at release `aa01ca7`, with a local QA update ready for review.
+Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Guided learning changes are ready for local review.
 
 ## Implemented milestones
 
@@ -15,6 +15,7 @@ Last updated **2026-11-22**. The static academy is live at release `aa01ca7`, wi
 | Production Stage A | Prepared a private handoff for the dedicated GitHub key, initial clone, academy vhost, certificate, external deployment script, and HTTPS checks. The five icons now have distinct colors from the existing blue, cyan, and violet palette. |
 | Clean Git history | Fetched GitHub `main` and synchronized local `main` to `aa01ca7`. Preserved three local-only commits on `archive/pre-clean-main-72c2e33`. The old and new tips had identical files, and both worktrees were retained. |
 | Website QA | Fixed curriculum tab keyboard navigation, mobile keyboard activation, the skip link, dark hover icon contrast, and theme button labels. Updated main-page search metadata and added semantic headings to the Concepts Reference. |
+| Guided learning | All seven paths show an ordered lesson list and progress. Path-specific lesson links open the shared material in place, with breadcrumbs, Previous and Next, completion, and a return link. Sharing and roadmap downloads are under More Options. |
 
 ## Tested
 
@@ -26,6 +27,7 @@ Last updated **2026-11-22**. The static academy is live at release `aa01ca7`, wi
 - QA rechecked the 29 public files, HTML titles, labels and IDs, JavaScript syntax, all 18 modules and 53 topics, all seven path sequences and hours, and simulated keyboard, roadmap, progress, and import/export interactions. The embedded curriculum data was byte-identical to the release.
 - QA checked the CSS cascade for dark sidebar hover. Stage A's contrast sampling used the wrong hover background. The corrected check shows the lowest ratio improved from 1.51:1 to 7.59:1.
 - Read-only HTTPS checks confirmed the live homepage and curriculum match `aa01ca7` byte-for-byte. Root-level Concepts Reference, CSS, JavaScript, and Test 2 URLs responded. The two exercise resources, legacy `/docs/` URLs, `/robots.txt`, and `/sitemap.xml` returned 404. The academy owner can review the exact scope in the [bug tracker](BUG_TRACKER.md).
+- Guided navigation tests walked every path sequence, checked direct links, refresh, boundaries and return to Complete Course, and verified shared progress and version-one backups. Run them with `node --test scripts/test_guided_navigation.cjs`. The generator check, static site validation, and simulated roadmap and progress regression checks passed.
 
 ## Manually verified
 
@@ -34,7 +36,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 ## Pending
 
 1. Restore the two public exercise URLs and consider redirects from old `/docs/` links. These are production follow-ups for the owner. The QA update did not deploy or change the VPS.
-2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). Verify the skip link, Up and Down tab navigation, both themes, progress persistence, and opening an exported plan offline.
+2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In Quick Learning, start Fundamentals, step through lessons, refresh mid-path, and switch to Complete Course to confirm shared completion. Verify keyboard focus, the first and last lessons, both themes, and opening an exported plan offline.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist. Then continue with the first beginner lessons and verified offline fixtures.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).

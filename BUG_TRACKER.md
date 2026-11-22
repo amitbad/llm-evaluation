@@ -10,6 +10,7 @@ Local fixes below are ready for review. Production checks were read-only against
 | QA-04 | Dark theme hover uses dark icons on a dark sidebar. The theme button can announce the opposite theme as pressed. | Medium | Fixed locally | Shared theme CSS and JavaScript | Kept the theme palette through hover and gave the button an explicit action label. |
 | QA-05 | Concepts Reference uses visual headings without a semantic page outline. The concepts and curriculum pages lack search descriptions. | Low | Fixed locally | Concepts Reference and curriculum generator | Added a heading hierarchy to Concepts Reference and page descriptions to both. |
 | QA-06 | The 14 individual lesson pages lack descriptions and canonical tags. The live sitemap and robots.txt routes return 404. | Low | Open | Lesson metadata and public search discovery | Add lesson-specific metadata and review sitemap and crawler policy against the working production URLs. |
+| QA-07 | Quick Learning topic and prerequisite links sent learners to Complete Course, where the path and lesson position were easy to lose. | High | Fixed locally | Guided navigation and progress | Use readable lesson titles, path-specific URLs, and breadcrumbs. Show the same topic material in both modes and keep a return link when switching modes. |
 
 ## Unverified behavior
 

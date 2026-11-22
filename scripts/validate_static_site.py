@@ -30,17 +30,27 @@ class Page(HTMLParser):
         self.ids = set()
         self.links = []
         self.dependencies = []
+        self.lesson_routes = set()
+        self.plan = None
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
         if "id" in attributes:
             self.ids.add(attributes["id"])
+        if tag == "article":
+            self.plan = attributes.get("data-quick-plan")
+        if tag == "li" and self.plan and "data-step" in attributes:
+            self.lesson_routes.add(f"quick-{self.plan.lower()}/{attributes['data-step'].lower()}")
         if tag == "a" and "href" in attributes:
             self.links.append(attributes["href"])
         if tag == "link" and "href" in attributes and attributes.get("rel") != "canonical":
             self.dependencies.append(attributes["href"])
         if tag in {"script", "img", "iframe", "source"} and "src" in attributes:
             self.dependencies.append(attributes["src"])
+
+    def handle_endtag(self, tag):
+        if tag == "article":
+            self.plan = None
 
 
 def public_files():
@@ -80,7 +90,8 @@ def validate():
                 raise ValueError(f"Unpublished link in {relative}: {link}")
             fragment = unquote(url.fragment)
             if fragment and destination in pages and fragment not in pages[destination].ids:
-                if destination != Path("docs/master-curriculum.html") or not VIRTUAL_ROUTES.fullmatch(fragment):
+                virtual = VIRTUAL_ROUTES.fullmatch(fragment) or fragment in pages[destination].lesson_routes
+                if destination != Path("docs/master-curriculum.html") or not virtual:
                     raise ValueError(f"Missing link target in {relative}: {link}")
     return files
 

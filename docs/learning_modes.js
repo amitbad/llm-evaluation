@@ -1,21 +1,50 @@
 "use strict";
 
-(() => {
-  const data = JSON.parse(document.getElementById("roadmap-data").textContent);
+const guidedLearning = (() => {
+  const data = curriculum;
   const catalog = document.getElementById("quick-catalog");
   const plans = Array.from(document.querySelectorAll("[data-quick-plan]"));
   const indicators = Array.from(document.querySelectorAll("[data-plan-progress]"));
-  const checks = Array.from(document.querySelectorAll("[data-complete]"));
   const returnToPlan = document.getElementById("return-to-plan");
   const hosted = location.protocol === "https:" || location.protocol === "http:";
   const road = CurriculumRoadmap;
+  const guided = name => document.getElementById("guided-" + name);
+  const lastViewed = new Map();
+  let active = null;
+  let mounted = null;
+
+  const pathHash = key => "#quick-" + key.toLowerCase();
+  const lessonHash = (key, topic) => pathHash(key) + "/" + topic.toLowerCase();
+
+  function resolve(hash) {
+    const match = /^#quick-([a-g])(?:\/(m\d{2}-t\d{2}))?$/.exec(hash);
+    if (!match) return null;
+    const path = data.paths[match[1].toUpperCase()];
+    const index = path.closure.indexOf(match[2]?.toUpperCase());
+    return {path, index, topic: path.closure[index], overview: pathHash(path.id)};
+  }
+
+  function restoreMaterial() {
+    if (!mounted) return;
+    for (const [link, href] of mounted.links) link.setAttribute("href", href);
+    mounted.parent.append(mounted.node);
+    mounted = null;
+  }
+
+  function mountMaterial(route) {
+    const node = document.getElementById("material-" + route.topic.toLowerCase());
+    const links = Array.from(node.querySelectorAll('a[href^="#m"]'), link => [link, link.getAttribute("href")]);
+    mounted = {node, links, parent: node.parentElement};
+    for (const [link, href] of links) {
+      const topic = href.slice(1).toUpperCase();
+      if (route.path.closure.includes(topic)) link.setAttribute("href", lessonHash(route.path.id, topic));
+      else link.removeAttribute("href");
+    }
+    guided("material").append(node);
+  }
 
   function syncProgress() {
     const {statuses, selectedPath} = progressState.current();
-    for (const check of checks) {
-      check.checked = statuses[check.dataset.complete] === "Completed";
-      check.closest(".plan-step").classList.toggle("is-complete", check.checked);
-    }
     for (const indicator of indicators) {
       const useSelection = indicator.dataset.planProgress === "selected";
       const path = data.paths[useSelection ? (selectedPath || "A") : indicator.dataset.planProgress];
@@ -25,15 +54,44 @@
       indicator.querySelector("[data-plan-status]").textContent =
         progress.next ? progress.completed + " completed · " + progress.remaining +
           " remaining · " + LearningProgress.duration(progress.hours) + " left"
-          : "Path complete. All " + progress.completed + " required topics are complete.";
+          : "Path complete. All " + progress.completed + " required lessons are complete.";
       const next = indicator.querySelector("[data-plan-next]");
       next.hidden = !progress.next;
       if (progress.next) {
         const topic = data.topics[progress.next];
-        next.href = "#" + topic.id.toLowerCase();
-        next.textContent = (useSelection && !selectedPath && !progress.completed ? "Start Learning: " :
-          "Continue Learning: ") + topic.title;
+        next.href = indicator.dataset.guided !== undefined ? lessonHash(path.id, topic.id) : "#" + topic.id.toLowerCase();
+        const started = progress.completed || statuses[topic.id] || lastViewed.has(path.id);
+        next.textContent = (started ? "Continue Learning: " : "Start Learning: ") + topic.title;
       }
+    }
+    for (const plan of plans) {
+      const path = data.paths[plan.dataset.quickPlan];
+      const current = lastViewed.get(path.id) || LearningProgress.routeProgress(path, data.topics, statuses).next;
+      for (const step of plan.querySelectorAll("[data-step]")) {
+        const {step: topic} = step.dataset;
+        const complete = statuses[topic] === "Completed";
+        step.classList.toggle("is-complete", complete);
+        const link = step.querySelector("a");
+        if (topic === current) link.setAttribute("aria-current", "step");
+        else link.removeAttribute("aria-current");
+        const state = step.querySelector("[data-lesson-state]");
+        state.hidden = false;
+        state.textContent = (topic === current ? "Current lesson · " : "") + (statuses[topic] || "Not Started");
+      }
+    }
+    returnToPlan.hidden = !selectedPath;
+    if (selectedPath) {
+      const last = lastViewed.get(selectedPath);
+      const link = returnToPlan.querySelector("a");
+      link.href = last ? lessonHash(selectedPath, last) : pathHash(selectedPath);
+      link.textContent = "Return to Quick Learning: " + data.paths[selectedPath].title;
+    }
+    if (active) {
+      const status = statuses[active.topic];
+      const complete = status === "Completed";
+      guided("complete").setAttribute("aria-disabled", String(complete));
+      guided("complete").textContent = complete ? "Completed" : "Mark as Completed";
+      guided("status").textContent = "Lesson progress: " + (status || "Not Started");
     }
   }
 
@@ -44,20 +102,45 @@
     });
   }
 
-  function showRoute(hash) {
-    if (!/^#(?:quick(?:-[a-g])?|paths|preparation)$/.test(hash)) return;
-    const key = /^#quick-([a-g])$/.exec(hash)?.[1].toUpperCase() || "";
-    catalog.hidden = Boolean(key);
-    for (const plan of plans) {
-      plan.hidden = plan.dataset.quickPlan !== key;
+  function show(hash, route) {
+    restoreMaterial();
+    active = route?.topic ? route : null;
+    guided("lesson").hidden = !active;
+    if (route || ["#quick", "#paths", "#preparation"].includes(hash)) {
+      catalog.hidden = Boolean(route);
+      for (const plan of plans) plan.hidden = Boolean(active) || plan.dataset.quickPlan !== route?.path.id;
     }
-    returnToPlan.hidden = !key;
-    if (key) {
-      const link = returnToPlan.querySelector("a");
-      link.href = "#quick-" + key.toLowerCase();
-      link.textContent = "Return to Quick Learning plan: " + data.paths[key].title;
+    if (active) {
+      const {path, index, topic, overview} = active;
+      lastViewed.set(path.id, topic);
+      guided("path").textContent = path.title;
+      guided("path").href = overview;
+      guided("back").href = overview;
+      guided("position").textContent = "Lesson " + (index + 1) + " of " + path.closure.length;
+      guided("title").textContent = data.topics[topic].title;
+      guided("estimate").textContent = LearningProgress.duration(data.topics[topic].hours) + " estimated learner time";
+      for (const [control, relative] of [["previous", -1], ["next", 1]]) {
+        const neighbor = path.closure[index + relative];
+        guided(control).hidden = !neighbor;
+        guided(control).href = neighbor ? lessonHash(path.id, neighbor) : overview;
+      }
+      mountMaterial(active);
     }
+    if (route && progressState.current().selectedPath !== route.path.id) progressState.select(route.path.id);
+    else syncProgress();
+    return active ? guided("lesson") : null;
   }
+
+  guided("complete").addEventListener("click", () => {
+    if (!active) return;
+    const current = progressState.current();
+    if (current.statuses[active.topic] === "Completed") return;
+    progressState.apply({...current, statuses: {...current.statuses, [active.topic]: "Completed"}});
+  });
+  window.addEventListener("beforeprint", restoreMaterial);
+  window.addEventListener("afterprint", () => {
+    if (active && !mounted) mountMaterial(active);
+  });
 
   for (const plan of plans) {
     const path = data.paths[plan.dataset.quickPlan];
@@ -121,19 +204,8 @@
     }
   }
 
-  for (const check of checks) {
-    check.parentElement.hidden = false;
-    check.addEventListener("change", () => {
-      const menu = menus.get(check.dataset.complete);
-      menu.value = check.checked ? "Completed" : "Not Started";
-      menu.dispatchEvent(new Event("change"));
-    });
-  }
-
   for (const indicator of indicators) indicator.hidden = false;
   document.addEventListener("curriculum-progress", syncProgress);
-  document.addEventListener("curriculum-route", event => showRoute(event.detail));
-  syncProgress();
-  if (!/^#quick-[a-g]$/.test(initialRoute)) showRoute("#quick");
-  showRoute(initialRoute);
+  show("#quick", null);
+  return {resolve, show};
 })();

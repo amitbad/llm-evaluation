@@ -38,7 +38,9 @@ The homepage puts Quick Learning and Complete Course first. The homepage and cur
 4. **About the Course** contains course outcomes, hour estimates, and progress controls.
 5. **Resources** links to published examples and concepts. Instructor Resources groups Existing Repository Coverage and Teaching Plan.
 
-Both learning modes use the same topic IDs and content. Continue Learning opens the first unfinished required topic in order. Progress is stored in the current browser's local storage when available. It does not synchronize across devices. The versioned JSON backup transfers completed topic IDs and the optional selected path. Imports require a preview and explicit apply, with merge or replace available. Reset requires confirmation.
+Both learning modes use the same topic IDs and content. Quick Learning links carry both the path and the topic in the URL fragment, so reload and browser history retain the exact lesson. The guided view temporarily moves the original topic material from Complete Course and restores it when the learner leaves. Required prerequisites appear in the lesson sequence. Complete Course keeps its existing topic links and provides module breadcrumbs.
+
+Continue Learning opens the first unfinished required topic in order. In Quick Learning and About the Course this opens a guided lesson, while Complete Course resumes in its own view. Progress is stored in the current browser's local storage when available. It does not synchronize across devices. The versioned JSON backup transfers completed topic IDs and the optional selected path. Imports require a preview and explicit apply, with merge or replace available. Reset requires confirmation.
 
 ## Deployment and development boundaries
 

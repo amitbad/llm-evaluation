@@ -651,8 +651,6 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     }
     document.addEventListener("curriculum-route", event => openRoute(event.detail));
     document.addEventListener("curriculum-progress", () => {if (initialized && selection) draw();});
-    if (!document.getElementById("roadmap").hidden) enterRoadmap();
-    openRoute(initialRoute);
   })();
 }
 
