@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated **2026-11-22**. The last verified live release is `aa01ca7`. M01-T01, M01-T02, and all three M02 lessons are complete locally. The other 48 topics retain their outlines.
+Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Modules 1 and 2 are complete locally. The other 47 topics retain their outlines.
 
 ## Implemented milestones
 
@@ -31,6 +31,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. M01-T0
 | Beginner teaching standard | [TEACHING_GUIDELINES.md](TEACHING_GUIDELINES.md) is required for future lessons and revisions. All four complete chapters now use familiar situations, plain-language explanations before terminology, and guided walkthroughs of the original labs. |
 | Lesson navigation refinement | Both modes use a smaller lesson title and tighter header spacing. Quick Learning groups time and progress on one row when space allows. Breadcrumbs and study navigation links underline on hover, and keyboard focus and lesson paragraph links retain their existing styling. |
 | Inference and repeatability | [M01-T02](docs/lessons/m01-t02.md) introduces next-token selection, temperature, top-p, seeds, model snapshots, and stop reasons through Harbor Leaf Bank. It includes three worked demonstrations, a seven-step offline lab, four solved exercises, eight explained knowledge checks, and an independent comparison assignment. |
+| Application architecture and smoke testing | [M01-T03](docs/lessons/m01-t03.md) follows a Harbor Leaf Bank question through the app. Three worked demonstrations and a seven-step offline lab teach how to report PASS, FAIL, and NEEDS REVIEW and locate the stage to investigate. Four solved exercises, eight knowledge checks, and a fee-helper assignment complete the chapter. |
 
 ## Tested
 
@@ -57,6 +58,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. M01-T0
 - Compared the four revised chapters with their previous versions. Objectives, activity structure, and all fenced code and transcripts were preserved. Reran all 28 original Python examples and checked exact output. Curriculum synchronization, public-site validation, and 11 non-browser tests passed.
 - The lesson header refinement passed curriculum synchronization, public-site validation, and all 11 non-browser tests. Comparing both generated pages before and after confirmed that only embedded styles changed. Header appearance and wrapping still need visual review.
 - All seven M01-T02 examples and seven experiments matched the displayed output on Python 3.12.7. The independent assignment produced the expected counts for both settings. The chapter uses simulated draws and saved fictional answers. The four-hour study estimate still needs learner feedback.
+- All seven M01-T03 examples, seven experiments, and the assignment run matched their expected results on Python 3.12.7. The lab uses a fixed-rule stand-in and simulated transport failures. It does not exercise a live model or connection.
 
 ## Manually verified
 
@@ -68,6 +70,6 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
 4. Ask a beginner to try a revised chapter and record where they pause or need help. Use that feedback and the [teaching guidelines](TEACHING_GUIDELINES.md) when expanding the remaining outlines. Check reading width, code-block scrolling, and disclosure controls in both themes.
-5. Develop M01-T03, **Application architecture and a first smoke test**, next in the foundations sequence. After Module 2, continue with M03-T01, **Exact match, normalization and rules**, and use the Harbor Leaf fee paraphrase to introduce false failures in text-based scoring.
+5. Develop M03-T01, **Exact match, normalization and rules**, next. Modules 1 and 2 are complete locally. Use the Harbor Leaf fee paraphrase to introduce false failures in text-based scoring.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).

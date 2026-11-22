@@ -2519,34 +2519,431 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
       <a class="topic-link" href="#m01-t03">Link to topic</a>
     </div>
     <div class="topic-material lesson-reading" id="material-m01-t03">
-  <p class="lesson-intro" data-lesson-search>A working request establishes connectivity and enables stage-specific diagnosis.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Client, prompt assembly, inference server, retrieval, tools, post-processing, transport errors and end-to-end elapsed time.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Follow a question from the chat screen through the app and back to the customer.</li><li>Explain what each part does, including the policy lookup, instructions, model, and reply handling.</li><li>Write a small check with an expected result and compare it with what happened.</li><li>Use PASS, FAIL, and NEEDS REVIEW to report a correct reply, a wrong claim, missing information, or a technical problem.</li><li>Build an offline simulator and use its records to decide where to investigate a failure.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Imagine ordering a meal at a café. One person takes your order, the kitchen makes it, and someone brings it to you. The order screen can show “Ready” even if you get the wrong dish. If that happens, you need to find the step where the order stopped matching what you asked for.</p>
+<p>Now suppose you type, “What is the minimum balance for a Standard Savings account?” into Harbor Leaf Bank’s chatbot. The screen works. The answer appears promptly. It says ₹10,000, although the approved policy says ₹5,000. Where would you look first? The app may have selected the wrong policy, or the answer may have gone wrong after the correct information arrived.</p>
+<p>You’ll follow one question through the app, then run a quick check with a small Python stand-in for the chatbot. Harbor Leaf Bank and its policies are fictional. The approved minimum in our examples is ₹5,000 for Standard Savings. A ₹100 monthly fee applies below that balance.</p>
+<h5>Plan your study session</h5>
+<p>Allow about 3.5 hours. Spend an hour reading and tracing the examples, an hour and a half running the guided code, and an hour on experiments, the assignment, and checking your reasoning. You can work through the request journey on paper before trying Python.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. Start with what the customer sees</h5>
+<p>Think of a calculator on a phone. You tap keys, and a program follows a rule to show the result. A program or group of programs that helps someone do a task is an <strong>application</strong>, often called an <strong>app</strong>.</p>
+<p>A banking chatbot still has a screen and rules. It also uses a <strong>large language model</strong>, or <strong>LLM</strong>, to write replies. The model takes in information and produces text. As you saw in the previous lessons, it works with pieces of text called tokens and can produce different wording across attempts. Some apps without an LLM also vary. The distinction here is which work the bank’s app gives to a language model and which rules the app follows itself.</p>
+<p>The chat box, send button, and reply make up the <strong>user interface</strong>. These are the parts the customer interacts with. If you press Send and a reply appears, you’ve seen the screen handle that interaction. You still need to read the answer. Imagine a correct answer hidden behind a blank screen, then a wrong answer shown beautifully. Those problems happen in different places.</p>
+<h5>2. Give each part of the app a job</h5>
+<p>Think back to the café. Someone takes the order, someone checks what ingredients are available, and someone prepares the food. The arrangement of the parts and how they work together is called <strong>architecture</strong>. An app can split these jobs across programs or do several of them in one program. Here’s how they work at Harbor Leaf Bank.</p>
+<p>The screen sends the customer’s question to a part that decides what happens next. That decision-making code is the <strong>application logic</strong>. It checks that there’s a question to answer and decides what information to look for. The part that asks another program to do something is called a <strong>client</strong>. The program that receives that request and performs the work is a <strong>server</strong>. The chat screen can be a client of the bank’s app. The bank’s app can in turn be a client of the model server.</p>
+<p>The app searches the bank’s approved material for the Standard Savings policy. That collection is the <strong>knowledge source</strong>. The search and selection step is called <strong>retrieval</strong>. If the app asks a separate lookup program to do the search, that program is a <strong>tool</strong>. Open the right page in a handbook and you have what you need to answer. Open an old page or come back without one and the same question can be much harder.</p>
+<p>Now collect the question, the policy excerpt, and an instruction such as “Use the approved information. Say when you can’t confirm an answer.” The material the app sends to the model makes up the <strong>prompt</strong> here. Putting it together is <strong>prompt assembly</strong>. The model is the part asked to write the response. You can change the prompt while keeping the same model, just as you can give a person different instructions for the next order.</p>
+<p>Using the trained model to generate a reply is <strong>inference</strong>. A program that receives the request and runs the model is an <strong>inference server</strong>. It may return the reply along with details such as which model ran or why it stopped. The bank’s app can then extract the text, check that it is usable, and hand it to the screen. Work done after receiving the model’s result is called <strong>post-processing</strong>. Formatting an answer and verifying its amount are separate checks.</p>
+<h5>3. See what crosses from one program to another</h5>
+<p>Imagine two people who agree to exchange orders using a form. A clear form tells them which details to send and where to find the answer. An <strong>application programming interface</strong>, or <strong>API</strong>, is an agreed way for programs to use each other’s features. Here it tells the bank’s app what to send to the model server and what to expect back.</p>
+<p>One common way to send the request is <strong>HTTP</strong>, a set of rules programs use to exchange requests and responses. Think of the request as “Please do this work” and the response as “Here is what happened.” An HTTP status such as 200 can mean the server handled the request successfully. The policy claim in the body still needs checking. If the app waits too long and gets no response, it may report a <strong>timeout</strong>. That’s a kind of <strong>transport error</strong>, a problem getting a request or response across the connection in this example. A timeout by itself leaves you unsure whether the server ever started or finished the work.</p>
+<p><strong>JSON</strong> is a way of writing structured information as text. Think of a little form with named boxes. The JSON text <code>{&quot;reply&quot;: &quot;The minimum is ₹5,000.&quot;}</code> has a field named “reply” and a value containing the answer. Braces surround the form. The colon joins the field name to the value. Quotes mark where text starts and ends. A program can read that text into data it can use. Reading a format this way is called <strong>parsing</strong>.</p>
+<p>Suppose the app receives the text <code>{&quot;reply&quot;:</code> and nothing follows. Some data arrived, but the form is unfinished. That’s <strong>malformed JSON</strong>, text that breaks the format rules. Start by checking what the app received and how it tried to read it. You have different evidence from a timeout with no response or a readable reply with the wrong amount.</p>
+<h5>4. Walk the question to the model and back</h5>
+<p>Trace the arrows. The engineer at the end looks back at the evidence saved during the journey.</p>
+<p><strong>Request →</strong> Chat screen → App receives the question → App selects the approved policy → App packages the instructions, question, and policy → Inference server</p>
+<p><strong>Response →</strong> Inference server → App reads and prepares the reply → Chat screen shows it → Engineer checks what the customer saw against the approved policy</p>
+<ol><li><strong>Enter the question.</strong> The customer types “What is the minimum balance for a Standard Savings account?” and presses Send.</li><li><strong>Receive and select.</strong> The bank’s app reads the question and finds the approved policy. It gives the minimum as ₹5,000.</li><li><strong>Prepare the model request.</strong> The app includes its instructions, the question, and the excerpt. In the previous lessons you checked what fits in the model’s input and how settings affect generation. Here you can ask which actual excerpt and settings made it into this request.</li><li><strong>Generate a reply.</strong> A real model could write “The minimum balance is ₹5,000.” It could phrase that amount differently, leave something out, or get it wrong. Our simulator returns text chosen by rules in Python.</li><li><strong>Return and display.</strong> The app reads the returned information and shows the usable reply. If it received no reply or the information was unreadable, it can show an error instead.</li><li><strong>Check the answer.</strong> The engineer reads the displayed amount and the approved record. They can look back at what each part handed off. If a handoff failed, the next part may never have run.</li></ol>
+<p>Try the same question with the policy lookup removed. Which team would you ask to look first? If the policy never made it into the request, start with selection and prompt assembly. If the correct text went in and ₹10,000 came out, check what generated that reply. If the model’s saved result said ₹5,000 and the screen showed ₹10,000, investigate the handling between the result and the display.</p>
+<h5>5. Keep a small record of what happened</h5>
+<p>If a delivery goes missing, a list of times and stops can help you see how far it got. A <strong>log</strong> is a saved record of events. An engineer might record a test ID, the policy selected, the model version or offline stand-in, and the stage where an error appeared. A linked record you can follow through the stages is a <strong>trace</strong>. Save what you need to understand the failure. For this lesson, use fictional questions and leave out account details and secrets.</p>
+<p>Looking across those events over time is <strong>monitoring</strong>. If the last five checks all failed while reading a response, start there. The time from sending a question to receiving a displayed result is the <strong>end-to-end elapsed time</strong> for those start and end points. Say you started at 100 milliseconds on your clock and finished at 350. The attempt took 250 milliseconds, or a quarter of a second. That includes work outside the model. You’d need times for individual stages before saying what caused a slow result. The example times here are made up.</p>
+<h5>6. Check the basics before doing a full evaluation</h5>
+<p>After a mechanic works on a car, they may start it before taking it on a road test. Starting the engine answers a useful first question. It doesn’t tell you how well the brakes work on a wet road. A <strong>smoke test</strong> is that quick first check for an app. Pick one or a few important paths and see if they work well enough to continue testing.</p>
+<p>At Harbor Leaf Bank, ask a known question and check whether the app returns a readable reply with the approved amount. A smoke test can catch a broken connection, an unreadable reply, or a known answer that suddenly gives the wrong amount. It covers the particular path you tried. A more detailed <strong>evaluation</strong> checks behavior across many situations against clear rules. Later you’ll try alternate wording, different policies, and questions the bank cannot answer.</p>
+<p>Before pressing Send, write a <strong>test case</strong>. It says what you’ll give the app, which conditions apply, and what should happen. For example, give the app one Standard Savings question with the approved ₹5,000 policy. The <strong>expected result</strong> is a readable answer with that amount. The <strong>actual result</strong> is what you observed when you ran the case. A status records how those two compare.</p>
+<ul><li><strong>PASS.</strong> The check met its stated expectation. If you ask about an ATM limit absent from the supplied policy and expect a clear “I can’t confirm,” that reply can pass.</li><li><strong>FAIL.</strong> You know the expectation was missed. A reply of ₹10,000 fails the policy check. A timeout fails the basic delivery check if the test expected a reply. Record which check failed. The timeout left no answer to judge for correctness.</li><li><strong>NEEDS REVIEW.</strong> You lack enough information to judge the observation. Perhaps there’s a readable reply but no approved expectation for that case. Ask for the missing evidence or for a person to review the meaning. Keep this outcome visible when you count results.</li></ul>
+<p>Write a two-part checklist before you look at an answer. First ask “Did I get a readable reply?” Then ask “Does it meet the expectation?” If the first answer is no, record the delivery or format failure. Leave factual correctness unscored.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. A supported question gets the right answer</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What is the minimum balance for a Standard Savings account?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The app selected the current Standard Savings excerpt. It says the minimum is ₹5,000.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Our saved teaching reply is “The minimum is ₹5,000.” The app read the reply field and showed it to the customer.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Check delivery first. You can read the reply on the screen. Now compare the amount with the policy. ₹5,000 agrees, so mark PASS for this smoke test. If the reply used “five thousand rupees,” read its meaning before calling it wrong.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>No failure was observed on this path. Save which policy was used so you can repeat the same check later. You still haven’t tested a question about fees or missing information.</span></p>
+<h5>Example 2. A working screen shows the wrong minimum</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What is the minimum balance for a Standard Savings account?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The saved request shows that the app sent the approved ₹5,000 excerpt with its instructions.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>In this teaching record, the model replies “The minimum is ₹10,000.” The displayed reply matches what it returned.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The reply arrived in a readable form. That part passed. The approved amount was in the request, and the returned claim contradicts it. Mark FAIL for the answer. You can point to the first place you saw ₹10,000, in the returned text.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Wrong amount in the generated answer. Recheck how often this happens under the same inputs and settings. If the request had contained the wrong policy to begin with, you’d investigate that earlier handoff. The number alone can’t tell you where it came from.</span></p>
+<h5>Example 3. Missing evidence, a silent connection, and an unreadable reply</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Try “What is the daily ATM withdrawal limit?” first. For the two technical runs, return to the supported minimum-balance question.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The savings excerpt doesn’t give an ATM limit. A safe expected reply says it can’t confirm the limit. For the minimum question, the available approved answer is ₹5,000.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The saved ATM reply says “I can’t confirm that from the approved policy.” On the next run no response arrives before the wait ends. On the last run a response arrives, but the app gets the incomplete JSON text <code>{&quot;reply&quot;:</code> and can’t read it.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>PASS for the ATM case because it handled the evidence gap as expected. FAIL for delivery in the timeout case and FAIL for response handling in the incomplete JSON case. Neither technical run yields a usable answer to compare with ₹5,000. If an ATM reply were readable but you had no approved expectation for it, record NEEDS REVIEW until you had one.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Missing policy coverage calls for checking what information the bank can supply. A timeout sends you to the connection and request records to see how far the request got. Unreadable JSON sends you to the response reader and what the server returned. Give each its own test if you want to check that the app handles it safely.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Python 3.10 or later. All seven programs work with Python’s standard library, the tools Python installs with itself. The exercises run offline in a local editor and make no network or model calls. You can also paste them into a Python editor that runs in a browser if you already have one. That editor may need a connection to load.</p>
+<p>For a local run, paste the Python block into a plain-text file named <code>m01_t03_smoke.py</code>. Save in UTF-8 so the rupee symbol displays correctly. Open a <strong>terminal</strong>, a window where you type commands, in the same folder as the file. If it opens elsewhere, type <code>cd</code>, a space, and the path to your folder in quotes. The first command checks the Python version and the second runs the file.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3 --version
+python3 m01_t03_smoke.py
+</code></pre>
+</div>
+<p>On Windows, these are alternatives if the Python launcher is installed.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">py -3 --version
+py -3 m01_t03_smoke.py
+</code></pre>
+</div>
+<p>If you use an online Python editor, paste the Python block and choose <strong>Run</strong>. In either editor, start each step by replacing the whole program with the new block. Read the expected output beside the result you see. Then change only the part described in the experiment and run it again. Paste the blocks labeled Python for execution. The output blocks show what you should see.</p>
+</div></details>
+<h5>Step 1 — Show what the customer sees</h5>
+<p>First, display two lines from a saved conversation. Imagine taking a screenshot of the chat. It shows the question and answer you want to investigate. The first program gives you just those lines.</p>
+<p>A <strong>string</strong> is text between quotation marks in Python. <code>print()</code> displays the text you put inside its parentheses. The outside quotation marks tell Python where the string starts and ends. They don’t appear on the screen.</p>
+<p><strong>Copy and run.</strong> Paste this program and run it. Compare the spelling and amount with the approved policy.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">print(&quot;Customer: What is the minimum balance for a Standard Savings account?&quot;)
+print(&quot;Assistant: The minimum is ₹5,000.&quot;)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> You can read the same question and answer that the program contains. No search or model produced those lines.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Customer: What is the minimum balance for a Standard Savings account?
+Assistant: The minimum is ₹5,000.
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>₹5,000</code> to <code>₹10,000</code> and rerun. The screen still shows a reply. The amount now disagrees with the policy.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Customer: What is the minimum balance for a Standard Savings account?
+Assistant: The minimum is ₹10,000.
+</code></pre></details>
+<p><strong>Checkpoint.</strong> What does the second <code>print()</code> tell you about accuracy? It tells you what was displayed. Compare the amount with the approved rule before deciding whether it’s accurate.</p>
+<h5>Step 2 — Save the question, policy, and timing separately</h5>
+<p>Suppose you’re handed the reply from Step 1 and asked to find out whether the app used the right policy. Add a small record of what was sent and what came back. Keep each piece under its own name so that changing the reply doesn’t change the policy.</p>
+<p>A <strong>variable</strong> is a name for a value. In <code>question = &quot;...&quot;</code>, the equals sign stores the text on the right under the name on the left. Numbers without quotes can be used for arithmetic. <code>-</code> subtracts. We’ll subtract the saved starting time from the saved finish time. Inside <code>print()</code> a comma separates items, and Python displays a space between them.</p>
+<p><strong>Copy and run.</strong> Paste the program and look for the elapsed time, then check which other lines help you review the amount.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">question = &quot;What is the minimum balance for a Standard Savings account?&quot;
+reference = &quot;Standard Savings requires a minimum of ₹5,000.&quot;
+reply = &quot;The minimum is ₹5,000.&quot;
+start_ms = 100
+finish_ms = 350
+
+elapsed_ms = finish_ms - start_ms
+print(&quot;Question:&quot;, question)
+print(&quot;Policy sent:&quot;, reference)
+print(&quot;Reply:&quot;, reply)
+print(&quot;Elapsed:&quot;, elapsed_ms, &quot;ms&quot;)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The question, policy, and reply are separate entries. The time is 350 − 100, or 250 milliseconds.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Question: What is the minimum balance for a Standard Savings account?
+Policy sent: Standard Savings requires a minimum of ₹5,000.
+Reply: The minimum is ₹5,000.
+Elapsed: 250 ms
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>finish_ms = 350</code> to <code>finish_ms = 500</code>. Rerun. Only the elapsed time changes. These are saved numbers for practice, so changing them doesn’t make the program run more slowly.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Question: What is the minimum balance for a Standard Savings account?
+Policy sent: Standard Savings requires a minimum of ₹5,000.
+Reply: The minimum is ₹5,000.
+Elapsed: 400 ms
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Can the 400 ms tell you that the model was slow? No. You only have the beginning and end times of the whole request. You’d need a record of the time spent at the model stage to answer that question.</p>
+<h5>Step 3 — Give one rule a name and use it</h5>
+<p>Try giving the program a question and letting it decide which of two saved replies to hand back. We’ll put that small job under a name so you can reuse it. For now, the program knows one exact question.</p>
+<p>A <strong>function</strong> is a named block of instructions you can run when you need it. <code>def answer(question):</code> names the block <code>answer</code> and gives its input the name <code>question</code>. The colon and the spaces at the start of the next lines show which instructions belong to it. On the last two lines you <strong>call</strong> the function by writing its name with a value in parentheses, then print what it sent back.</p>
+<p>Inside the function, <code>==</code> asks whether two values are equal. The single <code>=</code> still stores a value. <code>if</code> runs its indented lines only if the comparison is true. <code>return</code> hands a value back and ends that call. If the question differs, the indented return is skipped and the last return gives the fallback reply.</p>
+<p><strong>Copy and run.</strong> Paste the program. Predict which return runs for the known question.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def answer(question):
+    known_question = &quot;What is the minimum balance for a Standard Savings account?&quot;
+    if question == known_question:
+        return &quot;The minimum is ₹5,000.&quot;
+    return &quot;I can&#x27;t confirm that from the approved policy.&quot;
+
+
+question = &quot;What is the minimum balance for a Standard Savings account?&quot;
+reply = answer(question)
+print(&quot;Reply:&quot;, reply)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The question is the same as the one inside the function, so the first return runs.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply: The minimum is ₹5,000.
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only the <code>question = ...</code> line below the function to use <code>&quot;What is the daily ATM withdrawal limit?&quot;</code>. Leave <code>known_question</code> alone. The test now fails to match and the second return runs.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply: I can&#x27;t confirm that from the approved policy.
+</code></pre></details>
+<p><strong>Checkpoint.</strong> What happens if a customer types “What balance must I maintain?” This function falls back because the exact text differs. A person can see that the questions may mean the same thing. This small routing rule doesn’t understand that relationship.</p>
+<h5>Step 4 — Read the reply from a small policy source</h5>
+<p>In Step 3 the approved answer lives inside a rule. What if the bank wants to keep policy information in one place and change it without rewriting the rule? Move the approved sentence into a tiny reference source. Give it a short name, or <strong>topic</strong>, so the app can look it up.</p>
+<p>A <strong>dictionary</strong> stores pairs of names and values inside braces. The name is a <strong>key</strong>. The colon connects it to the value. In this example, the key <code>&quot;minimum&quot;</code> points to the approved sentence. The dot in <code>policy.get(topic)</code> gives you the dictionary’s lookup operation. If the key is absent, <code>get()</code> returns <code>None</code>, Python’s value for something that’s missing here. <code>is None</code> checks for that missing value. An empty dictionary is written <code>{}</code>.</p>
+<p><strong>Copy and run.</strong> Paste the code. Find the line that would show a policy sentence to the next stage of the app.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def answer(topic, policy):
+    approved = policy.get(topic)
+    if approved is None:
+        return &quot;I can&#x27;t confirm that from the approved policy.&quot;
+    return approved
+
+
+policy = {&quot;minimum&quot;: &quot;The minimum is ₹5,000.&quot;}
+topic = &quot;minimum&quot;
+print(&quot;Selected topic:&quot;, topic)
+print(&quot;Reply:&quot;, answer(topic, policy))
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The topic exists and the reply comes from the policy. This function takes two inputs, the topic and the source to look in.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Selected topic: minimum
+Reply: The minimum is ₹5,000.
+</code></pre></details>
+<p><strong>Experiment.</strong> Replace the <code>policy = ...</code> line with <code>policy = {}</code>. The topic still says “minimum,” but the key no longer has an approved sentence to return.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Selected topic: minimum
+Reply: I can&#x27;t confirm that from the approved policy.
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Does matching the topic prove that you have enough information? No. First you select a topic. Then you check whether there is an approved value for it. A missing entry should lead to the fallback in this simulation.</p>
+<h5>Step 5 — Compare the expected and actual text</h5>
+<p>Suppose you save a particular reply so you can check that it still comes back after changing the app. Set up an expectation first. Then save what you observed. This small test uses an exact match because the simulator chooses from fixed sentences. When someone checks a new model reply for meaning, different wording may still be acceptable.</p>
+<p>Use <code>==</code> to compare the two strings. If the characters match, the indented line under <code>if</code> prints PASS. <code>else</code> means “otherwise,” and its indented line prints FAIL. Both lines are part of the same decision. Exactly one result prints.</p>
+<p><strong>Copy and run.</strong> Paste the code. Read the expected and actual answers before looking at the result.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">expected = &quot;The minimum is ₹5,000.&quot;
+actual = &quot;The minimum is ₹5,000.&quot;
+
+print(&quot;Expected:&quot;, expected)
+print(&quot;Actual:&quot;, actual)
+if actual == expected:
+    print(&quot;Outcome: PASS&quot;)
+else:
+    print(&quot;Outcome: FAIL&quot;)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The saved sentences match. This meets the check you chose for this simulator.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Expected: The minimum is ₹5,000.
+Actual: The minimum is ₹5,000.
+Outcome: PASS
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>actual</code> to <code>&quot;The minimum is ₹10,000.&quot;</code>. Leave the expectation at ₹5,000. Run it again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Expected: The minimum is ₹5,000.
+Actual: The minimum is ₹10,000.
+Outcome: FAIL
+</code></pre></details>
+<p><strong>Checkpoint.</strong> If the reply said “Keep at least five thousand rupees,” would this check pass? The strings would differ, so this particular check would still print FAIL. The meaning can be correct. In a real evaluation, choose a scoring rule that fits what you need to know.</p>
+<h5>Step 6 — Try more than one path</h5>
+<p>Now check the known minimum, a faulty copy of the reference, and an unsupported question. Each case has its own expectation. This time a separate lookup connects a known question to a topic. Retrieving the actual approved sentence is a second step.</p>
+<p>The tests are stored in a <strong>list</strong>, a group of items inside square brackets. Each item is a <strong>tuple</strong>, a group of values in parentheses that stay in order. The four values here are the case name, question, policy source, and expected reply. A <code>for</code> loop takes one tuple at a time and puts its values in those four names. The lines below the colon repeat for each row. The test calls <code>answer()</code> with the case’s question and policy, then prints its result. A vertical bar inside quotes is just a separator for the reader.</p>
+<p><strong>Copy and run.</strong> Paste the whole block. Before you run it, ask whether an honest fallback could be the result a case expects.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">minimum_question = &quot;What is the minimum balance for a Standard Savings account?&quot;
+atm_question = &quot;What is the daily ATM withdrawal limit?&quot;
+topics = {minimum_question: &quot;minimum&quot;}
+fallback = &quot;I can&#x27;t confirm that from the approved policy.&quot;
+
+
+def answer(question, policy):
+    topic = topics.get(question)
+    approved = policy.get(topic)
+    if approved is None:
+        return fallback
+    return approved
+
+
+clean_policy = {&quot;minimum&quot;: &quot;The minimum is ₹5,000.&quot;}
+faulty_copy = {&quot;minimum&quot;: &quot;The minimum is ₹10,000.&quot;}
+expected_minimum = &quot;The minimum is ₹5,000.&quot;
+
+cases = [
+    (&quot;S1&quot;, minimum_question, clean_policy, expected_minimum),
+    (&quot;S2&quot;, minimum_question, faulty_copy, expected_minimum),
+    (&quot;S3&quot;, atm_question, clean_policy, fallback),
+]
+
+for case_id, question, policy, expected in cases:
+    actual = answer(question, policy)
+    if actual == expected:
+        outcome = &quot;PASS&quot;
+    else:
+        outcome = &quot;FAIL&quot;
+    print(case_id, outcome, &quot;|&quot;, actual)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> S2 looks up the amount in a faulty source. The reply fails against the unchanged approved expectation. S3 passes because this case expects a fallback.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S1 PASS | The minimum is ₹5,000.
+S2 FAIL | The minimum is ₹10,000.
+S3 PASS | I can&#x27;t confirm that from the approved policy.
+</code></pre></details>
+<p><strong>Experiment.</strong> Change the amount in <code>faulty_copy</code> from <code>₹10,000</code> to <code>₹5,000</code> and rerun. S2 now reads the corrected reference. S1 and S3 stay the same.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S1 PASS | The minimum is ₹5,000.
+S2 PASS | The minimum is ₹5,000.
+S3 PASS | I can&#x27;t confirm that from the approved policy.
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Would you start by changing how the reply was worded for S2? Start earlier. The faulty source already supplied the wrong amount. Compare that with Example 2, where the correct policy reached the model and its returned text was wrong.</p>
+<h5>Step 7 — Report what passed, what failed, and what needs review</h5>
+<p>Your teammate asks whether the app returned a readable answer. Before checking the amount, make sure a response arrived and that you can read it. This program runs the same conversation through different saved conditions. In the code, a <strong>simulator</strong> is a stand-in that follows a few fixed rules. It represents a handoff to a service and the kind of result that might come back. It makes no connection, does no real waiting, and generates no model text. A short label called <code>mode</code> chooses the condition to replay.</p>
+<p>Start by reading <code>simulate_reply()</code>. It returns <code>None</code> for a simulated timeout, a broken piece of JSON for an unreadable response, or a JSON response with a reply. Once a case gets past the technical checks, the first <code>if</code> checks for missing policy. <code>elif</code> means “otherwise, check this next.” It lets the simulator slip in a wrong amount for practice. <code>else</code> uses the approved sentence when neither condition applies.</p>
+<p><code>import json</code> makes Python’s standard JSON tools available. <code>json.dumps(...)</code> turns the dictionary into text. <code>json.loads(...)</code> reads the text back into data.</p>
+<p>Now read <code>smoke_check()</code>. It looks up the topic and policy and passes the selected sentence to the simulator. If the result is missing, the check ends before trying to parse it. <code>try</code> says to attempt the indented instruction. <code>except json.JSONDecodeError</code> handles the specific error of unreadable JSON. Then <code>result[&quot;reply&quot;]</code> reads the reply field. Every valid JSON response in this fixture, a saved example used for testing, has that field. A real app would also check that a received response has the field and that it contains text.</p>
+<p>The checks after parsing ask whether we have an approved expectation and whether the reply matches it. <code>!=</code> asks if two strings differ. Each <code>return</code> in <code>smoke_check()</code> hands back two values separated by a comma, an outcome and a detail. The test loop assigns them to <code>outcome</code> and <code>detail</code>. Each time a row finishes, <code>totals[outcome] = totals[outcome] + 1</code> adds one to the count for that status. A final loop prints each total.</p>
+<p><strong>Copy and run.</strong> Paste the block. Find S3 and S6. They return the same text. Predict why the statuses differ before you inspect the report.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+minimum_question = &quot;What is the minimum balance for a Standard Savings account?&quot;
+atm_question = &quot;What is the daily ATM withdrawal limit?&quot;
+waiver_question = &quot;Does the student fee waiver apply?&quot;
+topics = {minimum_question: &quot;minimum&quot;}
+policy = {&quot;minimum&quot;: &quot;The minimum is ₹5,000.&quot;}
+expected_minimum = &quot;The minimum is ₹5,000.&quot;
+fallback = &quot;I can&#x27;t confirm that from the approved policy.&quot;
+
+
+def simulate_reply(approved, mode):
+    if mode == &quot;timeout&quot;:
+        return None
+    if mode == &quot;malformed&quot;:
+        return &#x27;{&quot;reply&quot;:&#x27;
+    if approved is None:
+        reply = fallback
+    elif mode == &quot;wrong&quot;:
+        reply = &quot;The minimum is ₹10,000.&quot;
+    else:
+        reply = approved
+    return json.dumps({&quot;reply&quot;: reply})
+
+
+def smoke_check(question, mode, expected):
+    topic = topics.get(question)
+    approved = policy.get(topic)
+    raw_result = simulate_reply(approved, mode)
+    if raw_result is None:
+        return &quot;FAIL&quot;, &quot;transport: no reply before timeout&quot;
+    try:
+        result = json.loads(raw_result)
+    except json.JSONDecodeError:
+        return &quot;FAIL&quot;, &quot;response handling: unreadable JSON&quot;
+
+    reply = result[&quot;reply&quot;]
+    if expected is None:
+        return &quot;NEEDS REVIEW&quot;, reply
+    if reply != expected:
+        return &quot;FAIL&quot;, &quot;unexpected text: &quot; + reply
+    return &quot;PASS&quot;, reply
+
+
+cases = [
+    (&quot;S1&quot;, minimum_question, &quot;normal&quot;, expected_minimum),
+    (&quot;S2&quot;, minimum_question, &quot;wrong&quot;, expected_minimum),
+    (&quot;S3&quot;, atm_question, &quot;normal&quot;, fallback),
+    (&quot;S4&quot;, minimum_question, &quot;timeout&quot;, expected_minimum),
+    (&quot;S5&quot;, minimum_question, &quot;malformed&quot;, expected_minimum),
+    (&quot;S6&quot;, waiver_question, &quot;normal&quot;, None),
+]
+totals = {&quot;PASS&quot;: 0, &quot;FAIL&quot;: 0, &quot;NEEDS REVIEW&quot;: 0}
+
+print(&quot;Harbor Leaf Bank | offline smoke-test report&quot;)
+for case_id, question, mode, expected in cases:
+    outcome, detail = smoke_check(question, mode, expected)
+    totals[outcome] = totals[outcome] + 1
+    print(case_id, outcome, &quot;|&quot;, detail)
+
+for outcome in totals:
+    print(outcome + &quot;:&quot;, totals[outcome])
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> For S3, the reviewer approved the fallback for this case. For S6, no expectation was supplied for the waiver question. The same text can pass one check and remain for review in another. S4 and S5 fail the check for a usable reply. Only S2 has a usable reply with a demonstrably wrong amount.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Harbor Leaf Bank | offline smoke-test report
+S1 PASS | The minimum is ₹5,000.
+S2 FAIL | unexpected text: The minimum is ₹10,000.
+S3 PASS | I can&#x27;t confirm that from the approved policy.
+S4 FAIL | transport: no reply before timeout
+S5 FAIL | response handling: unreadable JSON
+S6 NEEDS REVIEW | I can&#x27;t confirm that from the approved policy.
+PASS: 2
+FAIL: 3
+NEEDS REVIEW: 1
+</code></pre></details>
+<p><strong>Experiment.</strong> In the S5 row only, change <code>&quot;malformed&quot;</code> to <code>&quot;normal&quot;</code> and rerun. S5 now receives valid JSON and checks the expected amount. The count of delivery and response failures falls by one. The deliberately wrong S2 reply and the unresolved S6 judgment stay as they were.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Harbor Leaf Bank | offline smoke-test report
+S1 PASS | The minimum is ₹5,000.
+S2 FAIL | unexpected text: The minimum is ₹10,000.
+S3 PASS | I can&#x27;t confirm that from the approved policy.
+S4 FAIL | transport: no reply before timeout
+S5 PASS | The minimum is ₹5,000.
+S6 NEEDS REVIEW | I can&#x27;t confirm that from the approved policy.
+PASS: 3
+FAIL: 2
+NEEDS REVIEW: 1
+</code></pre></details>
+<p><strong>Checkpoint.</strong> If a transport check fails, should you ask the model to give a clearer amount? First find out whether a request arrived and whether any result came back. Until you have a usable reply, there’s no amount to judge.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Find the first handoff that went wrong</h5>
+<p>A customer types the Standard Savings question. The interface and app both record it correctly. The selected excerpt says the minimum is ₹5,000, but the assembled prompt contains the question and an instruction without the excerpt. The model replies “I can’t confirm.” Write down the stages in order. Circle the first place where evidence you expected to see was missing. Which stage would you check first?</p>
+<h5>Practice 2. Write a smoke test for a fee question</h5>
+<p>The approved excerpt says a ₹100 monthly fee applies below ₹5,000. Write one test case for a customer with ₹4,999. Include the question, the reference to send, and the result you expect before running it. The saved actual answer is “You pay ₹100 every day.” Give the test outcome and explain what part of the expectation was missed.</p>
+<h5>Practice 3. Tell four different outcomes apart</h5>
+<p>Use the same approved minimum of ₹5,000 and assume each basic check expects a usable reply. Record the outcome and your first next step for each result.</p>
+<ul><li><strong>A.</strong> A readable reply gives ₹5,000 for Standard Savings.</li><li><strong>B.</strong> The screen shows an error and the log says the request timed out before any response arrived.</li><li><strong>C.</strong> The app receives the incomplete text <code>{&quot;reply&quot;:</code> and can’t parse it.</li><li><strong>D.</strong> An unsupported ATM question has a readable fallback. The checklist has no approved expectation for how to handle that question.</li></ul>
+<h5>Practice 4. Explain what the timing does and doesn’t say</h5>
+<p>A log says the app sent a question at 200 ms and the screen displayed a reply at 650 ms. The screen says ₹10,000. The saved server reply says ₹5,000, and the approved policy also says ₹5,000. Calculate the end-to-end elapsed time. Can you tell how long the model spent generating the reply? Where would you start investigating the changed amount, and what evidence would you keep?</p>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>The question goes from the interface to the app. The app selects the correct policy, assembles the prompt, and sends it to the model. The model returns “I can’t confirm,” which the app shows. The first missing piece is the approved excerpt in the assembled prompt. Check how the app passes the selected policy into the prompt. See whether the assembled request contains the right excerpt before asking the model to answer again.</p>
+<h5>Solution 2</h5>
+<p>Use “What fee applies if my Standard Savings balance is ₹4,999?” Attach the approved rule that a ₹100 monthly fee applies below ₹5,000. Expect a readable reply that gives ₹100 as a monthly charge for that balance. The saved answer fails. The amount agrees with the policy but the frequency contradicts it. Delivery worked. Check for the word “monthly” or equivalent meaning in the next run. Finding ₹100 alone would miss the problem.</p>
+<h5>Solution 3</h5>
+<p>A is PASS. The usable answer agrees with the policy. Save the case for the next basic check, and test other cases before making a broader claim.</p>
+<p>B is FAIL for delivery. Start with the connection and the request record and leave factual correctness unscored. C is FAIL for response handling. Something arrived, so compare the actual body with the agreed JSON format and see why it ended early. D is NEEDS REVIEW for what the reply should say. Ask the policy owner or reviewer to approve the expected behavior, then record the result under that rule.</p>
+<h5>Solution 4</h5>
+<p>The total is 650 − 200 = 450 ms. The whole request includes more than generation. You’d need the start and finish of the model stage to measure that part. The policy and returned model text agree, so start with the part that reads or displays the reply. Save the question, selected policy, raw server text, and displayed text together. The first observed change comes after the server returns.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>What jobs does the chat screen do? Name one job it doesn’t establish was done correctly.</li><li>How can you change the prompt and still use the same model?</li><li>What’s the difference between finding the approved paragraph and assembling the prompt?</li><li>What does an HTTP success status tell you? What does a readable JSON reply tell you?</li><li>Why record a timeout separately from a wrong minimum balance?</li><li>An ATM question returns a fallback. When would you record PASS, and when would you record NEEDS REVIEW?</li><li>What can one passed smoke test tell you about other questions and repeated attempts?</li><li>Which records would help you tell whether an amount changed in the model reply or on the way to the screen?</li></ol>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li><strong>The screen handles the interaction.</strong> It lets the customer send a question and see a reply. The fact that text appears tells you nothing by itself about which policy the app chose or whether the amount agrees with it.</li><li><strong>Change what you send.</strong> You might add an instruction to say when there’s no approved information. That changes the input. The same trained model can answer both requests.</li><li><strong>Follow the evidence.</strong> Retrieval locates the paragraph. Prompt assembly puts it with the instructions and question. A program can find the right paragraph and still leave it out of the request.</li><li><strong>Check each layer.</strong> A success status indicates success at the HTTP request level. A readable JSON reply gives you structured information you can inspect. You still have to check for the reply field and judge the answer against the policy.</li><li><strong>Keep the failure boundary visible.</strong> A timeout with no response leaves no answer to check. A wrong minimum is a claim you can read and compare with the approved amount. These observations send you to different stages.</li><li><strong>Decide using the expectation.</strong> PASS if the case explicitly requires a fallback and receives it. NEEDS REVIEW if you got readable text but don’t yet know what the assistant should say for that case. Record why.</li><li><strong>Scope the result.</strong> A smoke test shows the checked path met its expectation on that attempt. Try more questions and repeat runs to learn how behavior varies, using the same evaluation rule where it applies.</li><li><strong>Compare both sides of the handoff.</strong> Keep the selected policy and the actual request, the raw model result, and the text the user saw. If the returned amount is right and the displayed amount differs, investigate reply handling.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>Build a small simulated fee helper from a fresh copy of Step 7. Keep the six original cases so you can spot changes to paths you’ve already checked.</p>
+<ol><li><strong>Add the supported question.</strong> Before the <code>topics</code> line, store <code>fee_question = &quot;What fee applies if my Standard Savings balance is ₹4,999?&quot;</code>. Add the pair <code>fee_question: &quot;fee&quot;</code> to <code>topics</code>. Add the pair <code>&quot;fee&quot;: &quot;A ₹100 monthly fee applies below ₹5,000.&quot;</code> to <code>policy</code>.</li><li><strong>Write the checklist before running.</strong> For S7, expect the exact approved fee sentence under normal conditions. Add <code>(&quot;S7&quot;, fee_question, &quot;normal&quot;, &quot;A ₹100 monthly fee applies below ₹5,000.&quot;),</code> to the case list. For S8, use the same question and expected reply with <code>(&quot;S8&quot;, fee_question, &quot;timeout&quot;, &quot;A ₹100 monthly fee applies below ₹5,000.&quot;),</code>. Write which stage must work before you can check the text for either case.</li><li><strong>Run and explain the results.</strong> Record both verdicts and the report totals. Write one next check for the timeout. State how much this tells you about handling real fee questions.</li><li><strong>Trace the successful run on paper.</strong> Label “Use the approved policy or say you can’t confirm” as an instruction and the fee question as the user message. Show which selected policy goes with them in a real prompt. Mark the fixed-rule simulator as the reply source and <code>normal</code> as its setting. Write down the reply the app displays. For S8, mark the missing response at the connection. This is a paper trace of the handoffs. The simulator uses a lookup and a mode flag in place of a live prompt and model settings.</li></ol>
+<h5>Check your assignment</h5>
+<p>S7 passes because the question reaches the fee topic, the app finds the approved line, and the simulator’s readable reply matches it. S8 fails for delivery because the simulated response is absent. There’s no factual label for that attempt. The totals are 3 PASS, 4 FAIL, and 1 NEEDS REVIEW. In a real transport failure, check the request and connection records to see where the response was lost or whether the service received the request at all. Your extension checks one more saved question. Try alternate wording and missing fee evidence next if you want to test whether the helper recognizes nearby cases.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Treating the screen as the entire application.</strong> If the server saved ₹5,000 and the chat shows ₹10,000, check what happened after the response. If the server saved ₹10,000, follow the question further back.</li><li><strong>Treating the prompt as the model.</strong> You can attach a different sentence about the fee while sending both requests to the same model. Keep a record of the instructions and the model version separately so you can see what changed.</li><li><strong>Calling an app reliable after one correct reply.</strong> One correct ₹5,000 reply leaves open how the app handles another wording, a fee question, or a long conversation. Try those paths and repeat a few cases.</li><li><strong>Calling a smoke test a full evaluation.</strong> A successful lookup gets you to the next round of tests. A full evaluation plan needs explicit goals and varied cases. Include questions where the app should say it can’t confirm the answer.</li><li><strong>Expecting a simulator to behave like a model.</strong> If you replace one word in the question, the exact lookup may fail. A real model can respond to new wording. The simulator gives you predictable ways to practice checking what the app received and returned.</li><li><strong>Marking a technical error as a wrong policy answer.</strong> A timeout gives you no claim to check. Malformed JSON can stop the app before it has readable text. A readable answer of ₹10,000 gives you a policy mistake to investigate directly.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>You can now follow a question from the interface to the policy lookup, then through the prompt, response, and display. You can write an expected result before running a smoke test, record what came back, and tell a wrong answer from a missing or unreadable result.</p>
+<p>This completes Module 1. Next is <a href="#m02-t01">Objectives, dimensions and failure taxonomy</a>. You’ll decide what good answers should do across more than one case and give recurring problems consistent names. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
   <details class="lesson-disclosure">
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t02">Inference, sampling and repeatability</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Follow a frozen request through a tiny Python fixture reader. Optionally compare with a single local model call after setup.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P01, P03 and P04 for Python replay. The optional local request also uses P05.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Classify timeout, malformed output and plausible-but-wrong response, then name which stage owns each.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>0h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>

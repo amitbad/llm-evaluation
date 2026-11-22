@@ -8,7 +8,7 @@ const vm = require("node:vm");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const html = read("docs/master-curriculum.html");
 const data = JSON.parse(html.match(/<script id="roadmap-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
-const authoredLessons = new Set(["M01-T01", "M01-T02", "M02-T01", "M02-T02", "M02-T03"]);
+const authoredLessons = new Set(["M01-T01", "M01-T02", "M01-T03", "M02-T01", "M02-T02", "M02-T03"]);
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(read("docs/learning_roadmap.js"), "const CurriculumRoadmap = {};")
   .replace("LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);", "")
@@ -313,6 +313,10 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       if (topic.id === "M01-T02") {
         assert.match(markup, /<h4>Independent Assignment<\/h4>/);
         assert.match(markup, /<a href="#m01-t03">Application architecture and a first smoke test<\/a>/);
+      }
+      if (topic.id === "M01-T03") {
+        assert.match(markup, /<h4>Independent Assignment<\/h4>/);
+        assert.match(markup, /<a href="#m02-t01">Objectives, dimensions and failure taxonomy<\/a>/);
       }
       if (topic.id === "M02-T02") {
         assert.match(markup, /<h4>Independent Assignment<\/h4>/);
