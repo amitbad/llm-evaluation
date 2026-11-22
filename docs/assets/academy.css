@@ -85,9 +85,9 @@
 .academy-footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.55rem 1rem;
   padding:.85rem 0 1.2rem; border-top:1px solid var(--stroke); color:var(--secondary); font-size:.9rem; }
 .academy-page .curriculum-heading { background:linear-gradient(123deg,var(--surface),var(--violet-wash));
-  padding:.9rem 1.05rem; border:1px solid var(--stroke); border-radius:.8rem; margin-bottom:.8rem; }
-.academy-page .curriculum-heading h1 { font:750 clamp(1.55rem,3vw,2.6rem)/1.13 system-ui,sans-serif; letter-spacing:-.035em; max-width:none; }
-.academy-page .curriculum-heading p { color:var(--secondary); margin:.25rem 0 0; }
+  padding:.5rem .85rem; border:1px solid var(--stroke); border-radius:.8rem; margin-bottom:.45rem; }
+.academy-page .curriculum-heading h1 { font:750 clamp(1.55rem,calc(1.25rem + 1.3vw),2.125rem)/1.13 system-ui,sans-serif; letter-spacing:-.035em; max-width:none; }
+.academy-page .curriculum-heading p { color:var(--secondary); font-size:.94rem; margin:.15rem 0 0; }
 .academy-skip { position:absolute; left:.75rem; top:.75rem; z-index:10; padding:.6rem; background:var(--surface); transform:translateY(-200%); }
 .academy-skip:focus { transform:none; }
 
@@ -132,7 +132,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 
 /* Standalone curriculum also embeds these rules. */
 .academy-page { --ink:var(--text); --muted:var(--secondary); --paper:var(--page); --line:var(--stroke);
-  --accent:var(--blue); --soft:var(--blue-wash); }
+  --accent:var(--blue); --soft:var(--blue-wash); --lesson-title-size:clamp(1.5rem,calc(1.2rem + 1vw),1.875rem); }
 .academy-page .academy-layout { padding-block:.75rem; }
 .academy-page #tabs { display:grid; gap:.17rem; margin:0; border-bottom:0; }
 .academy-page #tabs a { border-bottom:0; padding:.48rem .5rem; color:var(--secondary); }
@@ -144,9 +144,15 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .academy-page .panel { padding-bottom:0; min-width:0; }
 .academy-page :is(.panel,.quick-plan,.module,.topic,#preparation) { scroll-margin-top:5rem; }
 .academy-page .panel > p,.academy-page .quick-plan p,.academy-page .module-body > .field-list dd { max-width:76ch; }
-.academy-page .mode-picker { margin:.8rem 0 1rem; }
-.academy-page .mode-grid a { padding:.65rem .82rem; color:var(--cyan); border-color:var(--stroke); background:var(--cyan-wash); }
-.academy-page .mode-grid a:nth-child(2) { color:var(--violet); background:var(--violet-wash); }
+.study-mode-picker { display:inline-flex; flex-wrap:wrap; gap:.15rem; margin:0 0 .55rem; padding:.15rem;
+  border:1px solid var(--stroke); border-radius:.55rem; background:var(--panel); }
+.academy-page .study-mode-picker a { padding:.28rem .65rem; border-radius:.35rem; color:var(--secondary);
+  font-size:.88rem; font-weight:650; text-decoration:none; }
+.academy-page .study-mode-picker a:hover { background:var(--surface); }
+.academy-page .study-mode-picker [aria-current] { background:var(--blue-wash); color:var(--blue); box-shadow:inset 0 0 0 1px var(--blue); }
+@media screen {
+  :is(#quick,#detail) > h2 { position:absolute; inline-size:1px; block-size:1px; overflow:hidden; clip-path:inset(50%); }
+}
 .academy-page .path-card,.academy-page .quick-plan,.academy-page .complete-strands a,
 .academy-page .road-board,.academy-page .road-inspector,.academy-page .road-results { background:var(--surface); }
 .academy-page .path-metrics,.academy-page #road-estimate { color:var(--cyan); }
@@ -158,27 +164,31 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .academy-page .road-inspector { max-height:calc(clamp(25rem,65vh,49rem) + 6rem); }
 .academy-page .mode-action { background:#224b9e; color:#fff; }
 .academy-page .mode-action:hover { background:#173576; }
-.study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.25rem .6rem; list-style:none; padding:0; margin:0 0 .65rem; }
+.study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.15rem .45rem; list-style:none; padding:0; margin:0 0 .3rem;
+  font-size:.9rem; line-height:1.4; }
 .study-breadcrumb li { margin:0; }
-.study-breadcrumb li + li::before { content:"›" / ""; margin-inline-end:.6rem; color:var(--secondary); }
-.guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem; padding:clamp(.7rem,1.8vw,1.35rem); scroll-margin-top:7rem; }
-.guided-header { margin-block:.65rem 1rem; }
-#guided-title { margin:0; color:var(--text); font-size:clamp(1.35rem,2.7vw,1.95rem); line-height:1.18; letter-spacing:-.02em; overflow-wrap:anywhere; }
-#guided-estimate { margin:.45rem 0 .75rem; font-size:.9rem; }
+.study-breadcrumb li + li::before { content:"›" / ""; margin-inline-end:.45rem; color:var(--secondary); }
+.guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem;
+  padding:.55rem clamp(.7rem,1.8vw,1.35rem) .85rem; scroll-margin-top:7rem; }
+.guided-header { margin-block:.4rem .75rem; }
+#guided-title,.topic[open] > summary > .item-title { margin:0; color:var(--text); font-size:var(--lesson-title-size);
+  line-height:1.18; letter-spacing:-.02em; overflow-wrap:anywhere; }
+#guided-estimate { margin:.2rem 0 .35rem; font-size:.9rem; }
 .guided-progress { max-width:24rem; color:var(--secondary); font-size:.85rem; }
-.guided-progress label { display:block; margin-bottom:.3rem; }
+.guided-progress label { display:block; margin-bottom:.15rem; }
 #guided-progress { height:.45rem; accent-color:var(--cyan); }
-.lesson-reading { min-inline-size:0; line-height:1.6; overflow-wrap:anywhere; }
+.lesson-reading { min-inline-size:0; font-size:1.0625rem; line-height:1.6; overflow-wrap:anywhere; }
 .lesson-reading > * + * { margin-block-start:.8rem; }
-.lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1.02rem,1.65vw,1.22rem); }
-.lesson-section :is(h4,h5) { margin:0; line-height:1.25; color:var(--text); }
-.lesson-section h4 { font-size:clamp(1.12rem,1.8vw,1.38rem); }
-.lesson-section h5 { font-size:1.04rem; }
-.lesson-section p { margin:.4rem 0 0; }
-.lesson-chapter > h4 { padding-block-start:1rem; margin-block-start:1.45rem; border-block-start:1px solid var(--stroke); }
+.lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1rem,1.4vw,1.125rem); }
+.lesson-section :is(h4,h5,h6) { margin:0; font-weight:700; line-height:1.25; color:var(--text); }
+.lesson-section h4 { font-size:1.5rem; }
+.lesson-section h5 { font-size:1.3125rem; }
+.lesson-section h6 { font-size:1.15625rem; }
+.lesson-section :is(p,ul,ol) { margin:.4rem 0 0; }
+.lesson-chapter > h4 { padding-block-start:.25rem; margin-block-start:1rem; border-block-start:1px solid var(--stroke); }
 .lesson-chapter > h4:first-child { padding-block-start:0; margin-block-start:0; border:0; }
-.lesson-chapter > h5 { margin-block-start:1.1rem; }
-.lesson-chapter :is(p,ul,ol) + :is(p,ul,ol) { margin-block-start:.6rem; }
+.lesson-chapter > :is(h5,h6),.lesson-supplement .lesson-disclosure-body > :is(h5,h6) { margin-block-start:.875rem; }
+.lesson-chapter :is(p,ul,ol) + :is(p,ul,ol) { margin-block-start:.5rem; }
 .lesson-reading .lesson-evidence {
   display:grid; grid-template-columns:minmax(8rem,10.5rem) minmax(0,1fr); gap:.2rem .9rem;
   margin-block:.3rem 0; padding:.3rem 0; border-block-end:1px solid var(--stroke);
@@ -212,7 +222,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .lesson-disclosure summary { font-weight:650; padding:.5rem .65rem; }
 .lesson-disclosure-body { padding:.2rem .65rem .55rem; }
 .lesson-chapter :is(.lesson-supplement,.lesson-output) { margin-block:.5rem .7rem; }
-.lesson-supplement summary :is(h4,h5) { font-size:.96rem; }
+.lesson-supplement summary :is(h4,h5) { font-size:1.125rem; }
 .lesson-output pre { margin:0; border:0; border-block-start:1px solid var(--stroke); }
 #guided-status { margin-block:1.2rem .65rem; color:var(--secondary); font-size:.9rem; }
 .guided-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .9rem; padding-top:.65rem; border-top:1px solid var(--stroke); }
@@ -310,9 +320,6 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 @media(max-width:620px) {
   .academy-page :is(.panel,.quick-plan,.module,.topic,#preparation) { scroll-margin-top:7rem; }
   .lesson-reading .lesson-evidence { grid-template-columns:minmax(0,1fr); }
-  .academy-page .mode-grid { gap:.45rem; }
-  .academy-page .mode-grid a { font-size:.86rem; }
-  .academy-page .mode-grid strong { font-size:1rem; }
   .academy-page .complete-strands a { min-height:2.75rem; }
   .academy-page button { min-height:2.75rem; }
   .academy-page #road-viewport { height:24rem; }

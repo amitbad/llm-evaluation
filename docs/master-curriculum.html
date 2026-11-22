@@ -46,8 +46,6 @@ caption { font-weight:650; text-align:left; padding-bottom:.45rem; }
 th,td { text-align:left; vertical-align:top; border-bottom:1px solid var(--line); padding:.65rem .7rem; }
 th { color:#204139; background:var(--soft); }
 td:first-child { min-width:7rem; }
-.status-counts { display:flex; flex-wrap:wrap; gap:.5rem; list-style:none; padding:0; }
-.status-counts li { background:var(--soft); border:1px solid var(--line); padding:.25rem .6rem; border-radius:.4rem; margin:0; }
 .course-progress,.filter-box { border:1px solid var(--line); border-radius:.65rem; background:var(--surface); padding:1rem 1.2rem; margin:1rem 0; }
 .course-progress { max-width:41rem; }
 progress { display:block; width:100%; height:.9rem; accent-color:var(--accent); }
@@ -80,7 +78,8 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
 .item-id { font-size:.85em; color:var(--accent); white-space:nowrap; margin-right:.2rem; }
 .topic-meta,.module-progress,.track { color:var(--muted); font-size:.9rem; }
 .module-progress { font-weight:500; }
-.topic-controls { display:flex; align-items:center; gap:.6rem 1rem; flex-wrap:wrap; border-top:1px solid var(--line); }
+.topic-controls { display:flex; align-items:center; gap:.3rem .75rem; flex-wrap:wrap; border-top:1px solid var(--line); }
+.topic-controls p { margin-block:.3rem; }
 .topic-controls label { display:inline-flex; align-items:center; gap:.45rem; }
 .topic-controls select { width:auto; }
 .topic-link { margin-left:auto; }
@@ -180,14 +179,7 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
   #roadmap { display:none !important; }
 }
 
-.mode-picker { margin:1.7rem 0 .6rem; }
-.mode-picker h2 { font-size:clamp(1.5rem,3.7vw,2rem); }
-.mode-grid,.path-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
-.mode-grid a { text-decoration:none; display:grid; gap:.2rem; padding:1rem 1.15rem;
-  border:1px solid #b2cbbf; border-radius:.75rem; background:#e9f4ee; color:#184c3e; }
-.mode-grid a:nth-child(2) { background:#eaf0fa; color:#24436a; border-color:#bacce5; }
-.mode-grid a:hover { box-shadow:0 0 0 2px currentColor; }
-.mode-grid strong { font-size:1.12rem; }
+.path-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
 .mode-tagline { font-size:1.13rem; font-weight:700; }
 .path-card,.quick-plan,.plan-resume,.complete-strands a { background:#fff; border:1px solid var(--line); border-radius:.7rem; }
 .path-card { display:flex; align-items:start; flex-direction:column; padding:1rem; border-top:4px solid #43886c; }
@@ -228,9 +220,9 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
 .complete-strands { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
 .complete-strands a { display:grid; padding:.65rem .8rem; }
 .complete-strands span { text-decoration:none; color:var(--ink); font-size:.91rem; }
-@media(max-width:640px) { .mode-grid,.path-grid,.complete-strands { grid-template-columns:1fr; } }
+@media(max-width:640px) { .path-grid,.complete-strands { grid-template-columns:1fr; } }
 @media print {
-  .mode-picker,.plan-resume,.plan-tools { display:none !important; }
+  .study-mode-picker,.plan-resume,.plan-tools { display:none !important; }
 }
 /* Shared visual system for the dashboard, curriculum and lesson navigation. */
 :root {
@@ -319,9 +311,9 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
 .academy-footer { display:flex; justify-content:space-between; flex-wrap:wrap; gap:.55rem 1rem;
   padding:.85rem 0 1.2rem; border-top:1px solid var(--stroke); color:var(--secondary); font-size:.9rem; }
 .academy-page .curriculum-heading { background:linear-gradient(123deg,var(--surface),var(--violet-wash));
-  padding:.9rem 1.05rem; border:1px solid var(--stroke); border-radius:.8rem; margin-bottom:.8rem; }
-.academy-page .curriculum-heading h1 { font:750 clamp(1.55rem,3vw,2.6rem)/1.13 system-ui,sans-serif; letter-spacing:-.035em; max-width:none; }
-.academy-page .curriculum-heading p { color:var(--secondary); margin:.25rem 0 0; }
+  padding:.5rem .85rem; border:1px solid var(--stroke); border-radius:.8rem; margin-bottom:.45rem; }
+.academy-page .curriculum-heading h1 { font:750 clamp(1.55rem,calc(1.25rem + 1.3vw),2.125rem)/1.13 system-ui,sans-serif; letter-spacing:-.035em; max-width:none; }
+.academy-page .curriculum-heading p { color:var(--secondary); font-size:.94rem; margin:.15rem 0 0; }
 .academy-skip { position:absolute; left:.75rem; top:.75rem; z-index:10; padding:.6rem; background:var(--surface); transform:translateY(-200%); }
 .academy-skip:focus { transform:none; }
 
@@ -366,7 +358,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 
 /* Standalone curriculum also embeds these rules. */
 .academy-page { --ink:var(--text); --muted:var(--secondary); --paper:var(--page); --line:var(--stroke);
-  --accent:var(--blue); --soft:var(--blue-wash); }
+  --accent:var(--blue); --soft:var(--blue-wash); --lesson-title-size:clamp(1.5rem,calc(1.2rem + 1vw),1.875rem); }
 .academy-page .academy-layout { padding-block:.75rem; }
 .academy-page #tabs { display:grid; gap:.17rem; margin:0; border-bottom:0; }
 .academy-page #tabs a { border-bottom:0; padding:.48rem .5rem; color:var(--secondary); }
@@ -378,9 +370,15 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .academy-page .panel { padding-bottom:0; min-width:0; }
 .academy-page :is(.panel,.quick-plan,.module,.topic,#preparation) { scroll-margin-top:5rem; }
 .academy-page .panel > p,.academy-page .quick-plan p,.academy-page .module-body > .field-list dd { max-width:76ch; }
-.academy-page .mode-picker { margin:.8rem 0 1rem; }
-.academy-page .mode-grid a { padding:.65rem .82rem; color:var(--cyan); border-color:var(--stroke); background:var(--cyan-wash); }
-.academy-page .mode-grid a:nth-child(2) { color:var(--violet); background:var(--violet-wash); }
+.study-mode-picker { display:inline-flex; flex-wrap:wrap; gap:.15rem; margin:0 0 .55rem; padding:.15rem;
+  border:1px solid var(--stroke); border-radius:.55rem; background:var(--panel); }
+.academy-page .study-mode-picker a { padding:.28rem .65rem; border-radius:.35rem; color:var(--secondary);
+  font-size:.88rem; font-weight:650; text-decoration:none; }
+.academy-page .study-mode-picker a:hover { background:var(--surface); }
+.academy-page .study-mode-picker [aria-current] { background:var(--blue-wash); color:var(--blue); box-shadow:inset 0 0 0 1px var(--blue); }
+@media screen {
+  :is(#quick,#detail) > h2 { position:absolute; inline-size:1px; block-size:1px; overflow:hidden; clip-path:inset(50%); }
+}
 .academy-page .path-card,.academy-page .quick-plan,.academy-page .complete-strands a,
 .academy-page .road-board,.academy-page .road-inspector,.academy-page .road-results { background:var(--surface); }
 .academy-page .path-metrics,.academy-page #road-estimate { color:var(--cyan); }
@@ -392,27 +390,31 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .academy-page .road-inspector { max-height:calc(clamp(25rem,65vh,49rem) + 6rem); }
 .academy-page .mode-action { background:#224b9e; color:#fff; }
 .academy-page .mode-action:hover { background:#173576; }
-.study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.25rem .6rem; list-style:none; padding:0; margin:0 0 .65rem; }
+.study-breadcrumb ol { display:flex; flex-wrap:wrap; gap:.15rem .45rem; list-style:none; padding:0; margin:0 0 .3rem;
+  font-size:.9rem; line-height:1.4; }
 .study-breadcrumb li { margin:0; }
-.study-breadcrumb li + li::before { content:"›" / ""; margin-inline-end:.6rem; color:var(--secondary); }
-.guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem; padding:clamp(.7rem,1.8vw,1.35rem); scroll-margin-top:7rem; }
-.guided-header { margin-block:.65rem 1rem; }
-#guided-title { margin:0; color:var(--text); font-size:clamp(1.35rem,2.7vw,1.95rem); line-height:1.18; letter-spacing:-.02em; overflow-wrap:anywhere; }
-#guided-estimate { margin:.45rem 0 .75rem; font-size:.9rem; }
+.study-breadcrumb li + li::before { content:"›" / ""; margin-inline-end:.45rem; color:var(--secondary); }
+.guided-lesson { background:var(--surface); border:1px solid var(--stroke); border-radius:.65rem;
+  padding:.55rem clamp(.7rem,1.8vw,1.35rem) .85rem; scroll-margin-top:7rem; }
+.guided-header { margin-block:.4rem .75rem; }
+#guided-title,.topic[open] > summary > .item-title { margin:0; color:var(--text); font-size:var(--lesson-title-size);
+  line-height:1.18; letter-spacing:-.02em; overflow-wrap:anywhere; }
+#guided-estimate { margin:.2rem 0 .35rem; font-size:.9rem; }
 .guided-progress { max-width:24rem; color:var(--secondary); font-size:.85rem; }
-.guided-progress label { display:block; margin-bottom:.3rem; }
+.guided-progress label { display:block; margin-bottom:.15rem; }
 #guided-progress { height:.45rem; accent-color:var(--cyan); }
-.lesson-reading { min-inline-size:0; line-height:1.6; overflow-wrap:anywhere; }
+.lesson-reading { min-inline-size:0; font-size:1.0625rem; line-height:1.6; overflow-wrap:anywhere; }
 .lesson-reading > * + * { margin-block-start:.8rem; }
-.lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1.02rem,1.65vw,1.22rem); }
-.lesson-section :is(h4,h5) { margin:0; line-height:1.25; color:var(--text); }
-.lesson-section h4 { font-size:clamp(1.12rem,1.8vw,1.38rem); }
-.lesson-section h5 { font-size:1.04rem; }
-.lesson-section p { margin:.4rem 0 0; }
-.lesson-chapter > h4 { padding-block-start:1rem; margin-block-start:1.45rem; border-block-start:1px solid var(--stroke); }
+.lesson-reading .lesson-intro { margin-top:0; font-size:clamp(1rem,1.4vw,1.125rem); }
+.lesson-section :is(h4,h5,h6) { margin:0; font-weight:700; line-height:1.25; color:var(--text); }
+.lesson-section h4 { font-size:1.5rem; }
+.lesson-section h5 { font-size:1.3125rem; }
+.lesson-section h6 { font-size:1.15625rem; }
+.lesson-section :is(p,ul,ol) { margin:.4rem 0 0; }
+.lesson-chapter > h4 { padding-block-start:.25rem; margin-block-start:1rem; border-block-start:1px solid var(--stroke); }
 .lesson-chapter > h4:first-child { padding-block-start:0; margin-block-start:0; border:0; }
-.lesson-chapter > h5 { margin-block-start:1.1rem; }
-.lesson-chapter :is(p,ul,ol) + :is(p,ul,ol) { margin-block-start:.6rem; }
+.lesson-chapter > :is(h5,h6),.lesson-supplement .lesson-disclosure-body > :is(h5,h6) { margin-block-start:.875rem; }
+.lesson-chapter :is(p,ul,ol) + :is(p,ul,ol) { margin-block-start:.5rem; }
 .lesson-reading .lesson-evidence {
   display:grid; grid-template-columns:minmax(8rem,10.5rem) minmax(0,1fr); gap:.2rem .9rem;
   margin-block:.3rem 0; padding:.3rem 0; border-block-end:1px solid var(--stroke);
@@ -446,7 +448,7 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .lesson-disclosure summary { font-weight:650; padding:.5rem .65rem; }
 .lesson-disclosure-body { padding:.2rem .65rem .55rem; }
 .lesson-chapter :is(.lesson-supplement,.lesson-output) { margin-block:.5rem .7rem; }
-.lesson-supplement summary :is(h4,h5) { font-size:.96rem; }
+.lesson-supplement summary :is(h4,h5) { font-size:1.125rem; }
 .lesson-output pre { margin:0; border:0; border-block-start:1px solid var(--stroke); }
 #guided-status { margin-block:1.2rem .65rem; color:var(--secondary); font-size:.9rem; }
 .guided-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .9rem; padding-top:.65rem; border-top:1px solid var(--stroke); }
@@ -544,9 +546,6 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 @media(max-width:620px) {
   .academy-page :is(.panel,.quick-plan,.module,.topic,#preparation) { scroll-margin-top:7rem; }
   .lesson-reading .lesson-evidence { grid-template-columns:minmax(0,1fr); }
-  .academy-page .mode-grid { gap:.45rem; }
-  .academy-page .mode-grid a { font-size:.86rem; }
-  .academy-page .mode-grid strong { font-size:1rem; }
   .academy-page .complete-strands a { min-height:2.75rem; }
   .academy-page button { min-height:2.75rem; }
   .academy-page #road-viewport { height:24rem; }
@@ -667,13 +666,10 @@ stroke-width="1.7" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></s
     <h1>LLM Evaluation Engineering</h1>
     <p>18 modules · 53 topics · 238h core study · <a href="#course-progress">Your progress</a></p>
   </header>
-  <section class="mode-picker" aria-labelledby="mode-heading">
-    <h2 id="mode-heading">Choose Your Learning Journey</h2>
-    <div class="mode-grid">
-      <a href="#quick"><strong>Quick Learning</strong><span>Learn what you need. Skip what you don't.</span></a>
-      <a href="#detail"><strong>Complete Course</strong><span>From beginner to advanced evaluation engineering.</span></a>
-    </div>
-  </section>
+  <nav class="study-mode-picker" aria-label="Learning mode">
+    <a href="#quick">Quick Learning</a>
+    <a href="#detail">Complete Course</a>
+  </nav>
   <section class="panel" id="quick"><h2>Quick Learning</h2>
 <div id="quick-catalog">
   <p class="mode-tagline">Learn what you need. Skip what you don't.</p>
@@ -1561,37 +1557,427 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <a class="topic-link" href="#m01-t01">Link to topic</a>
     </div>
     <div class="topic-material lesson-reading" id="material-m01-t01">
-  <p class="lesson-intro" data-lesson-search>Missing evidence or truncation can look like a reasoning failure.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Tokens versus words, system and user roles, context budget, truncation, input/output limits and message ordering.</p>
-  </section>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Compare two saved prompts that differ only in whether the fee schedule fits in the supplied context.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Read a short text fixture. The optional Python replay uses P01 and P03.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Mark which evidence the model saw and predict when the reply should abstain.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Explain how a language model receives text as tokens and why token counts affect capacity and cost.</li><li>Label the parts of a saved conversation and put the messages in the right order.</li><li>Calculate how much room is available for input and output in a model request.</li><li>Trace which evidence was kept or dropped and judge whether a reply is supported.</li><li>Run an offline diagnostic that distinguishes missing evidence from an input that cannot fit.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>A customer asks Harbor Leaf Bank, “What is the minimum balance for Standard Savings?” The assistant replies, “I can’t confirm that from the supplied policy.” The bank has a policy that gives the answer, ₹5,000. Before you decide that the assistant performed badly, ask a smaller question. Did it receive the policy with the request? If an older message carrying the policy was dropped, the right fix may be in the application that assembled the request.</p>
+<p>An <strong>LLM</strong>, or large language model, is a system that can generate text in response to input. This lesson uses a fictional bank, saved messages, and small Python programs. The bank and its policy are teaching data and provide no financial advice. The approved Standard Savings policy in this lesson requires a minimum of ₹5,000. The below-minimum fee is ₹100 per month and applies when the balance is below ₹5,000. All counts, model limits, and prices in the lab are invented for arithmetic practice.</p>
+<h5>Plan your study session</h5>
+<p>Set aside about 3.5 hours for the full lesson. Spend an hour on the concepts and worked demonstrations, an hour following the Python snippets, an hour trying the changes and completing the assignment, and half an hour checking your answers. Start with the explanations and try the arithmetic by hand before running the code. You can follow the worked demonstrations even if you are new to Python.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. What a token represents</h5>
+<p>To work with text, a model first needs a way to represent it as numbers. A <strong>tokenizer</strong> is the code that splits the text into pieces and converts them into numeric IDs from a known set. Each piece is called a <strong>token</strong>. A model generates IDs for output tokens, which can then be turned back into text.</p>
+<p>One token can cover a whole word, part of a word, punctuation, or a fragment that includes a space. Think about the two visible words in “balance ₹5,000.” A made-up splitter could represent the text as “balance”, “ ₹”, “5”, “,”, and “000”. That is five pieces for two space-separated units in this example. This split is just an illustration. A real tokenizer might group the pieces differently. Languages, unfamiliar names, spaces, and formatting can change the number of pieces. Two tokenizers may give different counts for the same text.</p>
+<p><strong>Tokenization</strong> is the splitting and numbering process. It matters when you ask how much text fits or what a request costs. Counting words with a document editor gives an approximation at best. In a real integration, use the tokenizer for the model you are calling or the service&#x27;s measured usage when available. Record which method produced the count. The labs use numbers assigned by the author. Python’s ordinary string length and splitting operations alone do not reproduce a model tokenizer.</p>
+<p><strong>Input tokens</strong> represent the text sent into the model. <strong>Output tokens</strong> represent the text it generated. For a fictional price of 2 paise per input token and 6 paise per output token, 42 input tokens and 6 generated tokens would cost 120 paise, or ₹1.20. The arithmetic is 42 × 2 plus 6 × 6. The unused room you leave for a reply is capacity. This teaching bill uses only tokens processed or generated. Actual billing depends on the service and features in use. Reducing unnecessary text may lower cost, but dropping the essential policy can make the reply unreliable.</p>
+<h5>2. Conversations are ordered records</h5>
+<p>A <strong>message</strong> is one record in a conversation. It usually has a <strong>role</strong>, which identifies where it came from, and <strong>content</strong>, which carries its text or other data. The <strong>request</strong> is the information the application sends to the model for a particular turn. A turn is one exchange in the conversation. The <strong>reply</strong> is what comes back to the application. The model gets the request assembled for that turn, which may contain only part of the conversation you see in a chat interface.</p>
+<p>Here are five role names you may see in an application. APIs differ in the roles they expose and how they represent instructions and tool calls. These descriptions explain the purpose of each role in the examples.</p>
+<ul><li><strong>System.</strong> Model-facing instructions for how the assistant should act. In this lesson the system message says it is Harbor Leaf Bank&#x27;s support assistant.</li><li><strong>Developer.</strong> Instructions from the application builder. Here the developer says to use approved policy evidence and to say when an answer cannot be confirmed.</li><li><strong>User.</strong> What the customer asks or supplies. “What is the Standard Savings minimum?” is a user message. If the user guesses ₹10,000, their guess is still user input. It has no policy authority.</li><li><strong>Assistant.</strong> Text or a structured request produced by the assistant. A prior reply can appear as an assistant message in later requests. Its claim is evidence of what was said in the past. You still need a policy to establish whether the claim is accurate.</li><li><strong>Tool.</strong> Data returned by a program the assistant or application used. In the example a lookup tool returns an approved policy excerpt. A lookup result can also contain a draft, an error, or text from an untrusted source. Review what it contains and where it came from.</li></ul>
+<p>A <strong>tool call</strong> asks a program to do something, such as look up a policy. A <strong>tool result</strong> is its return value, such as the policy excerpt. An actual API may attach an identifier to a call and its result so the application can match them. The saved examples here use short readable records in place of those structured fields. They never run a lookup.</p>
+<p><strong>Message order</strong> is the sequence of records in the request. Start with the instructions, then the customer&#x27;s question, the assistant&#x27;s lookup request, and the corresponding tool result. An assistant reply can then use the result. On a subsequent turn the application might include that earlier exchange alongside a new question. If a result is attached to the wrong call, comes before its call, or is omitted, the request can become invalid or the evidence can be misinterpreted. Always keep the actual request or an equivalent trace before judging the answer. A <strong>trace</strong> is a saved record of what happened.</p>
+<h5>3. Context windows and token budgets</h5>
+<p>The <strong>context window</strong> is the capacity for information the model can handle in a request and its generation. Think of it as a shared budget in this lesson. Instructions, messages, tool outputs, source excerpts, and the customer&#x27;s current question use input capacity. Encoding a message as part of a request can also add tokens for things like role markers. <strong>Overhead</strong> is the name we use for those extra tokens in the teaching examples. The reply uses output capacity.</p>
+<p>Some model interfaces impose a separate <strong>input limit</strong> or <strong>output limit</strong>. An output limit is the largest reply the interface allows. The lab also uses an <strong>output reserve</strong>, the room the application decides to leave for the upcoming reply. Choose a reserve inside the output limit. Actual interfaces differ in how they enforce limits or reserve space. Use their documented rules for real requests.</p>
+<p>Work through a small numerical example. Suppose the teaching window is 60 tokens, the input limit is 54, the output limit is 16, and you leave 12 tokens for the reply. The shared window gives you 60 − 12 = 48 tokens for input. The separate input cap is 54. Both limits must be respected, so 48 is the effective input budget. If your assembled input takes 52 tokens, its headroom is 48 − 52 = −4. A negative number is a shortfall. Trim at least four input tokens, adjust the reserve if the task can still be answered clearly, or reject the request before sending it. A shorter reply reserve leaves more input room but may also shorten what the model can say.</p>
+<p>An application can <strong>truncate</strong> a conversation, which means dropping some of its content to fit the budget. One simple strategy removes the oldest eligible history first while keeping instructions and the latest question. Other applications summarize history, choose evidence by relevance, or stop when the request is too large. The lab’s rule belongs to our fictional application. A chat model is not guaranteed to keep, summarize, or drop any particular message for you.</p>
+<p>Use a second version of the same teaching budget to see the risk. Reserve 12 tokens and hold the protected input at 28. An old policy exchange takes 14 and more recent small talk takes 10. The total input is 52. An oldest-first trim drops the policy group and leaves 38 tokens, well inside the 48-token budget. The system has made the request safe to send, but the evidence for the answer has gone. If you remove the small talk instead, input is 42 and the policy survives. Decide what matters for the task, then check that the kept conversation is still valid. If two tool messages need each other to make sense, trim or retain that exchange as a group.</p>
+<h5>4. Diagnose a failure at the stage where it happened</h5>
+<p>Evaluate the assistant&#x27;s claim against the exact evidence it received. If the approved excerpt was present and the reply asserted ₹10,000, the reply contradicts evidence the model could see. If the excerpt was missing and it said it could not confirm the amount, the reply followed the instruction to abstain. <strong>Abstain</strong> means declining to make a factual claim when there is too little evidence. In that second run the application still needs attention if its goal was to deliver the approved answer. Both cases are worth recording, for different reasons.</p>
+<p>Keep three pieces of information together. Save the intended request and its token budget. Save the messages actually sent or the list of groups dropped before sending. Save the reply and whether it met the expected behavior for that input. This distinguishes a request construction problem from a problem in the reply. It also prevents an old assistant answer or a customer&#x27;s guess from becoming the policy you grade against.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. The policy fits and the answer is supported</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What minimum balance should I maintain for Standard Savings?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The approved Harbor Leaf policy requires ₹5,000. The application retains that policy and drops recent small talk, leaving 42 input tokens under an effective budget of 48.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>“The minimum required balance for Standard Savings is ₹5,000.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Verify that the policy excerpt appears in a tool result after the lookup call and that it covers Standard Savings. The amount agrees with the approved evidence. There are six input tokens of room left. The fact that the request fits gives you the chance to check the reply. The evidence is what supports the amount.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>No failure is observed on this case. Record the kept policy group so a later run can use the same evidence.</span></p>
+<h5>Example 2. A tool result appears in the wrong order</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“Does Harbor Leaf charge a fee below the minimum?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The current policy in the intended lookup result says a ₹100 monthly fee applies below ₹5,000. The captured sequence contains the result record before the lookup call to which it belongs.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The saved trace contains no reply because the request was rejected before generation.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Match the result to its call and restore the recorded chronology before replaying. The trace cannot support a judgment about the wording of the assistant&#x27;s answer because there was no answer. Mark that judgment N/A, meaning not applicable on this attempt.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Request assembly failure. Test the application’s ordering or call matching before trying to improve the assistant&#x27;s policy wording.</span></p>
+<h5>Example 3. The same question loses its evidence</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What minimum balance should I maintain for Standard Savings?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Harbor Leaf&#x27;s real answer within the fictional scenario is ₹5,000. In this saved request the oldest-first trim has removed the policy exchange and left 38 input tokens. The model receives the question and instructions without the approved amount.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>“I can’t confirm the minimum from the supplied policy.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The reply obeys the evidence rule by abstaining. Still record that the application failed to supply the policy needed to answer the question. Compare this attempt with Example 1. Both requests fit. One retained the useful evidence.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Missing policy evidence in the request. Keep the same question and try trimming recent chat first. Then compare the next saved reply with the retained policy.</span></p>
+<p>Try the fee question as a second replay. Ask “What fee applies below the minimum?” in both saved requests. Keep the instructions unchanged. In the request that retains the fee schedule, check for ₹100 per month below ₹5,000. In the request that loses it, expect the assistant to say it cannot confirm the fee. A reply that confidently guesses the right fee still lacks support from that second request.</p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Python 3.10 or newer. Each step is complete on its own. The lab uses only standard Python, fictional saved data, and illustrative token counts. Running it needs no model, credentials, package installation, or network access.</p>
+<p><strong>Online editor.</strong> Use a Python 3 editor that runs without an account. Choose <strong>Copy Code</strong> on a Python block, paste it into the editor, and choose <strong>Run</strong>. Compare the output with the transcript. For the experiment, edit the stated line or value and run it again. Start each new step by replacing all the editor contents. The editor itself may need a connection to load.</p>
+<p><strong>Local terminal.</strong> A terminal is a window where you run commands and read their results. Copy the Python block into a plain-text file named <code>m01_t01_step.py</code>. Save it in UTF-8 so that the rupee symbol displays correctly. Open Terminal or PowerShell in the same folder. Check the version once and use the file command after each change. For the next step, replace the contents of the same file with the new block.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3 --version
+python3 m01_t01_step.py
+</code></pre>
+</div>
+<p>Use these commands on Windows if you have the Python launcher.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">py -3 --version
+py -3 m01_t01_step.py
+</code></pre>
+</div>
+<p>Use the Python block for running and the transcript for comparison. If your terminal cannot find the file, check its folder and filename. If Python reports an indentation error, copy the whole block again while preserving the spaces at the start of its lines.</p>
+</div></details>
+<h5>Step 1 — Store and inspect the messages</h5>
+<p>A <strong>string</strong> is text inside quotation marks. A <strong>variable</strong> is a name for a value. <code>messages = ...</code> assigns a value to that name. The value here is a <strong>list</strong>, an ordered collection inside square brackets. Each entry is a <strong>dictionary</strong>, a record inside braces. A dictionary&#x27;s <strong>key</strong> names a field, and a colon separates that key from its value. Commas separate fields and records.</p>
+<p>The <code>for</code> loop takes the list entries one at a time and names the current one <code>message</code>. The colon starts the loop body. Indentation, the spaces on the left, makes a line part of that body. Use square brackets after the dictionary name to retrieve a field by its key. <code>print()</code> displays the items you pass inside its parentheses, with spaces between comma-separated items. Inspecting the records in order can expose problems before you evaluate any reply.</p>
+<p>Copy this block, paste it into the editor or local file, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">messages = [
+    {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are Harbor Leaf Bank&#x27;s assistant.&quot;},
+    {&quot;role&quot;: &quot;developer&quot;, &quot;content&quot;: &quot;Use the approved policy as evidence.&quot;},
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;What is the Standard Savings minimum?&quot;},
+    {&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;Look up the Standard Savings policy.&quot;},
+    {&quot;role&quot;: &quot;tool&quot;, &quot;content&quot;: &quot;Approved Standard Savings minimum: ₹5,000.&quot;},
+]
+
+for message in messages:
+    print(message[&quot;role&quot;], &quot;-&quot;, message[&quot;content&quot;])
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">system - You are Harbor Leaf Bank&#x27;s assistant.
+developer - Use the approved policy as evidence.
+user - What is the Standard Savings minimum?
+assistant - Look up the Standard Savings policy.
+tool - Approved Standard Savings minimum: ₹5,000.
+</code></pre></details>
+<p>This is a saved request up to the lookup result. The assistant record describes the lookup request. There is no generated customer answer yet.</p>
+<p><strong>Experiment.</strong> Swap the last two dictionary lines, keeping both commas. Run it again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">system - You are Harbor Leaf Bank&#x27;s assistant.
+developer - Use the approved policy as evidence.
+user - What is the Standard Savings minimum?
+tool - Approved Standard Savings minimum: ₹5,000.
+assistant - Look up the Standard Savings policy.
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why did printing still work even though the new trace is suspect? The loop displays any list order it receives. The application&#x27;s request-order check must verify that the result follows the call.</p>
+<h5>Step 2 — Estimate a token budget</h5>
+<p>The numbers here are <strong>illustrative token counts</strong> for groups in our fictional request. Digits written without quotes, such as <code>4</code>, are numbers Python can add. Start with four overhead tokens and add each group&#x27;s count. The plus sign adds numbers. Select the totals you need from the record instead of drawing conclusions from the number of visible words.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">groups = [
+    {&quot;name&quot;: &quot;system instructions&quot;, &quot;tokens&quot;: 8},
+    {&quot;name&quot;: &quot;developer instructions&quot;, &quot;tokens&quot;: 8},
+    {&quot;name&quot;: &quot;approved policy exchange&quot;, &quot;tokens&quot;: 14},
+    {&quot;name&quot;: &quot;recent chat&quot;, &quot;tokens&quot;: 10},
+    {&quot;name&quot;: &quot;current question&quot;, &quot;tokens&quot;: 8},
+]
+overhead = 4
+reserve = 12
+input_tokens = overhead
+
+for group in groups:
+    print(group[&quot;name&quot;], group[&quot;tokens&quot;])
+    input_tokens = input_tokens + group[&quot;tokens&quot;]
+
+print(&quot;Overhead:&quot;, overhead)
+print(&quot;Input total:&quot;, input_tokens)
+print(&quot;Input plus reserved output:&quot;, input_tokens + reserve)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">system instructions 8
+developer instructions 8
+approved policy exchange 14
+recent chat 10
+current question 8
+Overhead: 4
+Input total: 52
+Input plus reserved output: 64
+</code></pre></details>
+<p>The five groups take 48 tokens. Add four overhead tokens for an input of 52. Reserving 12 more would require 64 tokens of shared space.</p>
+<p><strong>Experiment.</strong> Change only recent chat&#x27;s count from <code>10</code> to <code>6</code> to represent a shorter history. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">system instructions 8
+developer instructions 8
+approved policy exchange 14
+recent chat 6
+current question 8
+Overhead: 4
+Input total: 48
+Input plus reserved output: 60
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Did this program discover the token count by reading the policy text? It added the counts you assigned to the groups. Use the correct model tokenizer or measured usage for real counts.</p>
+<h5>Step 3 — Calculate remaining context capacity</h5>
+<p>Subtract the output reserve from the context window to find the window’s allowance for input. <code>min()</code> returns the smaller of two numbers. Use it with the separate input limit to apply both restrictions. Once you have that budget, subtract the actual input size. The subtraction sign is <code>-</code>. The result, called <strong>headroom</strong> here, is how many input tokens are still available. A negative answer shows a shortfall.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">context_window = 60
+input_limit = 54
+reserve = 12
+input_tokens = 52
+
+input_budget = min(input_limit, context_window - reserve)
+headroom = input_budget - input_tokens
+
+print(&quot;Input budget:&quot;, input_budget)
+print(&quot;Input headroom:&quot;, headroom)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input budget: 48
+Input headroom: -4
+</code></pre></details>
+<p>With a 12-token reserve, the shared budget allows only 48 input tokens. The saved input needs four more than that.</p>
+<p><strong>Experiment.</strong> Change only <code>reserve</code> from <code>12</code> to <code>8</code> and rerun. Assume the fictional model permits both output settings.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input budget: 52
+Input headroom: 0
+</code></pre></details>
+<p><strong>Checkpoint.</strong> What does zero headroom tell you? The input uses its entire allowance. The eight-token output reserve remains available. Any extra input would need to displace something or increase the budget.</p>
+<h5>Step 4 — Simulate dropping old history</h5>
+<p>Keep the system message, developer message, current question, and overhead protected as 28 tokens. Treat the policy lookup and its related result as one history group so the simulated trim does not leave an orphaned tool record. A <strong>while loop</strong> repeats its block while its condition remains true. The greater-than sign, <code>&gt;</code>, checks whether input exceeds the budget. <code>and</code> requires both conditions to hold. A list used as a condition is true when it has items.</p>
+<p>The dot in <code>history.pop(0)</code> accesses a list operation. <code>pop(0)</code> takes out and returns the first item, at position zero. Each removed group&#x27;s count is subtracted from the total. This version shows just enough of oldest-first trimming to inspect its consequences.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">protected = 28
+input_budget = 48
+history = [
+    {&quot;name&quot;: &quot;approved policy exchange&quot;, &quot;tokens&quot;: 14},
+    {&quot;name&quot;: &quot;recent chat&quot;, &quot;tokens&quot;: 10},
+]
+
+input_tokens = protected
+for group in history:
+    input_tokens = input_tokens + group[&quot;tokens&quot;]
+print(&quot;Before trimming:&quot;, input_tokens)
+
+while input_tokens &gt; input_budget and history:
+    removed = history.pop(0)
+    input_tokens = input_tokens - removed[&quot;tokens&quot;]
+    print(&quot;Dropped:&quot;, removed[&quot;name&quot;])
+
+print(&quot;Input sent:&quot;, input_tokens)
+for group in history:
+    print(&quot;History kept:&quot;, group[&quot;name&quot;])
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Before trimming: 52
+Dropped: approved policy exchange
+Input sent: 38
+History kept: recent chat
+</code></pre></details>
+<p>The oldest group is removed as a unit. Removing all 14 tokens leaves more room than the four needed to make the request fit. It also removes the approved amount. “Input sent” describes what the simulated application would send. The program only prints the report.</p>
+<p><strong>Experiment.</strong> Change only <code>input_budget</code> to <code>52</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Before trimming: 52
+Input sent: 52
+History kept: approved policy exchange
+History kept: recent chat
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Does a smaller input count prove that the trim preserved the important evidence? Check the kept group names. The 38-token run fits and still loses the policy.</p>
+<h5>Step 5 — See how missing evidence changes evaluation</h5>
+<p>Compare two saved requests with the same factual reply. In the first request the policy is present. In the second it has been dropped. The values <code>True</code> and <code>False</code> represent yes or no. An <code>if</code> checks its condition and runs the indented block when it is true. If it is false, <code>else</code> gives the alternative block. The double equals sign, <code>==</code>, tests equality. Here the expected sentences are pre-reviewed teaching examples, so comparing them with the saved wording is enough for these exact replies.</p>
+<p>Copy this block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cases = [
+    {
+        &quot;name&quot;: &quot;Full request&quot;,
+        &quot;policy_present&quot;: True,
+        &quot;reply&quot;: &quot;The minimum is ₹5,000.&quot;,
+    },
+    {
+        &quot;name&quot;: &quot;Trimmed request&quot;,
+        &quot;policy_present&quot;: False,
+        &quot;reply&quot;: &quot;The minimum is ₹5,000.&quot;,
+    },
+]
+
+for case in cases:
+    if case[&quot;policy_present&quot;]:
+        expected = &quot;The minimum is ₹5,000.&quot;
+    else:
+        expected = &quot;I can&#x27;t confirm that from the supplied policy.&quot;
+
+    if case[&quot;reply&quot;] == expected:
+        print(case[&quot;name&quot;], &quot;- PASS&quot;)
+    else:
+        print(case[&quot;name&quot;], &quot;- FAIL&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Full request - PASS
+Trimmed request - FAIL
+</code></pre></details>
+<p>The same amount is approved when the request includes the policy. Our rubric checks whether the reply follows the evidence given for the turn. In the trimmed request the factual statement is unsupported even though the number happens to agree with the real policy.</p>
+<p><strong>Experiment.</strong> Change only the reply in the Trimmed request to <code>&quot;I can&#x27;t confirm that from the supplied policy.&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Full request - PASS
+Trimmed request - PASS
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Does the edited result prove the system answered the customer&#x27;s question? It shows that the answer handled missing evidence honestly under this rubric. You can record the application&#x27;s loss of the policy separately. In a broader test, review equivalent answers by meaning rather than requiring these exact strings. M02-T01 and M02-T02 develop those checks.</p>
+<h5>Step 6 — Compare used tokens with reserved space</h5>
+<p>Keep the policy and remove small talk to get 42 input tokens. The application reserves 12 for the reply, and this saved reply uses six. The star, <code>*</code>, multiplies numbers. The fictional bill uses integer paise, with 100 paise in one rupee. Multiply each used count by its fictional rate, then add them. This makes it easier to see how generating a longer response affects the bill without changing the earlier request.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">input_tokens = 42
+reserved_output = 12
+generated_tokens = 6
+input_rate = 2
+output_rate = 6
+
+input_cost = input_tokens * input_rate
+output_cost = generated_tokens * output_rate
+
+print(&quot;Input tokens:&quot;, input_tokens)
+print(&quot;Output reserved:&quot;, reserved_output)
+print(&quot;Output used:&quot;, generated_tokens)
+print(&quot;Illustrative cost in paise:&quot;, input_cost + output_cost)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input tokens: 42
+Output reserved: 12
+Output used: 6
+Illustrative cost in paise: 120
+</code></pre></details>
+<p>The input costs 84 paise and the reply costs 36. The reserved space could have held more output. The simulated bill counts the six tokens actually generated.</p>
+<p><strong>Experiment.</strong> Change only <code>generated_tokens</code> to <code>10</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input tokens: 42
+Output reserved: 12
+Output used: 10
+Illustrative cost in paise: 144
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why did the bill rise while the reserved capacity stayed the same? The reply used four additional tokens. At six paise each they add 24 paise. The application had room for them in the same reserve.</p>
+<h5>Step 7 — Build an offline context-budget diagnostic</h5>
+<p>A <strong>function</strong> is a named block you can run repeatedly. The keyword <code>def</code> defines it. Names inside its parentheses are <strong>parameters</strong>, the values the function uses when you call it. The colon and indentation mark the block to run. A plain <code>return</code> stops the function early. Use it when no safe request can be formed under these limits.</p>
+<p>This diagnostic checks the maximum output setting first. The <code>&lt;</code> symbol means less than, and <code>or</code> means either condition is enough. It then checks whether the protected input can fit. Finally it works through an independent list of history groups created with <code>history.copy()</code>. The list copy lets the simulation remove entries without changing the original list. It never edits the individual dictionaries. The <code>append()</code> operation adds each dropped name to a separate list for the report.</p>
+<p>Copy the whole block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def diagnose(window, input_limit, output_limit, reserve, protected, history):
+    if reserve &lt; 1 or reserve &gt; output_limit:
+        print(&quot;STOP: output reserve is outside the allowed range.&quot;)
+        return
+
+    budget = min(input_limit, window - reserve)
+    print(&quot;Input budget:&quot;, budget)
+    if protected &gt; budget:
+        print(&quot;STOP: protected input cannot fit.&quot;)
+        return
+
+    kept = history.copy()
+    input_tokens = protected
+    for group in kept:
+        input_tokens = input_tokens + group[&quot;tokens&quot;]
+
+    dropped = []
+    while input_tokens &gt; budget and kept:
+        group = kept.pop(0)
+        dropped.append(group[&quot;name&quot;])
+        input_tokens = input_tokens - group[&quot;tokens&quot;]
+
+    policy_kept = False
+    for group in kept:
+        if group[&quot;approved_policy&quot;]:
+            policy_kept = True
+
+    print(&quot;Dropped groups:&quot;, dropped)
+    print(&quot;Input sent:&quot;, input_tokens)
+    print(&quot;Input headroom:&quot;, budget - input_tokens)
+    if policy_kept:
+        print(&quot;Evidence: approved policy retained&quot;)
+    else:
+        print(&quot;Evidence: missing approved policy; expect abstention&quot;)
+
+
+window = 60
+input_limit = 54
+output_limit = 16
+reserve = 12
+protected = 28
+history = [
+    {&quot;name&quot;: &quot;approved policy exchange&quot;, &quot;tokens&quot;: 14, &quot;approved_policy&quot;: True},
+    {&quot;name&quot;: &quot;recent chat&quot;, &quot;tokens&quot;: 10, &quot;approved_policy&quot;: False},
+]
+
+diagnose(window, input_limit, output_limit, reserve, protected, history)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input budget: 48
+Dropped groups: [&#x27;approved policy exchange&#x27;]
+Input sent: 38
+Input headroom: 10
+Evidence: missing approved policy; expect abstention
+</code></pre></details>
+<p>The report prints a list of removed names, in square brackets, so you can inspect the trim. The request fits with ten tokens of input room after dropping the group. It has lost the evidence. The diagnostic tells you what to expect under the evidence rule. It does not generate a reply or certify that a real model would follow that rule.</p>
+<p><strong>Experiment.</strong> Change only <code>reserve</code> from <code>12</code> to <code>8</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input budget: 52
+Dropped groups: []
+Input sent: 52
+Input headroom: 0
+Evidence: approved policy retained
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Could you always shrink the output reserve to save an old policy? A reply still needs enough room for its intended job and must respect the model&#x27;s output settings. Try retaining relevant evidence and dropping unrelated chat before sacrificing room for the answer.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Tokens and fictional cost</h5>
+<p>An approved excerpt and question take 42 input tokens in our teaching example. The hypothetical price is 2 paise per input token and 6 paise per generated token. One run generates six tokens. Another run generates ten tokens from the same request. Compute both totals. Explain why counting the words in the replies would not verify the token bill.</p>
+<h5>Practice 2. Label and order the records</h5>
+<p>A trace contains the following records in this order. “You are Harbor Leaf support.” “Use approved policy only.” “What balance is required?” “The policy says ₹5,000.” “Look up the Standard Savings policy.” Assume the last two records are a lookup result and the call that produced it. Label the role of each item, repair the order, and explain what an evaluator should capture before scoring a reply.</p>
+<h5>Practice 3. Decide whether the input fits</h5>
+<p>A teaching model has a context window of 60, input limit of 54, and output limit of 16. The application reserves 12 tokens for the reply. It proposes an input of 52, including 10 tokens of recent small talk and a 14-token approved policy group. Calculate the effective budget and shortfall. Choose one group to drop so the request fits and the policy is still available. Give the new input size and headroom.</p>
+<h5>Practice 4. Separate missing evidence from a wrong answer</h5>
+<p>The approved minimum is ₹5,000. In trace A, the request contains the approved policy and the reply says ₹10,000. In trace B, the policy was removed by truncation and the reply says “I can’t confirm the minimum from the supplied policy.” The developer instructions require the model to state only what the supplied evidence supports. For each trace, identify the model behavior and any application failure you can verify. Describe the next check you would run.</p>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>The input costs 42 × 2 = 84 paise. The first reply costs 6 × 6 = 36, so its total is 120 paise. The second costs 10 × 6 = 60, so its total is 144 paise. The difference is 24 paise. The tokenizer decides how many pieces the model processes. Ordinary word counts do not establish measured token usage.</p>
+<h5>Solution 2</h5>
+<p>The first record is system, the second developer, and the third user. The fourth is tool and the fifth is assistant. The assistant call should follow the user question and come before the tool result. An actual tool protocol might also require the result to match the call&#x27;s identifier. Save the exact ordered request and the tool evidence, then capture the reply so the next reviewer can check which messages were available before the answer.</p>
+<h5>Solution 3</h5>
+<p>The reserve of 12 is within the output limit of 16. The shared window leaves 60 − 12 = 48 tokens for input. The smaller of 54 and 48 is 48. Input of 52 is short by four. Dropping the ten-token small-talk group leaves 42, or six tokens of headroom. The approved policy is still present. Dropping the policy also frees space but would leave the model without the needed fact.</p>
+<h5>Solution 4</h5>
+<p>Trace A contradicts evidence present in the request. Record an incorrect answer and verify that the policy actually reached the model in the correct order and role before attributing cause. Trace B abstains in agreement with the evidence rule, and the application lost required context during preparation. Replay the same question and instructions with the policy group preserved, then compare the held-out reply with the approved amount.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Why can two tokenizers give different counts for the same sentence?</li><li>A customer types “I think the bank requires ₹10,000.” What role should that text have, and what determines the approved amount?</li><li>What order should a tool call and its corresponding result appear in?</li><li>A request has a 60-token window, 54-token input cap, and a 12-token output reserve. How many input tokens can it use?</li><li>Why might an application drop older information even though that information is relevant?</li><li>A context budget fits perfectly after a trim, but the assistant did not receive the approved policy. What does the fit establish?</li><li>If the application reserved 12 output tokens but the model generated six, how many output tokens does this lesson’s usage-based cost exercise charge for?</li><li>The assistant says it cannot confirm the minimum. What evidence should you review before calling that a failure?</li></ol>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li><strong>They may split the text differently.</strong> Tokenizers use different learned sets and splitting rules. Use the model-specific tokenizer or measured usage for real numbers.</li><li><strong>It remains a user message.</strong> The customer supplied that text. Check the approved policy for the account and date to establish the amount.</li><li><strong>Call first, result second.</strong> The result should correspond to the call that requested it. Keep the pairing when you include or drop a tool exchange.</li><li><strong>48 input tokens.</strong> Subtract the reserve from the context window for 48, then apply the lower of that allowance and the separate 54-token cap.</li><li><strong>A simple trim rule may rank age ahead of relevance.</strong> Inspect the actual selection and whether a necessary instruction or policy was lost.</li><li><strong>It establishes that the request is within the chosen size budget.</strong> Verify whether the actual input still supports the answer. The policy evidence check is independent of the arithmetic.</li><li><strong>Six output tokens.</strong> Capacity reserved for output and usage in this exercise are separate quantities. Real billing follows the applicable service rules.</li><li><strong>Check the request that reached the model and the expected behavior for it.</strong> If the policy was unavailable and the instructions require abstention, the wording may be appropriate. Record any evidence loss in request assembly separately.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>Start with an unedited copy of Step 7. Your task is to keep the evidence under the original 12-token reserve. Record which groups the diagnostic drops, which input limits apply, and what reply behavior is appropriate. Use the strings and numbers already in the script.</p>
+<ol><li><strong>Prioritize the policy.</strong> Swap the two dictionaries in <code>history</code> so that recent chat is the first group eligible for removal. Keep <code>window = 60</code> and all other values unchanged. Predict the report before running the program. Explain how this list models trim priority. A production application can choose which groups to keep while preserving the actual chronological order of the messages it sends.</li><li><strong>Trigger a stop.</strong> Leave that order in place and change only <code>window</code> to <code>37</code>. Predict whether the protected input can fit, run the program, and explain why dropping more history cannot help.</li></ol>
+<h5>Check your assignment</h5>
+<p>With the original window, the budget is 48. The report drops <code>recent chat</code>, sends 42 tokens with six tokens of headroom, and says <code>Evidence: approved policy retained</code>. The reply can use the approved amount, ₹5,000. You would still need to evaluate the actual reply.</p>
+<p>With the 37-token window, the budget is 25 after reserving 12 for output. The protected group alone takes 28, so the diagnostic prints <code>STOP: protected input cannot fit.</code> after the budget. It reaches this stop before removing any history. Either redesign what you need to send or use a larger window. Preserve the essential question and governing evidence when you change the request.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Equating tokens with words.</strong> Use model-specific counts for real requests. The numbers assigned in this lab are for teaching arithmetic.</li><li><strong>Assuming the whole chat history reaches the model.</strong> Inspect the actual request, including the tool result and any history that was dropped.</li><li><strong>Keeping all old text at the expense of evidence.</strong> Select history and excerpts for the current question and keep any required call and result pairs.</li><li><strong>Treating a user guess or old assistant reply as policy.</strong> Check role, source, and date before treating a value as approved evidence.</li><li><strong>Using a fit calculation as a quality verdict.</strong> Check token headroom and evidence retention separately. The model’s actual reply still requires evaluation.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>You can now read a saved conversation, identify the role of each message, and calculate a budget for input and output. You can follow which message groups survived a trim and judge a reply using the evidence the model actually received. You also saw how used tokens affect a fictional bill and how to stop when required input cannot fit.</p>
+<p>The next topic in Module 1 is <a href="#m01-t02">Inference, sampling and repeatability</a>. Here you learned to account for what enters the model. Next you will study why the same request can produce different replies and how to make fair comparisons across runs. If you are in a focused path, use <strong>Next Lesson</strong> to follow that path&#x27;s sequence.</p></div>
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test1.html"><code>docs/test1.html</code></a>, <code>model_client.py</code></dd></div><div><dt>Audit findings</dt><dd>S08</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the single request and shared adapter as diagrams.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add a token-budget worksheet and trace with a truncated prompt.</dd></div><div><dt>Technical corrections</dt><dd>Keep model selection and effective request settings visible.</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -1612,7 +1998,7 @@ data-subject="Foundations" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m01-t02">
   <p class="lesson-intro" data-lesson-search>A fixed prompt can yield different responses, and generation errors need their own outcome.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -1643,10 +2029,6 @@ data-subject="Foundations" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test8.html"><code>docs/test8.html</code></a>, <code>phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py</code></dd></div><div><dt>Audit findings</dt><dd>C08,V02</dd></div><div><dt>Reuse strategy</dt><dd>Keep the observed temperature comparison as an experiment-design critique.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add replayable repeated draws and a parameter glossary.</dd></div><div><dt>Technical corrections</dt><dd>Remove universal conclusions based on a single fixed-order run.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -1666,7 +2048,7 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m01-t03">
   <p class="lesson-intro" data-lesson-search>A working request establishes connectivity and enables stage-specific diagnosis.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -1696,10 +2078,6 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>0h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test1.html"><code>docs/test1.html</code></a>, <code>phase-1-first-experiments/test1_basic_test.py</code>, <code>config.yaml</code></dd></div><div><dt>Audit findings</dt><dd>C11,S06,S08,V02</dd></div><div><dt>Reuse strategy</dt><dd>Retain the smoke-test idea and worked terminal output.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add setup preflight and a one-model replay option.</dd></div><div><dt>Technical corrections</dt><dd>Qualify timing and creativity observations and verify direct requirements before teaching live setup.</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -2116,10 +2494,6 @@ Reply: The minimum is ₹10,000. Keep your PIN private.
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="concepts.html"><code>docs/concepts.html</code></a>, <a href="test0.html"><code>docs/test0.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C05,S02</dd></div><div><dt>Reuse strategy</dt><dd>Start with the audit&#x27;s false-pass examples and glossary.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add objective-to-check worksheet and worked failure tree.</dd></div><div><dt>Technical corrections</dt><dd>Make failure, evaluator error and N/A explicit.</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -2547,10 +2921,6 @@ NEEDS REVIEW: 2
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test0.html"><code>docs/test0.html</code></a>, <code>phase-0-foundations/explore_squad.py</code>, <a href="concepts.html"><code>docs/concepts.html</code></a></dd></div><div><dt>Audit findings</dt><dd>S06,V03</dd></div><div><dt>Reuse strategy</dt><dd>Retain the SQuAD schema and multiple gold answers walkthrough.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Supply a reviewed local fixture and contrast extractive versus generative tasks.</dd></div><div><dt>Technical corrections</dt><dd>Describe the download dependency or use the offline fixture.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -2570,7 +2940,7 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m02-t03">
   <p class="lesson-intro" data-lesson-search>Offline quality estimates and live user outcomes answer different questions.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -2601,10 +2971,6 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>3h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test14.html"><code>docs/test14.html</code></a>, <code>README.md</code></dd></div><div><dt>Audit findings</dt><dd>V04</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the offline-to-monitoring distinction.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add a lifecycle diagram, evidence worksheet and decision scenarios.</dd></div><div><dt>Technical corrections</dt><dd>Describe offline traces and causal online experiments as separate evidence.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -2634,7 +3000,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m03-t01">
   <p class="lesson-intro" data-lesson-search>String matches are fast and inspectable but can miss valid aliases and accept wrong claims.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -2665,10 +3031,6 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test0.html"><code>docs/test0.html</code></a>, <code>phase-0-foundations/phase_eval.py</code>, <a href="test4.html"><code>docs/test4.html</code></a>, <code>phase-2-evaluation-techniques/banking-bots/banking_evaluator.py</code></dd></div><div><dt>Audit findings</dt><dd>C05,S02,S09</dd></div><div><dt>Reuse strategy</dt><dd>Use the documented false pass and workbook as starter data.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add fixed expected outputs and error classification.</dd></div><div><dt>Technical corrections</dt><dd>Separate 15 automated from 49 manual cases and replace misleading refusal detection in the verified lab.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -2688,7 +3050,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m03-t02">
   <p class="lesson-intro" data-lesson-search>Valid JSON can still contain invalid field values or unsafe business outcomes.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -2719,10 +3081,6 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><code>phase-5-production-eval/agent-evaluation/agent.py</code>, <a href="test12.html"><code>docs/test12.html</code></a>, <code>phase-2-evaluation-techniques/groundedness/groundedness_evaluator.py</code></dd></div><div><dt>Audit findings</dt><dd>S04,S05</dd></div><div><dt>Reuse strategy</dt><dd>Reuse action and judge output schemas as later examples.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add a beginner classifier or extraction schema and trusted outcomes.</dd></div><div><dt>Technical corrections</dt><dd>Check top-level shape and field constraints before reading values.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -2742,7 +3100,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m03-t03">
   <p class="lesson-intro" data-lesson-search>Human scores vary when criteria, inputs and evidence are underspecified.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -2772,10 +3130,6 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test2.html"><code>docs/test2.html</code></a>, <code>phase-1-first-experiments/test2_score_evaluations.py</code>, <code>phase-1-first-experiments/results/scores.json</code></dd></div><div><dt>Audit findings</dt><dd>S01,C01</dd></div><div><dt>Reuse strategy</dt><dd>Retain the capture/score split and human-first review.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Supply canonical full responses, annotations and scoring key.</dd></div><div><dt>Technical corrections</dt><dd>Blind model labels, show full output and save each decision with its source response ID.</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -2809,7 +3163,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     </div>
     <div class="topic-material lesson-reading" id="material-m04-t01">
   <p class="lesson-intro" data-lesson-search>A score cannot be reproduced if cases, labels and outputs drift independently.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -2840,10 +3194,6 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><code>phase-2-evaluation-techniques/banking-bots/banking_test_cases.xlsx</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code></dd></div><div><dt>Audit findings</dt><dd>S09,S11,S15,S16,V03</dd></div><div><dt>Reuse strategy</dt><dd>Borrow realistic categories and documented fields.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add schema, manifest, converter and duplicate or missing-row fixtures.</dd></div><div><dt>Technical corrections</dt><dd>Separate canonical input from run artifacts and catch invalid ranges.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -2863,7 +3213,7 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     </div>
     <div class="topic-material lesson-reading" id="material-m04-t02">
   <p class="lesson-intro" data-lesson-search>Synthetic breadth is useful when human review and source-backed validation preserve label quality.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -2894,10 +3244,6 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test4.html"><code>docs/test4.html</code></a>, <code>phase-5-production-eval/langfuse-observability/create_test_cases.py</code>, <code>phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx</code></dd></div><div><dt>Audit findings</dt><dd>C01,V03</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the interactive case-writing prompt and fixed workbook generator as simple precursors.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add double-label and synthetic validation exercises with defective rows.</dd></div><div><dt>Technical corrections</dt><dd>Freeze exact outputs before calling verdicts comparable.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -2917,7 +3263,7 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m04-t03">
   <p class="lesson-intro" data-lesson-search>Aggregate gains may hide weak slices or reflect tuning on the evaluation set.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -2948,10 +3294,6 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>V03</dd></div><div><dt>Reuse strategy</dt><dd>Build a new split and maintenance lab using the fictional policies as domain context.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add distribution cards, near-duplicate examples and coverage thresholds.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -2981,7 +3323,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m05-t01">
   <p class="lesson-intro" data-lesson-search>Surface overlap offers a useful baseline for bounded tasks and can penalize correct paraphrases.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3012,10 +3354,6 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test3.html"><code>docs/test3.html</code></a>, <code>phase-2-evaluation-techniques/test3_bleu_score_evaluation.py</code></dd></div><div><dt>Audit findings</dt><dd>C10,S06,S08</dd></div><div><dt>Reuse strategy</dt><dd>Retain the one-passage example as a simple entry point.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add token F1, two references, per-case answer key and offline inputs.</dd></div><div><dt>Technical corrections</dt><dd>Correct claims equating overlap with quality or removing human bias.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3035,7 +3373,7 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m05-t02">
   <p class="lesson-intro" data-lesson-search>Cosine can find paraphrases while giving high scores to changed amounts or opposite meanings.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3066,10 +3404,6 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test6.html"><code>docs/test6.html</code></a>, <code>phase-2-evaluation-techniques/semantic-similarity/test6_semantic_similarity.py</code>, <code>phase-2-evaluation-techniques/semantic-similarity/healthcare_test_cases.xlsx</code></dd></div><div><dt>Audit findings</dt><dd>C09,S02,S11,S16</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the healthcare near misses and threshold discussion.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add cached vectors, negations and numeric contrast pairs.</dd></div><div><dt>Technical corrections</dt><dd>Separate similarity bands from correctness and exclude transport errors.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3089,7 +3423,7 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m05-t03">
   <p class="lesson-intro" data-lesson-search>An aggregate can hide an unacceptable error or an evaluator failure.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3120,10 +3454,6 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test6.html"><code>docs/test6.html</code></a>, <a href="test9.html"><code>docs/test9.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C02,C05,C09,S02</dd></div><div><dt>Reuse strategy</dt><dd>Reuse proxy disagreement and two-layer scoring examples.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add a decision table, N/A controls and escalation cost.</dd></div><div><dt>Technical corrections</dt><dd>Keep hard constraints visible and avoid double-counting correlated evidence.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3153,7 +3483,7 @@ data-subject="Judges" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m06-t01">
   <p class="lesson-intro" data-lesson-search>A model can scale rubric application while producing confident but unsupported labels.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3184,10 +3514,6 @@ data-subject="Judges" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test5.html"><code>docs/test5.html</code></a>, <code>phase-2-evaluation-techniques/llm-as-a-judge/llm_judge_evaluator.py</code>, <code>phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx</code>, <code>config.yaml</code></dd></div><div><dt>Audit findings</dt><dd>C01,S04,S07,S08,S09</dd></div><div><dt>Reuse strategy</dt><dd>Keep the human-first disagreement review.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add frozen responses with history, anchor examples and local replay verdicts.</dd></div><div><dt>Technical corrections</dt><dd>Align response IDs, validate schema, correct provider defaults and stop guessing verdicts from text.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3207,7 +3533,7 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m06-t02">
   <p class="lesson-intro" data-lesson-search>Human and model disagreements identify ambiguous rubrics, default preferences and systematic miss rates.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3238,10 +3564,6 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test5.html"><code>docs/test5.html</code></a>, <a href="test7.html"><code>docs/test7.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C01,C07,C12,S09,V03</dd></div><div><dt>Reuse strategy</dt><dd>Use documented disagreements and the perfect trajectory result as review prompts.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add authoritative evidence labels, second-rater labels and an ambiguous example.</dd></div><div><dt>Technical corrections</dt><dd>Distinguish uncertain human labels from adjudicated targets and reconcile sample counts.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3261,7 +3583,7 @@ data-subject="Judges" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m06-t03">
   <p class="lesson-intro" data-lesson-search>Comparative judgments can simplify preference assessment and are sensitive to order and tie policy.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3292,10 +3614,6 @@ data-subject="Judges" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Build on the pointwise frozen fixture with a revised rubric.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add three-system comparisons, balanced order and tie controls.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3325,7 +3643,7 @@ data-subject="Statistics" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m07-t01">
   <p class="lesson-intro" data-lesson-search>Repeated draws from the same case measure variation within that case and do not add independent case coverage.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3356,10 +3674,6 @@ data-subject="Statistics" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test2.html"><code>docs/test2.html</code></a>, <code>phase-1-first-experiments/test2_full_evaluations.py</code>, <a href="test8.html"><code>docs/test8.html</code></a>, <code>phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py</code></dd></div><div><dt>Audit findings</dt><dd>C08,C11,S02,S08,V04</dd></div><div><dt>Reuse strategy</dt><dd>Reuse repeated tasks and the temperature variation as critique material.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add grouped replay, warm/cold controls and aggregation walkthrough.</dd></div><div><dt>Technical corrections</dt><dd>Qualify one-draw claims and preserve run and stage metadata.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3379,7 +3693,7 @@ data-subject="Statistics" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m07-t02">
   <p class="lesson-intro" data-lesson-search>Small apparent differences can be sampling noise or too small to matter operationally.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3410,10 +3724,6 @@ data-subject="Statistics" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Treat existing pass-rate tables as hypotheses for new exercises.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add hand-resampling diagram, code and answer sheet for clustered outputs.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3433,7 +3743,7 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m07-t03">
   <p class="lesson-intro" data-lesson-search>A regression decision depends on what changed, what was held fixed and which risks matter.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3463,10 +3773,6 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test8.html"><code>docs/test8.html</code></a>, <a href="test11.html"><code>docs/test11.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C04,C08,C11,V04</dd></div><div><dt>Reuse strategy</dt><dd>Keep the comparative examples as discussion prompts.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add controlled one-variable tests and simulated online outcomes.</dd></div><div><dt>Technical corrections</dt><dd>Match inputs and judge or attribute changes explicitly.</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -3500,7 +3806,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m08-t01">
   <p class="lesson-intro" data-lesson-search>A generator cannot reliably cite supporting evidence that the retriever missed.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3531,10 +3837,6 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test9.html"><code>docs/test9.html</code></a>, <code>phase-3-what-you-are-evaluating/rag-evaluation/chunker.py</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/retriever.py</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/chunks.json</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code></dd></div><div><dt>Audit findings</dt><dd>C02</dd></div><div><dt>Reuse strategy</dt><dd>Retain the paragraph chunker, retriever and ranked evidence.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add gold passage IDs, graded gains and hand-computed solutions.</dd></div><div><dt>Technical corrections</dt><dd>Keep document origin stable and declare the handling of empty gold sets.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3554,7 +3856,7 @@ data-subject="RAG" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m08-t02">
   <p class="lesson-intro" data-lesson-search>Answers may be correct without supporting evidence or faithfully repeat stale information.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3585,10 +3887,6 @@ data-subject="RAG" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test7.html"><code>docs/test7.html</code></a>, <code>phase-2-evaluation-techniques/groundedness/groundedness_evaluator.py</code>, <a href="test9.html"><code>docs/test9.html</code></a>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py</code></dd></div><div><dt>Audit findings</dt><dd>C02,C03,C12,S04,S09</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the invented-specifics and misleading-aggregate cases as exercises.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add authoritative facts, claim-to-span labels and explicit refusal expectations.</dd></div><div><dt>Technical corrections</dt><dd>Separate source evidence from behavior policy, and reconcile conflicting sample labels.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3608,7 +3906,7 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m08-t03">
   <p class="lesson-intro" data-lesson-search>A better response score does not show whether retrieval or generation improved.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3639,10 +3937,6 @@ data-subject="RAG" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test9.html"><code>docs/test9.html</code></a>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code>, <a href="test11.html"><code>docs/test11.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C02,C04,S09</dd></div><div><dt>Reuse strategy</dt><dd>Keep the TC21 and retrieval-confusion walkthroughs.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add oracle controls, fixed generator outputs and before/after regression fixtures.</dd></div><div><dt>Technical corrections</dt><dd>Use answer/claim outcomes and correct sample denominators.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3672,7 +3966,7 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m09-t01">
   <p class="lesson-intro" data-lesson-search>Portable contracts keep experiments reproducible when a framework or judge changes.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3703,10 +3997,6 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test11.html"><code>docs/test11.html</code></a>, <code>requirements.txt</code>, <code>config.yaml</code></dd></div><div><dt>Audit findings</dt><dd>C04,S06,S08,S15,V02</dd></div><div><dt>Reuse strategy</dt><dd>Reuse case-object explanation and framework comparison as a discussion starter.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add a neutral schema, checked score parity, deterministic preflight and explicit version metadata.</dd></div><div><dt>Technical corrections</dt><dd>Distinguish scoring constructs and identify effective settings.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3726,7 +4016,7 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m09-t02">
   <p class="lesson-intro" data-lesson-search>Named metrics can answer different questions and require different labels or model calls.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3757,10 +4047,6 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test11.html"><code>docs/test11.html</code></a>, <code>phase-4-frameworks-and-tools/deepeval-evaluation/test11_deepeval_evaluator.py</code>, <code>phase-4-frameworks-and-tools/ragas-evaluation/test10_ragas_evaluator.py</code>, <code>phase-4-frameworks-and-tools/ragas-evaluation/ragas_test_cases.xlsx</code></dd></div><div><dt>Audit findings</dt><dd>C03,C04,S03,S08,S15,V01</dd></div><div><dt>Reuse strategy</dt><dd>Retain Test 11 explanations and use Test 10 code as an adapter candidate.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add Test 10 teaching notes, tested variant mapping and saved outputs for replay.</dd></div><div><dt>Technical corrections</dt><dd>Pin compatible versions, preflight credentials before calls, join by ID and preserve errors and denominators.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3780,7 +4066,7 @@ data-subject="Frameworks" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m09-t03">
   <p class="lesson-intro" data-lesson-search>Declarative and hosted runs can support review workflows once score meaning is understood.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3811,10 +4097,6 @@ data-subject="Frameworks" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the common contract rather than duplicating metrics.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add a local matrix lab and an offline mock of the hosted workflow.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3844,7 +4126,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m10-t01">
   <p class="lesson-intro" data-lesson-search>Tool response quality and authorization can fail independently of language quality.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3875,10 +4157,6 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test12.html"><code>docs/test12.html</code></a>, <code>phase-5-production-eval/agent-evaluation/agent.py</code>, <code>phase-5-production-eval/agent-evaluation/tools.py</code>, <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code>, <code>phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx</code></dd></div><div><dt>Audit findings</dt><dd>C06,S05,S13</dd></div><div><dt>Reuse strategy</dt><dd>Reuse local mock data, tools and visible schemas.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add typed validators, authorization fixtures and expected tool outcomes.</dd></div><div><dt>Technical corrections</dt><dd>Replace unbounded arithmetic evaluation and carry typed tool errors through replay.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3898,7 +4176,7 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m10-t02">
   <p class="lesson-intro" data-lesson-search>A path may look plausible while the task remains incomplete, and multiple paths may satisfy the same goal.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3929,10 +4207,6 @@ data-subject="Agents" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test12.html"><code>docs/test12.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a>, <code>phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py</code>, <code>phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json</code>, <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json</code></dd></div><div><dt>Audit findings</dt><dd>C06,C07,S05</dd></div><div><dt>Reuse strategy</dt><dd>Retain the Test 12 to Test 13 replay and compare both scoring layers.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add hard negatives, goal-state predicates, annotated alternative paths and scoring denominators.</dd></div><div><dt>Technical corrections</dt><dd>Validate judged dimensions and compute verdicts independently.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -3952,7 +4226,7 @@ data-subject="Agents" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m10-t03">
   <p class="lesson-intro" data-lesson-search>Retries may improve success while increasing cost, delay or duplicated side effects.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -3983,10 +4257,6 @@ data-subject="Agents" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test12.html"><code>docs/test12.html</code></a>, <code>phase-5-production-eval/agent-evaluation/agent.py</code>, <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code></dd></div><div><dt>Audit findings</dt><dd>S02,S05,S13</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the practical timeout discussion with mock faults.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add state snapshots, failure injection, latency and token trace fields.</dd></div><div><dt>Technical corrections</dt><dd>Separate infrastructure errors and test idempotency before discussing writes.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4016,7 +4286,7 @@ data-subject="Safety" data-status="Needs Correction" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m11-t01">
   <p class="lesson-intro" data-lesson-search>Safety depends on intended policy and on continuing to answer permissible requests.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4047,10 +4317,6 @@ data-subject="Safety" data-status="Needs Correction" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test4.html"><code>docs/test4.html</code></a>, <a href="test5.html"><code>docs/test5.html</code></a>, <a href="test7.html"><code>docs/test7.html</code></a>, <a href="test11.html"><code>docs/test11.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C03,C05,C12</dd></div><div><dt>Reuse strategy</dt><dd>Reuse examples of scope, uncertainty and high-stakes policies with fictionalized answers.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add a severity rubric, acceptable alternatives and balanced refusal fixtures.</dd></div><div><dt>Technical corrections</dt><dd>Validate behavior beyond keywords and keep abstention separate.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4070,7 +4336,7 @@ data-subject="Safety" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m11-t02">
   <p class="lesson-intro" data-lesson-search>A global metric can hide subgroup harms, and observability can increase unnecessary data exposure.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4101,10 +4367,6 @@ data-subject="Safety" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>S12</dd></div><div><dt>Reuse strategy</dt><dd>Use the fictional banking context without importing personal data.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add paired cases, synthetic trace receipts and human review protocol.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4124,7 +4386,7 @@ data-subject="Safety" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m11-t03">
   <p class="lesson-intro" data-lesson-search>A high benchmark average can hide severe edge cases, instability or a new false refusal.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4155,10 +4417,6 @@ data-subject="Safety" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test4.html"><code>docs/test4.html</code></a>, <a href="test8.html"><code>docs/test8.html</code></a>, <a href="test9.html"><code>docs/test9.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C08,C13</dd></div><div><dt>Reuse strategy</dt><dd>Adapt existing scope and robustness discussions.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add fixed controls, independent labels and reproducible safety regression cases.</dd></div><div><dt>Technical corrections</dt><dd>Report independent case counts and preserve critical slices.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4188,7 +4446,7 @@ data-subject="Red Teaming" data-status="Needs Improvement" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m12-t01">
   <p class="lesson-intro" data-lesson-search>A clear threat model links input channels and assets to the defensive behavior expected of the system.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4219,10 +4477,6 @@ data-subject="Red Teaming" data-status="Needs Improvement" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="concepts.html#prompt-injection"><code>docs/concepts.html#prompt-injection</code></a>, <a href="test4.html"><code>docs/test4.html</code></a>, <a href="test9.html"><code>docs/test9.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C13</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the glossary and fixed scope examples for discussion.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add threat-model worksheet and prewritten benign outcome fixtures.</dd></div><div><dt>Technical corrections</dt><dd>Treat system controls and authorization as independently testable.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4242,7 +4496,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m12-t02">
   <p class="lesson-intro" data-lesson-search>Untrusted content, permission mistakes and exposure can occur even when an assistant response sounds appropriate.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4273,10 +4527,6 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>C13</dd></div><div><dt>Reuse strategy</dt><dd>Carry forward mock states and separate answer/authorization labels from M10.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add canned before/after traces, benign marker receipts and a scoring key.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4296,7 +4546,7 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m12-t03">
   <p class="lesson-intro" data-lesson-search>A change needs independent evidence on fixed cases, unseen controls and ordinary permitted behavior.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4326,10 +4576,6 @@ data-subject="Red Teaming" data-status="New" data-track="Core">
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>C13</dd></div><div><dt>Reuse strategy</dt><dd>Use offline report interpretation alongside the neutral contract.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add fictional report exports, outcome labels and mitigation regression worksheet.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -4363,7 +4609,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     </div>
     <div class="topic-material lesson-reading" id="material-m13-t01">
   <p class="lesson-intro" data-lesson-search>A run must be attributable to one prompt, model, dataset, scorer and configuration.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4394,10 +4640,6 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><code>config.yaml</code>, <code>model_client.py</code>, <code>requirements.txt</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/report_generator.py</code></dd></div><div><dt>Audit findings</dt><dd>S02,S06,S07,S08,S10,S11,S14,S15</dd></div><div><dt>Reuse strategy</dt><dd>Reuse config, adapters and report layouts as examples to review.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add dry-run, version contract, harmless markup fixture and reproducible environment profile.</dd></div><div><dt>Technical corrections</dt><dd>Separate errors from data, escape reports, verify links and remove tracked secret guidance.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4417,7 +4659,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m13-t02">
   <p class="lesson-intro" data-lesson-search>A flaky or underpowered gate can block safe changes or let critical regressions through.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4448,10 +4690,6 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>V04</dd></div><div><dt>Reuse strategy</dt><dd>Build on the fixture scorecard and the neutral contract.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add local CI simulation, audit log, uncertainty and infrastructure-failure tests.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4471,7 +4709,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m13-t03">
   <p class="lesson-intro" data-lesson-search>A release requires ownership, explicit risk acceptance and a reversible decision backed by evidence.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4502,10 +4740,6 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>C13,V04</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the training traces and scores as mock release evidence.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add policy, sign-off and rollback templates plus decision scenarios.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4535,7 +4769,7 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     </div>
     <div class="topic-material lesson-reading" id="material-m14-t01">
   <p class="lesson-intro" data-lesson-search>Observability makes eval context inspectable across stages and repeated incidents.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4566,10 +4800,6 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test14.html"><code>docs/test14.html</code></a>, <code>phase-5-production-eval/langfuse-observability/test14_langfuse_evaluator.py</code>, <code>phase-5-production-eval/langfuse-observability/docker-compose.yml</code></dd></div><div><dt>Audit findings</dt><dd>C05,S07,S08,S12,S16,V02</dd></div><div><dt>Reuse strategy</dt><dd>Preserve the walkthrough and dashboard exploration.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add de-identified export/replay, telemetry failure and trace coverage example.</dd></div><div><dt>Technical corrections</dt><dd>Correct provider/range claims and use loopback, safe credentials and payload controls.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4589,7 +4819,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m14-t02">
   <p class="lesson-intro" data-lesson-search>Trace populations, user feedback and evaluator behavior can change independently.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4620,10 +4850,6 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>S12,V04</dd></div><div><dt>Reuse strategy</dt><dd>Use Test 14 categories as context for a synthetic monitoring dataset.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add trace sampling weights, dashboards, feedback routing and alert scenarios.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4643,7 +4869,7 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
     </div>
     <div class="topic-material lesson-reading" id="material-m14-t03">
   <p class="lesson-intro" data-lesson-search>Per-call averages can hide long waits, retry spend and the cost of an evaluation pipeline itself.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4674,10 +4900,6 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="concepts.html"><code>docs/concepts.html</code></a>, <a href="test8.html"><code>docs/test8.html</code></a>, <a href="test11.html"><code>docs/test11.html</code></a>, <a href="test14.html"><code>docs/test14.html</code></a></dd></div><div><dt>Audit findings</dt><dd>C08,S03,V04</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the performance definitions and real latency anomalies as prompts.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add token and percentile calculations, load profiles and cost model.</dd></div><div><dt>Technical corrections</dt><dd>Separate inference, evaluation and end-to-end timing and record failed attempts.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4707,7 +4929,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m15-t01">
   <p class="lesson-intro" data-lesson-search>A clear evidence plan lets teammates challenge a metric before the implementation hides its assumptions.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4738,10 +4960,6 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>V03,V04</dd></div><div><dt>Reuse strategy</dt><dd>Draw on the banking fixtures and course scorecards.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add briefs for FAQ, support RAG and account workflow variants and a grading rubric.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4761,7 +4979,7 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     </div>
     <div class="topic-material lesson-reading" id="material-m15-t02">
   <p class="lesson-intro" data-lesson-search>Releasing and teaching an evaluation requires explaining what evidence can support under uncertainty.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4791,10 +5009,6 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>2h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>V04</dd></div><div><dt>Reuse strategy</dt><dd>Use selected historical examples as prompts for the oral defense.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add instructor scoring rubric, incident variants and model answers.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -4828,7 +5042,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m16-t01">
   <p class="lesson-intro" data-lesson-search>Translation coverage and native-language correctness can diverge, especially for domain terms.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4859,10 +5073,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Retain the case schema and threshold lesson.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add native reviewer guidance, parallel fixtures and locale-specific test controls.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4882,7 +5092,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m16-t02">
   <p class="lesson-intro" data-lesson-search>A fluent answer can hallucinate a visual detail or attach the right explanation to the wrong region.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4913,10 +5123,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Adapt claim and citation scoring to image regions.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add accessible synthetic charts, labeled regions and verification examples.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -4936,7 +5142,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m16-t03">
   <p class="lesson-intro" data-lesson-search>More context can degrade evidence use or change which policy applies.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -4967,10 +5173,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the RAG evidence and oracle-control structure.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add controlled contexts, staged difficulty and held-out document families.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -5000,7 +5202,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m17-t01">
   <p class="lesson-intro" data-lesson-search>A document can produce correct fields with wrong entities or invalid records.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -5031,10 +5233,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Adapt beginner schema checks and proposed annotation contract.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add forms, field-level answer key and negative controls.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -5054,7 +5252,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m17-t02">
   <p class="lesson-intro" data-lesson-search>Generated code needs evidence from compilation, behavior, safety and resource bounds.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -5085,10 +5283,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>—</dd></div><div><dt>Reuse strategy</dt><dd>Reuse typed outcomes and locked holdout principles.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add harmless functions, run-result fixtures and isolated test harness design.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -5108,7 +5302,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m17-t03">
   <p class="lesson-intro" data-lesson-search>A successful individual reply can hide lost handoffs or inconsistent shared state.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -5139,10 +5333,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>C06</dd></div><div><dt>Reuse strategy</dt><dd>Extend the single-agent trace schema with actor and handoff IDs.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add coordination and conflicting-state fixtures with outcome labels.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -5172,7 +5362,7 @@ data-subject="Specialization" data-status="Needs Improvement" data-track="Electi
     </div>
     <div class="topic-material lesson-reading" id="material-m18-t01">
   <p class="lesson-intro" data-lesson-search>Judge ensembles and better prompts remain vulnerable to common correlated errors.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -5203,10 +5393,6 @@ data-subject="Specialization" data-status="Needs Improvement" data-track="Electi
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd><a href="test7.html"><code>docs/test7.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a>, <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json</code></dd></div><div><dt>Audit findings</dt><dd>C07,C12,S04,S05</dd></div><div><dt>Reuse strategy</dt><dd>Retain the false-confidence examples as hard negatives.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add independent anchors, repeat tests and disagreement/error review.</dd></div><div><dt>Technical corrections</dt><dd>Validate score consistency and delimit evidence and input roles.</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -5226,7 +5412,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m18-t02">
   <p class="lesson-intro" data-lesson-search>Benchmarks can overstate capability and model swaps can change outputs, costs and judge behavior simultaneously.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -5257,10 +5443,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
   </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>C11,V03</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the benchmark example and release packet structure.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add sealed slices, contamination indicators and migration fixtures.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
-  </details>
 </div>
   </div>
 </details>
@@ -5280,7 +5462,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     </div>
     <div class="topic-material lesson-reading" id="material-m18-t03">
   <p class="lesson-intro" data-lesson-search>Evaluation methods need a testable hypothesis and comparisons against simpler baselines.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -5310,10 +5492,6 @@ data-subject="Specialization" data-status="New" data-track="Elective">
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Existing files</dt><dd>—</dd></div><div><dt>Audit findings</dt><dd>V04</dd></div><div><dt>Reuse strategy</dt><dd>Reuse the evaluation contract and comparison harness.</dd></div><div><dt>Teaching and experiment gaps</dt><dd>Add method review template, simulation data and a replication exercise.</dd></div><div><dt>Technical corrections</dt><dd>—</dd></div></dl></div>
   </details>
 </div>
   </div>
@@ -5436,17 +5614,10 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 </section>
 </section>
 <section class="panel" id="resources"><h2>Resources</h2>
-<p><a href="index.html#library">Published examples and downloads</a> ·
+<p id="coverage"><a href="index.html#library">Published examples and downloads</a> ·
   <a href="concepts.html">Concepts reference</a></p>
 <section aria-labelledby="instructor-resources-title">
   <h3 id="instructor-resources-title">Instructor Resources</h3>
-  <details id="coverage" class="course-reference" open>
-    <summary>Existing Repository Coverage</summary>
-    <h3>Reading the mapping</h3>
-<p>The course audit in <code>docs/COURSE_AUDIT_REPORT.md</code> records evidence and impact. Each topic lists its current status, source files, relevant findings, suggested reuse, missing teaching and experiments, and corrections for a future implementation phase. Reusable means a substantial part already supports the topic. Needs Improvement indicates useful but incomplete material. Needs Correction identifies a defect affecting the intended lesson. New indicates absent substantive coverage. Not Assessed is reserved for insufficient evidence. Validation items beginning with V require further investigation. Current HTML/JSON reports illustrate past runs, and the teaching plan calls for separate answer keys.</p>
-<h3>Existing lesson crosswalk</h3>
-<ul><li><a href="test0.html">Test 0</a> contributes <a href="#m02">evaluation design</a> and <a href="#m03">deterministic checks</a>. <a href="test1.html">Test 1</a> contributes <a href="#m01-t03">the smoke test</a>. <a href="test2.html">Test 2</a> contributes <a href="#m03-t03">human review</a> and <a href="#m07-t01">repeatability</a>.</li><li><a href="test3.html">Test 3</a> contributes <a href="#m05-t01">reference metrics</a>. <a href="test4.html">Test 4</a> contributes <a href="#m03-t01">rules</a>, <a href="#m04-t02">dataset authoring</a> and <a href="#m11">safety scope</a>.</li><li><a href="test5.html">Test 5</a> contributes <a href="#m06-t01">pointwise judging</a>. <a href="test6.html">Test 6</a> contributes <a href="#m05-t02">semantic similarity</a>. <a href="test7.html">Test 7</a> contributes <a href="#m08-t02">grounding</a> and <a href="#m18-t01">evaluator robustness</a>.</li><li><a href="test8.html">Test 8</a> contributes <a href="#m01-t02">sampling</a> and <a href="#m07">controlled experiments</a>. <a href="test9.html">Test 9</a> contributes <a href="#m08">RAG diagnosis</a>.</li><li>Test 10 contributes RAGAS code to <a href="#m09-t02">the framework comparison</a>. Its script and dataset paths are in that topic&#x27;s mapping. <a href="test11.html">Test 11</a> contributes DeepEval setup, metrics and pitfalls to the same topic.</li><li><a href="test12.html">Test 12</a> and <a href="test13.html">Test 13</a> contribute <a href="#m10">agent outcome and trajectory scoring</a>. <a href="test14.html">Test 14</a> contributes <a href="#m14-t01">observability and trace scoring</a>.</li><li>The repository README, <a href="index.html">course hub</a>, <a href="home.html">home page</a>, and <a href="concepts.html">concepts reference</a> support navigation, setup and terminology. Use the Master Curriculum for the recommended learning order.</li></ul><ul class="status-counts"><li>Reusable <strong>2</strong></li><li>Needs Improvement <strong>17</strong></li><li>Needs Correction <strong>14</strong></li><li>New <strong>20</strong></li><li>Not Assessed <strong>0</strong></li></ul><div class="table-wrap" tabindex="0" role="region" aria-label="Coverage by topic"><table><caption>Coverage by topic</caption><thead><tr><th scope="col">Topic</th><th scope="col">Status</th><th scope="col">Existing files</th><th scope="col">Audit findings</th></tr></thead><tbody><tr><td><a href="#m01-t01">M01-T01 — Tokens, messages and context windows</a></td><td>Needs Improvement</td><td><a href="test1.html"><code>docs/test1.html</code></a>, <code>model_client.py</code></td><td>S08</td></tr><tr><td><a href="#m01-t02">M01-T02 — Inference, sampling and repeatability</a></td><td>Needs Correction</td><td><a href="test8.html"><code>docs/test8.html</code></a>, <code>phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py</code></td><td>C08,V02</td></tr><tr><td><a href="#m01-t03">M01-T03 — Application architecture and a first smoke test</a></td><td>Reusable</td><td><a href="test1.html"><code>docs/test1.html</code></a>, <code>phase-1-first-experiments/test1_basic_test.py</code>, <code>config.yaml</code></td><td>C11,S06,S08,V02</td></tr><tr><td><a href="#m02-t01">M02-T01 — Objectives, dimensions and failure taxonomy</a></td><td>Needs Improvement</td><td><a href="concepts.html"><code>docs/concepts.html</code></a>, <a href="test0.html"><code>docs/test0.html</code></a></td><td>C05,S02</td></tr><tr><td><a href="#m02-t02">M02-T02 — Ground truth, references and benchmarks</a></td><td>Reusable</td><td><a href="test0.html"><code>docs/test0.html</code></a>, <code>phase-0-foundations/explore_squad.py</code>, <a href="concepts.html"><code>docs/concepts.html</code></a></td><td>S06,V03</td></tr><tr><td><a href="#m02-t03">M02-T03 — Offline, online and the evaluation lifecycle</a></td><td>Needs Improvement</td><td><a href="test14.html"><code>docs/test14.html</code></a>, <code>README.md</code></td><td>V04</td></tr><tr><td><a href="#m03-t01">M03-T01 — Exact match, normalization and rules</a></td><td>Needs Correction</td><td><a href="test0.html"><code>docs/test0.html</code></a>, <code>phase-0-foundations/phase_eval.py</code>, <a href="test4.html"><code>docs/test4.html</code></a>, <code>phase-2-evaluation-techniques/banking-bots/banking_evaluator.py</code></td><td>C05,S02,S09</td></tr><tr><td><a href="#m03-t02">M03-T02 — Structured output and schema validation</a></td><td>Needs Improvement</td><td><code>phase-5-production-eval/agent-evaluation/agent.py</code>, <a href="test12.html"><code>docs/test12.html</code></a>, <code>phase-2-evaluation-techniques/groundedness/groundedness_evaluator.py</code></td><td>S04,S05</td></tr><tr><td><a href="#m03-t03">M03-T03 — Rubrics and a first human evaluation</a></td><td>Needs Correction</td><td><a href="test2.html"><code>docs/test2.html</code></a>, <code>phase-1-first-experiments/test2_score_evaluations.py</code>, <code>phase-1-first-experiments/results/scores.json</code></td><td>S01,C01</td></tr><tr><td><a href="#m04-t01">M04-T01 — Golden schemas, provenance and versioning</a></td><td>Needs Improvement</td><td><code>phase-2-evaluation-techniques/banking-bots/banking_test_cases.xlsx</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code></td><td>S09,S11,S15,S16,V03</td></tr><tr><td><a href="#m04-t02">M04-T02 — Annotation, adjudication and synthetic data</a></td><td>Needs Improvement</td><td><a href="test4.html"><code>docs/test4.html</code></a>, <code>phase-5-production-eval/langfuse-observability/create_test_cases.py</code>, <code>phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx</code></td><td>C01,V03</td></tr><tr><td><a href="#m04-t03">M04-T03 — Sampling, holdouts, leakage and maintenance</a></td><td>New</td><td>—</td><td>V03</td></tr><tr><td><a href="#m05-t01">M05-T01 — Token F1, BLEU, ROUGE and reference metrics</a></td><td>Needs Correction</td><td><a href="test3.html"><code>docs/test3.html</code></a>, <code>phase-2-evaluation-techniques/test3_bleu_score_evaluation.py</code></td><td>C10,S06,S08</td></tr><tr><td><a href="#m05-t02">M05-T02 — Embeddings and semantic similarity</a></td><td>Needs Correction</td><td><a href="test6.html"><code>docs/test6.html</code></a>, <code>phase-2-evaluation-techniques/semantic-similarity/test6_semantic_similarity.py</code>, <code>phase-2-evaluation-techniques/semantic-similarity/healthcare_test_cases.xlsx</code></td><td>C09,S02,S11,S16</td></tr><tr><td><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a></td><td>Needs Improvement</td><td><a href="test6.html"><code>docs/test6.html</code></a>, <a href="test9.html"><code>docs/test9.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a></td><td>C02,C05,C09,S02</td></tr><tr><td><a href="#m06-t01">M06-T01 — Pointwise LLM-as-a-Judge</a></td><td>Needs Correction</td><td><a href="test5.html"><code>docs/test5.html</code></a>, <code>phase-2-evaluation-techniques/llm-as-a-judge/llm_judge_evaluator.py</code>, <code>phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx</code>, <code>config.yaml</code></td><td>C01,S04,S07,S08,S09</td></tr><tr><td><a href="#m06-t02">M06-T02 — Human agreement, calibration and bias</a></td><td>Needs Improvement</td><td><a href="test5.html"><code>docs/test5.html</code></a>, <a href="test7.html"><code>docs/test7.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a></td><td>C01,C07,C12,S09,V03</td></tr><tr><td><a href="#m06-t03">M06-T03 — Pairwise comparisons and ranking</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m07-t01">M07-T01 — Variance, repetition and score aggregation</a></td><td>Needs Correction</td><td><a href="test2.html"><code>docs/test2.html</code></a>, <code>phase-1-first-experiments/test2_full_evaluations.py</code>, <a href="test8.html"><code>docs/test8.html</code></a>, <code>phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py</code></td><td>C08,C11,S02,S08,V04</td></tr><tr><td><a href="#m07-t02">M07-T02 — Confidence intervals, significance and sample size</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m07-t03">M07-T03 — Comparing models, prompts and A/B variants</a></td><td>Needs Improvement</td><td><a href="test8.html"><code>docs/test8.html</code></a>, <a href="test11.html"><code>docs/test11.html</code></a></td><td>C04,C08,C11,V04</td></tr><tr><td><a href="#m08-t01">M08-T01 — Ingestion, chunking and ranked retrieval</a></td><td>Needs Improvement</td><td><a href="test9.html"><code>docs/test9.html</code></a>, <code>phase-3-what-you-are-evaluating/rag-evaluation/chunker.py</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/retriever.py</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/chunks.json</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code></td><td>C02</td></tr><tr><td><a href="#m08-t02">M08-T02 — Context sufficiency, answer correctness and citations</a></td><td>Needs Correction</td><td><a href="test7.html"><code>docs/test7.html</code></a>, <code>phase-2-evaluation-techniques/groundedness/groundedness_evaluator.py</code>, <a href="test9.html"><code>docs/test9.html</code></a>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py</code></td><td>C02,C03,C12,S04,S09</td></tr><tr><td><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a></td><td>Needs Improvement</td><td><a href="test9.html"><code>docs/test9.html</code></a>, <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code>, <a href="test11.html"><code>docs/test11.html</code></a></td><td>C02,C04,S09</td></tr><tr><td><a href="#m09-t01">M09-T01 — Common evaluator contract and framework selection</a></td><td>Needs Improvement</td><td><a href="test11.html"><code>docs/test11.html</code></a>, <code>requirements.txt</code>, <code>config.yaml</code></td><td>C04,S06,S08,S15,V02</td></tr><tr><td><a href="#m09-t02">M09-T02 — DeepEval and RAGAS on frozen RAG records</a></td><td>Needs Correction</td><td><a href="test11.html"><code>docs/test11.html</code></a>, <code>phase-4-frameworks-and-tools/deepeval-evaluation/test11_deepeval_evaluator.py</code>, <code>phase-4-frameworks-and-tools/ragas-evaluation/test10_ragas_evaluator.py</code>, <code>phase-4-frameworks-and-tools/ragas-evaluation/ragas_test_cases.xlsx</code></td><td>C03,C04,S03,S08,S15,V01</td></tr><tr><td><a href="#m09-t03">M09-T03 — promptfoo and OpenAI Evals</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a></td><td>Needs Correction</td><td><a href="test12.html"><code>docs/test12.html</code></a>, <code>phase-5-production-eval/agent-evaluation/agent.py</code>, <code>phase-5-production-eval/agent-evaluation/tools.py</code>, <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code>, <code>phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx</code></td><td>C06,S05,S13</td></tr><tr><td><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a></td><td>Needs Correction</td><td><a href="test12.html"><code>docs/test12.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a>, <code>phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py</code>, <code>phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json</code>, <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json</code></td><td>C06,C07,S05</td></tr><tr><td><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a></td><td>Needs Improvement</td><td><a href="test12.html"><code>docs/test12.html</code></a>, <code>phase-5-production-eval/agent-evaluation/agent.py</code>, <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code></td><td>S02,S05,S13</td></tr><tr><td><a href="#m11-t01">M11-T01 — Risk taxonomy, harmful content and refusal</a></td><td>Needs Correction</td><td><a href="test4.html"><code>docs/test4.html</code></a>, <a href="test5.html"><code>docs/test5.html</code></a>, <a href="test7.html"><code>docs/test7.html</code></a>, <a href="test11.html"><code>docs/test11.html</code></a></td><td>C03,C05,C12</td></tr><tr><td><a href="#m11-t02">M11-T02 — Bias, fairness and privacy controls</a></td><td>New</td><td>—</td><td>S12</td></tr><tr><td><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a></td><td>Needs Improvement</td><td><a href="test4.html"><code>docs/test4.html</code></a>, <a href="test8.html"><code>docs/test8.html</code></a>, <a href="test9.html"><code>docs/test9.html</code></a></td><td>C08,C13</td></tr><tr><td><a href="#m12-t01">M12-T01 — Threat modeling, scope and test design</a></td><td>Needs Improvement</td><td><a href="concepts.html#prompt-injection"><code>docs/concepts.html#prompt-injection</code></a>, <a href="test4.html"><code>docs/test4.html</code></a>, <a href="test9.html"><code>docs/test9.html</code></a></td><td>C13</td></tr><tr><td><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a></td><td>New</td><td>—</td><td>C13</td></tr><tr><td><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a></td><td>New</td><td>—</td><td>C13</td></tr><tr><td><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a></td><td>Needs Correction</td><td><code>config.yaml</code>, <code>model_client.py</code>, <code>requirements.txt</code>, <code>phase-3-what-you-are-evaluating/rag-evaluation/report_generator.py</code></td><td>S02,S06,S07,S08,S10,S11,S14,S15</td></tr><tr><td><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a></td><td>New</td><td>—</td><td>V04</td></tr><tr><td><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a></td><td>New</td><td>—</td><td>C13,V04</td></tr><tr><td><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a></td><td>Needs Correction</td><td><a href="test14.html"><code>docs/test14.html</code></a>, <code>phase-5-production-eval/langfuse-observability/test14_langfuse_evaluator.py</code>, <code>phase-5-production-eval/langfuse-observability/docker-compose.yml</code></td><td>C05,S07,S08,S12,S16,V02</td></tr><tr><td><a href="#m14-t02">M14-T02 — Production sampling, human feedback, drift and alerts</a></td><td>New</td><td>—</td><td>S12,V04</td></tr><tr><td><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a></td><td>Needs Improvement</td><td><a href="concepts.html"><code>docs/concepts.html</code></a>, <a href="test8.html"><code>docs/test8.html</code></a>, <a href="test11.html"><code>docs/test11.html</code></a>, <a href="test14.html"><code>docs/test14.html</code></a></td><td>C08,S03,V04</td></tr><tr><td><a href="#m15-t01">M15-T01 — Design review and reproducible suite</a></td><td>New</td><td>—</td><td>V03,V04</td></tr><tr><td><a href="#m15-t02">M15-T02 — Decision defense, incident response and teaching</a></td><td>New</td><td>—</td><td>V04</td></tr><tr><td><a href="#m16-t01">M16-T01 — Multilingual and localized evaluation</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m16-t02">M16-T02 — Multimodal evaluation</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m16-t03">M16-T03 — Long-context evidence and memory</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m17-t01">M17-T01 — Structured extraction and classification</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m17-t02">M17-T02 — Code-generation evaluation</a></td><td>New</td><td>—</td><td>—</td></tr><tr><td><a href="#m17-t03">M17-T03 — Multi-agent coordination</a></td><td>New</td><td>—</td><td>C06</td></tr><tr><td><a href="#m18-t01">M18-T01 — Advanced judge design and evaluator robustness</a></td><td>Needs Improvement</td><td><a href="test7.html"><code>docs/test7.html</code></a>, <a href="test13.html"><code>docs/test13.html</code></a>, <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json</code></td><td>C07,C12,S04,S05</td></tr><tr><td><a href="#m18-t02">M18-T02 — Benchmark contamination and model migration</a></td><td>New</td><td>—</td><td>C11,V03</td></tr><tr><td><a href="#m18-t03">M18-T03 — Emerging evaluation methods and research literacy</a></td><td>New</td><td>—</td><td>V04</td></tr></tbody></table></div>
-  </details>
   <details id="teaching" class="course-reference">
     <summary>Teaching Plan</summary>
     <h3>Mandatory lesson standard</h3>
@@ -5649,6 +5820,7 @@ if (typeof module === "object" && module.exports) module.exports = LearningProgr
 "use strict";
 
 const tabs = Array.from(document.querySelectorAll("#tabs a"));
+const modeLinks = document.querySelectorAll(".study-mode-picker a");
 const panels = tabs.map(tab => document.querySelector(tab.hash));
 const stages = Array.from(document.querySelectorAll(".stage"));
 const modules = Array.from(document.querySelectorAll(".module"));
@@ -5670,6 +5842,10 @@ function activate(tab) {
     item.tabIndex = selected ? 0 : -1;
     panels[index].hidden = !selected;
   });
+  for (const link of modeLinks) {
+    if (link.hash === tab.hash) link.setAttribute("aria-current", "location");
+    else link.removeAttribute("aria-current");
+  }
   document.dispatchEvent(new CustomEvent("curriculum-tab", {detail: tab.hash}));
 }
 

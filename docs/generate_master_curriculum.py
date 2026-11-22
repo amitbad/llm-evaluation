@@ -2,7 +2,6 @@
 
 import argparse
 from base64 import b64encode
-from collections import Counter
 from html import escape
 from html.parser import HTMLParser
 import json
@@ -458,11 +457,10 @@ def lesson_material(topic, titles):
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body">{definitions(prerequisites, prerequisites)}</div>
   </details>'''
-    mapping = definitions(fields, TOPIC_FIELDS[11:])
     chapter = authored_lesson(topic["id"])
     reading = "\n" + chapter + preparation if chapter is not None else f'''
   <p class="lesson-intro" data-lesson-search>{inline(fields["Why it matters"])}</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
+  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
   <section class="lesson-section lesson-objectives" hidden>
     <h4>Learning objectives</h4>
     <h5>Module objectives</h5>
@@ -489,10 +487,6 @@ def lesson_material(topic, titles):
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body">{time_cards(topic['hours'])}</div>
-  </details>
-  <details class="lesson-disclosure">
-    <summary>Technical Reference</summary>
-    <div class="lesson-disclosure-body">{mapping}</div>
   </details>
 </div>'''
 
@@ -920,31 +914,17 @@ def overview_view(section, data):
 def render(title, sections, stages, data):
     modules = [module for group in stages.values() for module in group]
     topics = [topic for module in modules for topic in module["topics"]]
-    coverage = Counter(topic["fields"]["Status"] for topic in topics)
-    rows = []
-    for module in modules:
-        for topic in module["topics"]:
-            fields = topic["fields"]
-            rows.append([f"[{topic['id']} — {topic['title']}](#{topic['id'].lower()})",
-                         fields["Status"], fields["Existing files"], fields["Audit findings"]])
     titles = {item["id"]: item["title"] for item in (*modules, *topics)}
     detailed = filters(modules) + html_stages(stages, titles)
-    coverage_view = (prose(sections["Repository coverage"])
-                     + '<ul class="status-counts">' + "".join(f"<li>{status} <strong>{coverage[status]}</strong></li>" for status in STATUSES)
-                     + "</ul>" + table(("Topic", "Status", "Existing files", "Audit findings"), rows, "Coverage by topic"))
     views = {
         "quick": quick_view(data, sections["Learning paths"], titles),
         "detail": complete_view(data, detailed),
         "roadmap": roadmap_view(data),
         "overview": overview_view(sections["Course overview"], data),
-        "resources": f'''<p><a href="index.html#library">Published examples and downloads</a> ·
+        "resources": f'''<p id="coverage"><a href="index.html#library">Published examples and downloads</a> ·
   <a href="concepts.html">Concepts reference</a></p>
 <section aria-labelledby="instructor-resources-title">
   <h3 id="instructor-resources-title">Instructor Resources</h3>
-  <details id="coverage" class="course-reference" open>
-    <summary>Existing Repository Coverage</summary>
-    {coverage_view}
-  </details>
   <details id="teaching" class="course-reference">
     <summary>Teaching Plan</summary>
     {prose(sections["Teaching plan"])}
@@ -996,13 +976,10 @@ def render(title, sections, stages, data):
     <h1>LLM Evaluation Engineering</h1>
     <p>{len(modules)} modules · {len(topics)} topics · {duration(data["paths"]["A"]["hours"])} core study · <a href="#course-progress">Your progress</a></p>
   </header>
-  <section class="mode-picker" aria-labelledby="mode-heading">
-    <h2 id="mode-heading">Choose Your Learning Journey</h2>
-    <div class="mode-grid">
-      <a href="#quick"><strong>Quick Learning</strong><span>Learn what you need. Skip what you don't.</span></a>
-      <a href="#detail"><strong>Complete Course</strong><span>From beginner to advanced evaluation engineering.</span></a>
-    </div>
-  </section>
+  <nav class="study-mode-picker" aria-label="Learning mode">
+    <a href="#quick">Quick Learning</a>
+    <a href="#detail">Complete Course</a>
+  </nav>
   {panels}
 </main>
 </div>
@@ -1107,8 +1084,6 @@ caption { font-weight:650; text-align:left; padding-bottom:.45rem; }
 th,td { text-align:left; vertical-align:top; border-bottom:1px solid var(--line); padding:.65rem .7rem; }
 th { color:#204139; background:var(--soft); }
 td:first-child { min-width:7rem; }
-.status-counts { display:flex; flex-wrap:wrap; gap:.5rem; list-style:none; padding:0; }
-.status-counts li { background:var(--soft); border:1px solid var(--line); padding:.25rem .6rem; border-radius:.4rem; margin:0; }
 .course-progress,.filter-box { border:1px solid var(--line); border-radius:.65rem; background:var(--surface); padding:1rem 1.2rem; margin:1rem 0; }
 .course-progress { max-width:41rem; }
 progress { display:block; width:100%; height:.9rem; accent-color:var(--accent); }
@@ -1141,7 +1116,8 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
 .item-id { font-size:.85em; color:var(--accent); white-space:nowrap; margin-right:.2rem; }
 .topic-meta,.module-progress,.track { color:var(--muted); font-size:.9rem; }
 .module-progress { font-weight:500; }
-.topic-controls { display:flex; align-items:center; gap:.6rem 1rem; flex-wrap:wrap; border-top:1px solid var(--line); }
+.topic-controls { display:flex; align-items:center; gap:.3rem .75rem; flex-wrap:wrap; border-top:1px solid var(--line); }
+.topic-controls p { margin-block:.3rem; }
 .topic-controls label { display:inline-flex; align-items:center; gap:.45rem; }
 .topic-controls select { width:auto; }
 .topic-link { margin-left:auto; }
@@ -1245,14 +1221,7 @@ ROADMAP_CSS = """
 """
 
 MODES_CSS = """
-.mode-picker { margin:1.7rem 0 .6rem; }
-.mode-picker h2 { font-size:clamp(1.5rem,3.7vw,2rem); }
-.mode-grid,.path-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
-.mode-grid a { text-decoration:none; display:grid; gap:.2rem; padding:1rem 1.15rem;
-  border:1px solid #b2cbbf; border-radius:.75rem; background:#e9f4ee; color:#184c3e; }
-.mode-grid a:nth-child(2) { background:#eaf0fa; color:#24436a; border-color:#bacce5; }
-.mode-grid a:hover { box-shadow:0 0 0 2px currentColor; }
-.mode-grid strong { font-size:1.12rem; }
+.path-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.85rem; }
 .mode-tagline { font-size:1.13rem; font-weight:700; }
 .path-card,.quick-plan,.plan-resume,.complete-strands a { background:#fff; border:1px solid var(--line); border-radius:.7rem; }
 .path-card { display:flex; align-items:start; flex-direction:column; padding:1rem; border-top:4px solid #43886c; }
@@ -1293,9 +1262,9 @@ MODES_CSS = """
 .complete-strands { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; }
 .complete-strands a { display:grid; padding:.65rem .8rem; }
 .complete-strands span { text-decoration:none; color:var(--ink); font-size:.91rem; }
-@media(max-width:640px) { .mode-grid,.path-grid,.complete-strands { grid-template-columns:1fr; } }
+@media(max-width:640px) { .path-grid,.complete-strands { grid-template-columns:1fr; } }
 @media print {
-  .mode-picker,.plan-resume,.plan-tools { display:none !important; }
+  .study-mode-picker,.plan-resume,.plan-tools { display:none !important; }
 }
 """
 
@@ -1303,6 +1272,7 @@ SCRIPT = """
 "use strict";
 
 const tabs = Array.from(document.querySelectorAll("#tabs a"));
+const modeLinks = document.querySelectorAll(".study-mode-picker a");
 const panels = tabs.map(tab => document.querySelector(tab.hash));
 const stages = Array.from(document.querySelectorAll(".stage"));
 const modules = Array.from(document.querySelectorAll(".module"));
@@ -1324,6 +1294,10 @@ function activate(tab) {
     item.tabIndex = selected ? 0 : -1;
     panels[index].hidden = !selected;
   });
+  for (const link of modeLinks) {
+    if (link.hash === tab.hash) link.setAttribute("aria-current", "location");
+    else link.removeAttribute("aria-current");
+  }
   document.dispatchEvent(new CustomEvent("curriculum-tab", {detail: tab.hash}));
 }
 

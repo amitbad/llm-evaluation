@@ -8,7 +8,7 @@ const vm = require("node:vm");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const html = read("docs/master-curriculum.html");
 const data = JSON.parse(html.match(/<script id="roadmap-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
-const authoredLessons = new Set(["M02-T01", "M02-T02"]);
+const authoredLessons = new Set(["M01-T01", "M02-T01", "M02-T02"]);
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(read("docs/learning_roadmap.js"), "const CurriculumRoadmap = {};")
   .replace("LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);", "")
@@ -69,6 +69,7 @@ function start(hash, storage = new Map()) {
     panel.panel = panel;
     return add("tab-" + panel.id, {hash: "#" + panel.id});
   });
+  const modeLinks = ["quick", "detail"].map(mode => add("mode-" + mode, {hash: "#" + mode}));
   for (const id of ["tabs", "filters", "search", "matches", "difficulty", "subject", "status", "track",
     "clear-filters", "expand", "collapse", "quick-catalog", "progress-bar", "progress-label", "storage-note",
     "course-progress", "guided-lesson", "guided-path", "guided-position", "guided-title", "guided-estimate",
@@ -119,7 +120,7 @@ function start(hash, storage = new Map()) {
     documentElement: {outerHTML: html, dataset: {}},
     getElementById: el,
     createElement: tag => new Element({tag}),
-    queries: {"#tabs a": tabs, ".topic": topics, "[data-quick-plan]": plans,
+    queries: {"#tabs a": tabs, ".study-mode-picker a": modeLinks, ".topic": topics, "[data-quick-plan]": plans,
       "[data-plan-progress]": [...Object.values(planActions), overviewAction, completeAction],
       ".lesson-supplement, .lesson-output": [add("print-lesson-disclosure", {open: false})]},
   });
@@ -153,6 +154,33 @@ function start(hash, storage = new Map()) {
     },
   };
 }
+
+test("compact mode selector follows lesson links and preserves progress across modes", () => {
+  const topic = data.paths.B.closure[0];
+  const route = lessonHash("B", topic);
+  const ui = start(route);
+  const quick = ui.el("mode-quick");
+  const complete = ui.el("mode-detail");
+  assert.match(html, /<nav class="study-mode-picker" aria-label="Learning mode">\s*<a href="#quick">Quick Learning<\/a>\s*<a href="#detail">Complete Course<\/a>/);
+  assert.equal(quick.getAttribute("aria-current"), "location");
+  assert.equal(complete.getAttribute("aria-current"), undefined);
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+
+  ui.go(complete.hash);
+  assert.equal(quick.getAttribute("aria-current"), undefined);
+  assert.equal(complete.getAttribute("aria-current"), "location");
+  ui.go("#" + topic.toLowerCase());
+  assert.equal(complete.getAttribute("aria-current"), "location");
+  assert.equal(ui.el(topic.toLowerCase()).querySelector("[data-progress]").value, "Completed");
+
+  ui.go(quick.hash);
+  assert.equal(quick.getAttribute("aria-current"), "location");
+  ui.go(route);
+  assert.equal(ui.el("guided-complete").textContent, "Completed");
+  ui.go("#overview");
+  assert.equal(quick.getAttribute("aria-current"), undefined);
+  assert.equal(complete.getAttribute("aria-current"), undefined);
+});
 
 test("all seven deep-link sequences use one shared lesson and stop at their boundaries", () => {
   for (const path of Object.values(data.paths)) {
@@ -256,10 +284,10 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       "What You Will Learn", "Why This Lesson Matters", "Beginner Explanation", "Worked Demonstration",
       "Hands-On Python Exercise", "Practice Exercises", "Worked Solutions to Practice",
       "<h4>Knowledge Check</h4>", "Knowledge Check Answers", "Common Mistakes", "Lesson Summary and Next Step",
-      "<summary>Technical Reference</summary>",
+      "<summary>Detailed time estimates</summary>",
     ] : ['class="lesson-intro"', "<strong>Lesson outline.", "<h4>Learning objectives</h4>",
       "<h4>Key concepts</h4>", "<h4>Demonstrations and examples</h4>", "<h4>Practical exercise</h4>",
-      "<h4>Checkpoint</h4>", "<summary>Detailed time estimates</summary>", "<summary>Technical Reference</summary>"];
+      "<h4>Checkpoint</h4>", "<summary>Detailed time estimates</summary>"];
     const positions = sections.map(label => markup.indexOf(label));
     assert(positions.every((position, index) => position >= 0 && (!index || position > positions[index - 1])));
     const prerequisites = [...topic.mandatory, ...topic.recommended, ...topic.conditional];
@@ -277,13 +305,31 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 14);
       assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-output"><summary>Expected output<\/summary>/g)].length, 14);
       assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement">/g)].length, 3);
-      assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, topic.id === "M02-T01" ? 15 : 12);
+      assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, topic.id === "M02-T02" ? 12 : 15);
+      if (topic.id === "M01-T01") {
+        assert.match(markup, /<h4>Independent Assignment<\/h4>/);
+        assert.match(markup, /<a href="#m01-t02">Inference, sampling and repeatability<\/a>/);
+      }
       if (topic.id === "M02-T02") {
         assert.match(markup, /<h4>Independent Assignment<\/h4>/);
         assert.match(markup, /<a href="#m02-t03">Offline, online and the evaluation lifecycle<\/a>/);
       }
     }
   }
+});
+
+test("learner HTML excludes internal technical metadata and keeps public resources", () => {
+  const privateFields = ["Technical Reference", "Existing files", "Audit findings", "Reuse strategy",
+    "Teaching and experiment gaps", "Technical corrections", "Existing Repository Coverage"];
+  const source = read("MASTER_CURRICULUM.md");
+  for (const field of privateFields) {
+    assert.equal(html.includes(field), false, field);
+  }
+  for (const field of privateFields.slice(1, 6)) {
+    assert(source.includes("**" + field + ".**"), field);
+  }
+  assert.match(html, /id="coverage"><a href="index.html#library">Published examples and downloads<\/a>/);
+  assert.match(html, /<summary>Teaching Plan<\/summary>/);
 });
 
 function send(element, name, values = {}) {

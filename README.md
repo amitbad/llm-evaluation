@@ -3,7 +3,7 @@
 
 ## TestNeural LLM Academy
 
-The [academy dashboard](docs/index.html) is the starting point for **LLM Evaluation Engineering**. **Quick Learning** gives each focused goal its required topics, hours, exercises and checkpoints. It also contains the Learning Paths comparison and preparation checklist. **Complete Course** follows the core sequence and lists optional preparation and electives separately. **Learning Roadmap** shows dependencies, supports pan and zoom, and offers SVG, PNG and standalone HTML downloads. **About the Course** shows the overview, hours and progress. **Resources** links to reference material and groups Existing Repository Coverage and the Teaching Plan under Instructor Resources. Published examples and planned teaching material are distinguished in the curriculum.
+The [academy dashboard](docs/index.html) is the starting point for **LLM Evaluation Engineering**. **Quick Learning** gives each focused goal its required topics, hours, exercises and checkpoints. It also contains the Learning Paths comparison and preparation checklist. **Complete Course** follows the core sequence and lists optional preparation and electives separately. **Learning Roadmap** shows dependencies, supports pan and zoom, and offers SVG, PNG and standalone HTML downloads. **About the Course** shows the overview, hours and progress. **Resources** links to published examples, the concepts reference, and the Teaching Plan. Published examples and planned teaching material are distinguished in the curriculum.
 
 ### Required project tracking
 
@@ -44,7 +44,7 @@ The version-1 JSON contains only a format identifier, version, completed topic I
 1. Open the local academy and check the five navigation items at 375, 768, 1366, 1440 and 1920 pixels. Try both themes. Check that the About overview stacks on narrower screens and that the wide hours table scrolls independently.
 2. Open a Quick Learning path, mark a topic complete and check that Continue Learning advances in order. Reload and check the same topic in Complete Course.
 3. Export a backup and import it in another browser profile. Preview and cancel first, then try merge and replace. Try an invalid topic ID and check that current progress remains intact.
-4. Open Learning Paths from Quick Learning and check all seven paths. In Resources, open Existing Repository Coverage and Teaching Plan under Instructor Resources. Pan and zoom the roadmap, download a plan, and open its HTML offline.
+4. Open Learning Paths from Quick Learning and check all seven paths. In Resources, check the published example links and open the Teaching Plan. Pan and zoom the roadmap, download a plan, and open its HTML offline.
 
 ### Required HTML synchronization
 
