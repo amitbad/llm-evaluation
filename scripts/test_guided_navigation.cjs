@@ -268,8 +268,10 @@ test("all lesson outlines render the reading sequence and show only relevant dis
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
       assert.equal([...markup.matchAll(/<h5>Practice \d\./g)].length, 4);
       assert.equal([...markup.matchAll(/<h5>Solution \d<\/h5>/g)].length, 4);
-      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 1);
-      assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 3);
+      assert.deepEqual([...markup.matchAll(/<h5>Step (\d) — /g)].map(match => Number(match[1])),
+        [1, 2, 3, 4, 5, 6, 7]);
+      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 7);
+      assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 14);
     }
   }
 });

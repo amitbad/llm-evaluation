@@ -1784,33 +1784,34 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
 <p><strong>Failure classification.</strong> Incorrect fact for the two contradictory claims, missing required information for the absent fee and trigger, and unsafe request for the PIN. Record one failed response with multiple labels.</p>
 <p><strong>What should happen next.</strong> Hold this flow for safety review and verify that PIN requests are rejected in several phrasings. Separately check whether the latest balance and fee policy reached the assistant. A single FAIL tells you to investigate but hides the urgent safety problem and the two different content fixes.</p>
 <h4>Hands-On Python Exercise</h4>
-<h5>Why automate part of this check?</h5>
-<p>You can read five replies by hand. If you change the assistant every week, it helps to repeat simple checks on the same saved inputs without overlooking a row. A <strong>deterministic check</strong> gives the same result when its inputs and rules are unchanged. It can find an exact token, a missing reply, or a phrase that needs review. A <strong>judgment-based check</strong> asks what the reply means against a reference. For example, a person can recognize that “five thousand rupees” and “₹5,000” mean the same amount. This lab uses both approaches. The program flags evidence for review. You decide whether each flag reflects a real problem.</p>
 <h5>Setup and run</h5>
-<p>Use Python 3.10 or newer. No third-party packages, credentials, model, or network access are needed to run the program. There is one file named <code>m02_t01_eval.py</code>. Save it as plain text in UTF-8, which lets the rupee symbol display correctly.</p>
-<p>A <strong>terminal</strong> is a window where you can type a command and see its output. On macOS or Linux, open Terminal. On Windows, open PowerShell and use the <code>py</code> commands below if the Python launcher is installed. Run the version command first. If it fails, use an available Python installation or a compatible online Python 3 editor. The editor itself may need internet access to load. The program makes no network calls. Use only the fictional data shown here.</p>
-<ol><li>Create a working folder and open it in a text editor. Copy the <strong>entire</strong> program below into a new file. Save it as <code>m02_t01_eval.py</code>, with no extra <code>.txt</code> ending.</li><li>Open a terminal in that folder. If needed, type <code>cd</code> followed by a space and the path to the folder in quotes, then press Enter.</li><li>Run the version check and the program. The second command tells Python to read your file and execute it.</li></ol>
+<p>Work through the steps in order. Each step has its own complete Python block. Start each step with a fresh copy of that block. Within the step, make the experimental edit only after your first run matches the expected output.</p>
+<p><strong>Online editor.</strong> Use a Python 3.10 or newer editor that lets you run code without creating an account. Select <strong>Copy Code</strong> beside the Python block, paste it into the editor, and click <strong>Run</strong>. Compare the output panel with the expected output in the lesson. For the experiment, edit the code in the editor and click <strong>Run</strong> again. When you start the next step, replace the entire editor contents. The editor may need internet access to load. All seven snippets run offline without packages, credentials, or a model.</p>
+<p><strong>Local terminal.</strong> A terminal is a window where you type commands and read their results. Open Terminal on macOS or Linux, or PowerShell on Windows. Use a working folder you can find again. Paste the Python block into a text editor and save it there as <code>m02_t01_step.py</code>, using UTF-8 text so the rupee symbol is preserved. On later steps, replace all the text in that file and save again. Open the terminal in the working folder. To move there, type <code>cd</code>, a space, and the folder path in quotes. Run the version check once and the file command after each edit.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
   </div>
   <pre><code class="language-bash">python3 --version
-python3 m02_t01_eval.py
+python3 m02_t01_step.py
 </code></pre>
 </div>
-<p>Use these commands on Windows with the Python launcher.</p>
+<p>If you use the Python launcher on Windows, run these commands instead.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
   </div>
   <pre><code class="language-bash">py -3 --version
-py -3 m02_t01_eval.py
+py -3 m02_t01_step.py
 </code></pre>
 </div>
-<p>In an online editor with a Python 3 runtime, paste the complete program into the editor and press <strong>Run</strong>. Do not paste the terminal commands into the Python editor. If the environment requires <code>main.py</code>, use that name there and press Run. If Python cannot find the file locally, verify the terminal folder and filename. If you see an indentation error, recopy the program including its spaces.</p>
-<h5>Copy this complete program</h5>
+<p>If the command cannot find your file, check the terminal folder and the filename. Some editors add <code>.txt</code> when saving. If you see an indentation error in a later step, start again from the block and preserve the spaces at the beginning of each line. Keep the console transcripts in the lesson for comparison. Only paste the Python block into the file or online editor.</p>
+<h5>Step 1 — Variables and printing</h5>
+<p><strong>What you are learning.</strong> Store the approved balance and the balance the assistant gave. An evaluator needs both values visible before deciding whether they agree.</p>
+<p>A <strong>string</strong> is text inside quotes. The quotes tell Python where the text begins and ends. They disappear when you display the value. A <strong>variable</strong> is a name you can use to refer to a value. Read <code>expected_amount = &quot;₹5,000&quot;</code> as “give the name expected_amount the value ₹5,000.” The single equals sign, <code>=</code>, assigns the value on its right to the name on its left. <code>print()</code> displays what you put inside its parentheses. A comma separates the label and value, and Python displays a space between them.</p>
+<p>Copy the Python block, paste it into a fresh editor or replace the contents of <code>m02_t01_step.py</code>, and run it.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
@@ -1819,108 +1820,244 @@ py -3 m02_t01_eval.py
   <pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
 actual_amount = &quot;₹10,000&quot;
 
-print(&quot;Example 1 - exact value comparison&quot;)
-print(f&quot;Expected: {expected_amount}&quot;)
-print(f&quot;Actual:   {actual_amount}&quot;)
-if actual_amount == expected_amount:
-    print(&quot;Exact comparison: MATCH&quot;)
-else:
-    print(&quot;Exact comparison: DIFFERENT&quot;)
-
-
-def review_signals(response, required_tokens):
-    if response is None:
-        return [&quot;NO_RESPONSE&quot;]
-
-    signals = []
-    for token in required_tokens:
-        if token not in response:
-            signals.append(f&quot;MISSING_TOKEN({token})&quot;)
-
-    lower_response = response.lower()
-    if &quot;no fees ever&quot; in lower_response:
-        signals.append(&quot;FEE_CLAIM_REVIEW&quot;)
-    if &quot;send your pin&quot; in lower_response:
-        signals.append(&quot;SENSITIVE_REQUEST_REVIEW&quot;)
-
-    return signals
-
-
-cases = [
-    (&quot;correct&quot;, &quot;The minimum is ₹5,000.&quot;, [&quot;₹5,000&quot;]),
-    (&quot;wrong_amount&quot;, &quot;The minimum is ₹10,000.&quot;, [&quot;₹5,000&quot;]),
-    (&quot;missing_fee&quot;, &quot;The minimum is ₹5,000.&quot;, [&quot;₹5,000&quot;, &quot;₹100&quot;, &quot;below&quot;]),
-    (
-        &quot;multiple_issues&quot;,
-        &quot;The minimum is ₹10,000. There are no fees ever. Send your PIN to verify.&quot;,
-        [&quot;₹5,000&quot;, &quot;₹100&quot;, &quot;below&quot;],
-    ),
-    (&quot;no_reply&quot;, None, [&quot;₹5,000&quot;]),
-]
-
-print()
-print(&quot;Example 2 - review signals on saved responses&quot;)
-for case_name, response, required_tokens in cases:
-    signals = review_signals(response, required_tokens)
-    if signals:
-        print(f&quot;{case_name}: {&#x27; | &#x27;.join(signals)}&quot;)
-    else:
-        print(f&quot;{case_name}: NO RULE FLAGS&quot;)
+print(&quot;Approved minimum:&quot;, expected_amount)
+print(&quot;Assistant&#x27;s minimum:&quot;, actual_amount)
 </code></pre>
 </div>
-<h5>Observe the first run</h5>
-<p>Compare your output line for line with the following. The blank line separates the two examples. The words in capital letters are rule labels for this lab. Judge the reply itself using the policy.</p>
-<pre><code class="language-text">Example 1 - exact value comparison
-Expected: ₹5,000
-Actual:   ₹10,000
-Exact comparison: DIFFERENT
-
-Example 2 - review signals on saved responses
-correct: NO RULE FLAGS
-wrong_amount: MISSING_TOKEN(₹5,000)
-missing_fee: MISSING_TOKEN(₹100) | MISSING_TOKEN(below)
-multiple_issues: MISSING_TOKEN(₹5,000) | MISSING_TOKEN(₹100) | MISSING_TOKEN(below) | FEE_CLAIM_REVIEW | SENSITIVE_REQUEST_REVIEW
-no_reply: NO_RESPONSE
+<pre><code class="language-text">Approved minimum: ₹5,000
+Assistant&#x27;s minimum: ₹10,000
 </code></pre>
-<h5>Read the code in small pieces</h5>
-<p><strong>Names and values.</strong> A <strong>variable</strong> gives a value a name. The first two lines name the expected and actual text. Quoted text is a <strong>string</strong>, an ordered sequence of characters. Here both amounts are strings because the code compares their written forms character by character. The <code>f</code> in front of a string allows Python to insert the value of an expression enclosed in braces. That is why the console shows ₹5,000 instead of the name <code>expected_amount</code>.</p>
-<p><strong>Comparison and conditions.</strong> A single <code>=</code> gives a variable a value. Two equals signs, <code>==</code>, ask whether two values are equal. Python checks <code>if</code>, runs its indented block when the comparison is true, and otherwise runs the <code>else</code> block. Say the comparison aloud in the first example. “Is the text ₹10,000 identical to the text ₹5,000?” It is not, so only the DIFFERENT line prints.</p>
-<p><strong>A function and its inputs.</strong> A <strong>function</strong> is a named piece of code you can call repeatedly. <code>review_signals</code> takes the reply and a list of required pieces of text as inputs, then sends the list of signals back with <code>return</code>. The value <code>None</code> represents an absent response. That branch returns immediately because it makes no sense to search for fee words in a reply that never arrived.</p>
-<p><strong>Lists and loops.</strong> A <strong>list</strong> stores items in order. <code>required_tokens</code> lists exact text fragments to look for, such as ₹100 or “below.” In this program, token means a literal saved fragment that you can find in the reply. A <strong>loop</strong> repeats an action. <code>for token in required_tokens</code> takes one fragment at a time and tests whether it occurs anywhere in the reply. <code>append</code> adds one flag to the end of the signal list. <code>lower</code> returns text in lowercase, so the check for “send your pin” also finds “Send your PIN.”</p>
-<p><strong>Rows and reporting.</strong> Each row contains a name, the saved reply, and its required fragments. The last loop takes the three items from one row, calls the same function, and prints all the returned flags together. <code>join</code> puts a vertical bar between flags so you can tell them apart. Work through <code>missing_fee</code> by hand. The first fragment is present. The next two are absent. That gives two signals, although a human might classify both as one missing part of the answer.</p>
-<h5>Experiment 1. Fix one input and predict the effect</h5>
-<p>Change only <code>actual_amount = &quot;₹10,000&quot;</code> to <code>actual_amount = &quot;₹5,000&quot;</code>. Save and run the same program again. Before running, predict which lines can change. You changed a variable used by Example 1. Example 2 contains its own saved responses, so it does not change.</p>
-<pre><code class="language-text">Example 1 - exact value comparison
-Expected: ₹5,000
-Actual:   ₹5,000
-Exact comparison: MATCH
-
-Example 2 - review signals on saved responses
-correct: NO RULE FLAGS
-wrong_amount: MISSING_TOKEN(₹5,000)
-missing_fee: MISSING_TOKEN(₹100) | MISSING_TOKEN(below)
-multiple_issues: MISSING_TOKEN(₹5,000) | MISSING_TOKEN(₹100) | MISSING_TOKEN(below) | FEE_CLAIM_REVIEW | SENSITIVE_REQUEST_REVIEW
-no_reply: NO_RESPONSE
+<p>The first line comes from Harbor Leaf Bank’s approved Standard Savings policy. The second comes from the saved reply. The program displays the pair so that you can inspect it.</p>
+<p><strong>Experiment.</strong> Change only the value assigned to <code>actual_amount</code> to <code>&quot;₹5,000&quot;</code>. Run again. Which line changes?</p>
+<pre><code class="language-text">Approved minimum: ₹5,000
+Assistant&#x27;s minimum: ₹5,000
 </code></pre>
-<p>Explain the difference in your own words before moving on. If you changed the wrong line, reread both printed amounts. The expected amount is the reference, so leave it at ₹5,000.</p>
-<h5>Experiment 2. Try a correct paraphrase and a false pass</h5>
-<p>Restore <code>actual_amount</code> to ₹10,000. Inside <code>cases</code>, change the reply in the row named <code>correct</code> to “The minimum is five thousand rupees.” Change the reply in <code>wrong_amount</code> to “The minimum is ₹10,000, not ₹5,000.” Leave both required-token lists and the remaining rows as they were. Save and run again.</p>
-<pre><code class="language-text">Example 1 - exact value comparison
-Expected: ₹5,000
-Actual:   ₹10,000
-Exact comparison: DIFFERENT
+<p><strong>Checkpoint.</strong> Where should you look if the approved amount unexpectedly changes in your output? Check the assignment to <code>expected_amount</code>. Changing <code>actual_amount</code> affects only the reply value.</p>
+<h5>Step 2 — Comparing two answers</h5>
+<p><strong>What you are learning.</strong> Ask Python whether two pieces of text are identical. This gives you one repeatable check for a tightly defined field such as a saved minimum amount.</p>
+<p>The two equals signs in <code>==</code> ask a question about equality. The single <code>=</code> still assigns a value. Python evaluates the comparison on the right first, then stores the answer under <code>same_text</code>. That answer is either <code>True</code> or <code>False</code>. Python calls this two-valued result a <strong>Boolean</strong>.</p>
+<p>Copy the whole block, paste it in place of Step 1, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
+actual_amount = &quot;₹10,000&quot;
 
-Example 2 - review signals on saved responses
-correct: MISSING_TOKEN(₹5,000)
-wrong_amount: NO RULE FLAGS
-missing_fee: MISSING_TOKEN(₹100) | MISSING_TOKEN(below)
-multiple_issues: MISSING_TOKEN(₹5,000) | MISSING_TOKEN(₹100) | MISSING_TOKEN(below) | FEE_CLAIM_REVIEW | SENSITIVE_REQUEST_REVIEW
-no_reply: NO_RESPONSE
+same_text = expected_amount == actual_amount
+print(&quot;Exact text match:&quot;, same_text)
 </code></pre>
-<p>The correct reply raises a flag because the literal string is missing. A reviewer can verify that the amount is nevertheless correct. The wrong reply slips past the rule because the right token appears inside a denial. This is a <strong>false pass</strong> if someone treats NO RULE FLAGS as approval. Similarly, “Never send your PIN” would contain the rule&#x27;s exact phrase but give safe advice. Calling that request unsafe solely because of the flag would be an erroneous failure label.</p>
-<p>Write a two-column worksheet with the five case names. In the first column record the rule output, and in the second write your human assessment with a reason. For <code>no_reply</code>, record an operational failure and mark wording checks N/A. Explain one mismatch in terms of what the program can observe and what it cannot understand. Improvements could include parsing numbers into a known format, keeping a reviewer checklist, or later applying a meaning-based evaluation with verified counterexamples. None of these methods eliminates the need to validate the evaluator itself.</p>
-<h5>Check your worksheet</h5>
-<ul><li><strong>correct.</strong> The paraphrase gives the approved balance. Correctness and groundedness meet the objective even though the rule raises a flag.</li><li><strong>wrong_amount.</strong> The reply asserts ₹10,000 and denies ₹5,000. Record Incorrect fact even though the rule finds the expected token.</li><li><strong>missing_fee.</strong> The balance is right. Record Missing required information for the absent fee and trigger.</li><li><strong>multiple_issues.</strong> Record Incorrect fact, Missing required information, and Unsafe request as in Example 3. The review signals point you toward those judgments.</li><li><strong>no_reply.</strong> Record Operational failure and N/A for content. Investigate availability separately from the wording checks.</li></ul>
+</div>
+<pre><code class="language-text">Exact text match: False
+</code></pre>
+<p>The strings contain different characters. In this case the amounts also differ in meaning. The Boolean comes from checking the text. You still need the approved policy and your reading of the amount to make the factual judgment.</p>
+<p><strong>Experiment.</strong> Change <code>actual_amount</code> to <code>&quot;₹5,000&quot;</code>. Run again.</p>
+<pre><code class="language-text">Exact text match: True
+</code></pre>
+<p><strong>Checkpoint.</strong> In <code>same_text = expected_amount == actual_amount</code>, which part asks the question? <code>==</code> compares the values, and <code>=</code> stores the result.</p>
+<h5>Step 3 — PASS and FAIL with conditions</h5>
+<p><strong>What you are learning.</strong> Give a rule a clear label a reviewer can read quickly. Keep the scope of each label visible so a narrowly defined check stays easy to interpret.</p>
+<p>An <code>if</code> checks a condition. The colon at the end of the line starts a block of code. Move the next line four spaces to the right to show that it belongs to the block. This is <strong>indentation</strong>. Put <code>else</code> at the same left edge as <code>if</code> and indent its block too. Python runs the first block when the condition is true and the second when it is false. Choosing one of two paths is called <strong>branching</strong>.</p>
+<p>Copy the whole block, paste it in place of Step 2, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
+actual_amount = &quot;₹10,000&quot;
+
+print(&quot;Saved amount:&quot;, actual_amount)
+if actual_amount == expected_amount:
+    print(&quot;Exact-text check: PASS&quot;)
+else:
+    print(&quot;Exact-text check: FAIL&quot;)
+</code></pre>
+</div>
+<pre><code class="language-text">Saved amount: ₹10,000
+Exact-text check: FAIL
+</code></pre>
+<p>The comparison is false, so Python takes the <code>else</code> branch. The label names the <strong>exact-text check</strong>. This is a basic demonstration that tests the spelling of the amount.</p>
+<p><strong>Experiment.</strong> Replace the value of <code>actual_amount</code> with <code>&quot;five thousand rupees&quot;</code>. Read the amount yourself, predict which branch Python will take, and run again.</p>
+<pre><code class="language-text">Saved amount: five thousand rupees
+Exact-text check: FAIL
+</code></pre>
+<p><strong>Checkpoint.</strong> Would you tell the bank team that this edited answer gives the wrong amount? Both wordings give ₹5,000. The rule still reports a text mismatch. This is why exact text matching and factual correctness need separate judgments.</p>
+<h5>Step 4 — Evaluate multiple saved responses</h5>
+<p><strong>What you are learning.</strong> Apply one check consistently to several saved replies. You can rerun the same cases after a change and see which replies changed.</p>
+<p>A <strong>list</strong> holds items in order. Put the items inside square brackets and separate them with commas. The <code>for</code> line takes each item in turn and gives it the temporary name <code>response</code>. Its colon and indented block work much like those in Step 3. The block runs once per item. Here it displays each reply and the result of comparing the whole sentence with the expected answer.</p>
+<p>Copy the whole block, paste it in place of Step 3, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">expected_answer = &quot;The minimum is ₹5,000.&quot;
+responses = [
+    &quot;The minimum is ₹5,000.&quot;,
+    &quot;The minimum is ₹10,000.&quot;,
+    &quot;Keep at least ₹5,000 in the account.&quot;,
+]
+
+for response in responses:
+    print(&quot;Reply:&quot;, response)
+    print(&quot;Exact text match:&quot;, response == expected_answer)
+</code></pre>
+</div>
+<pre><code class="language-text">Reply: The minimum is ₹5,000.
+Exact text match: True
+Reply: The minimum is ₹10,000.
+Exact text match: False
+Reply: Keep at least ₹5,000 in the account.
+Exact text match: False
+</code></pre>
+<p>The first reply is identical to <code>expected_answer</code>. The second gives the wrong amount. The third expresses the same requirement in different words. The two false results therefore need different explanations.</p>
+<p><strong>Experiment.</strong> Replace just the third list item with <code>&quot;The minimum is ₹5,000.&quot;</code>. Run again. Keep the first two list items as they were.</p>
+<pre><code class="language-text">Reply: The minimum is ₹5,000.
+Exact text match: True
+Reply: The minimum is ₹10,000.
+Exact text match: False
+Reply: The minimum is ₹5,000.
+Exact text match: True
+</code></pre>
+<p><strong>Checkpoint.</strong> How many times does the indented block run? Three, once for each saved reply, even when two entries have the same text.</p>
+<h5>Step 5 — Introduce failure categories</h5>
+<p><strong>What you are learning.</strong> Separate review signals so a teammate knows which part of a reply to inspect. A <strong>failure category</strong> describes an observed problem, such as an incorrect minimum, a missing fee detail, or an unsafe request. The computer can flag text that deserves a look. You assign the actual category after reading the reply and the policy.</p>
+<p>Start by reading the first rule. <code>not in</code> asks whether a piece of text is absent. A reply that lacks the exact string <code>₹5,000</code> gets a minimum-text flag. Then read the two additional checks. <code>in</code> asks whether the exact phrase appears. The fee text check here is for a two-part question that asks for the minimum and what happens below it. The PIN rule looks for the case-sensitive phrase <code>send your PIN</code>. Each <code>if</code> runs independently, so one reply can raise several flags.</p>
+<p>Copy the whole block, paste it in place of Step 4, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">response = &quot;The minimum is ₹10,000. Please send your PIN.&quot;
+
+print(&quot;Reply:&quot;, response)
+if &quot;₹5,000&quot; not in response:
+    print(&quot;Review: minimum text missing&quot;)
+if &quot;₹100&quot; not in response:
+    print(&quot;Review: fee text missing&quot;)
+if &quot;send your PIN&quot; in response:
+    print(&quot;Review: possible unsafe request&quot;)
+</code></pre>
+</div>
+<pre><code class="language-text">Reply: The minimum is ₹10,000. Please send your PIN.
+Review: minimum text missing
+Review: fee text missing
+Review: possible unsafe request
+</code></pre>
+<p>The reply raises three signals. The reference gives ₹5,000 as the minimum and a ₹100 monthly fee below it, and forbids asking for a PIN. Your human labels are Incorrect fact, Missing required information, and Unsafe request. A phrase search catches only what its wording covers. It would also flag safe advice such as “Never send your PIN.”</p>
+<p><strong>Experiment.</strong> Change <code>₹10,000</code> to <code>₹5,000</code> inside the reply. Run again.</p>
+<pre><code class="language-text">Reply: The minimum is ₹5,000. Please send your PIN.
+Review: fee text missing
+Review: possible unsafe request
+</code></pre>
+<p><strong>Checkpoint.</strong> Does correcting the minimum clear the unsafe request? The PIN request still violates the policy, and the missing fee still needs attention.</p>
+<h5>Step 6 — Introduce functions</h5>
+<p><strong>What you are learning.</strong> Put one rule under a name so you can use it repeatedly. Keeping the rule in one place helps every case receive the same check.</p>
+<p>A <strong>function</strong> is a named piece of work. <code>def</code> introduces it. The names in parentheses are <strong>parameters</strong>, or names the function uses for its inputs. Like <code>if</code> and <code>for</code>, the definition ends with a colon and an indented block. Calling <code>minimum_signal(...)</code> runs that block with the values you supply. <code>return</code> sends a value back and ends that call. Here <code>print</code> displays the value returned by the inner call.</p>
+<p>Copy the whole block, paste it in place of Step 5, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def minimum_signal(response, expected_amount):
+    if expected_amount in response:
+        return &quot;Minimum text found&quot;
+    else:
+        return &quot;Review: minimum text missing&quot;
+
+
+print(minimum_signal(&quot;The minimum is ₹5,000.&quot;, &quot;₹5,000&quot;))
+print(minimum_signal(&quot;The minimum is ₹10,000.&quot;, &quot;₹5,000&quot;))
+</code></pre>
+</div>
+<pre><code class="language-text">Minimum text found
+Review: minimum text missing
+</code></pre>
+<p>You called the same function twice with the same approved amount and two different replies. Each call returns one label. The function checks for the literal text anywhere in the reply.</p>
+<p><strong>Experiment.</strong> Change only the reply in the second call to <code>&quot;The minimum is ₹10,000, not ₹5,000.&quot;</code>. Keep the expected amount at <code>&quot;₹5,000&quot;</code> and run again.</p>
+<pre><code class="language-text">Minimum text found
+Minimum text found
+</code></pre>
+<p><strong>Checkpoint.</strong> Why did the second reply get the same label as the first? The search found <code>₹5,000</code> inside a denial. Read the claim itself to see that the reply asserts the wrong amount.</p>
+<h5>Step 7 — Complete mini evaluation program</h5>
+<p><strong>What you are learning.</strong> Turn the previous checks into a repeatable report. Every saved reply answers the same question here. “What is the minimum balance, and what happens if I fall below it?” The approved policy requires a ₹5,000 minimum, a ₹100 monthly fee below the minimum, and safe handling of PINs.</p>
+<p>Read the three parts before running.</p>
+<ol><li><strong>The rules.</strong> The function starts with an empty list, <code>[]</code>. The dot in <code>flags.append(...)</code> uses the list’s <code>append</code> operation, which adds one label to the end. The fee rule uses <code>or</code>. It raises a flag if either the fee amount or the word <code>below</code> is missing. The function returns the complete list for this reply.</li><li><strong>The saved cases.</strong> Each item in <code>responses</code> is a fictional reply to the same question. The list includes a correct baseline, a correct paraphrase, a contradictory answer, and a reply that needs several reviews.</li><li><strong>The report.</strong> The outer loop processes one reply at a time. <code>print()</code> with empty parentheses adds a blank line. <code>if flags</code> means “does the list contain anything?” When it does, the inner loop prints each flag on a separate line. Its extra indentation keeps it inside the <code>if</code> block. An empty list gives “No rule flags.”</li></ol>
+<p>Copy the whole block, paste it in place of Step 6, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def review_reply(response):
+    flags = []
+    if &quot;₹5,000&quot; not in response:
+        flags.append(&quot;Minimum text missing&quot;)
+    if &quot;₹100&quot; not in response or &quot;below&quot; not in response:
+        flags.append(&quot;Fee or trigger text missing&quot;)
+    if &quot;send your PIN&quot; in response:
+        flags.append(&quot;Possible unsafe request&quot;)
+    return flags
+
+
+responses = [
+    &quot;The minimum is ₹5,000. A ₹100 monthly fee applies below it.&quot;,
+    &quot;Keep five thousand rupees. A ₹100 monthly fee applies below it.&quot;,
+    &quot;Minimum ₹10,000, not ₹5,000. ₹100 fee applies below ₹10,000.&quot;,
+    &quot;The minimum is ₹10,000. Please send your PIN.&quot;,
+]
+
+print(&quot;Harbor Leaf Bank - saved response review&quot;)
+for response in responses:
+    print()
+    print(&quot;Reply:&quot;, response)
+    flags = review_reply(response)
+    if flags:
+        for flag in flags:
+            print(&quot;-&quot;, flag)
+    else:
+        print(&quot;No rule flags&quot;)
+</code></pre>
+</div>
+<pre><code class="language-text">Harbor Leaf Bank - saved response review
+
+Reply: The minimum is ₹5,000. A ₹100 monthly fee applies below it.
+No rule flags
+
+Reply: Keep five thousand rupees. A ₹100 monthly fee applies below it.
+- Minimum text missing
+
+Reply: Minimum ₹10,000, not ₹5,000. ₹100 fee applies below ₹10,000.
+No rule flags
+
+Reply: The minimum is ₹10,000. Please send your PIN.
+- Minimum text missing
+- Fee or trigger text missing
+- Possible unsafe request
+</code></pre>
+<p>Compare the report with the policy. For the minimum rule, a flag on the correct paraphrase is a <strong>false positive</strong>. That means the rule raised an alert where the amount was right. The wrong reply that denies ₹5,000 is a <strong>false negative</strong> because the rule missed a real error. That reply also omits the fee frequency and attaches the fee to the wrong threshold. Finding <code>₹100</code> and <code>below</code> anywhere in the sentence cannot check those relationships.</p>
+<p>These are <strong>deterministic checks</strong>. The same saved text and rules give the same output each time. A reviewer makes a <strong>judgment-based assessment</strong> by comparing each claim with the evidence. A more advanced evaluation could parse amounts into a common format or compare the meaning of claims with the approved policy. Test any such evaluator on paraphrases, contradictory replies, and safe advice before relying on it. If a request times out and supplies no reply, record an operational failure and mark wording checks N/A.</p>
+<p><strong>Experiment.</strong> In the last list item, replace <code>Please send your PIN.</code> with <code>Keep your PIN private.</code>, leave the wrong amount in place, and run again.</p>
+<pre><code class="language-text">Harbor Leaf Bank - saved response review
+
+Reply: The minimum is ₹5,000. A ₹100 monthly fee applies below it.
+No rule flags
+
+Reply: Keep five thousand rupees. A ₹100 monthly fee applies below it.
+- Minimum text missing
+
+Reply: Minimum ₹10,000, not ₹5,000. ₹100 fee applies below ₹10,000.
+No rule flags
+
+Reply: The minimum is ₹10,000. Keep your PIN private.
+- Minimum text missing
+- Fee or trigger text missing
+</code></pre>
+<p><strong>Checkpoint.</strong> Explain why the edited last reply still fails the evaluation objective. The PIN advice is safe. The minimum still conflicts with the policy, and the fee and its trigger are still missing. Use a worksheet to put the report beside your human judgment for the four replies. The first reply meets the stated checks, the second is a correct paraphrase, the third contains an incorrect threshold and missing frequency, and the fourth after the edit contains a wrong amount and missing required fee information. Keeping the rule output and the human labels side by side shows where you can automate and where you still need a reviewer.</p>
 <h4>Practice Exercises</h4>
 <p>Write your answers first. The solutions are in the next section so you can compare the reasoning as well as the labels.</p>
 <h5>Practice 1. Identify an incorrect reply</h5>

@@ -20,6 +20,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The fi
 | Guided lesson reading | Lessons have a responsive reading layout, a prominent title and progress indicator, structured activities, and collapsed time and technical details. Empty prerequisites are omitted. The existing module goals and topic text are reused and the outlines are labeled. |
 | First full reference lesson | M02-T01 now teaches evaluation design through one fictional bank scenario, three worked assessments, an offline Python lab, four practice exercises with solutions, and eight knowledge checks with answers. Both learning modes use the same chapter. |
 | Lesson code copying | Generated executable fences have a shared Copy Code button with success and failure feedback. Console transcripts remain plain. |
+| Beginner Python tutorial | M02-T01 now builds from printing two saved amounts to a seven-step offline evaluation report. Each step includes an independent snippet, one edit to try, both expected outputs, and a checkpoint. |
 
 ## Tested
 
@@ -36,6 +37,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The fi
 - Reading-layout checks verified the section order and disclosures for all 53 outlines, restoration of module objectives on return to Complete Course, path progress counts, and generator and public-site validation.
 - Ran the M02-T01 Python program on Python 3.12.7 for the baseline and both documented edits. All three console transcripts matched exactly. The generated chapter is shared across learning modes, the remaining 52 topic renderings and curriculum data are unchanged, and the 4.5-hour estimate stays in place for the full set of activities. It has not been timed with learners.
 - Non-browser copy tests verified exact text, success reset, clipboard fallback and error feedback, and that transcripts have no button. Native clipboard permissions and sticky placement still need a manual check.
+- Ran all seven revised M02-T01 snippets and their seven learner edits on Python 3.12.7. All 14 transcripts matched exactly. The rest of the lesson, the remaining topics, and the generated navigation and progress code were unchanged.
 
 ## Manually verified
 
