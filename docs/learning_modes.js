@@ -27,22 +27,27 @@ const guidedLearning = (() => {
   function restoreMaterial() {
     if (!mounted) return;
     for (const [link, href] of mounted.links) link.setAttribute("href", href);
-    mounted.objectiveHome.append(mounted.objective);
-    mounted.objectives.hidden = true;
+    if (mounted.outline) {
+      mounted.outline.home.append(mounted.outline.objective);
+      mounted.outline.section.hidden = true;
+    }
     mounted.parent.append(mounted.node);
     mounted = null;
   }
 
   function mountMaterial(route) {
     const node = document.getElementById("material-" + route.topic.toLowerCase());
-    const moduleId = data.topics[route.topic].module.toLowerCase();
-    const objective = document.getElementById("module-objectives-" + moduleId);
-    const objectives = node.querySelector(".lesson-objectives");
-    const objectiveHome = objective.parentElement;
-    objectives.querySelector("[data-lesson-objectives]").append(objective);
-    objectives.hidden = false;
+    const section = node.querySelector(".lesson-objectives");
+    let outline = null;
+    if (section) {
+      const moduleId = data.topics[route.topic].module.toLowerCase();
+      const objective = document.getElementById("module-objectives-" + moduleId);
+      outline = {objective, home: objective.parentElement, section};
+      section.querySelector("[data-lesson-objectives]").append(objective);
+      section.hidden = false;
+    }
     const links = Array.from(node.querySelectorAll('a[href^="#m"]'), link => [link, link.getAttribute("href")]);
-    mounted = {node, links, parent: node.parentElement, objective, objectiveHome, objectives};
+    mounted = {node, links, parent: node.parentElement, outline};
     for (const [link, href] of links) {
       const topic = href.slice(1).toUpperCase();
       if (route.path.closure.includes(topic)) link.setAttribute("href", lessonHash(route.path.id, topic));

@@ -1697,34 +1697,232 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
       <a class="topic-link" href="#m02-t01">Link to topic</a>
     </div>
     <div class="topic-material lesson-reading" id="material-m02-t01">
-  <p class="lesson-intro" data-lesson-search>A score helps only if it answers a decision the team can act on.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Correctness, completeness, relevance, groundedness, usability, safety, cost, latency, evaluation units and error versus failure.</p>
-  </section>
+<div class="lesson-section" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Write an evaluation objective that names the behavior, the unit you will judge, and the decision the evidence will support.</li><li>Turn a vague goal such as “give good answers” into observable pass criteria for at least three quality dimensions.</li><li>Use approved evidence to distinguish correctness from completeness and relevance from groundedness.</li><li>Assign more than one failure category to a response and distinguish an evaluator error from a product failure.</li><li>Run a short Python evaluation on saved responses, predict the effect of a change, and explain what its rules miss.</li><li>Design a small evaluation dataset and recommend what a fictional bank team should fix, review, or hold back.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>A customer asks, “What is the minimum balance required for a Standard Savings Account?” The approved policy says, “The minimum required balance for the Standard Savings Account is ₹5,000.” The chat assistant answers, “The minimum balance is ₹10,000.”</p>
+<p>The reply is short and confident. The amount contradicts the approved policy. A customer might decide the account is unsuitable based on a requirement that does not exist. Now compare it with “The minimum required balance for the Standard Savings Account is ₹5,000.” That answer addresses the same question, gives the right amount, and is supported by the approved policy.</p>
+<p>Both answers could sound convincing. If you only read for fluency, they could look equally good. Keep the question and policy beside the response so that you can check what the assistant actually promised.</p>
+<p>Throughout this chapter, the bank is Harbor Leaf Bank. The bank, account, policy amounts, responses, costs, and targets are fictional teaching data. This lesson provides no financial advice. Do not enter real account information or credentials in any exercise.</p>
+<h5>Plan your study session</h5>
+<p>Allow about 4.5 hours if you are new to evaluation and Python. The code itself takes seconds to run. Most of the time is for making judgments, checking evidence, and explaining your results.</p>
+<ul><li><strong>Understand, about 60 minutes.</strong> Read the explanations slowly. Cover the judgments in the examples, write your own labels, and justify each label with a line from the policy.</li><li><strong>Follow and run, about 90 minutes.</strong> Work through the three demonstrations, copy and run the program, and trace one row by hand. Allow time for first-time Python or editor setup.</li><li><strong>Observe and experiment, about 60 minutes.</strong> Run the variations, record their results, and compare the rule output with your own reading of each reply.</li><li><strong>Practice and check, about 60 minutes.</strong> Solve the four practice exercises, then answer the eight questions before consulting the answer key.</li></ul>
+<h4>Beginner Explanation</h4>
+<h5>1. Evaluation starts with something you can check</h5>
+<p>An LLM, or large language model, generates text in response to an input. The <strong>response</strong> is the text the assistant actually returns. An <strong>evaluation</strong> is a deliberate check of how that response or the surrounding system behaves for a particular purpose. In the opening example, you compared one response against a specific policy sentence and found a contradiction. You have already done a small evaluation.</p>
+<p>The policy is your <strong>approved reference</strong>. It supplies the information the assistant is allowed to use for this question. A reference can supply a fact that the assistant puts into its own words. “You need ₹5,000 for that account” can be a good answer even though it uses different words. Conversely, copying the words “Standard Savings Account” can look reassuring while leaving the amount wrong. Look for the claim the answer makes and compare its meaning with the reference.</p>
+<p>Evaluation helps a team decide what to change or whether users should see a feature. An answer that sounds good once gives little evidence about the other questions the assistant will face. This is why we use a <strong>case</strong> with a question, the evidence available for it, and expected behavior, then repeat the check across different cases.</p>
+<h5>2. Define the decision, the evaluation unit, and success</h5>
+<p>An <strong>evaluation objective</strong> states why you are checking something and what evidence would help you act. “Make the bot better” gives two reviewers little basis for agreement. Try “Before releasing the Standard Savings FAQ assistant, verify that it answers supported balance and fee questions from the approved policy, and holds unsupported or sensitive requests for safe handling.” The decision is whether this narrow feature is ready for its next test. The assistant&#x27;s writing style may matter, but it is secondary to the balance and fee claims for this objective.</p>
+<p>An <strong>evaluation unit</strong> is the thing you judge as one item. For our saved-answer exercise, it is one assistant response to one question under one version of the approved policy. Keep three questions and three replies as three units. A question that gets a timeout is still an attempted unit for an availability check. If the goal were to judge a multi-turn conversation, the whole conversation could instead be one unit. Using a unit consistently keeps your counts meaningful. Three defects in one reply are still one failed reply for a response-level pass rate.</p>
+<p>A <strong>success criterion</strong> is an observable rule you apply to the unit. Turn “answer the balance question well” into “The reply states that the Standard Savings minimum is ₹5,000 and gives no conflicting amount for that requirement.” For a two-part balance-and-fee question, add “It states the monthly fee and the condition under which it applies.” For safety, add “It never asks for a PIN.” Each rule points to something a reviewer can check. A <strong>counterexample</strong> is a case that would break a rule, such as “₹5,000 or ₹10,000, whichever you prefer” for the no-conflicting-amount rule.</p>
+<p>Try writing your own criterion for an unanswered question. “Respond politely” is too broad for this purpose. A checkable version is “If the supplied reference cannot answer the policy question, the assistant says it cannot confirm the answer and does not invent an amount.” You will use a case like this in Practice 4.</p>
+<h5>3. Know what each evaluation dimension asks</h5>
+<p>A <strong>dimension</strong> is one property you inspect. Different dimensions explain different ways a reply can help or fail the same customer. Use the question and evidence to decide which properties matter before you read the reply.</p>
+<h6>Correctness and completeness</h6>
+<p><strong>Correctness</strong> asks whether the claims the assistant makes are accurate. “The minimum is ₹10,000” conflicts with the explicit ₹5,000 policy, so the amount is incorrect. You can recognize the error by finding two different values for the same account requirement. A common mistake is to treat a confidently stated number as evidence. Read the number in the reference first.</p>
+<p><strong>Completeness</strong> asks whether the reply provides all the information required by the question or its success criteria. If a customer asks for the balance and the fee, “The balance is ₹5,000” gets its claim right but omits the fee. It is incomplete. You can spot this by writing down the requested parts before reading the reply. A longer reply need not be more complete. Extra paragraphs about online banking leave the fee question unanswered. Practice 2 asks you to judge these dimensions separately.</p>
+<h6>Relevance and groundedness</h6>
+<p><strong>Relevance</strong> asks whether the reply addresses the user&#x27;s question. “Harbor Leaf Bank offers paperless statements” may be an approved fact, but it does not tell a customer the required balance. Look for the link between each substantial part of the reply and the customer&#x27;s request. A common mistake is to give a high relevance rating just because the reply mentions the correct bank or account.</p>
+<p><strong>Groundedness</strong> asks whether the supplied evidence supports the claims. Suppose the approved text covers only the minimum balance. “The minimum is ₹5,000, and the bank will waive every fee if you ask” stays close to the banking question, but the waiver claim has no support in the supplied policy. Identify the individual claim and point to the sentence that supports it. If none exists, it is unsupported under this reference. That is enough to flag it. Your assessment applies to this case and its supplied evidence.</p>
+<p>Correctness and groundedness often agree when an approved policy covers the claim fully. They can come apart. A fee figure might happen to match a trustworthy policy the evaluator later finds, yet the assistant was given only the short balance excerpt. The figure may be right in the wider world. Its groundedness still fails for this case, which supplies only the balance excerpt. Alternatively, if you verify that a reply copied an old supplied policy accurately and a separately approved current policy contradicts it, the copy is supported by the supplied text but wrong for today&#x27;s customer. Investigate the policy version rather than assuming the assistant invented the amount. You can also record “needs review” when you cannot determine correctness.</p>
+<h6>Usability and safety</h6>
+<p><strong>Usability</strong> asks whether the reader can understand and act on the reply. “The applicable threshold is INR 5e3, subject to the aforementioned product schema” describes ₹5,000 in a way many customers would have to decode. “Keep at least ₹5,000 in the Standard Savings Account” communicates the same amount in plain language. Read the reply as the person who asked the question. Can they tell what to do without guessing? A common mistake is to equate technical precision with a usable answer.</p>
+<p><strong>Safety</strong> asks whether the reply could cause avoidable harm or solicit information the assistant should not handle. In this scenario, the bank&#x27;s chat policy says never to request a customer&#x27;s PIN. “The minimum is ₹5,000. Send your PIN to confirm” is correct about the balance and unsafe about the PIN. A PIN is a secret number used to protect access. The customer can get an answer about public account terms without sharing it. Look for unsafe instructions even when the factual portion passes. A friendly disclaimer or a correct amount does not cancel an unsafe request. You will label this independently in Practice 3.</p>
+<h6>Cost and latency</h6>
+<p><strong>Cost</strong> is what the team spends to process the request. <strong>Latency</strong> is the time the user waits from sending the question to receiving the full reply. For a fictional test, imagine two implementations both answer correctly and safely. One takes 0.9 seconds and costs ₹0.04 per request. The other takes 3.4 seconds and costs ₹0.18. If the team set a 2-second and ₹0.10-per-request target for this small pilot, the first meets these limits on this observed request. Inspect measurements recorded beside the reply. Words like “instant” in the answer do not tell you the measured duration or spend.</p>
+<p>Cost and latency are separate from the quality of the wording. A cheap, fast answer still fails a safety rule if it asks for a PIN. A slow answer can be factually right and fail a speed target. Before drawing a release conclusion, repeat measurements under comparable conditions and include slow or failed attempts in the availability discussion. One observed request does not establish typical performance. Knowledge Check 7 asks you to make a scoped decision using both limits.</p>
+<h5>4. Describe what failed before deciding why it happened</h5>
+<p>In this chapter, a <strong>failure</strong> means the evaluated behavior did not meet a success criterion. An <strong>error</strong> is a specific mistake or problem you can observe. Giving ₹10,000 is an error in the answer. Failing the balance criterion is the outcome. If the evaluator used a retired policy or parsed ₹5,000 incorrectly, that would be an evaluator error. Correct the check and rerun it before blaming the assistant. If the request timed out, the system failed to provide a reply, but there is no reply to assess for correctness.</p>
+<p>A <strong>failure taxonomy</strong> is a small set of labels with clear rules that help reviewers record comparable problems. Start with labels that lead to different actions. Compare the following rules on the fictional banking replies.</p>
+<ul><li><strong>Incorrect fact.</strong> A claim conflicts with a known fact, such as ₹10,000 instead of ₹5,000. Check the approved policy, then trace where the incorrect number entered the answer.</li><li><strong>Missing required information.</strong> The reply leaves out a requested part, such as when the fee applies. Improve the instructions and test more two-part questions.</li><li><strong>Irrelevant content.</strong> The reply supplies material unrelated to the customer&#x27;s request. Check whether it followed the question and selected appropriate context.</li><li><strong>Unsupported claim.</strong> A claim cannot be backed by the available reference. Ask the assistant to stick to the supplied evidence or say it cannot confirm the claim.</li><li><strong>Hard to use.</strong> The reply obscures a needed next action or uses wording the expected reader cannot readily understand. Rewrite and compare with a customer-readable answer.</li><li><strong>Unsafe request.</strong> The reply asks for a secret or gives an unsafe instruction. Block release for the affected flow and test variations after a fix.</li><li><strong>Operational failure.</strong> There is no usable reply due to a timeout, or a measured operational target was missed. Inspect timing, spending, or request failures independently of factual judgments.</li></ul>
+<p>Label what you can observe. For one conflicting amount, use “Incorrect fact” as the main classification for that claim. A separate unsupported waiver claim earns “Unsupported claim.” This convention gives you more useful counts than treating every contradictory amount as a second, independent unsupported defect. Keep both dimension judgments in your notes if they matter. If no answer exists, mark response dimensions <strong>N/A</strong>, meaning not applicable for that attempt. A missing or untrusted reference when a response does exist calls for “needs review” on claims you cannot assess.</p>
+<p>After assigning a failure label, investigate the <strong>root cause</strong>, the underlying reason the problem occurred. A wrong amount could have come from old policy, wrong evidence selection, or an answer generated despite the right excerpt. Inspect what the system received before prescribing a fix. Teams can use the categories to prioritize a severe safety issue, decide what evidence to collect next, and retest the same cases after an update. A small teaching set is a starting point for that work. It cannot establish production readiness on its own.</p>
+<h4>Worked Demonstration</h4>
+<p>For each example, pause before the assessment. Write the question&#x27;s required parts, underline claims in the reply, and match each claim to the policy. Record both a verdict and a reason. A <strong>verdict</strong> is the result of a check, such as met, missed, needs review, or N/A.</p>
+<h5>Example 1. A fluent answer with the wrong amount</h5>
+<p><strong>User question.</strong> “What is the minimum balance required for a Standard Savings Account?”</p>
+<p><strong>Approved reference.</strong> The minimum required balance for the Standard Savings Account is ₹5,000.</p>
+<p><strong>Actual LLM response.</strong> “The minimum balance is ₹10,000.”</p>
+<p><strong>Evaluation objective.</strong> Check that this reply communicates the approved minimum without a conflicting amount.</p>
+<p><strong>Relevant dimensions.</strong> Correctness, relevance, groundedness, and usability.</p>
+<p><strong>Assessment.</strong> Correctness misses because ₹10,000 contradicts ₹5,000. Relevance is met because the reply addresses the minimum balance. It is easy to read. The claim lacks policy support. For the same question, “The minimum balance is ₹5,000” meets the amount criterion and is supported by the reference.</p>
+<p><strong>Failure classification.</strong> Incorrect fact. Record the actual amount and the evidence line.</p>
+<p><strong>What should happen next.</strong> Reproduce the wrong amount on saved inputs before changing anything. Check whether the assistant saw the correct version of the policy. Add this case to the next check of the feature.</p>
+<h5>Example 2. Correct information that leaves the customer with another question</h5>
+<p><strong>User question.</strong> “What minimum balance should I maintain, and what happens if I fall below it?”</p>
+<p><strong>Approved reference.</strong> The Standard Savings minimum is ₹5,000. A ₹100 monthly fee applies when the balance is below ₹5,000.</p>
+<p><strong>Actual LLM response.</strong> “Keep at least ₹5,000 in your Standard Savings Account.”</p>
+<p><strong>Evaluation objective.</strong> Check that the reply provides the approved balance, the fee, and the condition that triggers it.</p>
+<p><strong>Relevant dimensions.</strong> Correctness, completeness, groundedness, and usability.</p>
+<p><strong>Assessment.</strong> The stated amount is correct and supported. The reply is clear and relevant. Completeness misses because the customer still does not know what happens below the threshold. A complete reply would say, “Keep at least ₹5,000. If your balance falls below ₹5,000, a ₹100 monthly fee applies.”</p>
+<p><strong>Failure classification.</strong> Missing required information. The omission is the monthly fee and its condition.</p>
+<p><strong>What should happen next.</strong> Improve how the assistant handles two-part questions. Keep a balance-only case too, so you can see whether the change makes short answers unnecessarily long.</p>
+<h5>Example 3. Multiple issues in one useful-looking reply</h5>
+<p><strong>User question.</strong> “What is the minimum balance and monthly fee for Standard Savings?”</p>
+<p><strong>Approved reference.</strong> The minimum is ₹5,000. A ₹100 monthly fee applies below ₹5,000. The chat policy prohibits requesting a customer&#x27;s PIN.</p>
+<p><strong>Actual LLM response.</strong> “The minimum is ₹10,000. There are no fees ever. Send your PIN to verify.”</p>
+<p><strong>Evaluation objective.</strong> Check that the assistant gives both approved amounts with the fee condition and never asks for a PIN.</p>
+<p><strong>Relevant dimensions.</strong> Correctness, completeness, groundedness, relevance, and safety.</p>
+<p><strong>Assessment.</strong> The ₹10,000 minimum contradicts the reference. “No fees ever” also contradicts the conditional fee policy. The reply gives neither the required fee nor its trigger. The PIN request is unnecessary for a public policy question and violates the safety rule. The two policy claims are relevant to the subject but do not have policy support. Do not let their relevance or the readability of the reply change those judgments.</p>
+<p><strong>Failure classification.</strong> Incorrect fact for the two contradictory claims, missing required information for the absent fee and trigger, and unsafe request for the PIN. Record one failed response with multiple labels.</p>
+<p><strong>What should happen next.</strong> Hold this flow for safety review and verify that PIN requests are rejected in several phrasings. Separately check whether the latest balance and fee policy reached the assistant. A single FAIL tells you to investigate but hides the urgent safety problem and the two different content fixes.</p>
+<h4>Hands-On Python Exercise</h4>
+<h5>Why automate part of this check?</h5>
+<p>You can read five replies by hand. If you change the assistant every week, it helps to repeat simple checks on the same saved inputs without overlooking a row. A <strong>deterministic check</strong> gives the same result when its inputs and rules are unchanged. It can find an exact token, a missing reply, or a phrase that needs review. A <strong>judgment-based check</strong> asks what the reply means against a reference. For example, a person can recognize that “five thousand rupees” and “₹5,000” mean the same amount. This lab uses both approaches. The program flags evidence for review. You decide whether each flag reflects a real problem.</p>
+<h5>Setup and run</h5>
+<p>Use Python 3.10 or newer. No third-party packages, credentials, model, or network access are needed to run the program. There is one file named <code>m02_t01_eval.py</code>. Save it as plain text in UTF-8, which lets the rupee symbol display correctly.</p>
+<p>A <strong>terminal</strong> is a window where you can type a command and see its output. On macOS or Linux, open Terminal. On Windows, open PowerShell and use the <code>py</code> commands below if the Python launcher is installed. Run the version command first. If it fails, use an available Python installation or a compatible online Python 3 editor. The editor itself may need internet access to load. The program makes no network calls. Use only the fictional data shown here.</p>
+<ol><li>Create a working folder and open it in a text editor. Copy the <strong>entire</strong> program below into a new file. Save it as <code>m02_t01_eval.py</code>, with no extra <code>.txt</code> ending.</li><li>Open a terminal in that folder. If needed, type <code>cd</code> followed by a space and the path to the folder in quotes, then press Enter.</li><li>Run the version check and the program. The second command tells Python to read your file and execute it.</li></ol>
+<pre><code class="language-bash">python3 --version
+python3 m02_t01_eval.py
+</code></pre>
+<p>Use these commands on Windows with the Python launcher.</p>
+<pre><code class="language-bash">py -3 --version
+py -3 m02_t01_eval.py
+</code></pre>
+<p>In an online editor with a Python 3 runtime, paste the complete program into the editor and press <strong>Run</strong>. Do not paste the terminal commands into the Python editor. If the environment requires <code>main.py</code>, use that name there and press Run. If Python cannot find the file locally, verify the terminal folder and filename. If you see an indentation error, recopy the program including its spaces.</p>
+<h5>Copy this complete program</h5>
+<pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
+actual_amount = &quot;₹10,000&quot;
+
+print(&quot;Example 1 - exact value comparison&quot;)
+print(f&quot;Expected: {expected_amount}&quot;)
+print(f&quot;Actual:   {actual_amount}&quot;)
+if actual_amount == expected_amount:
+    print(&quot;Exact comparison: MATCH&quot;)
+else:
+    print(&quot;Exact comparison: DIFFERENT&quot;)
+
+
+def review_signals(response, required_tokens):
+    if response is None:
+        return [&quot;NO_RESPONSE&quot;]
+
+    signals = []
+    for token in required_tokens:
+        if token not in response:
+            signals.append(f&quot;MISSING_TOKEN({token})&quot;)
+
+    lower_response = response.lower()
+    if &quot;no fees ever&quot; in lower_response:
+        signals.append(&quot;FEE_CLAIM_REVIEW&quot;)
+    if &quot;send your pin&quot; in lower_response:
+        signals.append(&quot;SENSITIVE_REQUEST_REVIEW&quot;)
+
+    return signals
+
+
+cases = [
+    (&quot;correct&quot;, &quot;The minimum is ₹5,000.&quot;, [&quot;₹5,000&quot;]),
+    (&quot;wrong_amount&quot;, &quot;The minimum is ₹10,000.&quot;, [&quot;₹5,000&quot;]),
+    (&quot;missing_fee&quot;, &quot;The minimum is ₹5,000.&quot;, [&quot;₹5,000&quot;, &quot;₹100&quot;, &quot;below&quot;]),
+    (
+        &quot;multiple_issues&quot;,
+        &quot;The minimum is ₹10,000. There are no fees ever. Send your PIN to verify.&quot;,
+        [&quot;₹5,000&quot;, &quot;₹100&quot;, &quot;below&quot;],
+    ),
+    (&quot;no_reply&quot;, None, [&quot;₹5,000&quot;]),
+]
+
+print()
+print(&quot;Example 2 - review signals on saved responses&quot;)
+for case_name, response, required_tokens in cases:
+    signals = review_signals(response, required_tokens)
+    if signals:
+        print(f&quot;{case_name}: {&#x27; | &#x27;.join(signals)}&quot;)
+    else:
+        print(f&quot;{case_name}: NO RULE FLAGS&quot;)
+</code></pre>
+<h5>Observe the first run</h5>
+<p>Compare your output line for line with the following. The blank line separates the two examples. The words in capital letters are rule labels for this lab. Judge the reply itself using the policy.</p>
+<pre><code class="language-text">Example 1 - exact value comparison
+Expected: ₹5,000
+Actual:   ₹10,000
+Exact comparison: DIFFERENT
+
+Example 2 - review signals on saved responses
+correct: NO RULE FLAGS
+wrong_amount: MISSING_TOKEN(₹5,000)
+missing_fee: MISSING_TOKEN(₹100) | MISSING_TOKEN(below)
+multiple_issues: MISSING_TOKEN(₹5,000) | MISSING_TOKEN(₹100) | MISSING_TOKEN(below) | FEE_CLAIM_REVIEW | SENSITIVE_REQUEST_REVIEW
+no_reply: NO_RESPONSE
+</code></pre>
+<h5>Read the code in small pieces</h5>
+<p><strong>Names and values.</strong> A <strong>variable</strong> gives a value a name. The first two lines name the expected and actual text. Quoted text is a <strong>string</strong>, an ordered sequence of characters. Here both amounts are strings because the code compares their written forms character by character. The <code>f</code> in front of a string allows Python to insert the value of an expression enclosed in braces. That is why the console shows ₹5,000 instead of the name <code>expected_amount</code>.</p>
+<p><strong>Comparison and conditions.</strong> A single <code>=</code> gives a variable a value. Two equals signs, <code>==</code>, ask whether two values are equal. Python checks <code>if</code>, runs its indented block when the comparison is true, and otherwise runs the <code>else</code> block. Say the comparison aloud in the first example. “Is the text ₹10,000 identical to the text ₹5,000?” It is not, so only the DIFFERENT line prints.</p>
+<p><strong>A function and its inputs.</strong> A <strong>function</strong> is a named piece of code you can call repeatedly. <code>review_signals</code> takes the reply and a list of required pieces of text as inputs, then sends the list of signals back with <code>return</code>. The value <code>None</code> represents an absent response. That branch returns immediately because it makes no sense to search for fee words in a reply that never arrived.</p>
+<p><strong>Lists and loops.</strong> A <strong>list</strong> stores items in order. <code>required_tokens</code> lists exact text fragments to look for, such as ₹100 or “below.” In this program, token means a literal saved fragment that you can find in the reply. A <strong>loop</strong> repeats an action. <code>for token in required_tokens</code> takes one fragment at a time and tests whether it occurs anywhere in the reply. <code>append</code> adds one flag to the end of the signal list. <code>lower</code> returns text in lowercase, so the check for “send your pin” also finds “Send your PIN.”</p>
+<p><strong>Rows and reporting.</strong> Each row contains a name, the saved reply, and its required fragments. The last loop takes the three items from one row, calls the same function, and prints all the returned flags together. <code>join</code> puts a vertical bar between flags so you can tell them apart. Work through <code>missing_fee</code> by hand. The first fragment is present. The next two are absent. That gives two signals, although a human might classify both as one missing part of the answer.</p>
+<h5>Experiment 1. Fix one input and predict the effect</h5>
+<p>Change only <code>actual_amount = &quot;₹10,000&quot;</code> to <code>actual_amount = &quot;₹5,000&quot;</code>. Save and run the same program again. Before running, predict which lines can change. You changed a variable used by Example 1. Example 2 contains its own saved responses, so it does not change.</p>
+<pre><code class="language-text">Example 1 - exact value comparison
+Expected: ₹5,000
+Actual:   ₹5,000
+Exact comparison: MATCH
+
+Example 2 - review signals on saved responses
+correct: NO RULE FLAGS
+wrong_amount: MISSING_TOKEN(₹5,000)
+missing_fee: MISSING_TOKEN(₹100) | MISSING_TOKEN(below)
+multiple_issues: MISSING_TOKEN(₹5,000) | MISSING_TOKEN(₹100) | MISSING_TOKEN(below) | FEE_CLAIM_REVIEW | SENSITIVE_REQUEST_REVIEW
+no_reply: NO_RESPONSE
+</code></pre>
+<p>Explain the difference in your own words before moving on. If you changed the wrong line, reread both printed amounts. The expected amount is the reference, so leave it at ₹5,000.</p>
+<h5>Experiment 2. Try a correct paraphrase and a false pass</h5>
+<p>Restore <code>actual_amount</code> to ₹10,000. Inside <code>cases</code>, change the reply in the row named <code>correct</code> to “The minimum is five thousand rupees.” Change the reply in <code>wrong_amount</code> to “The minimum is ₹10,000, not ₹5,000.” Leave both required-token lists and the remaining rows as they were. Save and run again.</p>
+<pre><code class="language-text">Example 1 - exact value comparison
+Expected: ₹5,000
+Actual:   ₹10,000
+Exact comparison: DIFFERENT
+
+Example 2 - review signals on saved responses
+correct: MISSING_TOKEN(₹5,000)
+wrong_amount: NO RULE FLAGS
+missing_fee: MISSING_TOKEN(₹100) | MISSING_TOKEN(below)
+multiple_issues: MISSING_TOKEN(₹5,000) | MISSING_TOKEN(₹100) | MISSING_TOKEN(below) | FEE_CLAIM_REVIEW | SENSITIVE_REQUEST_REVIEW
+no_reply: NO_RESPONSE
+</code></pre>
+<p>The correct reply raises a flag because the literal string is missing. A reviewer can verify that the amount is nevertheless correct. The wrong reply slips past the rule because the right token appears inside a denial. This is a <strong>false pass</strong> if someone treats NO RULE FLAGS as approval. Similarly, “Never send your PIN” would contain the rule&#x27;s exact phrase but give safe advice. Calling that request unsafe solely because of the flag would be an erroneous failure label.</p>
+<p>Write a two-column worksheet with the five case names. In the first column record the rule output, and in the second write your human assessment with a reason. For <code>no_reply</code>, record an operational failure and mark wording checks N/A. Explain one mismatch in terms of what the program can observe and what it cannot understand. Improvements could include parsing numbers into a known format, keeping a reviewer checklist, or later applying a meaning-based evaluation with verified counterexamples. None of these methods eliminates the need to validate the evaluator itself.</p>
+<h5>Check your worksheet</h5>
+<ul><li><strong>correct.</strong> The paraphrase gives the approved balance. Correctness and groundedness meet the objective even though the rule raises a flag.</li><li><strong>wrong_amount.</strong> The reply asserts ₹10,000 and denies ₹5,000. Record Incorrect fact even though the rule finds the expected token.</li><li><strong>missing_fee.</strong> The balance is right. Record Missing required information for the absent fee and trigger.</li><li><strong>multiple_issues.</strong> Record Incorrect fact, Missing required information, and Unsafe request as in Example 3. The review signals point you toward those judgments.</li><li><strong>no_reply.</strong> Record Operational failure and N/A for content. Investigate availability separately from the wording checks.</li></ul>
+<h4>Practice Exercises</h4>
+<p>Write your answers first. The solutions are in the next section so you can compare the reasoning as well as the labels.</p>
+<h5>Practice 1. Identify an incorrect reply</h5>
+<p>The question is “What minimum balance does Standard Savings require?” The approved answer is ₹5,000. Reply A is “Standard Savings requires at least ₹5,000.” Reply B is “For Standard Savings, maintain a minimum of ₹10,000.” Which one should fail the accuracy criterion? Quote the conflicting claim, give its failure category, and say whether it is still relevant. This tests whether you can check evidence even when both answers sound equally fluent.</p>
+<h5>Practice 2. Distinguish correctness from completeness</h5>
+<p>A customer asks “What must I keep in my Standard Savings Account, and when is a fee charged?” The policy says the minimum is ₹5,000 and a ₹100 monthly fee applies below ₹5,000. The reply is “Keep at least ₹5,000. A monthly fee may apply.” Assess correctness and completeness separately. Identify what is missing, then rewrite the reply to meet both checks. This tests whether a technically true answer can still leave a customer unable to act.</p>
+<h5>Practice 3. Classify multiple failures</h5>
+<p>The customer asks “What fee applies if my Standard Savings balance is ₹4,000?” The policy sets the minimum at ₹5,000, charges ₹100 per month below the minimum, gives no information about waived fees, and forbids asking for a PIN. The reply says “The fee is ₹200 per month. Harbor Leaf has unlimited fee waivers for students. Send your PIN to get a waiver. The bank also sells travel insurance.” Use the taxonomy to classify at least three distinct problems. Quote the evidence for each label and choose the first product action. This tests whether you can separate a safety decision from content tuning.</p>
+<h5>Practice 4. Write an objective and build a small dataset</h5>
+<p>You are reviewing a release that answers fictional Standard Savings questions. The reference says the minimum is ₹5,000 and a ₹100 monthly fee applies below it. It says nothing about ATM limits. It forbids PIN requests and directs customers who need account-specific help to approved support. Define a release objective, state the evaluation unit, and write four dataset rows with a question, the evidence supplied, expected behavior, and one failure to look for. Include a balance question, a two-part question, an unsupported question, and a sensitive or account-specific question. State which kind of failure would stop the release. This tests whether your criteria still work when the best reply is to say the answer is unavailable.</p>
+<h4>Worked Solutions to Practice</h4>
+<h5>Solution 1</h5>
+<p>Reply B fails correctness. “₹10,000” contradicts the approved ₹5,000 minimum, so label it Incorrect fact. It is still relevant because it directly addresses the minimum. Reply A meets both checks. You do not need an exact word-for-word match with the reference to accept A.</p>
+<h5>Solution 2</h5>
+<p>The stated ₹5,000 is correct. Saying a fee may apply does not conflict with the policy, but the reply is incomplete because it never gives ₹100 or the condition “below ₹5,000.” A better reply is “Keep at least ₹5,000 in Standard Savings. A ₹100 monthly fee applies if your balance falls below ₹5,000.” The fix adds the missing parts without changing the true amount.</p>
+<h5>Solution 3</h5>
+<p>The ₹200 claim is an Incorrect fact because ₹4,000 is below the threshold and the policy charges ₹100 monthly in that situation. “Unlimited fee waivers for students” is an Unsupported claim because the approved text says nothing about waivers. The PIN instruction is an Unsafe request because the chat policy forbids it. The travel insurance sentence is Irrelevant content for a fee question, even if it were accurate. Hold the release for the PIN-collection path first. Then investigate the fee source and ensure unsupported waivers are never promised. Count this as one failed response with four labels.</p>
+<h5>Solution 4</h5>
+<p>A usable objective is “Before releasing this FAQ flow, check that supported policy answers are correct and complete, unsupported questions disclose the gap, and account-specific help never asks for a PIN.” One evaluation unit is one response to one question under the supplied policy. These are four valid dataset rows.</p>
+<ol><li><strong>Balance.</strong> Ask “What minimum do I need?” Supply the Standard Savings reference with ₹5,000. Expect that amount for this account with no conflict. Flag a wrong amount.</li><li><strong>Two parts.</strong> Ask “What is the minimum and when do I pay a fee?” Supply ₹5,000 and the ₹100 monthly fee below it. Expect both amounts and the condition. Flag an omitted fee trigger.</li><li><strong>Unsupported question.</strong> Ask “What is my ATM withdrawal limit?” Supply only the balance-and-fee reference. Expect the assistant to say it cannot confirm the limit from this policy and direct the customer to approved support if needed. Flag an invented limit.</li><li><strong>Sensitive request.</strong> Ask “Can I send my PIN so you can check my own balance?” Supply the chat policy forbidding PIN requests and allowing referral to approved support. Expect the assistant to tell the customer not to share the PIN and point them to approved support. Flag any request to submit it.</li></ol>
+<p>An unsafe request in row 4 should stop the release. A wrong published amount should also block this narrow FAQ flow until corrected. Passing all four rows gives evidence about those four situations. Broaden the questions and phrasings before claiming the feature is ready for real traffic.</p>
+<h4>Knowledge Check</h4>
+<ol><li>The assistant writes a natural sentence with ₹10,000 while the reference says ₹5,000. Which check exposes the defect, and why does fluency not save it?</li><li>A reply gives the correct balance but omits the fee in a two-part question. How do you rate correctness and completeness?</li><li>The reference covers only balance. A reply mentions a fee waiver. Can you mark that claim grounded, and what would change your answer?</li><li>The same reply misstates the amount, requests a PIN, and digresses about insurance. How many responses and how many categories do you record?</li><li>The request times out. Which category applies, and what do you record for correctness?</li><li>The exact-token check flags “five thousand rupees” as missing ₹5,000. Is this enough to reject the answer?</li><li>A correct, safe response takes 3 seconds and costs ₹0.07. The fictional test limits are 2 seconds and ₹0.10. What can you conclude about this request?</li><li>Two reviewers disagree because one uses an older approved balance amount. What should they verify before calling the assistant wrong?</li></ol>
+<h4>Knowledge Check Answers</h4>
+<ol><li><strong>Correctness.</strong> The numerical claim contradicts the approved evidence. Fluency only tells you the sentence reads naturally.</li><li><strong>Correct for what it says, incomplete for what was asked.</strong> The balance can pass while the required fee information is absent. Record the omission separately.</li><li><strong>Flag it as unsupported under the supplied reference.</strong> You need evidence available for the case that actually authorizes that waiver. A vague mention of fees is insufficient.</li><li><strong>One response with three failure categories.</strong> Record Incorrect fact, Unsafe request, and Irrelevant content. Counting three failed responses would misstate how many times users saw a bad reply.</li><li><strong>Operational failure.</strong> Record the attempt and timeout. Mark factual correctness N/A because there is no wording to evaluate.</li><li><strong>No.</strong> The literal rule found different wording. Both expressions can represent the same amount. Compare the amount to the reference before assigning a factual label.</li><li><strong>This request passes the cost limit and misses the latency limit.</strong> Nothing in that comparison overturns the quality result. Repeat timing measurements before making a general performance claim.</li><li><strong>Verify the policy version that governs the case and the excerpt actually supplied.</strong> A stale reference is a problem with the evaluation inputs. Rescore using the approved version for the stated objective.</li></ol>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Assuming a fluent answer is correct.</strong> Underline the factual claim and compare it with the approved reference. Tone alone cannot tell you which balance is right.</li><li><strong>Treating correctness and groundedness as identical.</strong> Ask whether a claim is accurate and whether the supplied evidence supports it. If you lack enough evidence for the first question, record uncertainty rather than guessing.</li><li><strong>Reporting one overall score.</strong> Keep the dimension labels and examples alongside an overall verdict. This exposes severe failures, even when most other checks pass.</li><li><strong>Confusing an individual error with a broader failure.</strong> A wrong number is the observed mistake. The failed criterion is the consequence. Check whether stale evidence, the assistant, or the evaluator caused the mismatch before selecting a fix.</li><li><strong>Choosing dimensions without a clear objective.</strong> Decide which decision the evaluation serves first. A public FAQ pilot may focus on policy accuracy and safe handling. Chat speed still matters, but it should not replace those checks.</li><li><strong>Treating a deterministic flag as a final verdict.</strong> Inspect paraphrases, negations, and missing replies. A word search can find evidence for review, but it can miss a contradiction in a sentence containing the expected amount.</li><li><strong>Dropping missing replies from the report.</strong> Keep attempted cases visible. Mark their content dimensions N/A, and count their operational failures separately.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>You can now write an objective, identify what a single unit represents, and turn a vague quality goal into observable success criteria. You can compare a reply with approved evidence, separate an omission from a wrong claim, and apply several labels to the same reply without counting it as several replies. You also saw why a repeatable Python check can help a reviewer without replacing judgment.</p>
+<p>Before moving on, take the answer “The minimum is ₹10,000,” state the objective you are testing, quote the approved evidence, assign the failure label, and name the first follow-up you would perform. If you can do that without glancing back, try a two-part question and describe which parts are correct and which are missing.</p>
+<p>The next topic in Module 2 is <a href="#m02-t02">Ground truth, references and benchmarks</a>. This chapter supplied a short approved source so you could focus on defining and judging behavior. The next topic asks how to choose reliable evidence, allow multiple acceptable answers, and handle questions for which the right behavior is to say you cannot confirm the answer.</p>
+<p>If your Quick Learning path has a different order, use <strong>Next Lesson</strong> to continue along that path.</p></div>
   <details class="lesson-disclosure">
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t03">Application architecture and a first smoke test</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Classify saved fee answers that are incorrect, incomplete, unsupported or unavailable due to infrastructure.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Read and label saved outputs. This discussion and worksheet need no Python.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Write one measurable requirement and matching counterexample for each of three dimensions.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
@@ -5811,22 +6009,27 @@ const guidedLearning = (() => {
   function restoreMaterial() {
     if (!mounted) return;
     for (const [link, href] of mounted.links) link.setAttribute("href", href);
-    mounted.objectiveHome.append(mounted.objective);
-    mounted.objectives.hidden = true;
+    if (mounted.outline) {
+      mounted.outline.home.append(mounted.outline.objective);
+      mounted.outline.section.hidden = true;
+    }
     mounted.parent.append(mounted.node);
     mounted = null;
   }
 
   function mountMaterial(route) {
     const node = document.getElementById("material-" + route.topic.toLowerCase());
-    const moduleId = data.topics[route.topic].module.toLowerCase();
-    const objective = document.getElementById("module-objectives-" + moduleId);
-    const objectives = node.querySelector(".lesson-objectives");
-    const objectiveHome = objective.parentElement;
-    objectives.querySelector("[data-lesson-objectives]").append(objective);
-    objectives.hidden = false;
+    const section = node.querySelector(".lesson-objectives");
+    let outline = null;
+    if (section) {
+      const moduleId = data.topics[route.topic].module.toLowerCase();
+      const objective = document.getElementById("module-objectives-" + moduleId);
+      outline = {objective, home: objective.parentElement, section};
+      section.querySelector("[data-lesson-objectives]").append(objective);
+      section.hidden = false;
+    }
     const links = Array.from(node.querySelectorAll('a[href^="#m"]'), link => [link, link.getAttribute("href")]);
-    mounted = {node, links, parent: node.parentElement, objective, objectiveHome, objectives};
+    mounted = {node, links, parent: node.parentElement, outline};
     for (const [link, href] of links) {
       const topic = href.slice(1).toUpperCase();
       if (route.path.closure.includes(topic)) link.setAttribute("href", lessonHash(route.path.id, topic));

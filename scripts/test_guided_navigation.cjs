@@ -8,6 +8,7 @@ const vm = require("node:vm");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const html = read("docs/master-curriculum.html");
 const data = JSON.parse(html.match(/<script id="roadmap-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
+const referenceLesson = "M02-T01";
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(read("docs/learning_roadmap.js"), "const CurriculumRoadmap = {};")
   .replace("LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);", "")
@@ -91,7 +92,8 @@ function start(hash, storage = new Map()) {
     const body = new Element();
     const links = [...topic.mandatory, ...topic.recommended, ...topic.conditional].map(edge =>
       new Element({attributes: {href: "#" + edge.id.toLowerCase()}}));
-    const objectives = new Element({hidden: true, queries: {"[data-lesson-objectives]": new Element()}});
+    const objectives = topic.id === referenceLesson ? null :
+      new Element({hidden: true, queries: {"[data-lesson-objectives]": new Element()}});
     body.append(add("material-" + topic.id.toLowerCase(),
       {queries: {'a[href^="#m"]': links, ".lesson-objectives": objectives}}));
     return add(topic.id.toLowerCase(), {dataset: {topic: topic.id}, panel: el("detail"), parentElement: body,
@@ -170,8 +172,13 @@ test("all seven deep-link sequences use one shared lesson and stop at their boun
       assert.equal(el("guided-material").children[0], material);
       const objective = el("module-objectives-" + data.topics[topic].module.toLowerCase());
       const objectives = material.querySelector(".lesson-objectives");
-      assert.equal(objectives.hidden, false);
-      assert.deepEqual(objectives.querySelector("[data-lesson-objectives]").children, [objective]);
+      if (topic === referenceLesson) {
+        assert.equal(objectives, null);
+        assert.equal(objective.parentElement, objective.home);
+      } else {
+        assert.equal(objectives.hidden, false);
+        assert.deepEqual(objectives.querySelector("[data-lesson-objectives]").children, [objective]);
+      }
       const {mandatory, recommended, conditional} = data.topics[topic];
       const expected = [...mandatory, ...recommended, ...conditional].map(edge =>
         path.closure.includes(edge.id) ? lessonHash(path.id, edge.id) : undefined);
@@ -242,7 +249,12 @@ test("all lesson outlines render the reading sequence and show only relevant dis
   assert.equal([...html.matchAll(/id="module-objectives-m\d+"/g)].length, 18);
   for (const [, id, markup] of sources) {
     const topic = data.topics[id.toUpperCase()];
-    const sections = ['class="lesson-intro"', "<strong>Lesson outline.", "<h4>Learning objectives</h4>",
+    const sections = topic.id === referenceLesson ? [
+      "What You Will Learn", "Why This Lesson Matters", "Beginner Explanation", "Worked Demonstration",
+      "Hands-On Python Exercise", "Practice Exercises", "Worked Solutions to Practice",
+      "<h4>Knowledge Check</h4>", "Knowledge Check Answers", "Common Mistakes", "Lesson Summary and Next Step",
+      "<summary>Technical Reference</summary>",
+    ] : ['class="lesson-intro"', "<strong>Lesson outline.", "<h4>Learning objectives</h4>",
       "<h4>Key concepts</h4>", "<h4>Demonstrations and examples</h4>", "<h4>Practical exercise</h4>",
       "<h4>Checkpoint</h4>", "<summary>Detailed time estimates</summary>", "<summary>Technical Reference</summary>"];
     const positions = sections.map(label => markup.indexOf(label));
@@ -251,6 +263,14 @@ test("all lesson outlines render the reading sequence and show only relevant dis
     assert.equal(markup.includes("<summary>Prerequisites</summary>"), prerequisites.length > 0);
     assert.doesNotMatch(markup, />M\d+-T\d+<\/a>/);
     assert.doesNotMatch(markup, /<details\b[^>]*\bopen\b/);
+    if (topic.id === referenceLesson) {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
+      assert.equal([...markup.matchAll(/<h5>Practice \d\./g)].length, 4);
+      assert.equal([...markup.matchAll(/<h5>Solution \d<\/h5>/g)].length, 4);
+      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 1);
+      assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 3);
+    }
   }
 });
 

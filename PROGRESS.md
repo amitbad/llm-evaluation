@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The guided reading layout and floating Learning Navigator are ready for local review.
+Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The first full lesson, M02-T01, is ready for local review.
 
 ## Implemented milestones
 
@@ -18,6 +18,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The gu
 | Guided learning | All seven paths show an ordered lesson list and progress. Path-specific lesson links open the shared material in place, with breadcrumbs, Previous and Next, completion, and a return link. Sharing and roadmap downloads are under More Options. |
 | Learning Navigator | Guided lessons have a floating preview or compact icon. The full map shows path progress, real prerequisite arrows and separate order lines. Escape and Minimize restore the launcher, and Close leaves a reopen button. |
 | Guided lesson reading | Lessons have a responsive reading layout, a prominent title and progress indicator, structured activities, and collapsed time and technical details. Empty prerequisites are omitted. The existing module goals and topic text are reused and the outlines are labeled. |
+| First full reference lesson | M02-T01 now teaches evaluation design through one fictional bank scenario, three worked assessments, an offline Python lab, four practice exercises with solutions, and eight knowledge checks with answers. Both learning modes use the same chapter. |
 
 ## Tested
 
@@ -32,6 +33,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The gu
 - Guided navigation tests walked every path sequence, checked direct links, refresh, boundaries and return to Complete Course, and verified shared progress and version-one backups. Run them with `node --test scripts/test_guided_navigation.cjs`. The generator check, static site validation, and simulated roadmap and progress regression checks passed.
 - Navigator tests checked all seven map layouts against the curriculum, simulated progress updates, in-path node navigation, focus, zoom and pan, and verified the mobile and reduced-motion CSS rules. Native dialog and responsive rendering still need the owner's browser acceptance.
 - Reading-layout checks verified the section order and disclosures for all 53 outlines, restoration of module objectives on return to Complete Course, path progress counts, and generator and public-site validation.
+- Ran the M02-T01 Python program on Python 3.12.7 for the baseline and both documented edits. All three console transcripts matched exactly. The generated chapter is shared across learning modes, the remaining 52 topic renderings and curriculum data are unchanged, and the 4.5-hour estimate stays in place for the full set of activities. It has not been timed with learners.
 
 ## Manually verified
 
@@ -41,7 +43,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 
 1. Restore the two public exercise URLs and consider redirects from old `/docs/` links. These are production follow-ups for the owner. The QA update did not deploy or change the VPS.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
-3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist. Then continue with the first beginner lessons and verified offline fixtures.
-4. Check reading width, typography, and disclosure controls in both themes. Develop topic-level objectives, full explanations, worked walkthroughs, and separate assessment guidance where the outlines only specify combined exercises and checkpoints.
+3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
+4. Ask a beginner to try M02-T01 and record where they pause or need help. Use that feedback and the [M02-T01 chapter](docs/lessons/m02-t01.md) when expanding the remaining outlines. Check reading width, code-block scrolling, and disclosure controls in both themes.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).

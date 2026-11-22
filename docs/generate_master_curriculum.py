@@ -387,6 +387,33 @@ def named_references(text, titles):
     return LINK.sub(lambda match: f"[{titles.get(match[1], match[1])}]({match[2]})", text)
 
 
+def authored_lesson(topic_id):
+    source = ROOT / "docs/lessons" / f"{topic_id.lower()}.md"
+    if not source.is_file():
+        return None
+    text = source.read_text(encoding="utf-8")
+    rendered = []
+
+    def render_text(chunk):
+        require("```" not in chunk, f"Invalid code fence in {source.name}")
+        for block in chunk.strip().split("\n\n"):
+            heading = re.fullmatch(r"(#{2,4}) (.+)", block)
+            if heading:
+                level = len(heading[1]) + 2
+                rendered.append(f"<h{level}>{inline(heading[2])}</h{level}>")
+            elif block:
+                rendered.append(prose(block))
+
+    offset = 0
+    for match in re.finditer(r"(?m)^```(bash|python|text)\n([\s\S]*?)^```[ \t]*$", text):
+        render_text(text[offset:match.start()])
+        language, code = match.groups()
+        rendered.append(f'<pre><code class="language-{language}">{escape(code)}</code></pre>')
+        offset = match.end()
+    render_text(text[offset:])
+    return '<div class="lesson-section" data-lesson-search>' + "\n".join(rendered) + "</div>"
+
+
 def lesson_material(topic, titles):
     fields = topic["fields"]
     prerequisites = {key: named_references(fields[key], titles) for key in DEPENDENCIES if fields[key] != "—"}
@@ -398,7 +425,8 @@ def lesson_material(topic, titles):
     <div class="lesson-disclosure-body">{definitions(prerequisites, prerequisites)}</div>
   </details>'''
     mapping = definitions(fields, TOPIC_FIELDS[11:])
-    return f'''<div class="topic-material lesson-reading" id="material-{topic['id'].lower()}">
+    chapter = authored_lesson(topic["id"])
+    reading = "\n" + chapter + preparation if chapter is not None else f'''
   <p class="lesson-intro" data-lesson-search>{inline(fields["Why it matters"])}</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
   <section class="lesson-section lesson-objectives" hidden>
@@ -422,7 +450,8 @@ def lesson_material(topic, titles):
   <section class="lesson-section lesson-checkpoint">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
+  </section>'''
+    return f'''<div class="topic-material lesson-reading" id="material-{topic['id'].lower()}">{reading}
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body">{time_cards(topic['hours'])}</div>
