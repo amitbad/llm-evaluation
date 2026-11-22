@@ -8,13 +8,15 @@
     '<button type="button" data-reading-start>Read Aloud</button>' +
     '<button type="button" data-reading-pause disabled>Pause</button>' +
     '<button type="button" data-reading-stop disabled>Stop</button>' +
-    '<label>Voice <select data-reading-voice title="Changing voice restarts the current paragraph." disabled>' +
+    '<label>Voice <select data-reading-voice disabled>' +
     '<option value="" disabled>No English voices listed</option></select></label>' +
     '<button type="button" data-reading-preview disabled>Preview Voice</button>' +
+    '<button type="button" data-reading-use-voice title="Save this voice for lessons. If reading, restart the current paragraph." disabled>Use Voice</button>' +
     '<label>Speed <select data-reading-speed title="Changing speed restarts the current paragraph.">' +
     '<option value="0.75">0.75×</option><option value="1" selected>1×</option>' +
     '<option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></label>' +
-    '</div><p class="lesson-reader-status" data-reading-status role="status"></p></div></details>';
+    '</div><p class="lesson-reader-status" data-reading-voice-info></p>' +
+    '<p class="lesson-reader-status" data-reading-status role="status"></p></div></details>';
 
   const blocked = "[hidden], [aria-hidden=true], [data-reading-skip], details:not([open]), " +
     "nav, header, footer, script, style, button, input, select, textarea, label, progress, " +
@@ -26,10 +28,16 @@
   const speech = supported ? window.speechSynthesis : null;
   const storageKey = "testneural-academy-reading";
   const speeds = ["0.75", "1", "1.25", "1.5"];
+  const voiceGroups = [
+    ["in", "English (India)"], ["us", "English (US)"],
+    ["gb", "English (UK)"], ["", "Other English"],
+  ];
   const views = [];
   const preferences = {voice: "", speed: "1"};
   let active = null;
-  let englishVoice;
+  let readingVoice = "";
+  let audition = "";
+  let hasQualityHint = false;
   let choices = new Map();
 
   try {
@@ -96,57 +104,71 @@
     });
   }
 
-  function syncPreferences() {
-    const value = [...choices].find(([, voice]) => voice === englishVoice)?.[0] || "";
+  function showVoiceControls() {
+    if (!supported) return;
+    const selected = audition || readingVoice;
+    let message = "";
+    if (choices.size && !hasQualityHint) {
+      message = "Only basic system voices appear to be listed. Preview a voice to hear how it sounds.";
+    }
+    if (choices.size && preferences.voice && !choices.has(preferences.voice)) {
+      message += " The saved voice is unavailable. Read Aloud is using an available voice.";
+    }
+    if (choices.size && active && !active.preview) message += " Stop reading to preview a voice.";
+    if (audition) message += " Choose Use Voice to save your selection for lessons.";
     for (const view of views) {
-      view.voice.value = value;
+      view.preview.disabled = !selected || Boolean(active);
+      view.useVoice.disabled = !selected || selected === preferences.voice;
+      view.voiceInfo.textContent = message.trim();
+    }
+  }
+
+  function syncPreferences() {
+    for (const view of views) {
+      view.voice.value = audition || readingVoice;
       view.speed.value = preferences.speed;
     }
+    showVoiceControls();
   }
 
   function updateVoices() {
     const locale = voice => voice.lang.toLowerCase().replaceAll("_", "-");
+    const region = voice => locale(voice).match(/^en(?:-[a-z]{4})?-(in|us|gb)(?:-|$)/)?.[1];
     // Browsers do not expose a quality or gender rating. Use only voice-name quality hints.
     const quality = voice => Number(/\b(natural|neural|premium|enhanced|studio)\b/i.test(voice.name));
     const voices = speech.getVoices().filter(voice => voice.name && /^en(?:-|$)/.test(locale(voice)));
     voices.sort((a, b) => quality(b) - quality(a) ||
+      Number(region(b) === "in") - Number(region(a) === "in") ||
       Number(Boolean(b.localService)) - Number(Boolean(a.localService)) ||
       Number(Boolean(b.default)) - Number(Boolean(a.default)));
-    const id = voice => voice.voiceURI || voice.name + "|" + locale(voice);
-    const available = new Map();
-    const labels = new Set();
-    for (const voice of voices) {
-      const label = voice.name + "|" + locale(voice);
-      if (available.has(id(voice)) || labels.has(label)) continue;
-      available.set(id(voice), voice);
-      labels.add(label);
-    }
-
     choices = new Map();
-    for (const [region, limit] of [["en-in", 2], ["en-us", 2], ["en-gb", 1]]) {
-      const regional = [...available.values()].filter(voice => locale(voice) === region);
-      for (const voice of regional.slice(0, limit)) choices.set(id(voice), voice);
+    for (const voice of voices) {
+      const key = voice.voiceURI || voice.name + "|" + locale(voice);
+      if (!choices.has(key)) choices.set(key, voice);
     }
-    for (const [key, voice] of available) {
-      if (choices.size === 5) break;
-      choices.set(key, voice);
+    hasQualityHint = [...choices.values()].some(quality);
+    readingVoice = choices.has(preferences.voice) ? preferences.voice : choices.keys().next().value ?? "";
+    if (!choices.has(audition) || audition === readingVoice) audition = "";
+
+    const groups = new Map(voiceGroups.map(([region, label]) => [region, {label, entries: []}]));
+    for (const [key, voice] of choices) {
+      const group = groups.get(region(voice)) || groups.get("");
+      group.entries.push([key, voice]);
     }
-    const saved = available.get(preferences.voice);
-    if (saved && !choices.has(preferences.voice)) {
-      if (choices.size === 5) choices.delete([...choices.keys()].at(-1));
-      choices.set(preferences.voice, saved);
-    }
-    const options = [...choices.values()];
-    englishVoice = saved || options.find(voice => voice.localService && voice.default) ||
-      options.find(voice => voice.localService) || options[0];
 
     for (const view of views) {
-      view.voice.length = 0;
-      for (const [key, voice] of choices) {
-        const option = document.createElement("option");
-        option.value = key;
-        option.textContent = voice.name + " · " + voice.lang;
-        view.voice.append(option);
+      view.voice.replaceChildren();
+      for (const {label, entries} of groups.values()) {
+        if (!entries.length) continue;
+        const group = document.createElement("optgroup");
+        group.label = label;
+        for (const [key, voice] of entries) {
+          const option = document.createElement("option");
+          option.value = key;
+          option.textContent = voice.name + " · " + voice.lang;
+          group.append(option);
+        }
+        view.voice.append(group);
       }
       if (!choices.size) {
         const option = document.createElement("option");
@@ -156,7 +178,6 @@
         view.voice.append(option);
       }
       view.voice.disabled = !choices.size;
-      view.preview.disabled = !englishVoice || Boolean(active);
     }
     syncPreferences();
   }
@@ -186,7 +207,7 @@
     view.pause.disabled = !session || session.preview;
     view.pause.textContent = session?.paused ? "Resume" : "Pause";
     view.stop.disabled = !session;
-    for (const reader of views) reader.preview.disabled = !englishVoice || Boolean(active);
+    showVoiceControls();
     if (message !== undefined) view.status.textContent = message;
   }
 
@@ -238,8 +259,9 @@
       chunk.node.classList.add("is-being-read");
     }
     const utterance = new window.SpeechSynthesisUtterance(chunk.text);
-    utterance.lang = englishVoice?.lang || "en";
-    if (englishVoice) utterance.voice = englishVoice;
+    const voice = session.preview ? session.voice : choices.get(readingVoice);
+    utterance.lang = voice?.lang || "en";
+    if (voice) utterance.voice = voice;
     utterance.rate = Number(preferences.speed);
     session.utterance = utterance;
 
@@ -295,7 +317,7 @@
     const find = name => holder.querySelector("[data-reading-" + name + "]");
     const view = {holder, source, heading, section: find("section"), start: find("start"),
       pause: find("pause"), stop: find("stop"), speed: find("speed"), status: find("status"),
-      voice: find("voice"), preview: find("preview")};
+      voice: find("voice"), preview: find("preview"), useVoice: find("use-voice"), voiceInfo: find("voice-info")};
     views.push(view);
     view.speed.value = preferences.speed;
     holder.hidden = false;
@@ -324,19 +346,26 @@
       restartParagraph();
     });
     view.voice.addEventListener("change", () => {
-      const voice = choices.get(view.voice.value);
-      if (!voice) return;
-      const changed = englishVoice !== voice;
-      englishVoice = voice;
-      preferences.voice = view.voice.value;
+      if (!choices.has(view.voice.value)) return;
+      audition = view.voice.value === readingVoice ? "" : view.voice.value;
+      syncPreferences();
+    });
+    view.useVoice.addEventListener("click", () => {
+      const selected = audition || readingVoice;
+      if (!choices.has(selected)) return;
+      const changed = readingVoice !== selected;
+      readingVoice = preferences.voice = selected;
+      audition = "";
       savePreferences();
       syncPreferences();
       if (changed) restartParagraph();
+      if (!active) showState(view, "Voice saved for reading.");
     });
     view.preview.addEventListener("click", () => {
-      if (active || !englishVoice || document.hidden || !isVisible(view)) return;
-      const queue = [{node: null, text: "Hello. This is how your lessons will sound."}];
-      const session = {view, preview: true, queue, index: 0, paused: false, utterance: null, highlight: null};
+      const voice = choices.get(audition || readingVoice);
+      if (active || !voice || document.hidden || !isVisible(view)) return;
+      const queue = [{node: null, text: "Let's try a quick example. Read the question, then think about what a good answer would include."}];
+      const session = {view, preview: true, voice, queue, index: 0, paused: false, utterance: null, highlight: null};
       active = session;
       showState(view, "Playing voice preview.");
       speak(session);

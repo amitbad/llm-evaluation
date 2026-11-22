@@ -34,7 +34,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 | Application architecture and smoke testing | [M01-T03](docs/lessons/m01-t03.md) follows a Harbor Leaf Bank question through the app. Three worked demonstrations and a seven-step offline lab teach how to report PASS, FAIL, and NEEDS REVIEW and locate the stage to investigate. Four solved exercises, eight knowledge checks, and a fee-helper assignment complete the chapter. |
 | Lesson Read Aloud | The shared native-speech controller supports whole lessons and individual sections in Quick Learning, Complete Course, and 14 published experiments. It highlights each passage, offers four speeds, and stops when the learner changes lessons. |
 | Sticky Listen sidebar | Both curriculum modes keep Read Aloud in a desktop right column with a compact disclosure on narrow screens. The speed hint moved to the selector tooltip and playback feedback. |
-| Read Aloud voices | The shared reader lists up to five English voices reported by the browser, previews a voice while narration is idle, and remembers the voice and speed locally. An unavailable saved voice falls back to an available voice. |
+| Read Aloud voices | The reader shows all distinct browser-reported English voices in regional groups. Preview works while narration is stopped. **Use Voice** saves the choice, and a missing saved voice falls back to an available option. |
 | Beginner Python reference chapter | M01-T01 now introduces concepts in the order a bank question encounters them and starts Python with printing before collections and loops. The first run uses Copy Code, an online editor, and the displayed output. The permanent execution standard is in [TEACHING_GUIDELINES.md](TEACHING_GUIDELINES.md). Completed lesson count is unchanged. |
 
 ## Tested
@@ -66,6 +66,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 - Read Aloud was tested with mocked speech synthesis and a non-browser DOM fixture. Tests cover playback, cancellation, stale callbacks, speed and visibility changes, content filtering, unavailable synthesis, and late-loading voices. Static validation includes the shared script as a public asset.
 - The sticky sidebar change passed generation, validation of 30 public files, and all 23 non-browser tests. The new test covers layout changes and confirms that collapsing the narrow disclosure keeps current narration playing.
 - Voice tests cover regional and quality preferences, duplicate filtering, preview, storage, late-loading and missing voices, and restarting only the current paragraph. Auditioning real voices and verifying availability across devices still requires browser review.
+- The expanded voice menu passed non-browser checks for more than five voices, native grouping, asynchronous list replacement, and fallback. The tests confirm that auditioning leaves the saved voice intact and that preview remains unavailable while narration is playing or paused.
 - The revised M01-T01 passed 16 isolated Python runs in an empty directory, including all seven baseline examples, their seven edits, and two assignment variants. Generator synchronization, validation of 30 public files, and all 22 non-browser tests passed. Human review of the editor workflow and concept sequence is pending.
 
 ## Manually verified

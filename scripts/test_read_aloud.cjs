@@ -8,7 +8,7 @@ const vm = require("node:vm");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const script = read("docs/assets/lesson-reader.js");
 const html = read("docs/master-curriculum.html");
-const controls = ["section", "start", "pause", "stop", "speed", "status", "voice", "preview"];
+const controls = ["section", "start", "pause", "stop", "speed", "status", "voice", "preview", "use-voice", "voice-info"];
 const preferenceKey = "testneural-academy-reading";
 const systemVoice = (name, lang, extra = {}) => ({name, lang, voiceURI: name, localService: true, ...extra});
 
@@ -32,6 +32,10 @@ class Element extends EventTarget {
       node.parentElement = this;
       this.childNodes.push(node);
     }
+  }
+  replaceChildren() {
+    for (const child of this.childNodes) child.parentElement = null;
+    this.childNodes = [];
   }
   after(node) {
     const parent = this.parentElement;
@@ -370,7 +374,7 @@ test("disables controls and explains unavailable speech synthesis", () => {
   const f = fixture({available: false});
   f.load();
   const ui = f.ui(f.complete);
-  for (const control of ["start", "pause", "stop", "speed", "section", "voice", "preview"]) {
+  for (const control of ["start", "pause", "stop", "speed", "section", "voice", "preview", "use-voice"]) {
     assert(ui[control].disabled, control);
   }
   assert.match(ui.status.textContent, /unavailable in this browser/);
@@ -414,35 +418,65 @@ test("recovers from an active speech error and uses a later system English voice
   assert.equal(f.speaking.current.lang, "en-GB");
 });
 
-test("lists up to five distinct browser English voices with regional and quality preferences", () => {
+test("groups every distinct browser English voice, without limiting the list to five", () => {
   const voices = [
     systemVoice("India regular", "en-IN"),
     systemVoice("India Natural", "en-IN"),
     systemVoice("India Premium", "en-IN"),
-    systemVoice("India Natural", "en-IN", {voiceURI: "duplicate"}),
+    systemVoice("India Natural", "en-IN"),
     systemVoice("US regular", "en-US"),
     systemVoice("US Neural", "en-US", {localService: false}),
     systemVoice("UK regular", "en-GB"),
     systemVoice("UK Enhanced", "en-GB"),
+    systemVoice("Canadian English", "en-CA", {voiceURI: ""}),
+    systemVoice("Canadian English", "en-CA", {voiceURI: ""}),
+    systemVoice("Irish English", "en-IE"),
     systemVoice("French Natural", "fr-FR"),
   ];
   const f = fixture({voices});
   f.load();
   const list = f.ui(f.complete).voice;
-  assert.deepEqual(list.childNodes.map(option => option.textContent), [
-    "India Natural · en-IN", "India Premium · en-IN", "US Neural · en-US", "US regular · en-US", "UK Enhanced · en-GB",
+  assert.deepEqual(list.childNodes.map(group => [group.tagName, group.label, group.childNodes.map(option => option.textContent)]), [
+    ["OPTGROUP", "English (India)", ["India Natural · en-IN", "India Premium · en-IN", "India regular · en-IN"]],
+    ["OPTGROUP", "English (US)", ["US Neural · en-US", "US regular · en-US"]],
+    ["OPTGROUP", "English (UK)", ["UK Enhanced · en-GB", "UK regular · en-GB"]],
+    ["OPTGROUP", "Other English", ["Canadian English · en-CA", "Irish English · en-IE"]],
   ]);
   assert.equal(list.disabled, false);
 });
 
-test("previews the chosen voice without highlighting and restores the idle controls", () => {
-  const voice = systemVoice("India Enhanced", "en-IN");
-  const f = fixture({voices: [voice]});
+test("prefers quality hints before accent and favors India among comparably ranked voices", () => {
+  const india = systemVoice("India regular", "en-IN");
+  const us = systemVoice("US Neural", "en-US");
+  const f = fixture({voices: [india, us]});
   f.load();
-  const {preview, pause, stop, start, status} = f.ui(f.complete);
+  const ui = f.ui(f.complete);
+  assert.equal(ui.voice.value, us.voiceURI);
+  const enhanced = systemVoice("India Enhanced", "en-IN");
+  f.speaking.voices = [india, us, enhanced];
+  f.speaking.dispatchEvent(new Event("voiceschanged"));
+  assert.equal(ui.voice.value, enhanced.voiceURI);
+  f.speaking.voices = [india];
+  f.speaking.dispatchEvent(new Event("voiceschanged"));
+  assert.equal(ui.voice.value, india.voiceURI);
+  assert.deepEqual(ui.voice.childNodes.map(group => group.label), ["English (India)"]);
+  assert.match(ui["voice-info"].textContent, /Only basic system voices appear/);
+});
+
+test("previews a different voice without saving it, highlighting it or interrupting narration", () => {
+  const readingVoice = systemVoice("India Enhanced", "en-IN");
+  const candidate = systemVoice("UK Natural", "en-GB");
+  const storage = new Map([[preferenceKey, JSON.stringify({voice: readingVoice.voiceURI, speed: "1"})]]);
+  const f = fixture({voices: [readingVoice, candidate], storage});
+  f.load();
+  const {voice, preview, pause, stop, start, status, "voice-info": voiceInfo} = f.ui(f.complete);
+  voice.value = candidate.voiceURI;
+  change(voice);
+  assert.match(voiceInfo.textContent, /Choose Use Voice/);
+  assert.equal(f.speaking.current, null);
   click(preview);
-  assert.equal(f.speaking.current.voice, voice);
-  assert.match(f.speaking.current.text, /how your lessons will sound/);
+  assert.equal(f.speaking.current.voice, candidate);
+  assert.match(f.speaking.current.text, /Read the question, then think/);
   assert.equal(status.textContent, "Playing voice preview.");
   reading(f.begin, false);
   assert.equal(preview.disabled, true);
@@ -451,6 +485,7 @@ test("previews the chosen voice without highlighting and restores the idle contr
   f.speaking.finish();
   assert.equal(status.textContent, "Voice preview finished.");
   assert.equal(preview.disabled, false);
+  assert.equal(JSON.parse(storage.get(preferenceKey)).voice, readingVoice.voiceURI);
 
   click(preview);
   const stale = f.speaking.current;
@@ -458,7 +493,15 @@ test("previews the chosen voice without highlighting and restores the idle contr
   assert.equal(f.speaking.current.text, "Introduction");
   stale.onend();
   assert.equal(f.speaking.current.text, "Introduction");
+  assert.equal(f.speaking.current.voice, readingVoice);
   assert.equal(preview.disabled, true);
+  assert.match(voiceInfo.textContent, /Stop reading to preview/);
+  click(pause);
+  assert.equal(preview.disabled, true);
+  assert.match(voiceInfo.textContent, /Stop reading to preview/);
+  click(preview);
+  assert.equal(f.speaking.current.voice, readingVoice);
+  assert.equal(pause.textContent, "Resume");
   click(stop);
   assert.equal(preview.disabled, false);
 });
@@ -478,6 +521,8 @@ test("voice changes restart only the current paragraph and leave paused narratio
   const cancelled = f.speaking.current;
   ui.voice.value = britain.voiceURI;
   change(ui.voice);
+  assert.equal(f.speaking.current, cancelled);
+  click(ui["use-voice"]);
   assert.equal(f.speaking.current.text, firstChunk);
   assert.equal(f.speaking.current.voice, britain);
   cancelled.onend();
@@ -486,6 +531,7 @@ test("voice changes restart only the current paragraph and leave paused narratio
   click(ui.pause);
   ui.voice.value = india.voiceURI;
   change(ui.voice);
+  click(ui["use-voice"]);
   assert.equal(f.speaking.current, null);
   assert.equal(ui.pause.textContent, "Resume");
   click(ui.pause);
@@ -502,6 +548,7 @@ test("persists voice and speed, uses an available fallback, and restores the sav
   const ui = f.ui(f.complete);
   ui.voice.value = britain.voiceURI;
   change(ui.voice);
+  click(ui["use-voice"]);
   ui.speed.value = "1.25";
   change(ui.speed);
   assert.deepEqual(JSON.parse(storage.get(preferenceKey)), {voice: britain.voiceURI, speed: "1.25"});
@@ -512,6 +559,7 @@ test("persists voice and speed, uses an available fallback, and restores the sav
   reloaded.load();
   const next = reloaded.ui(reloaded.complete);
   assert.equal(next.voice.value, india.voiceURI);
+  assert.match(next["voice-info"].textContent, /saved voice is unavailable/);
   assert.equal(next.speed.value, "1.25");
   assert.equal(JSON.parse(storage.get(preferenceKey)).voice, britain.voiceURI);
   click(next.preview);
@@ -521,6 +569,7 @@ test("persists voice and speed, uses an available fallback, and restores the sav
   reloaded.speaking.voices = [india, britain];
   reloaded.speaking.dispatchEvent(new Event("voiceschanged"));
   assert.equal(next.voice.value, britain.voiceURI);
+  assert.doesNotMatch(next["voice-info"].textContent, /saved voice is unavailable/);
   click(next.start);
   assert.equal(reloaded.speaking.current.voice, britain);
 });
