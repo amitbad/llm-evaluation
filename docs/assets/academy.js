@@ -9,8 +9,8 @@
     const theme = ["light", "dark"].includes(selection) ? selection : preferred.matches ? "dark" : "light";
     root.dataset.theme = theme;
     for (const button of document.querySelectorAll("[data-theme-toggle]")) {
-      button.setAttribute("aria-pressed", String(theme === "dark"));
       button.textContent = theme === "dark" ? "Light theme" : "Dark theme";
+      button.setAttribute("aria-label", theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
     }
   }
 
@@ -60,7 +60,7 @@
       sidebar.open = !mobile.matches;
       mobile.addEventListener("change", event => { sidebar.open = !event.matches; });
       sidebar.addEventListener("click", event => {
-        if (mobile.matches && event.target.closest("a[href]")) sidebar.open = false;
+        if (mobile.matches && event.detail > 0 && event.target.closest("a[href]")) sidebar.open = false;
       });
     }
   }

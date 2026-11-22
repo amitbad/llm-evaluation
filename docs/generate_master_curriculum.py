@@ -626,7 +626,7 @@ def academy_header(embedded=False):
       <a href="{prefix}#quick">Quick Learning</a>
       <a href="{prefix}#detail">Complete Course</a>
     </nav>
-    <button type="button" data-theme-toggle aria-pressed="false">Dark theme</button>
+    <button type="button" data-theme-toggle>Dark theme</button>
   </div>
 </div></header>'''
 
@@ -793,9 +793,10 @@ def render(title, sections, stages, data):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Explore the LLM Evaluation Engineering curriculum, including focused learning paths, topic prerequisites, and an interactive roadmap.">
 <title>{escape(title)} · TestNeural LLM Academy</title>
 {brand_links(embedded=True)}
-<link rel="canonical" href="https://llmacademy.testneural.in/docs/master-curriculum.html">
+<link rel="canonical" href="https://llmacademy.testneural.in/master-curriculum.html">
 <style>{CSS}{ROADMAP_CSS}{MODES_CSS}{academy_css}</style>
 </head>
 <body class="academy-page">
@@ -894,7 +895,7 @@ a { color:var(--accent); text-underline-offset:.2em; }
 button, select, input { font:inherit; color:inherit; }
 a:focus-visible, button:focus-visible, summary:focus-visible, select:focus-visible, input:focus-visible,
 [tabindex]:focus-visible { outline:3px solid #086f9c; outline-offset:3px; }
-.skip-link { position:fixed; z-index:2; top:.5rem; left:.5rem; padding:.5rem .75rem; background:#fff; transform:translateY(-150%); }
+.skip-link { position:fixed; z-index:9; top:.5rem; left:.5rem; padding:.5rem .75rem; background:var(--surface); transform:translateY(-150%); }
 .skip-link:focus { transform:none; }
 .shell { width:min(1160px,100% - 3rem); margin-inline:auto; }
 .hero { padding:clamp(2rem,6vw,4.6rem) 0 clamp(1.6rem,3vw,2.8rem); background:#132b39; color:#f6faf8; border-bottom:5px solid #48a493; }
@@ -1148,7 +1149,9 @@ function openTab(tab) {
   if (location.hash !== tab.hash) location.hash = tab.hash;
 }
 
-document.getElementById("tabs").setAttribute("role", "tablist");
+const tabList = document.getElementById("tabs");
+tabList.setAttribute("role", "tablist");
+tabList.setAttribute("aria-orientation", "vertical");
 tabs.forEach((tab, index) => {
   tab.setAttribute("role", "tab");
   tab.setAttribute("aria-controls", panels[index].id);
@@ -1161,7 +1164,8 @@ tabs.forEach((tab, index) => {
     openTab(tab);
   });
   tab.addEventListener("keydown", event => {
-    const offsets = {ArrowLeft: -1, ArrowRight: 1, Home: -index, End: tabs.length - 1 - index};
+    const offsets = {ArrowUp: -1, ArrowDown: 1, ArrowLeft: -1, ArrowRight: 1,
+                     Home: -index, End: tabs.length - 1 - index};
     if (event.key === " ") {
       event.preventDefault();
       openTab(tab);

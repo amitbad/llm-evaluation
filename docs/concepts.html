@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A reference for LLM evaluation terms, from keyword checks and benchmark data to agent tools and metric calibration.">
   <title>GenAI Evaluation — Concepts Reference</title>
+  <link rel="canonical" href="https://llmacademy.testneural.in/concepts.html">
 
 <style>
     :root {
@@ -64,7 +66,7 @@
       margin-bottom: 6px;
     }
 
-    .nav-header h2 {
+    .nav-header .nav-title {
       font-size: 16px;
       font-weight: 700;
       color: var(--text);
@@ -479,10 +481,10 @@
 <body class="academy-lesson academy-reference">
 
   <!-- ── Side Navigation ─────────────────────────────────────────────────────── -->
-  <nav>
+  <nav aria-label="Concept sections">
     <div class="nav-header">
       <div class="logo">GenAI Eval</div>
-      <h2>Concepts Reference</h2>
+      <p class="nav-title">Concepts Reference</p>
     </div>
 
     <div class="nav-section">
@@ -594,14 +596,14 @@
   <!-- ── Main Content ────────────────────────────────────────────────────────── -->
   <main>
 
-    <div class="page-title">Concepts<br>Reference</div>
+    <h1 class="page-title">Concepts<br>Reference</h1>
     <p class="page-subtitle">Key terms used across the LLM evaluation learning repository. Every definition includes a
       simple explanation, a real example from our banking bot tests, and why it matters in production.</p>
 
     <!-- ════════════════════════════════════════════════════════════════════════ -->
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Phase 0 — Foundations</div>
+      <h2 class="section-divider-label">Phase 0 — Foundations</h2>
       <div class="section-divider-line"></div>
     </div>
 
@@ -610,7 +612,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">🔑</div>
         <div>
-          <div class="concept-title">Keyword Check</div>
+          <h3 class="concept-title">Keyword Check</h3>
           <div class="concept-subtitle">Phase 0 · Deterministic Evaluation · Simplest Eval Method</div>
         </div>
       </div>
@@ -641,7 +643,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-hall">🌊</div>
         <div>
-          <div class="concept-title">Topic Drift</div>
+          <h3 class="concept-title">Topic Drift</h3>
           <div class="concept-subtitle">Phase 0 · Evaluation Failure Mode</div>
         </div>
       </div>
@@ -671,7 +673,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">⚠️</div>
         <div>
-          <div class="concept-title">Quality Failure</div>
+          <h3 class="concept-title">Quality Failure</h3>
           <div class="concept-subtitle">Phase 0 · Evaluation Blind Spot · Keyword Check Limitation</div>
         </div>
       </div>
@@ -702,7 +704,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-ground">🥇</div>
         <div>
-          <div class="concept-title">Gold Answer</div>
+          <h3 class="concept-title">Gold Answer</h3>
           <div class="concept-subtitle">Phase 0 · Evaluation Datasets · Reference Standard</div>
         </div>
       </div>
@@ -734,7 +736,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-ground">📚</div>
         <div>
-          <div class="concept-title">Benchmark Dataset</div>
+          <h3 class="concept-title">Benchmark Dataset</h3>
           <div class="concept-subtitle">Phase 0 · Evaluation Infrastructure · SQuAD Pattern</div>
         </div>
       </div>
@@ -764,7 +766,7 @@
     <!-- ════════════════════════════════════════════════════════════════════════ -->
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Behavioural Testing</div>
+      <h2 class="section-divider-label">Behavioural Testing</h2>
       <div class="section-divider-line"></div>
     </div>
 
@@ -773,7 +775,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-hall">🌀</div>
         <div>
-          <div class="concept-title">Hallucination</div>
+          <h3 class="concept-title">Hallucination</h3>
           <div class="concept-subtitle">Behavioural Testing · Core Concept</div>
         </div>
       </div>
@@ -811,7 +813,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">🚫</div>
         <div>
-          <div class="concept-title">Refusal</div>
+          <h3 class="concept-title">Refusal</h3>
           <div class="concept-subtitle">Behavioural Testing</div>
         </div>
       </div>
@@ -854,7 +856,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">🧠</div>
         <div>
-          <div class="concept-title">Context Retention</div>
+          <h3 class="concept-title">Context Retention</h3>
           <div class="concept-subtitle">Behavioural Testing</div>
         </div>
       </div>
@@ -900,7 +902,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-hall">💉</div>
         <div>
-          <div class="concept-title">Prompt Injection</div>
+          <h3 class="concept-title">Prompt Injection</h3>
           <div class="concept-subtitle">Behavioural Testing · Security</div>
         </div>
       </div>
@@ -943,7 +945,7 @@
     <!-- ════════════════════════════════════════════════════════════════════════ -->
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Agents &amp; Evaluation</div>
+      <h2 class="section-divider-label">Agents &amp; Evaluation</h2>
       <div class="section-divider-line"></div>
     </div>
 
@@ -952,7 +954,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">🔁</div>
         <div>
-          <div class="concept-title">Trajectory Evaluation</div>
+          <h3 class="concept-title">Trajectory Evaluation</h3>
           <div class="concept-subtitle">Agents · Phase 5 · Evaluation Method</div>
         </div>
       </div>
@@ -991,7 +993,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-ground">🧭</div>
         <div>
-          <div class="concept-title">Tool Selection Correctness</div>
+          <h3 class="concept-title">Tool Selection Correctness</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Test 12 · Decision Quality</div>
         </div>
       </div>
@@ -1025,7 +1027,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-speed">🧩</div>
         <div>
-          <div class="concept-title">Tool Argument Correctness</div>
+          <h3 class="concept-title">Tool Argument Correctness</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Test 12 · Input Accuracy</div>
         </div>
       </div>
@@ -1059,7 +1061,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-hall">⚖️</div>
         <div>
-          <div class="concept-title">Tool Overuse / Underuse</div>
+          <h3 class="concept-title">Tool Overuse / Underuse</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Test 12 · Efficiency vs Grounding</div>
         </div>
       </div>
@@ -1093,7 +1095,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">❓</div>
         <div>
-          <div class="concept-title">Clarification as Correct Behavior</div>
+          <h3 class="concept-title">Clarification as Correct Behavior</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Test 12 · Missing Information Cases</div>
         </div>
       </div>
@@ -1126,7 +1128,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-speed">🧱</div>
         <div>
-          <div class="concept-title">Action Schema Reliability</div>
+          <h3 class="concept-title">Action Schema Reliability</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Test 12 · Structured Output Stability</div>
         </div>
       </div>
@@ -1161,7 +1163,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-ground">⚖️</div>
         <div>
-          <div class="concept-title">Judge Scoring vs Binary Matching</div>
+          <h3 class="concept-title">Judge Scoring vs Binary Matching</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Test 13 · Two Evaluation Lenses</div>
         </div>
       </div>
@@ -1195,7 +1197,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-ground">🔒</div>
         <div>
-          <div class="concept-title">Trajectory Groundedness</div>
+          <h3 class="concept-title">Trajectory Groundedness</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Test 13 · Answer Source Tracing</div>
         </div>
       </div>
@@ -1230,7 +1232,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-behav">🔀</div>
         <div>
-          <div class="concept-title">Two-Layer Evaluation Pipeline</div>
+          <h3 class="concept-title">Two-Layer Evaluation Pipeline</h3>
           <div class="concept-subtitle">Agents &amp; Evaluation · Tests 12 + 13 · Production Pattern</div>
         </div>
       </div>
@@ -1265,7 +1267,7 @@
     <!-- ════════════════════════════════════════════════════════════════════════ -->
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Evaluation Frameworks</div>
+      <h2 class="section-divider-label">Evaluation Frameworks</h2>
       <div class="section-divider-line"></div>
     </div>
 
@@ -1280,7 +1282,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-speed">📐</div>
         <div>
-          <div class="concept-title">Metric Calibration</div>
+          <h3 class="concept-title">Metric Calibration</h3>
           <div class="concept-subtitle">Evaluation Frameworks · Test 11 · Key Learning</div>
         </div>
       </div>
@@ -1306,7 +1308,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-ground">✅</div>
         <div>
-          <div class="concept-title">Framework Pass / Fail — Unit Tests for LLMs</div>
+          <h3 class="concept-title">Framework Pass / Fail — Unit Tests for LLMs</h3>
           <div class="concept-subtitle">Evaluation Frameworks · Test 11 · DeepEval Pattern</div>
         </div>
       </div>
@@ -1327,7 +1329,7 @@
       <div class="concept-header">
         <div class="concept-icon icon-hall">⊘</div>
         <div>
-          <div class="concept-title">Refusal Handling in Automated Evaluation</div>
+          <h3 class="concept-title">Refusal Handling in Automated Evaluation</h3>
           <div class="concept-subtitle">Evaluation Frameworks · Tests 9 / 11 · Correct Bot Behaviour</div>
         </div>
       </div>

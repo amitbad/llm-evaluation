@@ -1,8 +1,7 @@
 /* Shared visual system for the dashboard, curriculum and lesson navigation. */
 :root {
   --page:#edf3ff; --surface:#fff; --panel:#f5f8ff; --text:#142344; --secondary:#465779;
-  --light-blue:#2251ae; --light-cyan:#086682; --light-violet:#5930a7;
-  --stroke:#cbd8ef; --blue:var(--light-blue); --cyan:var(--light-cyan); --violet:var(--light-violet); --focus:#0a71bb;
+  --stroke:#cbd8ef; --blue:#2251ae; --cyan:#086682; --violet:#5930a7; --focus:#0a71bb;
   --blue-wash:#e9f1ff; --cyan-wash:#e9f9fd; --violet-wash:#f3edff; --top:#14294f; --top-text:#fff;
   --shadow:0 10px 24px #22447910;
   color-scheme:light;
@@ -43,18 +42,11 @@
 .academy-sidebar nav { display:grid; padding:.2rem .45rem .6rem; gap:.17rem; border-top:1px solid var(--stroke); }
 .academy-sidebar nav a { display:flex; align-items:center; gap:.375rem; color:var(--secondary); padding:.44rem .5rem; border-radius:.4rem; font-size:.9rem; font-weight:650; text-decoration:none; }
 .academy-sidebar nav a:is(:hover,[aria-selected=true],[aria-current=page]) { color:var(--blue); background:var(--blue-wash); }
-.academy-nav-icon {
-  --icon-blue:var(--blue); --icon-cyan:var(--cyan); --icon-violet:var(--violet);
-  flex:none; color:var(--icon-violet); pointer-events:none;
-}
-/* Curriculum tabs keep their light hover background in either theme. */
-:root[data-theme="dark"] #tabs a:hover .academy-nav-icon {
-  --icon-blue:var(--light-blue); --icon-cyan:var(--light-cyan); --icon-violet:var(--light-violet);
-}
-.academy-nav-icon[data-icon="zap"] { color:var(--icon-blue); }
-.academy-nav-icon[data-icon="map"] { color:var(--icon-cyan); }
-.academy-nav-icon[data-icon="graduation-cap"] { color:color-mix(in srgb,var(--icon-blue) 60%,var(--icon-violet)); }
-.academy-nav-icon[data-icon="folder-open"] { color:color-mix(in srgb,var(--icon-cyan) 60%,var(--icon-violet)); }
+.academy-nav-icon { flex:none; color:var(--violet); pointer-events:none; }
+.academy-nav-icon[data-icon="zap"] { color:var(--blue); }
+.academy-nav-icon[data-icon="map"] { color:var(--cyan); }
+.academy-nav-icon[data-icon="graduation-cap"] { color:color-mix(in srgb,var(--blue) 60%,var(--violet)); }
+.academy-nav-icon[data-icon="folder-open"] { color:color-mix(in srgb,var(--cyan) 60%,var(--violet)); }
 .academy-main { min-width:0; }
 .academy-site h1,.academy-site h2,.academy-site h3,.academy-site p { margin:0; }
 .academy-site h1 { font-size:clamp(1.95rem,3.8vw,3.75rem); line-height:1.06; letter-spacing:-.045em; }
