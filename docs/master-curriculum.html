@@ -2139,34 +2139,410 @@ data-subject="Foundations" data-status="Reusable" data-track="Core">
       <a class="topic-link" href="#m02-t02">Link to topic</a>
     </div>
     <div class="topic-material lesson-reading" id="material-m02-t02">
-  <p class="lesson-intro" data-lesson-search>Valid answers can differ in wording, and some cases require abstention or multiple acceptable labels.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development. Check Technical Reference for existing materials.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Gold evidence, reference answer sets, expected behavior, benchmark validity, dataset rows and uncertain or unanswerable examples.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Separate an evidence-backed fact, a reference answer, and an evaluation label for a saved reply.</li><li>Choose the approved source for a question using its scope, authority, and effective dates.</li><li>Write several equally acceptable answers and a reference behavior for a question the policy cannot answer.</li><li>Build an eight-case benchmark with clear evidence, boundary cases, and unresolved cases.</li><li>Run a small offline benchmark and interpret PASS, FAIL, and NEEDS REVIEW.</li><li>Repair a faulty benchmark row while keeping earlier results reproducible.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>At Harbor Leaf Bank, a customer asks, “What is the minimum balance for Standard Savings?” One reviewer expects ₹5,000. Another opens an older policy and expects ₹4,000. The assistant says, “Keep five thousand rupees in Standard Savings.” Depending on the document and the comparison rule, one reviewer might accept it and the other might reject it. Before changing the assistant, check which evidence and expected behavior belong to the question.</p>
+<p>M02-T01 gave you an objective and criteria. Here you will build the evidence behind those criteria. Harbor Leaf Bank, its dates, policies, replies, and decisions in this chapter are fictional teaching data. Treat them as practice rather than financial guidance. Use only the supplied fictional examples.</p>
+<h5>Plan your study session</h5>
+<p>Allow about four hours for the full lesson. Spend about an hour on the concepts and worked demonstrations, 90 minutes on the Python steps, 40 minutes on the four practice tasks and knowledge check, and 50 minutes on the independent assignment and a review of your results. The programs run in seconds. Give yourself time to justify the labels and compare your reasoning with the worked solutions.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. Ground truth starts with the question and the evidence</h5>
+<p>In this lesson, <strong>ground truth</strong> means the best-supported fact or expected behavior you can establish for a particular evaluation case. For an ordinary current-policy question, an approved policy can establish a fact such as “Standard Savings requires ₹5,000 on July 15, 2026.” For a question outside that policy, you may establish only the expected behavior, such as “explain that the supplied policy cannot confirm the ATM limit.” This means something different from asserting that the bank has no limit.</p>
+<p>Consider three pieces of an evaluation. The <strong>fact</strong> is the policy requirement that applies given the question&#x27;s account and date. A <strong>reference answer</strong> is a usable example of how to communicate that fact or handle a gap. An <strong>evaluation label</strong> records a judgment about a particular reply. For July 15, the fact is the ₹5,000 minimum, a reference answer is “The Standard Savings minimum is ₹5,000,” and a correct paraphrase earns PASS. If a reply asserts ₹10,000 when the evidence establishes ₹5,000, the label is FAIL. The label describes the reply&#x27;s result under the rule.</p>
+<p>Start with the evidence when two reviewers disagree. Personal preferences about whether “keep” or “maintain” sounds better are a poor basis for a policy label. Ask each reviewer to identify the relevant policy line and the required meaning. Teams sometimes call vetted evidence or an approved reference <strong>gold evidence</strong> or a <strong>gold reference</strong>. The term means it has been reviewed for this case. You can correct it if you later find a mistake.</p>
+<p>Ground truth has limits. The applicable amount can change with time. The evidence may omit a fact, such as an ATM limit, or two equally authoritative documents can conflict. In a case with a documented evidence boundary, a reviewer can verify that the packet lacks the answer and assess whether the assistant handles that gap honestly. In an unresolved conflict, the reviewer cannot endorse either policy claim. Record NEEDS REVIEW and ask the policy owner to resolve it.</p>
+<h5>2. Read the Harbor Leaf policy records</h5>
+<p>An <strong>approved source</strong> is a document the bank authorizes for the question&#x27;s subject. <strong>Provenance</strong> is the information that lets you trace the evidence back to its source, such as the document ID, version, section, approving owner, and effective date. In this exercise, the policy register assigns the Savings Policy team authority over Standard Savings minimum balances and fees. The same register requires the assistant to keep PINs private. Use these excerpts as the full evidence packets for the examples that cite them.</p>
+<ul><li><strong>SV-1, Savings Policy version 1, §2, approved.</strong> Effective January 1 through June 30, 2026, inclusive. Standard Savings requires a minimum of ₹4,000. A ₹80 monthly fee applies when the balance is below ₹4,000.</li><li><strong>SV-2, Savings Policy version 2, §2, approved.</strong> Effective July 1, 2026. Standard Savings requires a minimum of ₹5,000. A ₹100 monthly fee applies when the balance is below ₹5,000. At the minimum, the below-minimum fee does not apply. This excerpt is silent about ATM limits and special student waivers.</li><li><strong>HELP-DRAFT, help-center draft, unapproved.</strong> Edited July 10, 2026. It suggests that Standard Savings requires ₹3,000. Its editing date establishes when someone saved the draft. Approval and effective dates determine which policy governs.</li><li><strong>FEE-A and FEE-B, fee addenda, both approved.</strong> Both list the same Savings Policy owner and become effective August 1, 2026. A says students are eligible for a below-minimum fee waiver. B says students are ineligible. The register gives no precedence or supersession between them. The baseline minimum and fee in SV-2 still apply to questions that do not depend on these addenda.</li></ul>
+<p>For an <strong>as-of date</strong>, use the date the question asks about. If a customer asks what applies “today,” record the date used by the evaluation case. Select the source in this order. Check that it covers the account and topic. Check its authority. Check that its effective interval covers the as-of date. Then check for a conflicting source of equal authority. If the register specifies which document supersedes another, record that decision. If it gives no way to decide, mark the case NEEDS REVIEW. The date a file was edited or downloaded does not resolve an authority conflict.</p>
+<p>Notice how the two approved savings versions can both be accurate for their dates. A reply about June 15 can correctly say ₹4,000 even if the evaluator opens the July policy today. By contrast, the two August addenda overlap in date, scope, and authority. Escalate that conflict because neither of those filters breaks the tie.</p>
+<h5>3. Build a reference answer from the evidence</h5>
+<p>A <strong>reference answer</strong> records an acceptable way to respond. Start by writing the fact or action the reply must convey. Then write a short answer and attach the source, section, version, and as-of date. Keep those details in the test case. You can also ask the assistant to cite the source if citation is one of the requirements. A citation is a pointer to the source for a claim. A source number printed beside the wrong claim does not fix it.</p>
+<p>For “What is the Standard Savings minimum on July 15, 2026?”, all three replies meet the same fact requirement under SV-2 §2.</p>
+<ol><li>“The Standard Savings minimum is ₹5,000.” This names the right account and requirement directly.</li><li>“Keep at least ₹5,000 in Standard Savings.” “At least” correctly includes the threshold and amounts above it.</li><li>“Maintain a minimum of five thousand rupees in Standard Savings.” This spells out the amount and preserves its meaning and scope.</li></ol>
+<p>A <strong>reference answer set</strong> is a list of approved variants. It helps you cover known paraphrases. New wording may still pass when its claim means the same thing and introduces no contradictions. Reserve exact wording for an objective that genuinely requires an exact output, such as a fixed status token for a system integration. In an <strong>extractive</strong> task, you may require copying a span from the source. For example, extracting the amount digit for digit from “Standard Savings requires a minimum of ₹5,000” yields the span “₹5,000.” In a <strong>generative</strong> task, the assistant composes its own answer. A customer-facing explanation can spell out the amount. Choose the comparison rule to fit the task.</p>
+<p>When supplied evidence cannot confirm the ATM limit, a reference answer could be “I can’t confirm the daily ATM withdrawal limit from the supplied policy.” This is <strong>abstention</strong>, which means withholding a factual claim that the evidence cannot support. If the task permits it, the assistant can suggest checking an approved ATM policy. A specific guessed limit should fail. Record the exact evidence boundary so a reviewer can reproduce the decision. A general instruction to abstain cannot resolve the conflicting August waiver question. The factual case needs policy review, and you can check a cautious reply separately if you define that behavior explicitly.</p>
+<h5>4. Build a benchmark that can teach you something</h5>
+<p>A <strong>test case</strong> is one scenario you can evaluate with a saved question, evidence, and an expected result. A <strong>dataset</strong> is a collection of these cases. A <strong>benchmark</strong> is a dataset plus agreed scoring rules, scope, and a version you can rerun for comparisons. An <strong>evaluation run</strong> applies the benchmark to one set of replies and produces results. One demonstration helps you learn a rule. A benchmark helps you see where the rule and the assistant succeed or fail across different cases.</p>
+<p>Begin with two cases. B01 checks a straightforward supported answer. B02 checks a correct paraphrase. They cover one question in two forms, which is enough to show why exact matching can fail. Use this compact benchmark sheet as you expand the set. Each row has a stable case ID, question, as-of date, source, saved reply, expected label, and reason. For every row, SV-1 and SV-2 refer to §2 and the policy register given above.</p>
+<ul><li><strong>B01, supported.</strong> Ask “What is the Standard Savings minimum?” as of July 15, 2026, using SV-2. Reply “The minimum is ₹5,000.” PASS. The minimum matches the current approved policy.</li><li><strong>B02, accepted paraphrase.</strong> Ask the same question using the same date and source. Reply “Keep five thousand rupees in Standard Savings.” PASS. The amount and account are unchanged.</li><li><strong>B03, incorrect reply.</strong> Ask the same question using SV-2 on July 15. Reply “The minimum is ₹10,000.” FAIL. The reply conflicts with the approved amount.</li><li><strong>B04, historical policy.</strong> Ask “What minimum applied on June 15, 2026?” using SV-1. Reply “The minimum was ₹4,000.” PASS. The as-of date is inside version 1’s effective interval.</li><li><strong>B05, boundary.</strong> Ask “Is the below-minimum fee due at exactly ₹5,000?” on July 15 using SV-2. Reply “No below-minimum fee applies.” PASS. The fee applies below the threshold.</li><li><strong>B06, tempting wrong fee.</strong> Ask “What fee applies at a balance of ₹4,999?” on July 15 using SV-2. Reply “A ₹100 fee applies every day.” FAIL. The amount happens to match, but the fee is monthly.</li><li><strong>B07, unsupported question.</strong> Ask “What is the daily ATM withdrawal limit?” on July 15. The evidence packet contains only SV-2. Reply “I can’t confirm that from the supplied policy.” PASS. Abstaining is the approved behavior for this packet.</li><li><strong>B08, unresolved evidence.</strong> Ask “Does the student waiver apply on August 3, 2026?” using both approved addenda, FEE-A and FEE-B. Reply “The student fee waiver applies.” NEEDS REVIEW. The register leaves the conflict unresolved.</li></ul>
+<p>B01, B02, and B04 are <strong>positive cases</strong> for a correct response. B03 and B06 are <strong>negative cases</strong> for an evaluator that detects known wrong replies. B05 is a <strong>boundary case</strong>, an input at the edge of a rule where “below” and “at or below” produce different results. B07 checks an unsupported question. B08 checks that you can keep uncertainty visible. Production questions also vary in form, context, topic, and difficulty. This sheet is a teaching set. It contains eight saved cases that test selected distinctions, so it cannot establish production readiness.</p>
+<p>Give each real benchmark row a stable ID and include the question, date or account context, source authority and excerpt, expected behavior, acceptable variants, and a short reason reviewers can apply. Keep the saved model reply and your actual run label with the run. A test can have a known expectation before any assistant reply exists. Separate a wrong policy answer from a response that never arrived, as in M02-T01.</p>
+<h5>5. Check the benchmark itself</h5>
+<p><strong>Benchmark validity</strong> asks whether the cases and rules measure the behavior you intended to test. If your objective is safe policy support, a sheet containing only easy minimum-balance questions misses unsupported requests and document conflicts. Give reviewers cases that differ in meaningful ways, such as a boundary amount and historically correct claims. Write a <strong>rubric</strong>, a short set of instructions for assigning the labels. For B06, require a reviewer to check both the rate and frequency. This prevents one reviewer from blessing any answer with ₹100 while another checks the meaning.</p>
+<p>Watch for errors in the reference data. If a July row mistakenly cites SV-1, a correct ₹5,000 reply might fail. If a fee reference says “₹100 when low,” reviewers may disagree about what low means and when it is charged. Fix the source or make the cutoff and frequency explicit. If two reviewers disagree, give them the same evidence and ask for their reasons. Use a policy owner for disagreements about authority. Retest with the revised rubric and record who approved the change.</p>
+<p>The automated pitfalls from M02-T01 still apply. A strict phrase comparison can produce a <strong>false failure</strong> on a correct paraphrase. A weak keyword check can produce a <strong>false pass</strong> on “₹100 every day” because it sees the right amount. Read the entire claim against the evidence. For an unfamiliar reply, route it to review rather than assuming that absence from a list is a failure. Review can mean the source is unresolved or the reply is new to a simple checker. Give the two reasons separate labels when you report them.</p>
+<p><strong>Data leakage</strong> happens when benchmark answers or near-duplicates reach the system or tuning process in a way that makes the test easier than real usage. Using approved policies as source material is intended in this scenario. Feeding the assistant the reserved case questions and answer key during testing gives away part of the benchmark. Keep a separate set of questions for release evaluation. Tune on development examples and set aside fresh questions from the same kinds of customer needs. Check for copied or lightly reworded questions across the two sets. Compare how the assistant handles fresh wording before declaring improvement.</p>
+<p>Version the benchmark, for example <code>HLB-SAV-1</code>, and record the exact policy excerpts and rubric version used. To repair a label, explain the defect, record the old and new labels and reasons, have another reviewer check the change, and publish a new version. Preserve the original results with their benchmark IDs. Comparing a score from eight easy cases with one from a larger, tougher sheet may reflect the change in cases rather than a model change. To compare two assistant versions, rerun both on the same frozen benchmark and report counts, including NEEDS REVIEW. If you publish an aggregate, state which cases are included in its denominator.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Accept a paraphrase and repair the check</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What minimum balance do I need for Standard Savings on July 15, 2026?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-2 §2 requires ₹5,000 from July 1, 2026.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>“Keep five thousand rupees in Standard Savings.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Compare the account, amount, and requirement against SV-2. The reply gets all three right. PASS. A reviewer who uses exact equality with “The minimum is ₹5,000” would record a false failure. Add this paraphrase to the reviewed examples and keep instructions for judging other equivalent answers.</span></p>
+<h5>Example 2. Resolve two conflicting amounts by date and authority</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What minimum balance applied on June 15, 2026?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-1 §2 says ₹4,000 through June 30. SV-2 §2 says ₹5,000 starting July 1. HELP-DRAFT is unapproved.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>“The Standard Savings minimum was ₹4,000.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>June 15 selects SV-1. SV-2 looks newer but does not cover the date asked about, and HELP-DRAFT has no authority over the policy. PASS. If the question were about July 15, the same ₹4,000 claim would fail. Record the as-of date and version in the case so both reviewers follow the same rule.</span></p>
+<h5>Example 3. Separate a missing answer from a policy conflict</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What is the ATM limit?” The second customer asks, “Did the student waiver apply on August 3?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The ATM case supplies only SV-2 §2, which does not cover withdrawals. The waiver case supplies FEE-A and FEE-B, with equally authoritative conflicting claims.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>For the ATM question, “I can’t confirm the limit from the supplied policy.” For the waiver question, “The student fee waiver applies.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The ATM reply meets the explicit abstention requirement, so PASS. A fabricated ATM amount would fail for the same case. The waiver statement cannot receive a reliable factual label while the conflict remains, so NEEDS REVIEW. Preserve both addenda and ask the policy owner to confirm the governing rule. If you also want to measure whether the assistant alerts the customer to the conflict, add a separate case with that expected behavior.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Python 3.10 or newer. Each step contains a complete program, so begin with a fresh copy of that step. The snippets use saved fictional replies and do not require packages, accounts, a model, or network calls.</p>
+<p><strong>Online editor.</strong> Use an editor with a Python 3 runner that lets you run code without signing in. Select <strong>Copy Code</strong>, paste the Python block into the editor, and click <strong>Run</strong>. Compare the output panel with the transcript. When you reach the experiment, make the stated edit and click <strong>Run</strong> again. Replace all the editor contents before starting the next step. The editor itself may need a connection to load.</p>
+<p><strong>Local terminal.</strong> A terminal is a window where you type commands and read their results. Copy the Python block into a plain-text file named <code>m02_t02_step.py</code>. Save it as UTF-8 so the rupee symbol displays correctly. Open a terminal in that folder. Check the version once and run the file after each edit. Replace the entire file for the next step.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3 --version
+python3 m02_t02_step.py
+</code></pre>
+</div>
+<p>Use the following commands if you have the Python launcher on Windows.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">py -3 --version
+py -3 m02_t02_step.py
+</code></pre>
+</div>
+<p>If Python cannot find the file, verify the terminal folder and the filename. Save after each change and preserve the spaces at the beginning of indented lines. Keep the console transcripts in the lesson for comparison.</p>
+</div></details>
+<h5>Step 1 — Store a question and its approved reference</h5>
+<p>A quoted piece of text is a <strong>string</strong>. A <strong>variable</strong> is a name you can use for a value. The equals sign assigns the text on its right to the name on its left. <code>print()</code> displays what is between its parentheses. A comma separates a label and its value. Python displays a space between these printed items. In evaluation, storing the question and reference together lets you review the pair before assigning a label.</p>
+<p>Copy the block, paste it into the editor or replace your local file, and run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">question = &quot;What is the Standard Savings minimum?&quot;
+reference = &quot;The minimum is ₹5,000.&quot;
+
+print(&quot;Question:&quot;, question)
+print(&quot;Approved reference:&quot;, reference)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Question: What is the Standard Savings minimum?
+Approved reference: The minimum is ₹5,000.
+</code></pre></details>
+<p>The output displays the two strings from their named values. For this question we assume the July 15 case and SV-2.</p>
+<p><strong>Experiment.</strong> Change only the question to <code>&quot;What balance must I maintain for Standard Savings?&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Question: What balance must I maintain for Standard Savings?
+Approved reference: The minimum is ₹5,000.
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why can the reference stay the same? The question asks about the same account requirement on the same date in different words.</p>
+<h5>Step 2 — Compare a reply with the reference</h5>
+<p>The double equals sign, <code>==</code>, compares two values. Python displays its result as <code>True</code> or <code>False</code>. This two-valued result is called a <strong>Boolean</strong>. The single equals sign still assigns a value. This exact match is easy to reproduce and gives you a starting point for investigating what the rule misses.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">reference = &quot;The minimum is ₹5,000.&quot;
+reply = &quot;The minimum is ₹5,000.&quot;
+
+print(&quot;Exact match:&quot;, reply == reference)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: True
+</code></pre></details>
+<p>The two strings contain identical characters. Compare the meaning separately.</p>
+<p><strong>Experiment.</strong> Change the reply to <code>&quot;Keep five thousand rupees in Standard Savings.&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: False
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Should the edited reply fail the July 15 factual criterion? It states the right amount for the right account. The text comparison found different wording, so human review can accept it.</p>
+<h5>Step 3 — Allow several reference answers</h5>
+<p>A <strong>list</strong> stores several items in order. Square brackets enclose the items and commas separate them. The expression <code>reply in accepted</code> checks whether one whole list item equals the reply. An answer set covers reviewed wordings and makes gaps in the set easier to spot.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">accepted = [
+    &quot;The minimum is ₹5,000.&quot;,
+    &quot;You must maintain at least ₹5,000.&quot;,
+]
+reply = &quot;Keep five thousand rupees in Standard Savings.&quot;
+
+print(&quot;Known reference:&quot;, reply in accepted)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Known reference: False
+</code></pre></details>
+<p>The reply expresses the approved amount. This version of the answer set has only two entries, neither of which uses that wording.</p>
+<p><strong>Experiment.</strong> Add <code>&quot;Keep five thousand rupees in Standard Savings.&quot;,</code> as the third item before the closing bracket. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Known reference: True
+</code></pre></details>
+<p><strong>Checkpoint.</strong> What changed when you added the third item? The lookup can now recognize that wording. The source fact stayed the same. An unfamiliar paraphrase still deserves review.</p>
+<h5>Step 4 — Represent a case as a dictionary</h5>
+<p>A <strong>dictionary</strong> uses curly braces to hold named fields. A <strong>key</strong> is the name of a field, such as <code>&quot;source&quot;</code>, and the colon separates it from its value. Commas separate pairs. To retrieve a value, put its key in brackets after the dictionary name. Storing the question and source beside the reply makes a result auditable, which means another reviewer can retrace the decision.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">case = {
+    &quot;id&quot;: &quot;B01&quot;,
+    &quot;question&quot;: &quot;What is the Standard Savings minimum?&quot;,
+    &quot;as_of&quot;: &quot;2026-07-15&quot;,
+    &quot;source&quot;: &quot;SV-2&quot;,
+    &quot;reference&quot;: &quot;The minimum is ₹5,000.&quot;,
+    &quot;reply&quot;: &quot;The minimum is ₹5,000.&quot;,
+}
+
+print(&quot;Case:&quot;, case[&quot;id&quot;])
+print(&quot;Evidence:&quot;, case[&quot;source&quot;], case[&quot;as_of&quot;])
+print(&quot;Exact match:&quot;, case[&quot;reply&quot;] == case[&quot;reference&quot;])
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Case: B01
+Evidence: SV-2 2026-07-15
+Exact match: True
+</code></pre></details>
+<p>Python used the ID and evidence fields when displaying the result. The last line compares the two strings retrieved from the dictionary.</p>
+<p><strong>Experiment.</strong> Change only the <code>&quot;reply&quot;</code> value to <code>&quot;The minimum is ₹10,000.&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Case: B01
+Evidence: SV-2 2026-07-15
+Exact match: False
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why keep the case&#x27;s source and date beside the label? They tell the next reviewer why the approved amount is ₹5,000 for this case and let them check the version independently.</p>
+<h5>Step 5 — Run a two-case benchmark</h5>
+<p>A list can hold dictionaries as well as strings. The <code>for</code> loop below takes one case at a time and names it <code>case</code>. The colon starts the body of the loop. The four spaces at the start of each line keep it inside the loop. A repeatable rule over a saved set of cases lets you compare fresh batches without changing which questions are being asked.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cases = [
+    {
+        &quot;id&quot;: &quot;B01&quot;,
+        &quot;reference&quot;: &quot;The minimum is ₹5,000.&quot;,
+        &quot;reply&quot;: &quot;The minimum is ₹5,000.&quot;,
+    },
+    {
+        &quot;id&quot;: &quot;B03&quot;,
+        &quot;reference&quot;: &quot;The minimum is ₹5,000.&quot;,
+        &quot;reply&quot;: &quot;The minimum is ₹10,000.&quot;,
+    },
+]
+
+for case in cases:
+    exact = case[&quot;reply&quot;] == case[&quot;reference&quot;]
+    print(case[&quot;id&quot;], &quot;exact match:&quot;, exact)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">B01 exact match: True
+B03 exact match: False
+</code></pre></details>
+<p>B01 and B03 use the same amount reference. They differ in the saved replies. Each loop iteration computes its own result.</p>
+<p><strong>Experiment.</strong> Simulate a second run by changing the reply in B03 only to <code>&quot;The minimum is ₹5,000.&quot;</code>. Keep both references and IDs unchanged. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">B01 exact match: True
+B03 exact match: True
+</code></pre></details>
+<p><strong>Checkpoint.</strong> What should stay fixed if you compare two versions of the assistant? Keep the questions, sources, expected behavior, and scoring rules fixed. Record each run’s replies and outcomes separately.</p>
+<h5>Step 6 — Check the evidence status before checking wording</h5>
+<p>An <code>if</code> tests a condition. Python runs its indented block when the condition is true. If it is false, <code>elif</code> checks another condition, and <code>else</code> covers the remaining situation. The colon introduces each block. The operator <code>!=</code> asks whether two values differ. Check that the evidence status is explicitly resolved before judging the reply. A human reviewer establishes that status using the rules above.</p>
+<p>Copy the block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">case = {
+    &quot;source&quot;: &quot;SV-2&quot;,
+    &quot;as_of&quot;: &quot;2026-07-15&quot;,
+    &quot;evidence&quot;: &quot;resolved&quot;,
+    &quot;reply&quot;: &quot;The minimum is ₹5,000.&quot;,
+    &quot;accepted&quot;: [&quot;The minimum is ₹5,000.&quot;],
+}
+
+print(&quot;Evidence:&quot;, case[&quot;source&quot;], case[&quot;as_of&quot;])
+if case[&quot;evidence&quot;] != &quot;resolved&quot;:
+    print(&quot;NEEDS REVIEW: evidence is unresolved&quot;)
+elif case[&quot;reply&quot;] in case[&quot;accepted&quot;]:
+    print(&quot;PASS: approved reference found&quot;)
+else:
+    print(&quot;NEEDS REVIEW: reply is unfamiliar&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Evidence: SV-2 2026-07-15
+PASS: approved reference found
+</code></pre></details>
+<p>This case already has a resolved source, and its reply matches an approved variant. The code uses the stored decision about evidence.</p>
+<p><strong>Experiment.</strong> Simulate an incomplete evidence review. Change only <code>&quot;evidence&quot;: &quot;resolved&quot;</code> to <code>&quot;evidence&quot;: &quot;unresolved&quot;</code> and run again. The source ID still records which policy the reviewer intended to use.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Evidence: SV-2 2026-07-15
+NEEDS REVIEW: evidence is unresolved
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why is the identical reply held for review after that edit? The evidence decision comes first. A text match tells you what characters agree. The reviewer still needs to establish that the source governs the case.</p>
+<h5>Step 7 — Produce a readable evaluation report</h5>
+<p>Use the eight reviewed cases above. This miniature checker looks up known good and known bad saved replies. It does not judge an unfamiliar reply for factual accuracy. The cases show the expected behavior within the supplied evidence packets, including a reviewed abstention for B07.</p>
+<p>A <strong>function</strong> is a named block you can call more than once. <code>def</code> gives the function a name and names its input inside parentheses. The indented block runs when you call it. <code>return</code> hands an outcome and reason back to the caller and ends that call. Here the comma between the two returned values lets the caller store them in two names, <code>outcome</code> and <code>reason</code>, in that order. The first check keeps any case with an unresolved evidence status out of the pass and fail branches.</p>
+<p>The case dictionaries keep provenance and reviewed answer lists. An empty list, <code>[]</code>, means there are no reviewed examples in that category yet. The loop saves each outcome in <code>outcomes</code>. The dot in <code>outcomes.append(outcome)</code> accesses the list&#x27;s operation for adding one item at the end. <code>outcomes.count(&quot;PASS&quot;)</code> asks the list how many entries equal PASS. In the report, a <strong>tuple</strong> is the ordered pair of strings returned by the function, so the caller can print both pieces of the decision.</p>
+<p>Copy the whole block into a fresh editor or replace the previous file, then run it.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def assess(case):
+    if case[&quot;evidence&quot;] != &quot;resolved&quot;:
+        return &quot;NEEDS REVIEW&quot;, &quot;evidence is unresolved&quot;
+    if case[&quot;reply&quot;] in case[&quot;accepted&quot;]:
+        return &quot;PASS&quot;, &quot;reviewed acceptable reply&quot;
+    if case[&quot;reply&quot;] in case[&quot;rejected&quot;]:
+        return &quot;FAIL&quot;, &quot;reviewed incorrect reply&quot;
+    return &quot;NEEDS REVIEW&quot;, &quot;reply has no reviewed label&quot;
+
+
+cases = [
+    {
+        &quot;id&quot;: &quot;B01&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;source&quot;: &quot;SV-2&quot;,
+        &quot;evidence&quot;: &quot;resolved&quot;,
+        &quot;reply&quot;: &quot;The minimum is ₹5,000.&quot;,
+        &quot;accepted&quot;: [&quot;The minimum is ₹5,000.&quot;], &quot;rejected&quot;: [],
+    },
+    {
+        &quot;id&quot;: &quot;B02&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;source&quot;: &quot;SV-2&quot;,
+        &quot;evidence&quot;: &quot;resolved&quot;,
+        &quot;reply&quot;: &quot;Keep five thousand rupees in Standard Savings.&quot;,
+        &quot;accepted&quot;: [&quot;Keep five thousand rupees in Standard Savings.&quot;],
+        &quot;rejected&quot;: [],
+    },
+    {
+        &quot;id&quot;: &quot;B03&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;source&quot;: &quot;SV-2&quot;,
+        &quot;evidence&quot;: &quot;resolved&quot;,
+        &quot;reply&quot;: &quot;The minimum is ₹10,000.&quot;,
+        &quot;accepted&quot;: [&quot;The minimum is ₹5,000.&quot;],
+        &quot;rejected&quot;: [&quot;The minimum is ₹10,000.&quot;],
+    },
+    {
+        &quot;id&quot;: &quot;B04&quot;, &quot;as_of&quot;: &quot;2026-06-15&quot;, &quot;source&quot;: &quot;SV-1&quot;,
+        &quot;evidence&quot;: &quot;resolved&quot;,
+        &quot;reply&quot;: &quot;The minimum was ₹4,000.&quot;,
+        &quot;accepted&quot;: [&quot;The minimum was ₹4,000.&quot;], &quot;rejected&quot;: [],
+    },
+    {
+        &quot;id&quot;: &quot;B05&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;source&quot;: &quot;SV-2&quot;,
+        &quot;evidence&quot;: &quot;resolved&quot;,
+        &quot;reply&quot;: &quot;No below-minimum fee applies.&quot;,
+        &quot;accepted&quot;: [&quot;No below-minimum fee applies.&quot;], &quot;rejected&quot;: [],
+    },
+    {
+        &quot;id&quot;: &quot;B06&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;source&quot;: &quot;SV-2&quot;,
+        &quot;evidence&quot;: &quot;resolved&quot;,
+        &quot;reply&quot;: &quot;A ₹100 fee applies every day.&quot;,
+        &quot;accepted&quot;: [&quot;A ₹100 monthly fee applies.&quot;],
+        &quot;rejected&quot;: [&quot;A ₹100 fee applies every day.&quot;],
+    },
+    {
+        &quot;id&quot;: &quot;B07&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;source&quot;: &quot;SV-2&quot;,
+        &quot;evidence&quot;: &quot;resolved&quot;,
+        &quot;reply&quot;: &quot;I can&#x27;t confirm that from the supplied policy.&quot;,
+        &quot;accepted&quot;: [&quot;I can&#x27;t confirm that from the supplied policy.&quot;],
+        &quot;rejected&quot;: [],
+    },
+    {
+        &quot;id&quot;: &quot;B08&quot;, &quot;as_of&quot;: &quot;2026-08-03&quot;, &quot;source&quot;: &quot;FEE-A + FEE-B&quot;,
+        &quot;evidence&quot;: &quot;unresolved&quot;,
+        &quot;reply&quot;: &quot;The student fee waiver applies.&quot;,
+        &quot;accepted&quot;: [], &quot;rejected&quot;: [],
+    },
+]
+
+outcomes = []
+print(&quot;Harbor Leaf Bank | HLB-SAV-1&quot;)
+for case in cases:
+    outcome, reason = assess(case)
+    outcomes.append(outcome)
+    print(case[&quot;id&quot;], case[&quot;as_of&quot;], case[&quot;source&quot;], outcome, &quot;-&quot;, reason)
+
+print(&quot;PASS:&quot;, outcomes.count(&quot;PASS&quot;))
+print(&quot;FAIL:&quot;, outcomes.count(&quot;FAIL&quot;))
+print(&quot;NEEDS REVIEW:&quot;, outcomes.count(&quot;NEEDS REVIEW&quot;))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Harbor Leaf Bank | HLB-SAV-1
+B01 2026-07-15 SV-2 PASS - reviewed acceptable reply
+B02 2026-07-15 SV-2 PASS - reviewed acceptable reply
+B03 2026-07-15 SV-2 FAIL - reviewed incorrect reply
+B04 2026-06-15 SV-1 PASS - reviewed acceptable reply
+B05 2026-07-15 SV-2 PASS - reviewed acceptable reply
+B06 2026-07-15 SV-2 FAIL - reviewed incorrect reply
+B07 2026-07-15 SV-2 PASS - reviewed acceptable reply
+B08 2026-08-03 FEE-A + FEE-B NEEDS REVIEW - evidence is unresolved
+PASS: 5
+FAIL: 2
+NEEDS REVIEW: 1
+</code></pre></details>
+<p>The questions and evidence excerpts are in the eight-case sheet. The program carries the case IDs, dates, and reviewed replies for the reporting exercise. B07&#x27;s evidence is resolved for deciding which behavior is expected. The packet is complete for this exercise, and the expected behavior is to abstain. B08&#x27;s policy fact remains unresolved. Check both reasons before combining the outcomes into any count.</p>
+<p><strong>Experiment.</strong> Change only B01&#x27;s <code>&quot;reply&quot;</code> value to <code>&quot;Maintain five thousand rupees in Standard Savings.&quot;</code>. Leave its accepted list alone and rerun.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Harbor Leaf Bank | HLB-SAV-1
+B01 2026-07-15 SV-2 NEEDS REVIEW - reply has no reviewed label
+B02 2026-07-15 SV-2 PASS - reviewed acceptable reply
+B03 2026-07-15 SV-2 FAIL - reviewed incorrect reply
+B04 2026-06-15 SV-1 PASS - reviewed acceptable reply
+B05 2026-07-15 SV-2 PASS - reviewed acceptable reply
+B06 2026-07-15 SV-2 FAIL - reviewed incorrect reply
+B07 2026-07-15 SV-2 PASS - reviewed acceptable reply
+B08 2026-08-03 FEE-A + FEE-B NEEDS REVIEW - evidence is unresolved
+PASS: 4
+FAIL: 2
+NEEDS REVIEW: 2
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why do B01 and B08 share a label after the edit? B01 has reliable evidence and unfamiliar wording. A reviewer can accept it after checking the claim. B08 needs a policy decision before a factual verdict can be recorded. The reasons tell you where to investigate.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Build a reference answer set</h5>
+<p>A July 15 customer asks about the Standard Savings minimum. SV-2 §2 requires ₹5,000. Write a compact reference answer, a differently worded valid reply, and a reply you would reject. Record the source and date. Write one exact-match check that could falsely reject your alternative and one keyword-only check that could let a wrong reply through.</p>
+<h5>Practice 2. Choose the governing evidence</h5>
+<p>On July 15, a customer asks, “What minimum did I need on June 30?” SV-1 §2 sets ₹4,000 through June 30 inclusive. SV-2 §2 sets ₹5,000 starting July 1. HELP-DRAFT suggests ₹3,000 and was edited July 10 without approval. The assistant says “₹5,000.” Pick the source and label the reply. Then state what you would do if two approved June policies of equal authority overlapped on June 30 with different amounts.</p>
+<h5>Practice 3. Handle unavailable and disputed answers</h5>
+<p>Packet 1 is the SV-2 balance and fee excerpt. It is silent about ATM limits. A customer asks for the daily ATM limit, and the assistant says “The limit is ₹20,000.” Packet 2 is FEE-A and FEE-B. Both are approved and effective August 1, one grants the student waiver and the other denies it. A customer asks if the waiver applies August 3, and the assistant says “Yes.” Give a label and reason for each. Write an acceptable reply for Packet 1 and name the owner action for Packet 2.</p>
+<h5>Practice 4. Correct a benchmark without losing history</h5>
+<p>Version <code>HLB-SAV-1</code> has a July 15 minimum case using SV-2. One reviewer recorded ₹4,000 as the reference and failed a ₹5,000 reply. Another reviewer accepted the reply. The rubric just says “correct amount” and no date appears in the result export. Write a revised benchmark row and an audit note with the old and new judgments. State how to compare two assistant versions using the correction.</p>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Reference “The Standard Savings minimum is ₹5,000.” Accept “Keep at least five thousand rupees in Standard Savings.” Cite SV-2 §2 and July 15, 2026, for both. Reject “The requirement is ₹10,000.” An exact match to the reference would reject the correct alternative. A rule that merely checks whether ₹5,000 occurs would accept “The minimum is ₹10,000, not ₹5,000,” even though it asserts the wrong requirement. Check what the sentence affirms.</p>
+<h5>Solution 2</h5>
+<p>Use SV-1. The question asks about June 30 and SV-1 includes that date. The ₹5,000 reply fails because the applicable minimum was ₹4,000. SV-2 applies the following day, and the edit date of the unapproved draft cannot establish policy. If two equally authoritative policies overlap and the register gives no precedence, mark NEEDS REVIEW, retain both documents, and ask the Savings Policy owner to resolve the overlap.</p>
+<h5>Solution 3</h5>
+<p>Packet 1 earns FAIL against the expected abstention behavior. The statement about ₹20,000 has no support in the supplied packet. A suitable reply is “I can’t confirm the daily ATM withdrawal limit from the supplied policy.” Packet 2 earns NEEDS REVIEW for factual adjudication. Ask the policy owner to issue or identify the governing document, including a confirmed effective date. A safe reply that acknowledges the conflict could be assessed separately once you define its expected behavior.</p>
+<h5>Solution 4</h5>
+<p>Use a versioned row such as <code>HLB-SAV-2 / B01</code>. Record July 15, SV-2 §2, expected minimum ₹5,000, and the rule “states the Standard Savings minimum without an incompatible amount.” Label the saved ₹5,000 reply PASS. The audit note should record the v1 reference ₹4,000, the old FAIL label, the approved replacement reference, the revised PASS label, and the reason. The July case was linked to the wrong value. Keep the original v1 run and attach the correction as a v2 change. Run both assistant versions against v2&#x27;s frozen cases before claiming one improved.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>For the July 15 case, identify the fact, one reference answer, and the label for a reply giving ₹10,000.</li><li>Why might “You must maintain at least ₹5,000” pass a case whose reference uses “The minimum is ₹5,000”?</li><li>A draft created July 10 mentions ₹3,000, while approved SV-2 began July 1. Which source governs a July 15 answer?</li><li>Why is a fee question at exactly ₹5,000 valuable in a benchmark?</li><li>What label should the benchmark give a supported abstention for an ATM question and a factual answer under the unresolved August waiver conflict?</li><li>How can a checker miss the error in “₹100 charged every day” when the policy says ₹100 monthly?</li><li>How would putting the reserved release questions and answer key into the assistant&#x27;s tuning data affect the evaluation?</li><li>Two reported scores used different benchmark versions after a wrong reference was repaired. What comparison can you make next?</li></ol>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li><strong>Fact.</strong> The Standard Savings minimum was ₹5,000 on July 15 under SV-2. “The minimum is ₹5,000” is a reference answer. A ₹10,000 claim receives FAIL.</li><li><strong>Equivalent meaning.</strong> Both require at least ₹5,000 for the same account. The reference is a reviewed way to say it. An exact match can miss equally valid wording.</li><li><strong>SV-2.</strong> It is approved and effective for that date. The draft&#x27;s later edit time carries no policy authority.</li><li><strong>It separates below from at or below.</strong> A program that accidentally includes equality can pass easier cases above and below the threshold and still fail this boundary.</li><li><strong>PASS for the reviewed abstention, NEEDS REVIEW for the conflict.</strong> The bounded ATM case has known expected behavior. The waiver claim lacks a resolved source of truth.</li><li><strong>A keyword test can find the amount without checking its frequency.</strong> The reply’s policy claim converts a monthly charge to a daily charge. Review the relationship between the amount and the frequency.</li><li><strong>The score could exaggerate performance on fresh questions.</strong> The assistant may have seen the evaluation answers during tuning. Use held-out, independently reviewed cases and check for near-duplicates.</li><li><strong>Rerun both assistant versions on the same corrected benchmark.</strong> Preserve the older reports with their version IDs. A change in labels and case coverage can change a score even when the assistant&#x27;s behavior stays the same.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>Start from the unedited Step 7 program. Enter two additional cases at the end of its <code>cases</code> list. Start each as a new dictionary, using the same keys as the other rows. Keep the original rows intact. Save your new sheet as <code>HLB-SAV-2</code> and change the report title to that version. Write the full question and policy excerpt separately with each ID.</p>
+<ul><li><strong>B09, historical boundary.</strong> “Was the below-minimum fee due at exactly ₹4,000 on June 15?” Use SV-1 §2, which applies a ₹80 monthly fee only below ₹4,000. Use date <code>2026-06-15</code>, source <code>SV-1</code>, evidence <code>resolved</code>, and reply <code>No below-minimum fee applies.</code> Put that exact reply in the accepted list and leave the rejected list empty.</li><li><strong>B10, held-out wording.</strong> “What minimum did Standard Savings require on July 15?” Use SV-2 §2, which requires ₹5,000. Use date <code>2026-07-15</code>, source <code>SV-2</code>, evidence <code>resolved</code>, and reply <code>Five thousand rupees is enough for Standard Savings.</code> Keep only <code>The minimum is ₹5,000.</code> in the accepted list and leave the rejected list empty for the first run.</li></ul>
+<p>Before running, predict both labels. Save your report. Review B10 against the evidence, record whether the meaning is acceptable, and only then add its exact wording to the accepted list if warranted. Save that second run separately, with a rubric or benchmark revision such as <code>HLB-SAV-2.1</code>. Describe which counts changed and why. Explain why this change gives no direct evidence that the assistant improved.</p>
+<h5>Check your assignment</h5>
+<p>The first run gives B09 PASS and B10 NEEDS REVIEW for unfamiliar wording. Its totals are 6 PASS, 2 FAIL, and 2 NEEDS REVIEW. B09 is exactly at the historical minimum. The held-out wording in B10 expresses the approved amount for the right account and date. After adding it to the accepted set, the totals are 7 PASS, 2 FAIL, and 1 NEEDS REVIEW. B08 still needs a policy decision. The second report changed because you reviewed a reply and updated the reference set. The saved assistant text did not change. Keep the first run for comparison and write down why you approved the new variant.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Selecting the newest file automatically.</strong> Select by approval, scope, and the case&#x27;s as-of date. Use the register to check supersession.</li><li><strong>Treating every unfamiliar reply as a failure.</strong> Separate reviewed errors from replies you have yet to judge. A paraphrase can be correct.</li><li><strong>Guessing at a policy conflict.</strong> Keep the source IDs and ask the policy owner for a documented decision.</li><li><strong>Using a keyword as the entire rubric.</strong> Check what the reply claims, especially thresholds, units, frequency, and negation.</li><li><strong>Editing a previous result in place.</strong> Keep the original report, issue a documented benchmark revision, and run comparisons on aligned versions.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>M02-T01 showed how to choose a useful objective and record what failed. You can now decide what evidence belongs to a case, prepare multiple reference answers, and explain why a reviewer may need to abstain or hold a label for review. You built a small versioned benchmark with different kinds of questions and used it to record outcomes and their reasons.</p>
+<p>The next topic in Module 2 is <a href="#m02-t03">Offline, online and the evaluation lifecycle</a>. You will decide where a saved benchmark fits before release, what real traffic can teach you afterward, and how to turn evidence into a release decision or follow-up. In a focused Quick Learning path, use <strong>Next Lesson</strong> to follow that path’s own sequence.</p></div>
   <details class="lesson-disclosure">
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t01">Objectives, dimensions and failure taxonomy</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Inspect a saved extractive QA example and a synthetic banking record with two acceptable answers.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Read policy records and benchmark rows. P04 helps when inspecting JSON directly.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Write a case with a source, acceptable answers, an abstention label and one known false positive.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>

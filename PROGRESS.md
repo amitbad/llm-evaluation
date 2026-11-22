@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The first full lesson, M02-T01, is ready for local review.
+Last updated **2026-11-22**. The last verified live release is `aa01ca7`. M02-T01 and M02-T02 are complete locally. The other 51 topics retain their outlines.
 
 ## Implemented milestones
 
@@ -23,6 +23,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The fi
 | Beginner Python tutorial | M02-T01 now builds from printing two saved amounts to a seven-step offline evaluation report. Each step includes an independent snippet, one edit to try, both expected outputs, and a checkpoint. |
 | Textbook layout | Both reading modes give code, tables, and examples more room while keeping prose line lengths readable. Setup, outputs, and solutions are collapsible. The guided Navigator opens from a compact control aligned to the left sidebar. |
 | Responsive lesson width | Replaced fixed character caps on lesson text with an 88% desktop reading column shared by prose, examples, code, and dividers. Narrow layouts continue to use the available width. |
+| Ground truth and benchmarks | M02-T02 teaches evidence selection, acceptable references, abstention, policy conflicts, and benchmark maintenance. It includes three worked demonstrations, four solved exercises, eight explained knowledge checks, and a benchmark-extension assignment. |
 
 ## Tested
 
@@ -41,6 +42,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. The fi
 - Non-browser copy tests verified exact text, success reset, clipboard fallback and error feedback, and that transcripts have no button. Native clipboard permissions and sticky placement still need a manual check.
 - Ran all seven revised M02-T01 snippets and their seven learner edits on Python 3.12.7. All 14 transcripts matched exactly. The rest of the lesson, the remaining topics, and the generated navigation and progress code were unchanged.
 - Static checks verified the expanded reading layout markup, collapsed secondary sections, unchanged lesson text, code and outputs, and the sidebar launcher. Non-browser tests covered Copy Code, path navigation, progress, and the Navigator dialog and camera behavior.
+- M02-T01's shared layout and code controls passed non-browser structural and interaction checks. For M02-T02, all seven base snippets, their seven edits, and both assignment runs matched the documented results on Python 3.12.7. The eight-case baseline reported 5 PASS, 2 FAIL, and 1 NEEDS REVIEW. Static-site and shared lesson tests passed.
 
 ## Manually verified
 
@@ -52,5 +54,6 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
 4. Ask a beginner to try M02-T01 and record where they pause or need help. Use that feedback and the [M02-T01 chapter](docs/lessons/m02-t01.md) when expanding the remaining outlines. Check reading width, code-block scrolling, and disclosure controls in both themes.
+5. Develop M02-T03, **Offline, online and the evaluation lifecycle**, next. Reuse the reviewed Harbor Leaf cases from M02-T02 as the saved benchmark for the release discussion.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).

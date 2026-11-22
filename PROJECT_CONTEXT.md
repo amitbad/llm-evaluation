@@ -12,6 +12,7 @@ The academy uses static HTML, CSS, and vanilla JavaScript. A Python standard-lib
 | --- | --- |
 | [MASTER_CURRICULUM.md](MASTER_CURRICULUM.md) | Authoritative curriculum, including topic IDs, dependency definitions, path membership, and hour estimates |
 | [docs/lessons/m02-t01.md](docs/lessons/m02-t01.md) | First complete learner-facing chapter and reference for future lesson authors |
+| [docs/lessons/m02-t02.md](docs/lessons/m02-t02.md) | Complete chapter on evidence, reference answers, and versioned benchmarks |
 | [docs/generate_master_curriculum.py](docs/generate_master_curriculum.py) | Validates curriculum data and generates the homepage and interactive curriculum |
 | [docs/index.html](docs/index.html), [docs/home.html](docs/home.html) | Generated homepage and compatibility entry point |
 | [docs/master-curriculum.html](docs/master-curriculum.html), [homepage template](docs/templates/academy-home.html) | Standalone curriculum and homepage source template |
@@ -44,6 +45,8 @@ Both learning modes use the same topic IDs and content. Quick Learning links car
 The shared reading layout presents the introduction, concepts, demonstrations, and exercise in study order. On desktop, lesson prose, headings, dividers, code, and examples use a shared column that spans 88% of the available lesson area. It fills the available width at narrower breakpoints. Guided lessons show the path, time estimate, and completion count beside the title. Outline lessons reuse the authored module objectives and label them as module-wide goals. Setup, expected outputs, answer sections, time estimates, nonempty prerequisites, and technical references use native disclosures. An outline notice distinguishes planning material from full lessons that still need to be written.
 
 Complete chapters live in `docs/lessons/` under their lowercase topic ID. The generator places the chapter in the same shared topic view for Quick Learning and Complete Course. Use Markdown headings from level 2, the existing inline and list syntax, and labeled `python`, `bash`, or `text` fences. Follow M02-T01 as the authoring standard. Use topic-level objectives, a coherent scenario, explanations before code, complete offline examples with verified console output, and progressively harder practice with separate solutions. Keep audit and repository material under Technical Reference. Topics without a chapter still show their current outline.
+
+M02-T01 is complete, and its shared layout has passed non-browser structural checks. M02-T02 is complete with a verified eight-case benchmark lab. The other 51 topics await full chapter development. The next topic in Module 2 is M02-T03, **Offline, online and the evaluation lifecycle**.
 
 The Learning Navigator launcher appears on guided lessons at the bottom of the desktop course sidebar. On narrower screens it becomes a bottom-left icon with reserved space beside the reading column. It opens a native dialog that shows the path order, prerequisites, current lesson, and completion state. Selecting a node opens the lesson in Quick Learning. Zoom and pan are retained per path while the page stays open.
 

@@ -8,7 +8,7 @@ const vm = require("node:vm");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const html = read("docs/master-curriculum.html");
 const data = JSON.parse(html.match(/<script id="roadmap-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
-const referenceLesson = "M02-T01";
+const authoredLessons = new Set(["M02-T01", "M02-T02"]);
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(read("docs/learning_roadmap.js"), "const CurriculumRoadmap = {};")
   .replace("LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);", "")
@@ -92,7 +92,7 @@ function start(hash, storage = new Map()) {
     const body = new Element();
     const links = [...topic.mandatory, ...topic.recommended, ...topic.conditional].map(edge =>
       new Element({attributes: {href: "#" + edge.id.toLowerCase()}}));
-    const objectives = topic.id === referenceLesson ? null :
+    const objectives = authoredLessons.has(topic.id) ? null :
       new Element({hidden: true, queries: {"[data-lesson-objectives]": new Element()}});
     body.append(add("material-" + topic.id.toLowerCase(),
       {queries: {'a[href^="#m"]': links, ".lesson-objectives": objectives}}));
@@ -173,7 +173,7 @@ test("all seven deep-link sequences use one shared lesson and stop at their boun
       assert.equal(el("guided-material").children[0], material);
       const objective = el("module-objectives-" + data.topics[topic].module.toLowerCase());
       const objectives = material.querySelector(".lesson-objectives");
-      if (topic === referenceLesson) {
+      if (authoredLessons.has(topic)) {
         assert.equal(objectives, null);
         assert.equal(objective.parentElement, objective.home);
       } else {
@@ -245,14 +245,14 @@ test("refresh, completion, return links and version-one backups preserve shared 
   assert.equal(resumed.el("guided-complete").textContent, "Completed");
 });
 
-test("all lesson outlines render the reading sequence and show only relevant disclosures", () => {
+test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
   assert.equal(new Set(sources.map(([, id]) => id)).size, 53);
   assert.equal([...html.matchAll(/id="module-objectives-m\d+"/g)].length, 18);
   for (const [, id, markup] of sources) {
     const topic = data.topics[id.toUpperCase()];
-    const sections = topic.id === referenceLesson ? [
+    const sections = authoredLessons.has(topic.id) ? [
       "What You Will Learn", "Why This Lesson Matters", "Beginner Explanation", "Worked Demonstration",
       "Hands-On Python Exercise", "Practice Exercises", "Worked Solutions to Practice",
       "<h4>Knowledge Check</h4>", "Knowledge Check Answers", "Common Mistakes", "Lesson Summary and Next Step",
@@ -266,7 +266,7 @@ test("all lesson outlines render the reading sequence and show only relevant dis
     assert.equal(markup.includes("<summary>Prerequisites</summary>"), prerequisites.length > 0);
     assert.doesNotMatch(markup, />M\d+-T\d+<\/a>/);
     assert.doesNotMatch(markup, /<details\b[^>]*\bopen\b/);
-    if (topic.id === referenceLesson) {
+    if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
       assert.equal([...markup.matchAll(/<h5>Practice \d\./g)].length, 4);
@@ -277,7 +277,11 @@ test("all lesson outlines render the reading sequence and show only relevant dis
       assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 14);
       assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-output"><summary>Expected output<\/summary>/g)].length, 14);
       assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement">/g)].length, 3);
-      assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, 15);
+      assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, topic.id === "M02-T01" ? 15 : 12);
+      if (topic.id === "M02-T02") {
+        assert.match(markup, /<h4>Independent Assignment<\/h4>/);
+        assert.match(markup, /<a href="#m02-t03">Offline, online and the evaluation lifecycle<\/a>/);
+      }
     }
   }
 });
