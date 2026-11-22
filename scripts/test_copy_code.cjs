@@ -95,7 +95,7 @@ test("keeps the original label and gives manual instructions when copying fails"
 
 test("generated curriculum adds buttons to executable blocks and leaves transcripts alone", () => {
   const html = read("docs/master-curriculum.html");
-  const sources = ["m01-t01", "m02-t01", "m02-t02", "m02-t03"].flatMap(id =>
+  const sources = ["m01-t01", "m01-t02", "m02-t01", "m02-t02", "m02-t03"].flatMap(id =>
     [...read("docs/lessons/" + id + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]);
   const rendered = [...html.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)];
   const wrapped = [...html.matchAll(/<div class="lesson-code">([\s\S]*?)<\/pre>\n<\/div>/g)];

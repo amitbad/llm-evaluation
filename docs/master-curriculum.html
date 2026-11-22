@@ -2028,34 +2028,475 @@ data-subject="Foundations" data-status="Needs Correction" data-track="Core">
       <a class="topic-link" href="#m01-t02">Link to topic</a>
     </div>
     <div class="topic-material lesson-reading" id="material-m01-t02">
-  <p class="lesson-intro" data-lesson-search>A fixed prompt can yield different responses, and generation errors need their own outcome.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Next-token sampling, temperature, top-p, seed limits, maximum output tokens, stop conditions and model snapshots.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Trace how a language model turns a saved request into a reply one piece at a time.</li><li>Explain how temperature and top-p change the choices available when a reply is written.</li><li>Use a seed to repeat a classroom simulation and explain why a real service may still give different answers.</li><li>Tell a completed answer, an answer cut short, and a request that never returned an answer apart.</li><li>Design a fair comparison using repeated runs, saved settings, and separate counts for different outcomes.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Imagine asking two people at a bank, “How much do I need to keep in this account?” One says, “The minimum is ₹5,000.” The other says, “Keep at least five thousand rupees in your account.” You heard two different answers that mean the same thing. Now imagine someone says ₹10,000. This time, the difference matters.</p>
+<p>A chat assistant can also phrase the same answer in different ways. If you change one of its settings and try it once, which kind of difference did you observe? Could the old settings have produced the same change in wording? Would another attempt bring back the right amount?</p>
+<p>You’ll learn to answer these questions by seeing how a reply is built, then keeping a small record of repeated attempts. The examples use Harbor Leaf Bank, a fictional bank. Its approved Standard Savings policy in these examples sets a ₹5,000 minimum and a ₹100 monthly fee below that balance. The amounts and replies are teaching examples.</p>
+<h5>Plan your study session</h5>
+<p>Allow about four hours. Try an hour for the explanations and worked examples, an hour and a half for the guided Python steps, an hour for the experiments and assignment, and half an hour for checking your reasoning. If you’re new to Python, trace the first examples on paper and use the setup instructions when you’re ready to run them.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. Watch a reply take shape</h5>
+<p>Think of the suggestions that appear as you type on a phone. After “The minimum,” you might see “is” or “balance.” Once you add “is,” the next suggestions change. That gives you a way to picture how a model writes a reply.</p>
+<p>A large language model, or <strong>LLM</strong>, takes the information you send and can generate text from it. Using an already-trained model to produce an answer is called <strong>inference</strong>. Training is the earlier work of adjusting the model using examples. In this lesson, we use the model as it is. The written instructions, question, and any attached policy together make up the <strong>prompt</strong> in our examples.</p>
+<p>As you saw in the previous chapter, a <strong>token</strong> is a piece of text that the model can represent as a number. For each step of a reply, the model can give possible next tokens different chances based on the request and the tokens already chosen. A chance expressed as a number is a <strong>probability</strong>. Once the model picks a token, it uses the longer text to work out the next set of chances. Repeat and you get a reply.</p>
+<p>Suppose the reply so far is “The minimum is”. In a classroom sketch, the next piece might start the amount or be a word such as “usually”. The possible pieces change after that choice. Try finishing both versions aloud. This is why a difference early in a reply can change what comes later. Our Python examples use prewritten pieces and invented chances. Real text can split into tokens differently, and a real model computes fresh chances at each step.</p>
+<h5>2. Choose the most likely piece or draw from several</h5>
+<p>Imagine a bag with 60 blue counters, 30 green ones, and 10 white ones. If you’re allowed to pick whichever color appears most often, you’ll choose blue every time while the bag stays the same. If you reach in without looking, blue is more likely than either other color, and you can still draw green or white.</p>
+<p>Picking the highest-scoring next token is called <strong>greedy selection</strong>. Drawing a token according to its chance is called <strong>sampling</strong>. You can think of the chances as the proportions of colored counters. The model makes a decision for each next token. Greedy selection chooses the locally highest score. It doesn’t check every possible finished reply or verify the bank’s policy.</p>
+<p>In the lab, we’ll draw from possible next words after “The minimum”: “is”, “balance”, and “required”. The invented chances are 60%, 30%, and 10%. Try drawing several counters from the bag and putting each one back. Some sets of four draws may all be blue. Others may include every color. Four attempts tell you what you saw. They give you only a rough picture of the long-run chances.</p>
+<h5>3. Change how much the choices differ</h5>
+<p>Suppose you run a quiz and give three choices different chances of being picked. You want your most likely choice to show up more often. You can widen its lead, while still allowing a less likely choice to be picked sometimes.</p>
+<p><strong>Temperature</strong> controls how strongly the model favors higher-scoring choices before a sampled draw. A lower positive temperature pushes more of the chance toward the strongest choices. A higher temperature spreads the chances more evenly across choices. At temperature 1, this adjustment leaves the original chances unchanged. Some interfaces use 0 to request greedy behavior. The supported values and behavior depend on the interface.</p>
+<p>In the lab, we start with probabilities and raise them to the power of one divided by temperature, then scale them back to sum to 1. At temperature 0.5, this squares the probabilities. For 0.60, 0.30, and 0.10, the squared values are 0.36, 0.09, and 0.01. Divide each by their total, 0.46, to get a new set of probabilities. The first choice rises from 60% to about 78.3%. At temperature 1, the first choice stays at 60%. This arithmetic illustrates the usual score adjustment using an already normalized set of probabilities.</p>
+<p>Would the higher chance make a bank answer more accurate? Ask which choice got the extra chance. If the preferred amount is wrong, making it more likely can repeat the error. Review the claims against the policy before choosing settings for a customer-facing use.</p>
+<h5>4. Decide how many likely choices to keep</h5>
+<p>Think of putting the most-used tools in a small toolbox. Start with the most useful one. Add the next until you’ve covered enough of the jobs you expect to do. A tool just beyond that line stays outside the box.</p>
+<p><strong>Top-p</strong>, also called <strong>nucleus sampling</strong>, sets a cutoff for the combined probability of choices to keep. Put the choices in order from highest probability to lowest. Keep adding them until their probabilities reach or exceed the cutoff. Include the choice that crossed the line, then scale the remaining chances so they sum to 1 before drawing. Implementations can have details such as tie handling. This example has no ties.</p>
+<p>Using 60%, 30%, and 10%, try a cutoff of 80%. The first choice only covers 60%, so keep the next one too. You now cover 90% and leave out the third. Divide the two kept chances by 90% to get about 66.7% and 33.3%. Now try 95% on paper. You’ll need all three, so each retains its original chance. A lower cutoff can remove choices entirely. Temperature adjusts their chances. Change one setting at a time in an experiment so you know which change you’re examining.</p>
+<h5>5. Repeat a draw and record what was held fixed</h5>
+<p>Imagine a friend following a numbered list of draws that looks random. Start them at the same place, follow the same directions, and they can repeat the list. Start in a different place and you may see a different order.</p>
+<p>A <strong>pseudorandom number generator</strong> is a program that makes a sequence of numbers that behave like random draws for tasks like this. A <strong>seed</strong> is a starting value for that program. In our Python lab, each time you create a fresh generator with the same seed and perform the same operations, you get the same sequence. Reusing a generator for more draws continues its sequence. It doesn’t go back to the beginning.</p>
+<p><strong>Repeatability</strong> asks how consistently you get the same result under stated conditions. A real model interface may accept a seed or offer another way to request more repeatable replies. The same seed can help under matching conditions. It cannot fix changes in the input, settings, model version, or the system running the model. Tiny differences in the calculations, or differences in how a service processes requests, can also affect which piece wins. Even a greedy request can vary across environments or versions.</p>
+<p>A <strong>model snapshot</strong> is a specific published version of a model, where the provider makes one available. A general name may point to a different version later. If you compare March’s results with today’s and you saved only the general name, you may have changed the model without realizing it. Record the snapshot or other version information you actually have, and flag what’s unknown. A version ID makes a comparison easier to explain. Other parts of the request may still have changed.</p>
+<h5>6. See why a reply ended</h5>
+<p>You ask a colleague to give a short announcement. They might finish the sentence, stop at an agreed cue, or get cut off when time runs out. In every case you stop hearing words, but the reason tells you what to do next.</p>
+<p><strong>Maximum output tokens</strong> cap how many tokens the model may generate for a request. If it uses the entire allowance and could have continued, you may see a length-related ending. Suppose “The minimum is” is all that fits. You received words, but the customer still needs the amount.</p>
+<p>A <strong>stop condition</strong> is any rule that ends generation. It might be the output limit, a special end marker generated by the model, or a configured text sequence. Different interfaces may report stop reasons or hide markers differently. This lab uses the classroom marker “&lt;END&gt;” to signal an intended end. The program doesn’t show that marker in the reply.</p>
+<p>A <strong>timeout</strong> means part of the system waited longer than allowed and ended the attempt. A timeout with no reply gives you no amount to check. If an answer arrives and claims ₹10,000, that’s a different result. Save what ended the attempt, then check any usable answer against the policy. If the result doesn’t tell you why it ended, record that the reason is unknown.</p>
+<h5>7. Use the evidence a fair comparison gives you</h5>
+<p>If you bake one tray at a different oven temperature and it turns out better, how much did you learn? Perhaps the dough was colder, or that tray was on a different shelf. Bake more than one tray and keep track of what stayed the same.</p>
+<p>In a model comparison, keep the actual questions, instructions, policy, and scoring rules the same. Save the model snapshot, temperature, top-p, seed or seed schedule if available, output cap, and stop settings. A <strong>seed schedule</strong> is the list of starting values you plan to use across attempts. Save the returned text, version and settings information you received, and the reason each attempt ended. When a service only provides some of those details, keep that limitation visible.</p>
+<p>First repeat the same setting to see what variation you observe. Then compare two settings across the same cases and planned repeat counts. If you can match starting settings and seeds for each case, record those pairs. In a live experiment, mix the order of the two settings rather than running all of one first. A service could get busier or run differently later, affecting failures or timing. Keep incomplete answers and attempts with no reply visible alongside policy scores.</p>
+<p>Two answers may read differently and both satisfy the policy. Check meaning as well as exact wording. Report what changed in *these* attempts. A couple of replies can suggest where to investigate. They don’t establish how every model will behave or whether one setting is ready for release.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Same request, two ways to say it</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What is the Standard Savings minimum?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The supplied Harbor Leaf policy says the minimum is ₹5,000.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Our two saved teaching replies are “The minimum is ₹5,000.” and “Keep at least five thousand rupees in the account.” Both attempts are recorded with the same prompt and settings. No starting seed was saved.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Read each reply as a customer. Both give the required amount for that account. They differ in wording. A comparison of exact text would say they are different, while a policy check would accept both.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>No policy failure was observed in these two replies. You have evidence of wording variation. Save the two attempts and their available settings. Try agreeing on which pieces of the answer must stay correct before you count variants.</span></p>
+<h5>Example 2. One word changes why the answer needs review</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What is the Standard Savings minimum?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The same ₹5,000 rule is present in the saved request.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>In one saved attempt, the assistant returns “The minimum is” and reports that it reached the length cap. In another, it finishes with “The minimum is ₹10,000.” A third attempt times out without any reply.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Point to the amount in each answer. The first cut off before the amount, so record it as incomplete. The second has a clear amount that contradicts the policy. The third gives the reviewer no answer to read.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Keep three outcomes. For the cutoff, check the output limit and try allowing enough space. For the wrong amount, inspect the request and check how often the model gives that claim. For the timeout, inspect where the request stopped. Giving the second attempt a larger limit won’t change the number it already stated in this saved reply.</span></p>
+<h5>Example 3. Compare two settings without hiding missing replies</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What is the Standard Savings minimum?” Use the same question, policy, and instructions for every attempt.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>A full reply must give ₹5,000 as the minimum for Standard Savings. The rubric, or scoring guide, accepts equivalent wording and counts attempts with no usable reply separately.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>An invented saved run has four attempts at temperature 0.2 and four at 0.8. It records the same model snapshot, top-p, output cap, stop settings, and four starting seeds for both settings. At 0.2, three replies give the correct amount and one attempt times out. At 0.8, two give the correct amount, one says ₹10,000, and one ends at “For Standard Savings, the minimum balance you need to maintain is” after reporting a length stop.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Start with repeated runs at 0.8. Some outcomes differ under the same temperature. Then compare both settings. At 0.2, three out of four attempts delivered correct answers. All three assessable replies were correct. At 0.8, two out of four attempts delivered correct answers. Two of the three assessable replies were correct. Showing both counts keeps the timeout and cutoff visible.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Record the timeout separately at 0.2 and the wrong amount and cutoff separately at 0.8. This small sample gives you issues to recheck. It gives too little evidence to say temperature caused the timeout, to estimate the true error rate, or to declare one setting best. Save the settings and run order. Repeat both settings on more questions, including ones about fees, before drawing a broader conclusion.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Python 3.10 or later. You’ll work with made-up token pieces, made-up probabilities, and saved replies. The programs make no model calls and need no extra packages, accounts, or credentials.</p>
+<p>If you’re using Python on your computer, open a plain-text editor. Copy the Python block into a file named <code>m01_t02_step.py</code>. Save it as UTF-8 so the rupee symbol displays correctly. Open a terminal, the window where you enter commands, in the folder where you saved it. If you opened the terminal elsewhere, type <code>cd</code>, a space, and the folder path in quotes. The commands below check your version and run the file.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3 --version
+python3 m01_t02_step.py
+</code></pre>
+</div>
+<p>On Windows, you can use the Python launcher if it’s installed.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">py -3 --version
+py -3 m01_t02_step.py
+</code></pre>
+</div>
+<p>If you have a suitable online Python editor, paste the Python block and click <strong>Run</strong>. The editor itself may need a connection to load. Compare what it prints with the expected output in this lesson. Paste only the Python block. The output blocks are there for comparison. For every new step, replace the previous program with the whole new block. For an experiment, change only what the instructions say and run the program again.</p>
+</div></details>
+<h5>Step 1 — Build the reply one piece at a time</h5>
+<p>Before we draw any pieces, let’s see what happens if the choices are already saved. You’ll build a reply from left to right so you can see exactly when the amount appears.</p>
+<p>A <strong>string</strong> is text inside quotation marks. A <strong>variable</strong> is a name you give a value. The single equals sign <code>=</code> saves the value on the right under the name on the left. <code>reply = &quot;&quot;</code> starts the reply as an empty string. The chosen pieces are in a <strong>list</strong>, a series of items in square brackets with commas between them. We’re treating each item as one token in this exercise.</p>
+<p>Read <code>for piece in pieces:</code> as “take each piece in order and call this one <code>piece</code>.” The colon starts instructions for the loop. The spaces on the left, called <strong>indentation</strong>, show which lines to repeat. Here <code>+</code> joins two strings, and <code>print()</code> shows the growing reply. With two items inside its parentheses, separated by a comma, Python displays them with a space between them. Spaces inside a string stay part of that string.</p>
+<p><strong>Copy and run.</strong> Paste the program into your editor and run it. Look for the first line where a customer could read the amount.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">pieces = [&quot;The&quot;, &quot; minimum&quot;, &quot; is&quot;, &quot; ₹5,000&quot;, &quot;.&quot;]
+reply = &quot;&quot;
+
+for piece in pieces:
+    reply = reply + piece
+    print(&quot;So far:&quot;, reply)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The amount appears on the fourth line. A real model would choose each next token using what came before it. Here you’re replaying choices that were already made.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">So far: The
+So far: The minimum
+So far: The minimum is
+So far: The minimum is ₹5,000
+So far: The minimum is ₹5,000.
+</code></pre></details>
+<p><strong>Experiment.</strong> Replace the fourth piece with <code>&quot; ₹10,000&quot;</code>, including the leading space. Run it again. The policy hasn’t changed. You’ve changed the saved choice, and every line after it carries the new amount.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">So far: The
+So far: The minimum
+So far: The minimum is
+So far: The minimum is ₹10,000
+So far: The minimum is ₹10,000.
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why is there a space before <code>₹5,000</code> inside the saved piece? The program joins pieces exactly as written. Without that space, the amount would run into the previous piece. Actual token boundaries vary, so read these strings as a teaching sketch.</p>
+<h5>Step 2 — Try a weighted draw by hand</h5>
+<p>Now picture a draw from the bag of counters. Number 100 equally likely positions from 0 through 99. Reserve positions 0 through 59 for “is”, 60 through 89 for “balance”, and 90 through 99 for “required.” The groups cover 60, 30, and 10 positions. Enter a position by hand so you can see how the choice works before using random draws.</p>
+<p>Python treats digits without quotes as a number. <code>&lt;</code> asks whether a number is less than another. The <code>if</code> branch runs when its test is true. If that test is false, <code>elif</code> means “check this one next.” <code>else</code> handles whatever is left. Exactly one indented choice runs for a valid position.</p>
+<p><strong>Copy and run.</strong> Replace the last program with this one. Predict which group contains position 23.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">draw = 23
+
+if draw &lt; 60:
+    piece = &quot;is&quot;
+elif draw &lt; 90:
+    piece = &quot;balance&quot;
+else:
+    piece = &quot;required&quot;
+
+print(&quot;Draw:&quot;, draw)
+print(&quot;Next piece:&quot;, piece)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The first range includes 23. The program uses the number you supplied. It hasn’t drawn a number itself yet.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Draw: 23
+Next piece: is
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>draw = 23</code> to <code>draw = 60</code>. Try the two comparisons in order, then run it. The first group ends at 59, so the first test fails and the second one succeeds.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Draw: 60
+Next piece: balance
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Would the lower-scoring choice ever win if you always chose the strongest one? Under greedy selection with these scores, you’d always choose “is.” A weighted draw gives “balance” some chance because its range contains 30 positions.</p>
+<h5>Step 3 — Adjust the chances with temperature</h5>
+<p>You’ll now change the chances before drawing. Start from the 60%, 30%, and 10% you already know. At temperature 0.5, see how much of the chance moves to “is.”</p>
+<p>In Python, <code>/</code> divides and <code>**</code> raises a number to a power. Read <code>chance ** (1 / temperature)</code> as “divide 1 by the temperature, then raise this chance to that power.” <code>append()</code> adds an item to the list named before the dot. The first loop makes a list with the new weights. <code>sum()</code> adds those weights. Dividing each by the total turns the weights back into probabilities you can draw from.</p>
+<p>In the print line, an <code>f</code> before a quoted string lets you put values into it using braces. In <code>{chance:.1%}</code>, <code>.1%</code> tells Python to show a fraction as a percentage with one digit after the decimal point. It rounds each line for display. The full numbers can sum to 100% even if the individually rounded lines don’t.</p>
+<p><strong>Copy and run.</strong> Paste this program and run it. Compare the first printed chance with its original 60%.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">temperature = 0.5
+original = [0.60, 0.30, 0.10]
+weights = []
+
+for chance in original:
+    weights.append(chance ** (1 / temperature))
+
+total = sum(weights)
+print(&quot;Temperature:&quot;, temperature)
+for weight in weights:
+    chance = weight / total
+    print(f&quot;Chance: {chance:.1%}&quot;)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The strongest piece is now much more likely. The weakest choice still has a chance.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Temperature: 0.5
+Chance: 78.3%
+Chance: 19.6%
+Chance: 2.2%
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>temperature</code> to <code>1.0</code> and run again. The exponent is now 1, so each weight stays the same. Their total is already 1.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Temperature: 1.0
+Chance: 60.0%
+Chance: 30.0%
+Chance: 10.0%
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Has the program found the best setting for the bank? It has shown how one setting changes the chances for one invented list of choices. To recommend a setting, you’d need to look at the meaning of the replies and test more questions. This snippet requires a positive temperature because it divides by that value.</p>
+<h5>Step 4 — Keep enough choices to reach a cutoff</h5>
+<p>Try setting aside the least likely choices before you draw. We’ll use whole percentage points so you can add them on paper. This is top-p with a cutoff written as 80 out of 100 rather than 0.8 out of 1.</p>
+<p>Each pair inside parentheses is a <strong>tuple</strong>, two values kept together in order here. The list is already sorted from most likely to least likely. <code>for word, points in choices:</code> takes the two values from one pair and gives them their own names. This is called <strong>unpacking</strong>. The loop keeps the pair, then adds its points. When <code>&gt;=</code> (“at least”) becomes true, <code>break</code> ends the loop. The pair that reached the cutoff has already been kept.</p>
+<p>The final loop divides each kept entry’s points by the total kept. This is what gives you chances that sum to 100% across the smaller set.</p>
+<p><strong>Copy and run.</strong> Paste the block and run it. Predict how many choices you’ll keep before the 80-point cutoff is reached.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cutoff = 80
+choices = [(&quot;is&quot;, 60), (&quot;balance&quot;, 30), (&quot;required&quot;, 10)]
+kept = []
+covered = 0
+
+for word, points in choices:
+    kept.append((word, points))
+    covered = covered + points
+    if covered &gt;= cutoff:
+        break
+
+print(&quot;Covered points:&quot;, covered)
+for word, points in kept:
+    chance = points / covered
+    print(f&quot;{word}: {chance:.1%}&quot;)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The first choice gives you 60 points. Adding “balance” takes you to 90. The final 10-point choice stays outside the set.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Covered points: 90
+is: 66.7%
+balance: 33.3%
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>cutoff</code> to <code>95</code> and run again. The first two choices cover too little, so the third one stays in. With all 100 points kept, each final chance matches its original share.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Covered points: 100
+is: 60.0%
+balance: 30.0%
+required: 10.0%
+</code></pre></details>
+<p><strong>Checkpoint.</strong> At a cutoff of 80, why did we cover 90 points? We kept whole choices. The second choice takes the running total past 80, and the rule keeps that choice in full.</p>
+<h5>Step 5 — Repeat a set of draws with a seed</h5>
+<p>Now let Python supply the draw positions. To see what a seed can control, start two fresh number generators with the same seed and use each for four draws. Think of these as four separate attempts at picking the next piece after “The minimum.” The starting text and chances reset for each attempt. The generator keeps moving through its number sequence.</p>
+<p>The <code>import random</code> line makes Python’s standard tools for simulated draws available. <code>random.Random(seed)</code> creates a fresh generator. Each <code>generator.random()</code> gets the next number from 0 up to but excluding 1. The <code>*</code> sign multiplies that number by 100. <code>int()</code> drops the decimal part so you get a position from 0 to 99. The tests then use the same ranges as Step 2.</p>
+<p>A <strong>function</strong> is a named block you can run again. <code>def show_draws(seed):</code> names the work and gives it a name, <code>seed</code>, for its input. The indented lines run each time you call the function. <code>range(4)</code> supplies four positions, starting at zero. The name <code>turn</code> marks which repetition you’re on. The print line adds one so the report starts at 1. Calling <code>show_draws()</code> with a value starts the function and creates the generator inside it again.</p>
+<p><strong>Copy and run.</strong> Paste the program and run it. Compare the two sets line by line.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import random
+
+
+def show_draws(seed):
+    generator = random.Random(seed)
+    print(&quot;Seed:&quot;, seed)
+    for turn in range(4):
+        draw = int(generator.random() * 100)
+        if draw &lt; 60:
+            piece = &quot;is&quot;
+        elif draw &lt; 90:
+            piece = &quot;balance&quot;
+        else:
+            piece = &quot;required&quot;
+        print(turn + 1, draw, piece)
+
+
+second_seed = 7
+show_draws(7)
+show_draws(second_seed)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> Both sets start at seed 7 and do the same work in the same order. The small draw can repeat a choice several times.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Seed: 7
+1 32 is
+2 15 is
+3 65 balance
+4 7 is
+Seed: 7
+1 32 is
+2 15 is
+3 65 balance
+4 7 is
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>second_seed</code> to <code>8</code>. There’s no need to change the first call. Run it and see which lines change. The second set now takes numbers from a different starting point. It still draws from the same group of choices.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Seed: 7
+1 32 is
+2 15 is
+3 65 balance
+4 7 is
+Seed: 8
+1 22 is
+2 96 required
+3 12 is
+4 70 balance
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Can the bank promise every hosted model request with seed 7 will repeat? We repeated a local number sequence under the same conditions. A model service can vary if the model version, settings, request, or way it runs changes. Save the information available to you and check actual repeatability on that system.</p>
+<h5>Step 6 — Record why the reply stopped</h5>
+<p>Revisit the saved pieces from Step 1. This time add a classroom end marker and a maximum output length. Two runs can end for different reasons, and you want that reason beside the reply before a reviewer checks it.</p>
+<p><code>==</code> asks whether two values are equal. In the first check, it compares the current piece with the marker. A match sets the stop reason and <code>break</code> leaves the loop before the marker is added. A normal piece gets joined to the reply and <code>used</code> goes up by one. If <code>used</code> equals the budget, the second check records a length stop and leaves the loop. If the saved list ends without either kind of stop, the reason stays “saved stream ended.” This toy counter uses a positive budget and counts only visible reply pieces.</p>
+<p><strong>Copy and run.</strong> Paste the program and run it. Look at the reason and then at the text the customer received.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">budget = 8
+pieces = [&quot;The&quot;, &quot; minimum&quot;, &quot; is&quot;, &quot; ₹5,000&quot;, &quot;.&quot;, &quot;&lt;END&gt;&quot;]
+reply = &quot;&quot;
+used = 0
+reason = &quot;saved stream ended&quot;
+
+for piece in pieces:
+    if piece == &quot;&lt;END&gt;&quot;:
+        reason = &quot;end marker&quot;
+        break
+    reply = reply + piece
+    used = used + 1
+    if used == budget:
+        reason = &quot;length limit&quot;
+        break
+
+print(&quot;Reply:&quot;, reply)
+print(&quot;Visible pieces:&quot;, used)
+print(&quot;Stop reason:&quot;, reason)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> The saved marker arrived with room left. The customer sees the completed sentence without the marker.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply: The minimum is ₹5,000.
+Visible pieces: 5
+Stop reason: end marker
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>budget</code> to <code>3</code> and rerun. The third visible piece uses the last available slot, so the amount and marker never get read.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply: The minimum is
+Visible pieces: 3
+Stop reason: length limit
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Should a reviewer label the second reply “wrong amount”? There is no amount to compare with the policy. Record an incomplete answer and investigate whether the output allowance was large enough. If a reply ends at a limit after already giving the necessary information, record the stop and review the available text according to your guide.</p>
+<h5>Step 7 — Compare repeated attempts and keep every outcome visible</h5>
+<p>You’re helping the bank decide what to test next. We’ll use the eight saved attempts from Example 3. Each setting has four starting seeds. Save the shared settings and count the outcomes separately, so a timeout or cutoff stays visible in the report.</p>
+<p>Read each row as a tuple with five entries. In order, they are temperature, seed, stop reason, reply, and policy review. <code>None</code> means a value is absent. On a timeout there is no reply or policy review. The cut-off reply is saved, but it’s missing the amount, so it has no policy review label in this exercise. The other policy labels were assigned by a human who checked the savings policy.</p>
+<p>A loop can sit inside another loop. For each temperature, set the counts back to zero. Then read every saved row. <code>!=</code> means “is different from.” If the row belongs to the other temperature, <code>continue</code> skips to the next row.</p>
+<p>Read the stop reason first. For a timeout, print “no reply.” For this length stop, print the partial text. For a finished reply, read the saved policy review. The program has two such labels in this exercise, PASS and WRONG AMOUNT. A vertical bar inside quotes is just a separator in the report. At the end of the inner loop, count the attempts that answered correctly and the attempts you could judge.</p>
+<p><strong>Copy and run.</strong> Paste the whole program and run it. Follow the two possible denominators for each temperature.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">snapshot = &quot;harbor-demo-v1&quot;
+top_p = 1.0
+budget = 12
+direct = &quot;The minimum is ₹5,000.&quot;
+alternate = &quot;Keep at least five thousand rupees in the account.&quot;
+wrong = &quot;The minimum is ₹10,000.&quot;
+partial = &quot;For Standard Savings, the minimum balance you need to maintain is&quot;
+
+runs = [
+    (0.2, 7, &quot;finished&quot;, direct, &quot;PASS&quot;),
+    (0.2, 8, &quot;timeout&quot;, None, None),
+    (0.2, 9, &quot;finished&quot;, alternate, &quot;PASS&quot;),
+    (0.2, 10, &quot;finished&quot;, direct, &quot;PASS&quot;),
+    (0.8, 7, &quot;finished&quot;, alternate, &quot;PASS&quot;),
+    (0.8, 8, &quot;finished&quot;, wrong, &quot;WRONG AMOUNT&quot;),
+    (0.8, 9, &quot;length limit&quot;, partial, None),
+    (0.8, 10, &quot;finished&quot;, direct, &quot;PASS&quot;),
+]
+
+print(&quot;Snapshot:&quot;, snapshot, &quot;| Top-p:&quot;, top_p, &quot;| Output cap:&quot;, budget)
+print(&quot;Configured stop text: none&quot;)
+
+for temperature in [0.2, 0.8]:
+    attempts = 0
+    correct = 0
+    wrong_amount = 0
+    incomplete = 0
+    timeouts = 0
+    print(&quot;Temperature:&quot;, temperature)
+
+    for setting, seed, stop_reason, reply, review in runs:
+        if setting != temperature:
+            continue
+
+        attempts = attempts + 1
+        if stop_reason == &quot;timeout&quot;:
+            timeouts = timeouts + 1
+            print(&quot;Seed:&quot;, seed, &quot;| timeout | no reply&quot;)
+        elif stop_reason == &quot;length limit&quot;:
+            incomplete = incomplete + 1
+            print(&quot;Seed:&quot;, seed, &quot;| incomplete |&quot;, reply)
+        else:
+            if review == &quot;PASS&quot;:
+                correct = correct + 1
+            else:
+                wrong_amount = wrong_amount + 1
+            print(&quot;Seed:&quot;, seed, &quot;|&quot;, review, &quot;|&quot;, reply)
+
+    print(&quot;Correct replies:&quot;, correct, &quot;of&quot;, attempts, &quot;attempts&quot;)
+    print(&quot;Assessable replies:&quot;, correct + wrong_amount, &quot;of&quot;, attempts)
+    print(&quot;Wrong amount:&quot;, wrong_amount, &quot;| Incomplete:&quot;, incomplete,
+          &quot;| Timeout:&quot;, timeouts)
+</code></pre>
+</div>
+<p><strong>Expected output.</strong> At 0.2, one attempt never gives you a reply, so you can assess three replies. At 0.8, one attempt gives you some text but no amount. You can still assess three replies. Two out of those three gave a correct amount.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Snapshot: harbor-demo-v1 | Top-p: 1.0 | Output cap: 12
+Configured stop text: none
+Temperature: 0.2
+Seed: 7 | PASS | The minimum is ₹5,000.
+Seed: 8 | timeout | no reply
+Seed: 9 | PASS | Keep at least five thousand rupees in the account.
+Seed: 10 | PASS | The minimum is ₹5,000.
+Correct replies: 3 of 4 attempts
+Assessable replies: 3 of 4
+Wrong amount: 0 | Incomplete: 0 | Timeout: 1
+Temperature: 0.8
+Seed: 7 | PASS | Keep at least five thousand rupees in the account.
+Seed: 8 | WRONG AMOUNT | The minimum is ₹10,000.
+Seed: 9 | incomplete | For Standard Savings, the minimum balance you need to maintain is
+Seed: 10 | PASS | The minimum is ₹5,000.
+Correct replies: 2 of 4 attempts
+Assessable replies: 3 of 4
+Wrong amount: 1 | Incomplete: 1 | Timeout: 0
+</code></pre></details>
+<p><strong>Experiment.</strong> In a separate copy of this fixture, imagine you have a replacement record for the first setting at seed 8. The saved reply now finishes and gets the amount right. Replace <code>(0.2, 8, &quot;timeout&quot;, None, None)</code> with <code>(0.2, 8, &quot;finished&quot;, direct, &quot;PASS&quot;)</code>. Rerun. The 0.2 group gains one correct and assessable reply and loses one timeout. The other group is unchanged. In a real report, keep the original attempt and log the new attempt separately.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Snapshot: harbor-demo-v1 | Top-p: 1.0 | Output cap: 12
+Configured stop text: none
+Temperature: 0.2
+Seed: 7 | PASS | The minimum is ₹5,000.
+Seed: 8 | PASS | The minimum is ₹5,000.
+Seed: 9 | PASS | Keep at least five thousand rupees in the account.
+Seed: 10 | PASS | The minimum is ₹5,000.
+Correct replies: 4 of 4 attempts
+Assessable replies: 4 of 4
+Wrong amount: 0 | Incomplete: 0 | Timeout: 0
+Temperature: 0.8
+Seed: 7 | PASS | Keep at least five thousand rupees in the account.
+Seed: 8 | WRONG AMOUNT | The minimum is ₹10,000.
+Seed: 9 | incomplete | For Standard Savings, the minimum balance you need to maintain is
+Seed: 10 | PASS | The minimum is ₹5,000.
+Correct replies: 2 of 4 attempts
+Assessable replies: 3 of 4
+Wrong amount: 1 | Incomplete: 1 | Timeout: 0
+</code></pre></details>
+<p><strong>Checkpoint.</strong> Why report both “correct replies” and “assessable replies”? The first count shows how often an attempt gave the customer the right amount. The second shows how many attempts produced enough information to judge it. This report uses saved judgments for a particular question. A larger study would separately review any reply that ends at the cap, because some can answer the question before they stop.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Sketch two continuations</h5>
+<p>Write “The minimum” on two lines. At the next step “is” has a 60% chance, “balance” has 30%, and “required” has 10% in the made-up example. For the first line pick the strongest choice. For the second line use a weighted draw at position 74 under the Step 2 ranges. Finish each as a truthful reply based on the ₹5,000 rule. Explain why the two paths can share the same meaning.</p>
+<h5>Practice 2. Change one setting and describe its effect</h5>
+<p>Begin with the same 60%, 30%, and 10% chances. First, change temperature from 1.0 to 0.5 and leave top-p off. Is “required” still available? Then reset the temperature to 1.0 and set top-p to 80%. Which choices stay in and what are their new chances? Explain which setting made a choice unavailable in this comparison.</p>
+<h5>Practice 3. Sort a short set of saved attempts</h5>
+<p>The policy says ₹5,000. You receive four records. A finishes with “Keep at least five thousand rupees.” B finishes with “The minimum is ₹10,000.” C stops at the length limit after “The minimum is”. D ends with a timeout and no text. Label each case. Give the number of correct replies out of all attempts and the number correct among replies you could judge. What would you check first for C and D?</p>
+<h5>Practice 4. Repair a comparison you can’t yet trust</h5>
+<p>A teammate ran one fee question at temperature 0.2 on Monday and at 0.8 on Friday. Monday’s reply said “A ₹100 monthly fee applies below ₹5,000.” Friday’s reply said “A ₹100 fee applies daily.” The log shows the same general model name, but no snapshot, the questions as displayed to the user, and no saved policy excerpts or seed setting. Write the narrow conclusion you can defend. Then plan a repeat with a fairer comparison. Specify what to hold fixed, how to schedule the runs, and what to record.</p>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Greedy selection picks “is” at 60%. Position 74 falls between 60 and 89, so the weighted draw gives “balance.” You could finish the first line with “The minimum is ₹5,000.” The second could say “The minimum balance is ₹5,000.” The earlier choice changes which pieces make sense next. Both completed sentences still express the approved minimum.</p>
+<h5>Solution 2</h5>
+<p>At temperature 0.5 the new weights are 0.36, 0.09, and 0.01. The 0.01 is positive, so “required” still has a chance after dividing by 0.46. At temperature 1.0 with top-p set to 80%, keep the first two choices, which together reach 90%. Their new chances are 60 ÷ 90, about 66.7%, and 30 ÷ 90, about 33.3%. Top-p excluded “required” in this example. Temperature strengthened the lead without excluding that choice.</p>
+<h5>Solution 3</h5>
+<p>A is correct. Spelling out the amount leaves its meaning unchanged. B is assessable and wrong. C is incomplete because there is no amount to judge. D is a timeout with no reply. One out of four attempts delivered a correct reply. Of the two assessable replies, one was correct. For C, check whether the configured token cap left enough room to give the amount. For D, check where the wait expired before trying to fix the wording of a reply.</p>
+<h5>Solution 4</h5>
+<p>The two saved replies differ in fee frequency. Under the supplied policy the Monday reply is correct and the Friday reply is wrong. You can’t tell whether the temperature caused the difference. The actual instructions and evidence sent each day might differ, and a general model name may refer to different versions.</p>
+<p>Save the complete request and use the same approved excerpts, scoring guide, and test questions. Record a fixed snapshot if the service provides one. Hold top-p, the token cap, and stop settings steady. Pick the repeat count in advance, and if seeds are available, plan and record the same schedule for both temperatures. Mix the run order across temperatures. Review replies, stop reasons, and failures case by case. Compare the counts under each setting and note any missing settings or version details.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>What is inference in the bank assistant example, and where does training fit?</li><li>Why can changing the first few tokens change the rest of the reply?</li><li>With chances of 60%, 30%, and 10%, can “required” appear under greedy selection? What about weighted sampling?</li><li>At temperature 1, what happens to the example chances before top-p? What can you conclude about answer quality?</li><li>At top-p 0.8, why do the kept choices cover 90% before you rescale?</li><li>Why is “we used the same seed” insufficient to explain whether two real model runs should match?</li><li>Which information helps you distinguish a length stop from a timeout with no reply? Why keep these separate from wrong amounts?</li><li>Your report shows two correct replies out of three assessable replies and four attempts. What should you say about the unassessed attempt?</li></ol>
+<details class="lesson-disclosure lesson-supplement"><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li><strong>Using an existing model.</strong> Inference is what happens when the assistant uses the trained model to produce a reply. Training is the earlier process of adjusting the model using examples. This lesson varies how replies are generated from an existing model.</li><li><strong>The next choice depends on what came before.</strong> “The minimum is” can lead to an amount. “The minimum balance” may lead to “is” first. The model works out new chances with the chosen piece included.</li><li><strong>It can appear in the weighted draw.</strong> Greedy selection picks “is,” the strongest choice. The 10% choice occupies positions 90 through 99 in the toy draw, so it can win by sampling.</li><li><strong>The probabilities stay as they were.</strong> Dividing 1 by 1 gives an exponent of 1 in our sketch. That says nothing about whether the resulting text gives the correct amount. Check the answer against the policy.</li><li><strong>The second choice crosses the line.</strong> 60% alone falls short, and adding 30% takes the total to 90%. Keep the whole second choice, then rescale the two kept chances.</li><li><strong>The seed is one part of the setup.</strong> Save the actual request, model snapshot if available, and generation settings too. The service and its computations can also change. Check how consistently the system repeats under the conditions you can document.</li><li><strong>Read the stop reason and saved text.</strong> A length stop may leave part of the reply. A timeout with no reply leaves no text to judge. A wrong amount is a factual error you can show by comparing a claim against the policy.</li><li><strong>Keep both denominators.</strong> Two of four attempts delivered a correct reply. Two of three assessable replies were correct. There was one attempt without a factual judgment. Report the reason if known, such as a timeout or missing amount, so the attempt stays visible.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>Return to a fresh copy of Step 7. Imagine a teammate gives you one extra saved attempt at each temperature, both using seed 11. At 0.2 the assistant finishes with ₹10,000. At 0.8 it finishes with the correct amount in words. The policy, settings other than temperature, and question are the same.</p>
+<ol><li>Insert <code>(0.2, 11, &quot;finished&quot;, wrong, &quot;WRONG AMOUNT&quot;),</code> after the last 0.2 row. Insert <code>(0.8, 11, &quot;finished&quot;, alternate, &quot;PASS&quot;),</code> after the last 0.8 row. Predict the totals and then run the program.</li><li>Write both fractions for each temperature. Keep a separate line for timeouts and incomplete replies.</li><li>Write two sentences for the bank team. Say what this expanded comparison shows, and propose one repeat study to learn more. Include at least one additional type of question and one piece of setup information you would save.</li></ol>
+<h5>Check your assignment</h5>
+<p>Both groups now have three correct replies in five attempts. Four of five replies are assessable in each group, and three of those four are correct. Each group has one wrong amount. The last outcome differs. The 0.2 group has a timeout, and the 0.8 group has an incomplete reply. The new seed shows why a result from a small set can change with another pair of observations. Neither the tied fractions nor the different stop reasons establish that one temperature causes more errors. A reasonable next study would add below-minimum fee questions and record the exact model snapshot and policy used in each matched set.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Calling every wording change a mistake.</strong> Compare what each answer says. “Five thousand rupees” and “₹5,000” can express the same requirement.</li><li><strong>Expecting one draw to reveal the effect of a setting.</strong> Repeat both settings. Read the individual answers before interpreting the counts.</li><li><strong>Assuming lower temperature fixes incorrect answers.</strong> It can give a wrong but favored choice even more weight. Check the policy claims directly.</li><li><strong>Reading top-p as a fixed number of choices.</strong> Start at the strongest and add their chances. The total you need to reach determines how many you keep.</li><li><strong>Saving the seed and forgetting the rest of the request.</strong> Save the full input, snapshot if available, other settings, and outcomes. Look for changes when two runs disagree.</li><li><strong>Dropping short or missing replies from the report.</strong> Record what ended the attempt. Report all attempts as well as the subset you could assess.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>You can now follow a reply as it grows, explain how temperature and top-p shape a sampled choice, and repeat a small simulation with a seed. You can read a set of saved attempts, tell a wording change from a wrong claim, and keep a cutoff or timeout visible when comparing settings.</p>
+<p>Next in Module 1 is <a href="#m01-t03">Application architecture and a first smoke test</a>. A <strong>smoke test</strong> is a quick check that the basic request path works. You’ll follow a request through the app and learn where to look when the failure happens before you have a reply to score. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
   <details class="lesson-disclosure">
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Inspect repeated saved completions and compare a changed setting with repeated runs under one setting.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Read a table of saved completions. Live comparisons use P03 and P05 plus a prepared local model.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Explain which difference the dataset can support and what metadata it lacks.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure">
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>0h 30m</dd></div><div><dt>Learner total (hrs)</dt><dd>4h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>2h 30m</dd></div></dl></div>
