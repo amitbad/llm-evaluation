@@ -416,6 +416,22 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .lesson-reading code { background:var(--panel); color:var(--text); padding:.08em .2em; border-radius:.2em; }
 .lesson-reading pre { max-width:100%; overflow:auto; padding:.75rem; background:var(--panel); border:1px solid var(--stroke); }
 .lesson-reading pre code { padding:0; }
+.lesson-code { margin-block:1em; }
+.lesson-reading .lesson-code pre { margin:0; }
+.lesson-copy-toolbar {
+  position:sticky; top:4.25rem; z-index:1; display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:.35rem .65rem;
+  padding:.35rem .5rem; background:var(--panel); border:1px solid var(--stroke); border-bottom:0;
+}
+.lesson-copy-button { flex:none; font-size:.85rem; }
+.lesson-copy-status { color:var(--text); font-size:.85rem; }
+.lesson-copy-status:not(.is-error) { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.lesson-copy-fallback { position:fixed; inset:0 auto auto 0; width:1px; height:1px; opacity:0; }
+@media(max-width:620px) {
+  .lesson-copy-toolbar { top:5.5rem; }
+}
+@media print {
+  .lesson-copy-toolbar { display:none!important; }
+}
 .lesson-disclosure summary { font-weight:650; padding:.5rem .65rem; }
 .lesson-disclosure-body { padding:.2rem .65rem .55rem; }
 #guided-status { margin-block:1.2rem .65rem; color:var(--secondary); font-size:.9rem; }
@@ -1774,16 +1790,33 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
 <p>Use Python 3.10 or newer. No third-party packages, credentials, model, or network access are needed to run the program. There is one file named <code>m02_t01_eval.py</code>. Save it as plain text in UTF-8, which lets the rupee symbol display correctly.</p>
 <p>A <strong>terminal</strong> is a window where you can type a command and see its output. On macOS or Linux, open Terminal. On Windows, open PowerShell and use the <code>py</code> commands below if the Python launcher is installed. Run the version command first. If it fails, use an available Python installation or a compatible online Python 3 editor. The editor itself may need internet access to load. The program makes no network calls. Use only the fictional data shown here.</p>
 <ol><li>Create a working folder and open it in a text editor. Copy the <strong>entire</strong> program below into a new file. Save it as <code>m02_t01_eval.py</code>, with no extra <code>.txt</code> ending.</li><li>Open a terminal in that folder. If needed, type <code>cd</code> followed by a space and the path to the folder in quotes, then press Enter.</li><li>Run the version check and the program. The second command tells Python to read your file and execute it.</li></ol>
-<pre><code class="language-bash">python3 --version
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3 --version
 python3 m02_t01_eval.py
 </code></pre>
+</div>
 <p>Use these commands on Windows with the Python launcher.</p>
-<pre><code class="language-bash">py -3 --version
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">py -3 --version
 py -3 m02_t01_eval.py
 </code></pre>
+</div>
 <p>In an online editor with a Python 3 runtime, paste the complete program into the editor and press <strong>Run</strong>. Do not paste the terminal commands into the Python editor. If the environment requires <code>main.py</code>, use that name there and press Run. If Python cannot find the file locally, verify the terminal folder and filename. If you see an indentation error, recopy the program including its spaces.</p>
 <h5>Copy this complete program</h5>
-<pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">expected_amount = &quot;₹5,000&quot;
 actual_amount = &quot;₹10,000&quot;
 
 print(&quot;Example 1 - exact value comparison&quot;)
@@ -1834,6 +1867,7 @@ for case_name, response, required_tokens in cases:
     else:
         print(f&quot;{case_name}: NO RULE FLAGS&quot;)
 </code></pre>
+</div>
 <h5>Observe the first run</h5>
 <p>Compare your output line for line with the following. The blank line separates the two examples. The words in capital letters are rule labels for this lab. Judge the reply itself using the policy.</p>
 <pre><code class="language-text">Example 1 - exact value comparison
@@ -6475,7 +6509,66 @@ followHash(false, initialRoute);
     }
   }
 
+  async function copyCode(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Some local files and browsers restrict the Clipboard API.
+    }
+
+    const previousFocus = document.activeElement;
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.readOnly = true;
+    field.className = "lesson-copy-fallback";
+    document.body.append(field);
+    try {
+      field.focus({preventScroll: true});
+      field.select();
+      if (!document.execCommand("copy")) throw new Error("Clipboard copy failed.");
+    } finally {
+      field.remove();
+      previousFocus?.focus({preventScroll: true});
+    }
+  }
+
+  function setupCopyButtons() {
+    for (const block of document.querySelectorAll(".lesson-code")) {
+      const toolbar = block.querySelector(".lesson-copy-toolbar");
+      const button = block.querySelector(".lesson-copy-button");
+      const status = block.querySelector(".lesson-copy-status");
+      const code = block.querySelector("pre > code");
+      let copying = false;
+      let reset;
+      button.addEventListener("click", async () => {
+        if (copying) return;
+        copying = true;
+        window.clearTimeout(reset);
+        button.textContent = "Copy Code";
+        status.classList.remove("is-error");
+        status.textContent = "";
+        try {
+          await copyCode(code.textContent);
+          button.textContent = "✓ Copied!";
+          status.textContent = "Code copied to clipboard.";
+          reset = window.setTimeout(() => {
+            button.textContent = "Copy Code";
+            status.textContent = "";
+          }, 2000);
+        } catch {
+          status.classList.add("is-error");
+          status.textContent = "Could not copy the code. Select it and copy it manually.";
+        } finally {
+          copying = false;
+        }
+      });
+      toolbar.hidden = false;
+    }
+  }
+
   function setup() {
+    setupCopyButtons();
     if (document.body.classList.contains("academy-lesson")) {
       const header = document.createElement("header");
       header.className = "lesson-header";

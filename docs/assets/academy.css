@@ -182,6 +182,22 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .lesson-reading code { background:var(--panel); color:var(--text); padding:.08em .2em; border-radius:.2em; }
 .lesson-reading pre { max-width:100%; overflow:auto; padding:.75rem; background:var(--panel); border:1px solid var(--stroke); }
 .lesson-reading pre code { padding:0; }
+.lesson-code { margin-block:1em; }
+.lesson-reading .lesson-code pre { margin:0; }
+.lesson-copy-toolbar {
+  position:sticky; top:4.25rem; z-index:1; display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:.35rem .65rem;
+  padding:.35rem .5rem; background:var(--panel); border:1px solid var(--stroke); border-bottom:0;
+}
+.lesson-copy-button { flex:none; font-size:.85rem; }
+.lesson-copy-status { color:var(--text); font-size:.85rem; }
+.lesson-copy-status:not(.is-error) { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.lesson-copy-fallback { position:fixed; inset:0 auto auto 0; width:1px; height:1px; opacity:0; }
+@media(max-width:620px) {
+  .lesson-copy-toolbar { top:5.5rem; }
+}
+@media print {
+  .lesson-copy-toolbar { display:none!important; }
+}
 .lesson-disclosure summary { font-weight:650; padding:.5rem .65rem; }
 .lesson-disclosure-body { padding:.2rem .65rem .55rem; }
 #guided-status { margin-block:1.2rem .65rem; color:var(--secondary); font-size:.9rem; }

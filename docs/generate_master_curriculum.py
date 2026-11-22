@@ -408,7 +408,16 @@ def authored_lesson(topic_id):
     for match in re.finditer(r"(?m)^```(bash|python|text)\n([\s\S]*?)^```[ \t]*$", text):
         render_text(text[offset:match.start()])
         language, code = match.groups()
-        rendered.append(f'<pre><code class="language-{language}">{escape(code)}</code></pre>')
+        block = f'<pre><code class="language-{language}">{escape(code)}</code></pre>'
+        if language != "text":
+            block = f'''<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  {block}
+</div>'''
+        rendered.append(block)
         offset = match.end()
     render_text(text[offset:])
     return '<div class="lesson-section" data-lesson-search>' + "\n".join(rendered) + "</div>"

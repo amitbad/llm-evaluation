@@ -14,7 +14,66 @@
     }
   }
 
+  async function copyCode(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Some local files and browsers restrict the Clipboard API.
+    }
+
+    const previousFocus = document.activeElement;
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.readOnly = true;
+    field.className = "lesson-copy-fallback";
+    document.body.append(field);
+    try {
+      field.focus({preventScroll: true});
+      field.select();
+      if (!document.execCommand("copy")) throw new Error("Clipboard copy failed.");
+    } finally {
+      field.remove();
+      previousFocus?.focus({preventScroll: true});
+    }
+  }
+
+  function setupCopyButtons() {
+    for (const block of document.querySelectorAll(".lesson-code")) {
+      const toolbar = block.querySelector(".lesson-copy-toolbar");
+      const button = block.querySelector(".lesson-copy-button");
+      const status = block.querySelector(".lesson-copy-status");
+      const code = block.querySelector("pre > code");
+      let copying = false;
+      let reset;
+      button.addEventListener("click", async () => {
+        if (copying) return;
+        copying = true;
+        window.clearTimeout(reset);
+        button.textContent = "Copy Code";
+        status.classList.remove("is-error");
+        status.textContent = "";
+        try {
+          await copyCode(code.textContent);
+          button.textContent = "✓ Copied!";
+          status.textContent = "Code copied to clipboard.";
+          reset = window.setTimeout(() => {
+            button.textContent = "Copy Code";
+            status.textContent = "";
+          }, 2000);
+        } catch {
+          status.classList.add("is-error");
+          status.textContent = "Could not copy the code. Select it and copy it manually.";
+        } finally {
+          copying = false;
+        }
+      });
+      toolbar.hidden = false;
+    }
+  }
+
   function setup() {
+    setupCopyButtons();
     if (document.body.classList.contains("academy-lesson")) {
       const header = document.createElement("header");
       header.className = "lesson-header";
