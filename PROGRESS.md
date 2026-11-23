@@ -36,6 +36,8 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 | Sticky Listen sidebar | Both curriculum modes keep Read Aloud in a desktop right column with a compact disclosure on narrow screens. The speed hint moved to the selector tooltip and playback feedback. |
 | Read Aloud voices | The reader shows all distinct browser-reported English voices in regional groups. Preview works while narration is stopped. **Use Voice** saves the choice, and a missing saved voice falls back to an available option. |
 | Beginner Python reference chapter | M01-T01 now introduces concepts in the order a bank question encounters them and starts Python with printing before collections and loops. The first run uses Copy Code, an online editor, and the displayed output. The permanent execution standard is in [TEACHING_GUIDELINES.md](TEACHING_GUIDELINES.md). Completed lesson count is unchanged. |
+| Reference chapter teaching rewrite | M01-T01 is **Rewritten — Awaiting Human Teaching Review**. It follows one customer conversation, uses named counts before introducing collections, and ends with a saved comparison of short policy, long policy, and a window too small for required information. |
+| Final M01-T01 wording edits | Clarified what the program checks, explained how to pair a lookup with its result, named which reply to compare, and separated the Step 1 simulation from a real service test. Human teaching approval remains pending. |
 
 ## Tested
 
@@ -68,6 +70,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 - Voice tests cover regional and quality preferences, duplicate filtering, preview, storage, late-loading and missing voices, and restarting only the current paragraph. Auditioning real voices and verifying availability across devices still requires browser review.
 - The expanded voice menu passed non-browser checks for more than five voices, native grouping, asynchronous list replacement, and fallback. The tests confirm that auditioning leaves the saved voice intact and that preview remains unavailable while narration is playing or paused.
 - The revised M01-T01 passed 16 isolated Python runs in an empty directory, including all seven baseline examples, their seven edits, and two assignment variants. Generator synchronization, validation of 30 public files, and all 22 non-browser tests passed. Human review of the editor workflow and concept sequence is pending.
+- The reference rewrite passed 17 fresh Python 3.12.7 runs from an empty directory. All seven examples, seven edits, and three assignment cases matched their expected results. Generator synchronization, validation of 30 public files, and all 29 non-browser tests passed. These checks verify the technical output. First-time learner review is pending.
 
 ## Manually verified
 
@@ -78,7 +81,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 1. Restore the two public exercise URLs and consider redirects from old `/docs/` links. These are production follow-ups for the owner. The QA update did not deploy or change the VPS.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
-4. **M01-T01 teaching-quality approval is pending human review.** Ask a first-time learner to open the chapter, run a block using the editor link, and explain what changed after an experiment. Check that the revised order makes sense without help.
+4. **M01-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to explain what “that” refers to, run a block using the editor link, and use the assignment records to distinguish an omitted fee paragraph from an answer that contradicts it. Record where the learner needed help before approving the reference.
 5. **New lesson development is paused until M01-T01 is approved.** After approval, use the reference chapter to correct the beginner workflows identified below. M03-T01 remains the next unfinished topic.
 6. In Chrome and Safari, open an authored lesson in both learning modes. Scroll to verify the wide Listen sidebar stays below the site header. Check for page overflow with a long code line and a long section name. At a narrower width, verify that keyboard users can open and close Listen and that audio continues when the disclosure closes. Test speed, highlighting, and lesson switches in both themes. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Sticky positioning, visual wrapping, and native audio behavior remain unverified.
 
