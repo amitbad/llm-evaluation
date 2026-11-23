@@ -39,6 +39,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 | Reference chapter teaching rewrite | M01-T01 is **Rewritten — Awaiting Human Teaching Review**. It follows one customer conversation, uses named counts before introducing collections, and ends with a saved comparison of short policy, long policy, and a window too small for required information. |
 | Final M01-T01 wording edits | Clarified what the program checks, explained how to pair a lookup with its result, named which reply to compare, and separated the Step 1 simulation from a real service test. Human teaching approval remains pending. |
 | Final automated M01-T01 teaching audit | Reviewed the full chapter against the teaching guidelines. Clarified the link between the lookup demonstration and Step 1, the exact-match rule in Step 5, and the distinction between removal priority and conversation order in the assignment. Made the role exercise self-contained and corrected the budget solution’s wording. Status remains **Rewritten — Awaiting Human Teaching Review**. |
+| M01-T02 teaching rewrite | **Rewritten — Awaiting Human Teaching Review.** Replaced the file and terminal workflow with Copy Code and the online editor, walked learners through temperature and top-p with the same counter example, and added a check for prompt or model changes in the saved comparison. The three demonstrations, seven activities, four solved exercises, eight knowledge checks, and assignment are intact. |
 
 ## Tested
 
@@ -73,6 +74,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 - The revised M01-T01 passed 16 isolated Python runs in an empty directory, including all seven baseline examples, their seven edits, and two assignment variants. Generator synchronization, validation of 30 public files, and all 22 non-browser tests passed. Human review of the editor workflow and concept sequence is pending.
 - The reference rewrite passed 17 fresh Python 3.12.7 runs from an empty directory. All seven examples, seven edits, and three assignment cases matched their expected results. Generator synchronization, validation of 30 public files, and all 29 non-browser tests passed. These checks verify the technical output. First-time learner review is pending.
 - After the final automated teaching audit, all 17 isolated Python 3.12.7 runs passed again with the original code and output blocks. Curriculum synchronization, static validation of 30 public files, and all 29 non-browser tests passed. The live editor, native clipboard and audio, and actual beginner comprehension still need human review.
+- After the M01-T02 rewrite, all seven baselines and seven experiments matched the unchanged transcripts in fresh Python 3.12.7 processes. The assignment also matched its answer key. Curriculum synchronization, static validation of 30 public files, and all 29 non-browser tests passed.
 
 ## Manually verified
 
@@ -86,16 +88,17 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 4. **M01-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to explain what “that” refers to, run a block using the editor link, and use the assignment records to distinguish an omitted fee paragraph from an answer that contradicts it. Record where the learner needed help before approving the reference.
 5. **New lesson development is paused until M01-T01 is approved.** After approval, use the reference chapter to correct the beginner workflows identified below. M03-T01 remains the next unfinished topic.
 6. In Chrome and Safari, open an authored lesson in both learning modes. Scroll to verify the wide Listen sidebar stays below the site header. Check for page overflow with a long code line and a long section name. At a narrower width, verify that keyboard users can open and close Listen and that audio continues when the disclosure closes. Test speed, highlighting, and lesson switches in both themes. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Sticky positioning, visual wrapping, and native audio behavior remain unverified.
+7. **M01-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run an activity in the editor, explain what changing temperature and top-p did, and use the saved comparison to distinguish a wrong answer from a change in the model or prompt.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).
 
 ## Beginner Python workflow audit
 
-The other completed lesson sources were inspected and left unchanged. Their examples supply their sample data. The friction is in the setup and execution directions.
+The original audit below recorded friction in setup and execution directions. The examples supplied their sample data. The M01-T02 rewrite addressed its finding. The other findings remain open.
 
 | Lesson | Instruction found | Why it can block a beginner | Correction after approval |
 | --- | --- | --- | --- |
-| M01-T02 | Save `m01_t02_step.py` as UTF-8 and use `cd` before running the command. | The learner has to name, encode, and find a file before trying a draw. | Lead with Copy Code and the editor link. Move local setup to optional guidance. |
+| M01-T02 | Save `m01_t02_step.py` as UTF-8 and use `cd` before running the command. | The learner had to name, encode, and find a file before trying a draw. | Implemented Copy Code and the editor-first workflow. Human review is pending. |
 | M01-T03 | Create `m01_t03_smoke.py`, open a terminal, and check the interpreter. | The first response demo appears to require a configured command line. | Start with paste and Run. Keep version and launcher checks separate. |
 | M02-T01 | Open Terminal or PowerShell, then replace `m02_t01_step.py` in Step 1. | The section offers an editor, but the first step sends learners back to a file they must create. | Point each step at a fresh editor buffer and retain the copyable block. |
 | M02-T02 | Create `m02_t02_step.py` and check the folder and filename if the run fails. | Troubleshooting assumes the learner understands paths and a local interpreter. | Put the linked editor first and explain how to replace starter code or recover after an edit. |
