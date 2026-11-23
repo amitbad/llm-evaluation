@@ -41,6 +41,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 | Final automated M01-T01 teaching audit | Reviewed the full chapter against the teaching guidelines. Clarified the link between the lookup demonstration and Step 1, the exact-match rule in Step 5, and the distinction between removal priority and conversation order in the assignment. Made the role exercise self-contained and corrected the budget solution’s wording. Status remains **Rewritten — Awaiting Human Teaching Review**. |
 | M01-T02 teaching rewrite | **Rewritten — Awaiting Human Teaching Review.** Replaced the file and terminal workflow with Copy Code and the online editor, walked learners through temperature and top-p with the same counter example, and added a check for prompt or model changes in the saved comparison. The three demonstrations, seven activities, four solved exercises, eight knowledge checks, and assignment are intact. |
 | M02-T01 teaching rewrite | **Rewritten — Awaiting Human Teaching Review.** Followed one Harbor Leaf FAQ decision from objectives through dimension checks and failure priorities. Replaced terminal setup with the online editor and added an independent assignment on evidence, missing records, and fair comparison. Preserved three demonstrations, seven Python activities, four solved exercises, and eight explained knowledge checks. |
+| M02-T02 teaching rewrite | **Rewritten — Awaiting Human Teaching Review.** Used Harbor Leaf’s policy change to teach ground truth, equivalent answers, abstention, and repeatable benchmark comparisons. Replaced file setup with the online editor and clarified the assignment’s scoring revision. Preserved three demonstrations, seven Python activities, four solved exercises, and eight explained knowledge checks. The fee boundary check now asks learners to choose an input that exposes the mistake. |
 
 ## Tested
 
@@ -77,6 +78,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 - After the final automated teaching audit, all 17 isolated Python 3.12.7 runs passed again with the original code and output blocks. Curriculum synchronization, static validation of 30 public files, and all 29 non-browser tests passed. The live editor, native clipboard and audio, and actual beginner comprehension still need human review.
 - After the M01-T02 rewrite, all seven baselines and seven experiments matched the unchanged transcripts in fresh Python 3.12.7 processes. The assignment also matched its answer key. Curriculum synchronization, static validation of 30 public files, and all 29 non-browser tests passed.
 - After the M02-T01 rewrite, all seven baselines and seven experiments matched the unchanged transcripts in fresh Python 3.12.7 processes. Curriculum synchronization, static validation of 30 public files, and all 29 non-browser tests passed. Generated changes were confined to the shared M02-T01 chapter.
+- After the M02-T02 rewrite, all seven baselines, seven experiments, and both assignment runs matched the expected output in fresh Python 3.12.7 processes. Curriculum synchronization, static validation of 30 public files, and all 29 non-browser tests passed. Generated changes were confined to the shared M02-T02 chapter.
 
 ## Manually verified
 
@@ -92,17 +94,18 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 6. In Chrome and Safari, open an authored lesson in both learning modes. Scroll to verify the wide Listen sidebar stays below the site header. Check for page overflow with a long code line and a long section name. At a narrower width, verify that keyboard users can open and close Listen and that audio continues when the disclosure closes. Test speed, highlighting, and lesson switches in both themes. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Sticky positioning, visual wrapping, and native audio behavior remain unverified.
 7. **M01-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run an activity in the editor, explain what changing temperature and top-p did, and use the saved comparison to distinguish a wrong answer from a change in the model or prompt.
 8. **M02-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run a rule check, explain why a correct claim can still need a groundedness review, and defend their first action on the assignment.
+9. **M02-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to choose the governing policy for June 30 and July 1, run an editor activity, and explain why the assignment’s additional PASS reflects a scoring revision.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).
 
 ## Beginner Python workflow audit
 
-The original audit below recorded friction in setup and execution directions. The examples supplied their sample data. The M01-T02 and M02-T01 rewrites addressed their findings. The other findings remain open.
+The original audit below recorded friction in setup and execution directions. The examples supplied their sample data. The M01-T02, M02-T01, and M02-T02 rewrites addressed their findings. The remaining findings are open.
 
 | Lesson | Instruction found | Why it can block a beginner | Correction after approval |
 | --- | --- | --- | --- |
 | M01-T02 | Save `m01_t02_step.py` as UTF-8 and use `cd` before running the command. | The learner had to name, encode, and find a file before trying a draw. | Implemented Copy Code and the editor-first workflow. Human review is pending. |
 | M01-T03 | Create `m01_t03_smoke.py`, open a terminal, and check the interpreter. | The first response demo appears to require a configured command line. | Start with paste and Run. Keep version and launcher checks separate. |
 | M02-T01 | Open Terminal or PowerShell, then replace `m02_t01_step.py` in Step 1. | The first step sent learners back to a file they had to create. | Implemented the editor-first workflow. Human review is pending. |
-| M02-T02 | Create `m02_t02_step.py` and check the folder and filename if the run fails. | Troubleshooting assumes the learner understands paths and a local interpreter. | Put the linked editor first and explain how to replace starter code or recover after an edit. |
+| M02-T02 | Create `m02_t02_step.py` and check the folder and filename if the run fails. | Troubleshooting assumed the learner understood paths and a local interpreter. | Implemented the editor-first workflow, including recovery after an edit. Human review is pending. |
 | M02-T03 | Lead with creating `m02_t03_lab.py`; mention online use only if the learner already has a suitable editor. | The learner has to choose or set up a tool before the first replay. | Start with the supplied editor link, Copy Code, and the expected output. |
