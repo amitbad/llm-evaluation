@@ -38,6 +38,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 | Beginner Python reference chapter | M01-T01 now introduces concepts in the order a bank question encounters them and starts Python with printing before collections and loops. The first run uses Copy Code, an online editor, and the displayed output. The permanent execution standard is in [TEACHING_GUIDELINES.md](TEACHING_GUIDELINES.md). Completed lesson count is unchanged. |
 | Reference chapter teaching rewrite | M01-T01 is **Rewritten — Awaiting Human Teaching Review**. It follows one customer conversation, uses named counts before introducing collections, and ends with a saved comparison of short policy, long policy, and a window too small for required information. |
 | Final M01-T01 wording edits | Clarified what the program checks, explained how to pair a lookup with its result, named which reply to compare, and separated the Step 1 simulation from a real service test. Human teaching approval remains pending. |
+| Final automated M01-T01 teaching audit | Reviewed the full chapter against the teaching guidelines. Clarified the link between the lookup demonstration and Step 1, the exact-match rule in Step 5, and the distinction between removal priority and conversation order in the assignment. Made the role exercise self-contained and corrected the budget solution’s wording. Status remains **Rewritten — Awaiting Human Teaching Review**. |
 
 ## Tested
 
@@ -71,6 +72,7 @@ Last updated **2026-11-22**. The last verified live release is `aa01ca7`. Module
 - The expanded voice menu passed non-browser checks for more than five voices, native grouping, asynchronous list replacement, and fallback. The tests confirm that auditioning leaves the saved voice intact and that preview remains unavailable while narration is playing or paused.
 - The revised M01-T01 passed 16 isolated Python runs in an empty directory, including all seven baseline examples, their seven edits, and two assignment variants. Generator synchronization, validation of 30 public files, and all 22 non-browser tests passed. Human review of the editor workflow and concept sequence is pending.
 - The reference rewrite passed 17 fresh Python 3.12.7 runs from an empty directory. All seven examples, seven edits, and three assignment cases matched their expected results. Generator synchronization, validation of 30 public files, and all 29 non-browser tests passed. These checks verify the technical output. First-time learner review is pending.
+- After the final automated teaching audit, all 17 isolated Python 3.12.7 runs passed again with the original code and output blocks. Curriculum synchronization, static validation of 30 public files, and all 29 non-browser tests passed. The live editor, native clipboard and audio, and actual beginner comprehension still need human review.
 
 ## Manually verified
 
