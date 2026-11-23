@@ -21,6 +21,12 @@ Follow this sequence for each new idea.
 
 Review the order of ideas as well as the language. For each new term, identify the concrete thing the learner has already seen that gives it meaning. If the reader needs to understand several unfamiliar terms to follow a paragraph, split the demonstration and teach the missing idea first. Start the first Python program with the smallest operation that illustrates the lesson. Add another operation only after the learner knows what the first one does and can change its result.
 
+For a beginner chapter, carry a realistic situation from the opening through the worked cases. Let the learner inspect what happened, then give the idea a name. Change one thing at a time so they can tell why the result changed. Before moving on, ask the learner to make a decision or explain an observation using only what they’ve learned so far.
+
+Every major concept should connect to a practical evaluation-engineering decision where relevant. Explain what evidence an engineer should examine, what should remain unchanged, what should be changed, and what conclusions the result supports. Do not force an evaluation exercise where it adds no learning value.
+
+Label made-up counts, saved replies, and model simulations where they appear.
+
 ## Beginner Python Execution Standard
 
 Use an online Python editor as the default in every beginner lesson. Put the **Open Python Editor** link next to the practice instructions or the code. Use [Online Python](https://www.online-python.com/) as the recommended editor. Open it in a new tab with `rel="noopener noreferrer"`. Explain that learners paste the copied code themselves.
@@ -40,6 +46,16 @@ Keep worked examples, code, outputs, experiments, checkpoints, practice, solutio
 
 ## Review before publishing
 
-Read the lesson as a first-time learner. Check each term at its first use. Check each example and exercise for missing assumptions, each code block for unexplained syntax, and each result for what it actually establishes. Keep author-only notes in the curriculum or audit sources. Run any changed examples and experiments and check their transcripts. Regenerate the course and run the synchronization and static-site checks described in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+Read the whole chapter as a first-time learner. Check each term at its first use, each example for missing assumptions, and each code block for unexplained syntax. Confirm that the exercises let the learner connect a result to what they would investigate next. Keep author-only notes in the curriculum or audit sources.
 
-Have a person review the actual learning experience. Ask them to follow the link, paste code into an empty editor, predict a change, and explain one result in their own words. Record where they get stuck or need a term explained. Automated checks verify the examples and site wiring. Human review decides whether the sequence teaches the lesson.
+**Technical validation.** Run each beginner program in a fresh process and compare its baseline and experiment output with the lesson. Regenerate the course and run the synchronization, static-site, and relevant non-browser checks in [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md). Record the checks and their results.
+
+**Teaching-quality approval.** A human reviewer must use the actual lesson and judge whether a beginner can follow its explanations and work independently. Have them use the online editor, predict an experiment, interpret a result, and explain how that evidence changes their next action. Record where they needed help. For a rewritten lesson, record **Rewritten — Awaiting Human Teaching Review** until a human explicitly approves it. Passing technical checks does not grant approval.
+
+The human reviewer must answer these questions before approving the lesson.
+
+- Can the learner explain the concept without reading its definition again?
+- Can they run the Python exercise without assistance?
+- Can they predict and explain the experiment's result?
+- Can they identify what the result proves and what it does not prove?
+- Were any instructions or technical terms confusing?
