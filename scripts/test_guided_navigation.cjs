@@ -4,11 +4,12 @@ const {readFileSync} = require("node:fs");
 const {resolve} = require("node:path");
 const {test} = require("node:test");
 const vm = require("node:vm");
+const {authoredLessonIds} = require("./lesson_test_data.cjs");
 
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const html = read("docs/master-curriculum.html");
 const data = JSON.parse(html.match(/<script id="roadmap-data" type="application\/json">([\s\S]*?)<\/script>/)[1]);
-const authoredLessons = new Set(["M01-T01", "M01-T02", "M01-T03", "M02-T01", "M02-T02", "M02-T03"]);
+const authoredLessons = new Set(authoredLessonIds);
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
   .replace(read("docs/learning_roadmap.js"), "const CurriculumRoadmap = {};")
   .replace("LearningProgress.bindControls(progressState, CurriculumRoadmap.saveBlob);", "")

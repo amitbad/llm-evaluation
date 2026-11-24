@@ -4370,34 +4370,368 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m03-t01">
-  <p class="lesson-intro" data-lesson-search>String matches are fast and inspectable but can miss valid aliases and accept wrong claims.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Exact match, case and whitespace normalization, Unicode caution, regex boundaries, canonical aliases, numeric checks, precision and recall.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Compare exact text, normalized text, and a list of approved names. Explain what each check preserves.</li><li>Use a regular expression to check a number’s boundaries, then explain why finding the number still leaves the claim unverified.</li><li>Read a fee amount from a known format, convert it to a number, and compare it with the approved fee.</li><li>Write a table of expected judgments for punctuation, negation, a wrong amount, and a valid paraphrase.</li><li>Calculate precision and recall for a small set of reviewed replies and report which cases still need review.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>A customer with ₹4,999 in Harbor Leaf Bank’s Standard Savings account asks what fee applies on July 15, 2026. The bank’s approved policy, SV-2 §2, says the minimum is ₹5,000 and the fee is ₹100 per month below that balance. The saved reply says “Monthly fee: ₹100.” A test that looks for the text “100” gives it a pass.</p>
+<p>Now read “Monthly fee: ₹1000.” The same test still finds “100,” even though the fee is ten times too large. Make the rule stricter and another problem appears. A reply that says “You pay one hundred rupees each month” may fail an exact text check even though it communicates the approved fee.</p>
+<p>You’ll use the same question to find out where each rule helps and where it gets in the way. The bank, policy, replies, and judgments below are fictional. Allow about 4.5 hours, including time to predict the experiments and complete the assignment.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. Start with text you can compare</h5>
+<p>Suppose the bank asks for the fee in a fixed format so another program can read it. If the expected text is “Monthly fee: ₹100.” and the actual text is the same, a character-by-character check passes. That’s an <strong>exact match</strong>. A missing period or an extra space would make it fail. The check is <strong>deterministic</strong>, meaning the same text and rule give the same result each time.</p>
+<p>An exact match makes sense if the period is part of the format the bank requires. If the customer simply wants a clear answer, both versions can convey the same fee. Decide which behaviour the check is measuring before treating a mismatch as a wrong answer.</p>
+<h5>2. Agree which differences can be ignored</h5>
+<p>A teammate types “  STANDARD   SAVINGS  ” in a field for the account name. It looks like the same account. You can trim the extra spaces at the ends, collapse repeated spaces inside, and make the comparison ignore capital letters. Applying agreed changes before comparing is <strong>normalization</strong>.</p>
+<p>Do this only where the change preserves the information you need. For an account-name field, repeated spaces may be harmless. For a money field, removing every mark can change the value. “₹1.00” and “₹100” become the same text if you blindly delete the period.</p>
+<p>Computers use a standard called <strong>Unicode</strong> to represent text characters. For example, the full-width letter “Ｓ” takes up more space on the page and has a different stored representation from “S.” Python’s Unicode normalization form called <strong>NFKC</strong> can turn that full-width letter into the ordinary one. It can also fold other characters, such as turning “²” into “2.” Apply it only when your field’s rules permit those changes. In the lab, you’ll try it on the account name. The fee reader uses its own separate format.</p>
+<p>The bank may also accept “Standard Savings Account” as a name for the same product. An <strong>alias</strong> is another approved name for the same thing. Pick one <strong>canonical name</strong>, meaning the name you store as the standard, and map reviewed aliases to it. If a name is unfamiliar, leave it for review. A similar-looking product could carry different fees.</p>
+<h5>3. Find complete numbers, then read the claim</h5>
+<p>A <strong>substring</strong> is a piece of text that appears inside a larger string. “100” is a substring of “1000.” It also appears in “The fee is ₹80, not ₹100.” The substring check answers whether some characters occur. The fee question asks what the reply actually says the customer must pay.</p>
+<p>A <strong>regular expression</strong>, or <strong>regex</strong>, describes a text pattern. A boundary in that pattern can help you find “100” as a separate number in the examples above. It keeps “100” inside “1000” from matching. The separate number still matches in “not ₹100.” A boundary test tells you where the number occurs, while the neighbouring words tell you what the reply claims.</p>
+<p>If the bank asks for exactly one field such as “Monthly fee: ₹100.”, check the full format and read the digits as a Python integer, a whole number. Compare the resulting number with the approved 100 rupees. This is a <strong>typed check</strong> because it compares numbers after reading the text. The word “Monthly” in the agreed format establishes the time period. The pattern in this lesson accepts only whole, nonnegative rupee amounts in that format, with an optional final period. Natural customer replies outside the format still need a reviewer.</p>
+<h5>4. Test your checker with replies someone has already reviewed</h5>
+<p>Write a row for each saved reply before running a rule. Include the policy, the reply, and whether a reviewer says the reply gives the right monthly fee. Then add the rule’s result. A table like this is a <strong>truth table</strong> for your checks. It shows where the rule agrees with your expected judgments and where it gets them wrong.</p>
+<p>Suppose a rule marks four replies correct and a reviewer agrees on two of them. Its <strong>precision</strong> is two out of four, or 50%. Precision asks how many of the rule’s passes were deserved. If the reviewer found three correct replies in all, the rule’s <strong>recall</strong> is two out of three, or about 66.7%. Recall asks how many of the correct replies the rule found.</p>
+<p>The passes a reviewer agrees with are <strong>true positives</strong>. A wrong reply that the rule passes is a <strong>false positive</strong>, or false pass. A correct reply the rule rejects is a <strong>false negative</strong>, or false failure. If a conservative rule sends a correct reply to review, it has yet to find that pass automatically. Report pending reviews separately. If a request never returned a reply, mark it UNSCORABLE. There’s no text to check, and it should stay visible as an execution outcome.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Decide whether a difference matters</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“Which savings account does this fee apply to?” The app expects an account name.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The policy names Standard Savings. The bank also approves “Standard Savings Account” as another name for it.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The saved field reads “  STANDARD   SAVINGS  ”.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>A character-by-character comparison fails. Trim the outside spaces, collapse the gaps, and compare without case. Now both names match. If the field instead reads “Standard Savings Account,” spacing rules alone leave an extra word. Look up the approved alias and store “Standard Savings.” This verifies the account name under the bank’s rules. It gives you no evidence that the rest of a reply states the fee correctly.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Treat the original exact-match failure as a false failure if the field allows these variations. Keep a counterexample such as “Premium Savings” so a rule cannot pass every name that contains “Savings.”</span></p>
+<h5>Example 2. Check what the number is doing</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What monthly fee is due at ₹4,999 in Standard Savings on July 15?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-2 §2 requires a ₹100 monthly fee at that balance. The lab’s fixed output format is “Monthly fee: ₹100.”, with the period optional.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>One saved reply says “Monthly fee: ₹1000.” Another says “The fee is ₹80, not ₹100.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Both contain “100,” so a substring rule passes both. A number-boundary regex rules out the first and still matches the second. In the fixed format, read the first amount as the integer 1000. It fails the comparison with 100. The second reply needs review under the format check. A reviewer can then see that it asserts ₹80 and rejects the approved amount.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Both saved replies are incorrect. Count a false pass each time a rule accepts one. Keep the regex result as evidence of a text match, then use the fixed format or a reading of the whole claim to decide whether it found the right fee.</span></p>
+<h5>Example 3. Choose a rule for the job</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“At a balance of ₹4,999, what fee would I pay each month for Standard Savings on July 15?” The review sheet includes five saved replies and one request that timed out.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-2 §2 supports ₹100 per month. Reviewers accept equivalent wording about that amount and frequency.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>A says “Monthly fee: ₹100.” B omits the period. C says “The fee is ₹80, not ₹100.” D says “Monthly fee: ₹1000.” E says “You pay one hundred rupees each month.” F returned no reply.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>A, B, and E give the correct fee. C and D give the wrong fee. A substring rule for “100” passes A through D, so two of its four passes are right. It finds two of the three correct replies. The typed check automatically passes A and B, fails D, and sends C and E to review. F stays unscorable under either rule.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The substring rule produces two false passes and one false failure. The typed rule has no false passes in these examples, but it still misses E as an automatic pass and needs two reviews. For a fixed output field, the typed check is a useful starting point. For natural replies, keep the review step. The small set demonstrates particular failure modes and supplies no estimate of live performance.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Every block is a complete Python 3.10+ program using only built-in features or the standard library. All replies and judgments are supplied as fictional practice data.</p>
+<ol><li>Select <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a> to open an editor in a separate tab. There is also an editor link next to every Python block.</li><li>Select <strong>Copy Code</strong>, then paste the entire block into the editor yourself. Replace any text already there.</li><li>Click <strong>Run</strong>. Open <strong>Expected output</strong> in the lesson and compare it with the editor’s output.</li><li>Predict the experiment result, make the one specified edit, and click <strong>Run</strong> again. Compare with the second <strong>Expected output</strong>.</li></ol>
+<p>Keep the spaces at the start of lines. If you get an error while editing, paste the original block and check it before trying the edit again.</p>
+</div></details>
+<h5>Step 1 — Check the exact text</h5>
+<p>Begin with the bank’s fixed fee format. Python will compare the expected string with one saved reply. A string is text between quotes. A name such as <code>reply</code> holds that text. Use <code>=</code> to store it and <code>==</code> to compare two values. The comparison produces <code>True</code> or <code>False</code>, and <code>print()</code> shows that result.</p>
+<p>Copy the block, replace the editor contents, and click <strong>Run</strong>.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
+  </div>
+  <pre><code class="language-python">expected = &quot;Monthly fee: ₹100.&quot;
+reply = &quot;Monthly fee: ₹100.&quot;
+
+print(&quot;Exact match:&quot;, reply == expected)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: True
+</code></pre></details>
+<p>The two strings contain the same characters. Python can make that comparison without reading the bank policy.</p>
+<p><strong>Experiment.</strong> Remove only the final period from <code>reply</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: False
+</code></pre></details>
+<p>The last character is now different, so the exact match fails. The amount and frequency stayed the same.</p>
+<p><strong>Checkpoint.</strong> Would you mark the edited customer answer factually wrong? The policy fact is unchanged. Decide separately whether the format requires that period.</p>
+<h5>Step 2 — Ignore agreed differences in an account name</h5>
+<p>The same account name can arrive in capital letters or with repeated spaces. Use <code>split()</code> to split the name into pieces at whitespace, the spaces and similar gaps in text. In <code>&quot; &quot;.join(words)</code>, the quoted space is the separator that goes between those pieces. <code>casefold()</code> prepares text for a comparison that ignores differences in letter case.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>. The function starts with <code>def</code> and takes one name each time you call it. <code>return</code> hands the cleaned name back.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
+  </div>
+  <pre><code class="language-python">def normalize_name(name):
+    words = name.split()
+    return &quot; &quot;.join(words).casefold()
+
+
+expected = &quot;Standard Savings&quot;
+reply = &quot;  STANDARD   SAVINGS  &quot;
+
+print(&quot;Exact match:&quot;, reply == expected)
+print(&quot;Cleaned reply:&quot;, normalize_name(reply))
+print(&quot;Normalized match:&quot;, normalize_name(reply) == normalize_name(expected))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: False
+Cleaned reply: standard savings
+Normalized match: True
+</code></pre></details>
+<p>Splitting and rejoining removes the outside gaps and leaves one space inside. The cleaned versions use the same case.</p>
+<p><strong>Experiment.</strong> Change only <code>reply</code> to <code>&quot;  PREMIUM   SAVINGS  &quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: False
+Cleaned reply: premium savings
+Normalized match: False
+</code></pre></details>
+<p>The same cleanup leaves the product name different, so the comparison still distinguishes these two accounts.</p>
+<p><strong>Checkpoint.</strong> Which changes did you decide to ignore? Spaces and letter case in the account field. This result says nothing about whether two differently named accounts share a policy.</p>
+<h5>Step 3 — Use a reviewed list of aliases</h5>
+<p>The bank accepts the text “Standard Savings Account” as an alias. A dictionary stores a name and its associated value in curly braces. <code>aliases.get(key)</code> retrieves the value for the supplied key and gives <code>None</code> when it cannot find one. Here <code>None</code> means the list contains no approved match.</p>
+<p>The line <code>from unicodedata import normalize</code> makes Python’s standard Unicode helper available. Use NFKC on the account field before cleaning spaces and case. The <code>if account is None</code> condition handles a name the dictionary couldn’t find. The indented <code>else</code> block handles a name it found. Copy the block and click <strong>Run</strong>.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
+  </div>
+  <pre><code class="language-python">from unicodedata import normalize
+
+
+def account_key(name):
+    name = normalize(&quot;NFKC&quot;, name)
+    return &quot; &quot;.join(name.split()).casefold()
+
+
+aliases = {
+    &quot;standard savings&quot;: &quot;Standard Savings&quot;,
+    &quot;standard savings account&quot;: &quot;Standard Savings&quot;,
+}
+reply = &quot;Ｓtandard Savings Account&quot;
+account = aliases.get(account_key(reply))
+
+if account is None:
+    print(&quot;Review: account name not recognized&quot;)
+else:
+    print(&quot;Canonical account:&quot;, account)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Canonical account: Standard Savings
+</code></pre></details>
+<p>NFKC changes the full-width “Ｓ” to “S.” Cleanup turns the name into a dictionary key that already exists, so the program prints the canonical name saved under that key.</p>
+<p><strong>Experiment.</strong> Change only <code>reply</code> to <code>&quot;Standard-Savings Account&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Review: account name not recognized
+</code></pre></details>
+<p>The hyphen stays in the cleaned key. This dictionary gives no match, so review the name before adding it as a new alias.</p>
+<p><strong>Checkpoint.</strong> Can you apply the same cleanup to every field? Use it only where the transformations preserve what the field is supposed to mean. For this check, the bank reviewed two account names.</p>
+<h5>Step 4 — Check the number’s boundaries</h5>
+<p>A substring search with <code>in</code> finds literal text wherever it appears. Import Python’s standard <code>re</code> module to try a pattern instead. In <code>r&quot;\b100\b&quot;</code>, <code>r</code> tells Python to keep the backslashes for the regex, and <code>\b</code> means a boundary between a word character and a non-word character or the start or end of text. Digits are word characters, so there is no boundary between “100” and the last “0” in “1000.” <code>re.search()</code> returns <code>None</code> if it finds no match. <code>is not None</code> checks for a match.</p>
+<p>Copy the complete block and click <strong>Run</strong>.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
+  </div>
+  <pre><code class="language-python">import re
+
+reply = &quot;Monthly fee: ₹1000.&quot;
+
+print(&quot;Substring found:&quot;, &quot;100&quot; in reply)
+print(&quot;Number pattern found:&quot;, re.search(r&quot;\b100\b&quot;, reply) is not None)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Substring found: True
+Number pattern found: False
+</code></pre></details>
+<p>The substring occurs inside 1000. The pattern requires the boundary after 100, so it rejects this occurrence.</p>
+<p><strong>Experiment.</strong> Set only <code>reply</code> to <code>&quot;The fee is ₹80, not ₹100.&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Substring found: True
+Number pattern found: True
+</code></pre></details>
+<p>Now the number is separate, and the pattern matches. The word “not” tells you that the reply denies this amount.</p>
+<p><strong>Checkpoint.</strong> Did the pattern verify the monthly fee? It found “100” with a boundary on each side. To check which amount the reply asserts, read the words around it. This pattern can also find “100” inside “100.50” because the decimal point marks a boundary.</p>
+<h5>Step 5 — Read a whole-rupee fee from a fixed format</h5>
+<p>Ask Python to match the entire field. <code>re.fullmatch()</code> requires a match from start to finish. In the pattern below, <code>[0-9]+</code> means one or more digits from 0 through 9. Parentheses keep those digits as a group you can read back. <code>[.]?</code> makes a literal final period optional. <code>match.group(1)</code> reads the first group, and <code>int()</code> changes that string of digits into a whole number. <code>strip()</code> trims whitespace from the outside of the field.</p>
+<p>Copy the block and click <strong>Run</strong>. Compare the displayed amount with the approved fee.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
+  </div>
+  <pre><code class="language-python">import re
+
+expected_rupees = 100
+reply = &quot;Monthly fee: ₹1000&quot;
+
+match = re.fullmatch(r&quot;Monthly fee: ₹([0-9]+)[.]?&quot;, reply.strip())
+if match is None:
+    print(&quot;Review: could not read the fee field&quot;)
+else:
+    actual_rupees = int(match.group(1))
+    print(&quot;Read rupees:&quot;, actual_rupees)
+    print(&quot;Fee matches:&quot;, actual_rupees == expected_rupees)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Read rupees: 1000
+Fee matches: False
+</code></pre></details>
+<p>The full field matches the format, so Python compares 1000 and 100 as numbers.</p>
+<p><strong>Experiment.</strong> Change only <code>reply</code> to <code>&quot;Monthly fee: ₹100&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Read rupees: 100
+Fee matches: True
+</code></pre></details>
+<p>The pattern accepts the field without a period and the amounts now agree. Step 1’s literal check would reject the missing period.</p>
+<p><strong>Checkpoint.</strong> What if the reply says “You pay one hundred rupees each month”? This pattern would ask for review. The typed check measures the agreed field, so a reviewer must judge replies outside it.</p>
+<h5>Step 6 — Measure the substring rule against reviewed replies</h5>
+<p>Use the five replies from Example 3 that arrived. A reviewer has already judged each one. Put the replies and their expected judgments into pairs, then use <code>for reply, correct in reviewed:</code> to give the two values in each pair names. <code>predicted</code> holds what the substring rule says. Each pair is written in parentheses. The <code>and</code> test requires both conditions. <code>elif</code> tries the next condition when the one above didn’t run.</p>
+<p>Copy the block and click <strong>Run</strong>. Divide the correct automatic passes by all automatic passes for precision. Divide the same correct automatic passes by all replies the reviewer accepted for recall. Multiply by 100 for a percentage. <code>round(value, 1)</code> gives one decimal place. Both denominators are positive in this lesson.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
+  </div>
+  <pre><code class="language-python">reviewed = [
+    (&quot;Monthly fee: ₹100.&quot;, True),
+    (&quot;Monthly fee: ₹100&quot;, True),
+    (&quot;The fee is ₹80, not ₹100.&quot;, False),
+    (&quot;Monthly fee: ₹1000.&quot;, False),
+    (&quot;You pay one hundred rupees each month.&quot;, True),
+]
+
+true_passes = 0
+false_passes = 0
+missed_passes = 0
+needle = &quot;100&quot;
+
+for reply, correct in reviewed:
+    predicted = needle in reply
+    if predicted and correct:
+        true_passes = true_passes + 1
+    elif predicted:
+        false_passes = false_passes + 1
+    elif correct:
+        missed_passes = missed_passes + 1
+
+print(&quot;True passes:&quot;, true_passes)
+print(&quot;False passes:&quot;, false_passes)
+print(&quot;Missed passes:&quot;, missed_passes)
+print(&quot;Precision (%):&quot;, round(100 * true_passes / (true_passes + false_passes), 1))
+print(&quot;Recall (%):&quot;, round(100 * true_passes / (true_passes + missed_passes), 1))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">True passes: 2
+False passes: 2
+Missed passes: 1
+Precision (%): 50.0
+Recall (%): 66.7
+</code></pre></details>
+<p>Two of four automatic passes are correct. Two of the three reviewed correct replies got an automatic pass.</p>
+<p><strong>Experiment.</strong> Change only <code>needle = &quot;100&quot;</code> to <code>needle = &quot;100.&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">True passes: 1
+False passes: 1
+Missed passes: 2
+Precision (%): 50.0
+Recall (%): 33.3
+</code></pre></details>
+<p>Requiring a period drops the wrong 1000 claim and also drops the valid reply without a period. The negated amount still ends in “100.” Precision stays at one half and recall drops.</p>
+<p><strong>Checkpoint.</strong> Did tightening the search make it a better checker? It removed one false pass and lost one valid pass. The reviewed replies tell you which errors changed. This small set gives no general performance rate.</p>
+<h5>Step 7 — Compare the rules and retain cases for review</h5>
+<p>Put both rules beside the same reviewed judgments. Run the format check in a function and <code>return</code> a result for each reply. <code>None</code> stands for a timeout with no saved text. The first condition returns UNSCORABLE before the code tries to read the text. An unfamiliar format returns REVIEW. A readable field returns PASS or FAIL according to its amount.</p>
+<p>Copy the full block and click <strong>Run</strong>. The loop unpacks each case’s ID, reply, and reviewer judgment, then prints the two rule outcomes beside that judgment. <code>expected</code> is a policy value, while <code>human</code> holds the result of a review already performed for the example.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+    <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>
+  </div>
+  <pre><code class="language-python">import re
+
+
+def typed_fee(reply, expected):
+    if reply is None:
+        return &quot;UNSCORABLE&quot;
+    match = re.fullmatch(r&quot;Monthly fee: ₹([0-9]+)[.]?&quot;, reply.strip())
+    if match is None:
+        return &quot;REVIEW&quot;
+    if int(match.group(1)) == expected:
+        return &quot;PASS&quot;
+    return &quot;FAIL&quot;
+
+
+expected = 100
+cases = [
+    (&quot;A&quot;, &quot;Monthly fee: ₹100.&quot;, &quot;PASS&quot;),
+    (&quot;B&quot;, &quot;Monthly fee: ₹100&quot;, &quot;PASS&quot;),
+    (&quot;C&quot;, &quot;The fee is ₹80, not ₹100.&quot;, &quot;FAIL&quot;),
+    (&quot;D&quot;, &quot;Monthly fee: ₹1000.&quot;, &quot;FAIL&quot;),
+    (&quot;E&quot;, &quot;You pay one hundred rupees each month.&quot;, &quot;PASS&quot;),
+    (&quot;F&quot;, None, &quot;UNSCORABLE&quot;),
+]
+
+print(&quot;Case | Human | Substring | Typed&quot;)
+for case_id, reply, human in cases:
+    if reply is None:
+        substring = &quot;UNSCORABLE&quot;
+    elif &quot;100&quot; in reply:
+        substring = &quot;PASS&quot;
+    else:
+        substring = &quot;FAIL&quot;
+    print(case_id, &quot;|&quot;, human, &quot;|&quot;, substring, &quot;|&quot;, typed_fee(reply, expected))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Case | Human | Substring | Typed
+A | PASS | PASS | PASS
+B | PASS | PASS | PASS
+C | FAIL | PASS | REVIEW
+D | FAIL | PASS | FAIL
+E | PASS | FAIL | REVIEW
+F | UNSCORABLE | UNSCORABLE | UNSCORABLE
+</code></pre></details>
+<p>The typed check makes three automatic decisions about written replies, all in agreement with the reviewer. It leaves two to review and records one execution outcome.</p>
+<p><strong>Experiment.</strong> In row D only, change <code>&quot;Monthly fee: ₹1000.&quot;</code> to <code>&quot;A ₹100 fee applies every day.&quot;</code>. Keep its human label as FAIL because the frequency is wrong. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Case | Human | Substring | Typed
+A | PASS | PASS | PASS
+B | PASS | PASS | PASS
+C | FAIL | PASS | REVIEW
+D | FAIL | PASS | REVIEW
+E | PASS | FAIL | REVIEW
+F | UNSCORABLE | UNSCORABLE | UNSCORABLE
+</code></pre></details>
+<p>The substring rule still finds 100. The typed check now sees an unfamiliar format and asks for review. The human label stays FAIL because the bank charges monthly.</p>
+<p><strong>Checkpoint.</strong> Does the typed rule understand daily and monthly fees? It recognizes the word “Monthly” in one format. Keep the reviewer’s result and the rule’s result side by side when you decide how much to automate.</p>
+<p>## Practice Exercises</p>
+<h5>Practice 1. Decide what a mismatch means</h5>
+<p>The bank expects the field “Monthly fee: ₹100.” The reply omits the period. Give a judgment for a strict field that requires the period, then give a judgment for factual correctness. Write one formatting change you would allow for an account name and one you would avoid for a fee.</p>
+<h5>Practice 2. Write the expected judgments before running a rule</h5>
+<p>Use the approved ₹100 per month fee. Make a truth table for B, C, D, and E from Example 3. Write the human verdict first. Then predict the verdicts of an exact match against A and a substring check for “100.” Identify where the two rules make different mistakes.</p>
+<h5>Practice 3. Separate a match from a verified amount</h5>
+<p>In the fixed field, try “Monthly fee: ₹1000.” and “The fee is ₹80, not ₹100.” Which text would match the boundary pattern from Step 4? Which would the typed check fail, and which would it send to review? Use the policy to give a final human judgment for each.</p>
+<h5>Practice 4. Read a checker report</h5>
+<p>A reviewer accepts three replies out of five. A rule passes four, including two that the reviewer accepts. Calculate precision and recall. Then imagine you improve precision by sending two false passes to review and leave the other rows unchanged. Give the new automatic precision, recall, and review count. What should the team check before choosing the new rule?</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>The missing period fails the strict format. It still states the approved amount and frequency. For an account field, collapsing repeated spaces can preserve the account name. For money, keep decimal separators unless the format tells you how to interpret them. Removing the period in “₹1.00” would turn one rupee into a string that looks like one hundred.</p>
+<h5>Solution 2</h5>
+<p>Use three columns in each row for human judgment, exact match, and substring match.</p>
+<ul><li><strong>B, no period.</strong> PASS, FAIL, PASS. The exact match falsely fails it.</li><li><strong>C, negates ₹100.</strong> FAIL, FAIL, PASS. The substring rule falsely passes it.</li><li><strong>D, claims ₹1000.</strong> FAIL, FAIL, PASS. The substring rule falsely passes it.</li><li><strong>E, amount in words.</strong> PASS, FAIL, FAIL. Both rules falsely fail it.</li></ul>
+<p>The strict rule rejects two valid alternatives in these four rows. The loose rule accepts the punctuation variant and misses why the two wrong claims contain the expected characters.</p>
+<h5>Solution 3</h5>
+<p>The boundary pattern misses 100 inside 1000 but finds the separate 100 after “not.” The typed check reads the first reply as 1000 and fails it. The second reply does not fit the agreed field format, so it goes to review. Both replies give the wrong fee. The reviewer reads the whole second statement and finds that it asserts ₹80.</p>
+<h5>Solution 4</h5>
+<p>Precision is two correct automatic passes divided by four automatic passes, or 50%. Recall is two correct automatic passes divided by all three reviewed correct replies, or about 66.7%. After the change, both automatic passes are correct, so precision is 100% on this sample. Recall stays at about 66.7%, and two cases now need review. Before choosing the new rule, check what happens to more examples, whether the team can handle reviews, and whether an important error could still pass.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>The two amounts are “₹1.00” and “₹100.” What mistake could a normalization rule make here?</li><li>Your checker sees the full-width “Ｓ” in an account name. When would you fold it into ordinary “S”?</li><li>An unfamiliar product name contains “Savings.” What would you do before treating it as a known alias?</li><li>A boundary regex finds “100” in “not ₹100.” What can you conclude?</li><li>The typed field expects a monthly fee but the saved reply says “₹100 per day.” Is a matching number enough for a pass?</li><li>A new rule passes fewer replies and makes no false passes on this sample. What two counts should you check before calling it an improvement?</li><li>A request timed out. Should it enter the table as a reply that failed the fee rule?</li><li>You want to compare two checkers. Your teammate also replaced the reviewed judgments between runs. What would you do before crediting the change to the checker?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Removing punctuation can turn both amounts into the same text. Interpret punctuation using the field’s money format before comparing amounts.</li><li>Do it if the account-name rules allow full-width and ordinary forms to stand for the same name. Check the resulting name against the approved list.</li><li>Send it to review and check the product catalogue. Sharing a word gives you no basis to apply another account’s policy.</li><li>The characters occur at the pattern’s boundaries. The phrase denies that amount. You need the whole claim to judge it.</li><li>No. The policy is monthly. Under the lab’s typed format, this reply needs review. A human would fail it for frequency.</li><li>Check how many correct replies still get an automatic pass and how many rows now need review. Precision alone can hide missed correct answers or a growing review queue.</li><li>Record it as UNSCORABLE because there was no reply to read. Track it as an execution failure separately.</li><li>Use one reviewed set with the same expectations for both checkers, then rerun them. A changed judgment can change a score without any change in either rule.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>You’re reviewing a bank change that allows a second fixed label, “Fee per month.” The approved amount stays ₹100. Your job is to see which additional cases the updated rule can decide without reading every reply by hand.</p>
+<ol><li>Copy the original Step 7 program into the editor. Add these two rows after F, before the closing square bracket in <code>cases</code>. Put a comma after each row. Keep all the earlier rows and human judgments unchanged.</li><li>   - Row G has reply <code>&quot;Fee per month: ₹100.&quot;</code> and human judgment <code>&quot;PASS&quot;</code>.</li><li>   - Row H has reply <code>&quot;Fee per day: ₹100.&quot;</code> and human judgment <code>&quot;FAIL&quot;</code>.</li><li>Run the program. Record the two rules’ verdicts on G and H, what happened to the original rows, and how many typed reviews you now have.</li><li>In the regex pattern only, replace <code>Monthly fee</code> with <code>(?:Monthly fee|Fee per month)</code>. The vertical bar offers two labels. The <code>?:</code> tells Python to group the choices without saving a group, so <code>match.group(1)</code> still reads the digits. Run again. Record the typed verdicts for G and H and the new review count.</li><li>Write a recommendation. Say which format the rule now supports and why you’d still review some replies. Compare the rules on these same eight rows.</li></ol>
+<h5>Check your assignment</h5>
+<p>With the original rule, G and H both get PASS from the substring rule and REVIEW from the typed rule. The earlier rows are unchanged. The typed rule now has four replies to review, C, E, G, and H. After extending the pattern, G gets an automatic PASS because its format and amount match. H still needs review because the daily format falls outside both allowed labels. The queue drops from four to three. F remains unscorable in both runs.</p>
+<p>The revised rule can read both approved monthly labels. It automatically finds three of the four replies the reviewer accepted. It still can’t read the amount spelled out in E. Keep the wrong daily reply in the test sheet. This comparison shows one additional valid format on the supplied cases. It gives no estimate of how often future replies will arrive in a new format.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Treating a substring as a fact.</strong> Check which amount the reply asserts, alongside its currency and frequency.</li><li><strong>Cleaning every field the same way.</strong> Choose normalization for each field. Check a counterexample before ignoring a character.</li><li><strong>Counting unresolved or absent replies as accepted.</strong> Report pending reviews and unscorable requests separately.</li><li><strong>Reporting precision without coverage.</strong> Keep the number of correct replies the rule missed and the size of the review queue visible.</li><li><strong>Changing the examples when changing the rule.</strong> Compare both rules on the same saved replies and reviewed judgments.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>Start by deciding whether the field requires exact text or allows agreed variations. Check narrow formats with normalization, approved aliases, and typed comparisons where suitable. Use reviewed replies to measure where the rule passes the wrong answer or misses the right one. Keep a review path for claims the rule cannot read.</p>
+<p>The next topic in the complete curriculum is <a href="#m03-t02">Structured output and schema validation</a>. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Implement normalized matches and a typed fee check in Python. Compare with a substring baseline.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P01–P04 for normalization and assertions in Python. The first truth table can be done on paper.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Write a truth table for punctuation, negation, an amount mismatch and an acceptable paraphrase.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>

@@ -4,6 +4,7 @@ const {readFileSync} = require("node:fs");
 const {resolve} = require("node:path");
 const {test} = require("node:test");
 const vm = require("node:vm");
+const {authoredLessonIds} = require("./lesson_test_data.cjs");
 
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const sample = '    if amount < 5000:\n        print("₹5,000 ✓ & <minimum>")\n\n';
@@ -95,8 +96,8 @@ test("keeps the original label and gives manual instructions when copying fails"
 
 test("generated curriculum adds buttons to executable blocks and leaves transcripts alone", () => {
   const html = read("docs/master-curriculum.html");
-  const sources = ["m01-t01", "m01-t02", "m01-t03", "m02-t01", "m02-t02", "m02-t03"].flatMap(id =>
-    [...read("docs/lessons/" + id + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]);
+  const sources = authoredLessonIds.flatMap(id =>
+    [...read("docs/lessons/" + id.toLowerCase() + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]);
   const rendered = [...html.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)];
   const wrapped = [...html.matchAll(/<div class="lesson-code">([\s\S]*?)<\/pre>\n<\/div>/g)];
   const editor = '<a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>';

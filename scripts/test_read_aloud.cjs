@@ -4,6 +4,7 @@ const {readFileSync, readdirSync} = require("node:fs");
 const {resolve} = require("node:path");
 const {test} = require("node:test");
 const vm = require("node:vm");
+const {authoredLessonIds} = require("./lesson_test_data.cjs");
 
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const script = read("docs/assets/lesson-reader.js");
@@ -629,7 +630,8 @@ test("generator includes the shared reader for the standalone curriculum and all
   assert.equal(count(/<div class="lesson-layout">\s*<aside class="lesson-reader" data-guided-reader aria-label="Listen" hidden><\/aside>\s*<div id="guided-material"><\/div>/g), 1);
   assert.match(script, /<select data-reading-speed title="Changing speed restarts the current paragraph\.">/);
   assert.equal(count(/data-reading-hint/g), 0);
-  assert.equal(count(/class="lesson-disclosure lesson-supplement" data-reading-skip/g), 12);
+  // Each authored chapter hides its worked solutions and knowledge-check answers from narration.
+  assert.equal(count(/class="lesson-disclosure lesson-supplement" data-reading-skip/g), 2 * authoredLessonIds.length);
   for (const file of readdirSync(resolve(__dirname, "../docs")).filter(name => /^test\d+\.html$/.test(name))) {
     assert.match(read("docs/" + file), /<script src="assets\/lesson-reader.js" defer><\/script>/, file);
   }
