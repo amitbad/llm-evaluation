@@ -5963,34 +5963,388 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m04-t02">
-  <p class="lesson-intro" data-lesson-search>Synthetic breadth is useful when human review and source-backed validation preserve label quality.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Annotation instructions, independent labels, disagreement and arbitration, structured generation from policy, review and rejection, provenance and license.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Write instructions for reviewers who label a case independently.</li><li>Resolve a disagreement using the full question, the applicable source, and a recorded reason.</li><li>Generate draft cases from a policy without treating proposed labels as reviewed truth.</li><li>Decide which drafts to accept, hold for review, or reject.</li><li>Record where a draft came from and what permission covers its reuse.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Imagine you keep exactly the balance your bank asks for. The assistant says you won’t owe a fee, but the team’s test marks that reply wrong. At Harbor Leaf Bank, one reviewer filled in “fee due” in the answer key and another wrote “no fee.” Before anyone changes the assistant, check what the policy says about a balance right at the minimum.</p>
+<p>The question is about a Standard Savings account with exactly ₹5,000 on July 15, 2026. Section 2 of the approved July policy, SV-2#2, says the monthly fee of ₹100 applies <strong>below</strong> ₹5,000. Put the customer’s balance beside that word. Exactly ₹5,000 is at the minimum. A label that says fee due would make a correct “no fee” reply fail the test.</p>
+<p>The bank, policy, generated drafts, and reviewer records are fictional. The chapter builds on <a href="#m03-t03">Rubrics and a first human evaluation</a>. If you’re publishing reviewed cases to a versioned dataset, first use <a href="#m04-t01">Golden schemas, provenance and versioning</a>. Allow about six hours for demonstrations, Python experiments, and practice.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. Give reviewers the same question and the same rule</h5>
+<p>Imagine you hand someone a printed question and ask them to “mark it right.” They may judge the wording, while you wanted them to check the fee. Instead, tell each reviewer what decision the label represents. Supply the same case ID, account, date, balance if known, and policy excerpt.</p>
+<p>Here the label describes what the correct answer should say for the case. It belongs to the case. A later verdict on a particular assistant reply belongs to that captured reply. Adding a label or evidence note to a case is <strong>annotation</strong>. These instructions keep everyone on the same task.</p>
+<ul><li><strong>FEE_DUE.</strong> Use when the verified July Standard Savings balance is below ₹5,000. Record the approved fee of ₹100 per month.</li><li><strong>NO_FEE.</strong> Use at ₹5,000 or above. Record that no below-minimum fee applies.</li><li><strong>NEEDS_REVIEW.</strong> Use when the balance or applicable policy is missing or unclear. Record what would let you decide. Keep the case out of the scored set while it is unresolved.</li></ul>
+<p>Ask each reviewer to record a label and the words from the policy that support it before they see the other reviewer&#x27;s decision. These are <strong>independent labels</strong>. They give you a record of where people could interpret the instructions differently. Independent reviewers can still make the same mistake, so agreement alone gives no guarantee that a label is correct.</p>
+<h5>2. Resolve the disagreement from the evidence</h5>
+<p>For case S-02 at ₹5,000, reviewer A reads “below” as “at or below” and chooses FEE_DUE. Reviewer B chooses NO_FEE and cites the strict cutoff. Show the full case and approved policy to a designated reviewer who can resolve the disagreement. Have them compare the notes, record a final label and reason, and keep the original labels.</p>
+<p>This process is <strong>adjudication</strong>, sometimes called arbitration. The adjudicator should explain the decision by reference to the case and policy. When the source itself is unclear, keep the case unresolved and ask the policy owner. Two votes for one label can’t settle a policy that says something different.</p>
+<p>If reviewers keep making the same mistake, change the instructions. Add a worked example at exactly ₹5,000. Keep a record of which instruction version was used and recheck any reviewed labels affected by the change.</p>
+<h5>3. Make more draft cases from one approved source</h5>
+<p>Start with the policy sentence and pick balances just below, at, and just above the cutoff. Use ₹4,999, ₹5,000 and ₹5,001. Write a customer question for each. Include the account, date, balance, source, and a proposed label in each draft. This is <strong>structured generation</strong> because you’re asking for the same fields every time. You can create drafts with a small program or ask a model for candidates. In this chapter Python supplies the fictional drafts.</p>
+<p>Cases created deliberately for practice or testing are <strong>synthetic data</strong>. Three invented balances help test the edge of this rule. They don’t tell you how often actual customers ask those questions. A draft can introduce an invented source, a different account, or a wrong proposed label. A neat table is only the start of review.</p>
+<p>Imagine S-01 comes back a month later with a note that says “from the bank’s website.” Another reviewer can’t tell which policy was used or whether the label was checked. Save SV-2#2, the effective date, how the case was made, and who reviewed it. That record of the case’s history is its <strong>provenance</strong>.</p>
+<p>Then check what you’re allowed to reuse. A public policy could be readable while its reuse terms remain unclear. Record the permission or <strong>license</strong>, the terms that say what you can copy or share, and keep a reference to those terms alongside the case. Here the bank’s fictional permission covers these excerpts and derived questions for the practice set. If that record is missing, hold the draft while you check with the owner.</p>
+<h5>4. Decide what enters the scored set</h5>
+<p>A draft that meets the source and review requirements can be accepted. A draft with missing evidence or an unresolved label should be held. A draft that contradicts the approved rule should be rejected.</p>
+<p>Keep held cases in a separate review area. This is <strong>quarantine</strong>. They stay available for investigation but don’t count toward a score. Keep the reason for a rejection too. If a reviewer later corrects a defective draft, go through review again before accepting a new version. Preserve the original decisions.</p>
+<p>For the lab, accept a draft only if the source applies, the reuse permission is known, the balance is verified within the case, and the proposed label agrees with a reviewed, policy-backed final label. Run simple checks to catch missing fields or an inconsistent proposal. Human review still handles whether the source and language make sense for the question. These examples do not measure real assistant performance.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Label the same case before discussing it</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>S-01 asks “Will I pay a monthly fee on a Standard Savings balance of ₹4,999 on July 15, 2026?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-2#2 applies to Standard Savings on that date and charges ₹100 monthly below ₹5,000.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The draft generator proposed the label FEE_DUE and the reference reply “A ₹100 monthly fee applies.” This is a fictional draft.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Reviewer A checks that ₹4,999 lies below ₹5,000 and chooses FEE_DUE. Reviewer B reads the applicable excerpt independently and records the same label and amount. Compare both notes only after they have been saved. The passage supports their shared answer.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Accept the row once source and permission checks are complete. The agreement supports the decision on S-01. It gives no estimate of how often reviewers will agree on other wording.</span></p>
+<h5>Example 2. Settle a dispute at exactly the minimum</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>S-02 asks “If my Standard Savings balance is exactly ₹5,000 on July 15, 2026, do I pay the monthly fee?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-2#2 charges the fee strictly below ₹5,000. The source and instructions are the same as for S-01.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The fictional draft answer says “No below-minimum fee applies.” Reviewer A chose FEE_DUE and reviewer B chose NO_FEE.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Read A’s and B’s labels beside the case. A treated the cutoff as “at or below.” B used “below.” Check the date, then read SV-2#2 and compare the two numbers. ₹5,000 equals ₹5,000, so the balance does not meet the “below” condition. Write the resolution as “S-02, NO_FEE. The stated balance equals the minimum, and SV-2#2 charges only below it.” Keep A’s and B’s labels with that new entry. If the same mistake recurs, add the exact-cutoff example to the guide.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The first label used the wrong comparison. Resolve the label without changing the question or the policy. An unresolved policy conflict would need a different decision, to hold the case while the owner clarifies the rule.</span></p>
+<h5>Example 3. A plausible draft still needs review before it counts</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>S-03 asks “Will I pay a fee on my July Standard Savings account?” and omits the balance. S-04 asks the same question with a verified balance of ₹5,001.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-2#2 is approved and reusable in the fictional practice set. The amount of the balance determines whether the fee applies.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Both fictional drafts say “A ₹100 monthly fee applies” and propose FEE_DUE. The wording reads like a real answer.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>S-03 gives no balance, so the reviewer can’t verify a fee. Mark NEEDS_REVIEW. S-04 gives an above-threshold balance, and both reviewers choose NO_FEE. Read the source to verify that decision. The draft’s proposed FEE_DUE contradicts the policy for S-04.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Hold S-03 outside scoring until the missing information is resolved. Reject S-04 as submitted and review any corrected draft again. Counting both as valid because they cite a real policy would make the set look bigger without making its labels more reliable.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Each block is a complete Python 3.10+ program using fictional inline data. You can run the blocks in any order. Python helps check the records and summarize the supplied decisions. The labels in the examples are not live model judgments.</p>
+<ol><li>Use the Open Python Editor link beside each block.</li><li>Select <strong>Copy Code</strong> and paste the entire block yourself. Replace any existing code in the editor.</li><li>Click <strong>Run</strong> and check the first <strong>Expected output</strong>.</li><li>Predict the experiment result, make the specified edit, then run again and compare with the second <strong>Expected output</strong>.</li></ol>
+<p>Keep indentation when pasting. If an edit causes an error, paste the original block and run it before trying the edit again.</p>
+</div></details>
+<h5>Step 1 — Turn one policy sentence into an instruction</h5>
+<p>The approved July policy charges a fee below 5000. Try the instruction with a known balance. The equals sign stores a value in a named variable. The <code>&lt;</code> comparison asks whether one number is less than the other. The indented line under <code>if</code> runs when the comparison is true. The <code>else</code> line selects the other outcome.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">balance = 4999
+minimum = 5000
+
+if balance &lt; minimum:
+    print(&quot;Proposed label: FEE_DUE&quot;)
+else:
+    print(&quot;Proposed label: NO_FEE&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Proposed label: FEE_DUE
+</code></pre></details>
+<p>The balance is one rupee below the minimum, so the program takes the first branch.</p>
+<p><strong>Experiment.</strong> Change only <code>balance</code> to <code>5000</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Proposed label: NO_FEE
+</code></pre></details>
+<p>Equal values don’t meet the less-than comparison. Include both values in the guide so reviewers can test how they interpret “below.”</p>
+<p><strong>Checkpoint.</strong> Does this rule apply to every account or date? It only models the supplied July Standard Savings rule. Check the account and effective date before using it.</p>
+<h5>Step 2 — Hold a case when a fact is missing</h5>
+<p>Try a July test case with no balance recorded. The braces make a dictionary. Use <code>case[&quot;balance&quot;]</code> to read the value under that field name. <code>None</code> represents a missing fact in this exercise. Test it before comparing numbers. <code>elif</code> means “otherwise, check this next condition.”</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">case = {&quot;id&quot;: &quot;S-03&quot;, &quot;balance&quot;: None}
+balance = case[&quot;balance&quot;]
+
+if balance is None:
+    label = &quot;NEEDS_REVIEW&quot;
+elif balance &lt; 5000:
+    label = &quot;FEE_DUE&quot;
+else:
+    label = &quot;NO_FEE&quot;
+
+print(case[&quot;id&quot;], label)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-03 NEEDS_REVIEW
+</code></pre></details>
+<p>The missing value goes to review before any threshold test. Setting a missing balance to zero would create a different case.</p>
+<p><strong>Experiment.</strong> In this fictional record, supply a verified balance of <code>5000</code> in place of <code>None</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-03 NO_FEE
+</code></pre></details>
+<p>With a balance available, Python can apply the comparison. It lands at the minimum and selects NO_FEE. A reviewer can now check the supplied evidence.</p>
+<p><strong>Checkpoint.</strong> Does finding a number in a draft make it verified? Check where the balance came from. This experiment supplies the verified value as part of the example.</p>
+<h5>Step 3 — Find disagreements by case ID</h5>
+<p>Two people recorded their labels in separate dictionaries. They used different orders. The loop takes each case ID from the first sheet and looks up the same ID in both sheets. <code>==</code> compares the two labels. This example assumes both sheets cover the same IDs.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">reviewer_a = {&quot;S-01&quot;: &quot;FEE_DUE&quot;, &quot;S-02&quot;: &quot;FEE_DUE&quot;}
+reviewer_b = {&quot;S-02&quot;: &quot;NO_FEE&quot;, &quot;S-01&quot;: &quot;FEE_DUE&quot;}
+
+for case_id in reviewer_a:
+    first = reviewer_a[case_id]
+    second = reviewer_b[case_id]
+    if first == second:
+        print(case_id, &quot;AGREE&quot;)
+    else:
+        print(case_id, &quot;DISAGREE:&quot;, first, &quot;vs&quot;, second)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-01 AGREE
+S-02 DISAGREE: FEE_DUE vs NO_FEE
+</code></pre></details>
+<p>S-01 compares correctly even though it appears in different positions. S-02 is the case you need to inspect.</p>
+<p><strong>Experiment.</strong> In a separate practice copy of reviewer A’s sheet, change only the S-02 label to <code>&quot;NO_FEE&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-01 AGREE
+S-02 AGREE
+</code></pre></details>
+<p>The labels now match. The program didn’t check the policy. In a real review, keep the original sheets and store any later judgment separately.</p>
+<p><strong>Checkpoint.</strong> Which record should an adjudicator read first? Find S-02 by ID, then read its full question, source, and both evidence notes.</p>
+<h5>Step 4 — Record the adjudicator’s decision separately</h5>
+<p>Use S-02’s original two labels. An adjudicator has written a proposed decision and a reason. In this example the person records whether they confirmed the approved evidence. <code>elif not evidence_confirmed</code> asks whether that confirmation is missing. Print the final label only when the two labels differ and the evidence has been checked.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">first = &quot;FEE_DUE&quot;
+second = &quot;NO_FEE&quot;
+final_label = &quot;NO_FEE&quot;
+reason = &quot;SV-2#2 charges only below 5000.&quot;
+evidence_confirmed = True
+
+print(&quot;Original S-02 labels:&quot;, first, second)
+if first == second:
+    print(&quot;No disagreement to resolve&quot;)
+elif not evidence_confirmed:
+    print(&quot;HOLD: verify the applicable policy&quot;)
+else:
+    print(&quot;Adjudicated S-02:&quot;, final_label)
+    print(&quot;Reason:&quot;, reason)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Original S-02 labels: FEE_DUE NO_FEE
+Adjudicated S-02: NO_FEE
+Reason: SV-2#2 charges only below 5000.
+</code></pre></details>
+<p>The original two labels still appear. The adjudicator’s recorded decision is a separate entry.</p>
+<p><strong>Experiment.</strong> Change only <code>evidence_confirmed</code> to <code>False</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Original S-02 labels: FEE_DUE NO_FEE
+HOLD: verify the applicable policy
+</code></pre></details>
+<p>The program now takes the hold branch. Even a plausible reason needs a verified source before it settles the disagreement.</p>
+<p><strong>Checkpoint.</strong> Did Python decide which source is right? It used the confirmation supplied by the human reviewer. The policy excerpt is the evidence behind the decision.</p>
+<h5>Step 5 — Generate drafts around a boundary</h5>
+<p>Start at ₹5,000 and move one rupee in either direction. Subtracting one gives ₹4,999, and adding one gives ₹5,001. Both readings of the rule agree at those balances. Add zero to test the only balance that separates “below” from “at or below.” Each list item holds a name and a number to add, called an offset. <code>append()</code> adds the exact-cutoff pair when you ask for it.</p>
+<p>The loop builds a dictionary for each draft with the same fields. <code>str(balance)</code> converts the balance to text so it can be joined to the ID prefix. The <code>f</code> before the question string tells Python to insert the current balance where it sees <code>{balance}</code>.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">minimum = 5000
+source = &quot;SV-2#2&quot;
+include_boundary = False
+offsets = [(&quot;below&quot;, -1), (&quot;above&quot;, 1)]
+if include_boundary:
+    offsets.append((&quot;at&quot;, 0))
+
+for position, offset in offsets:
+    balance = minimum + offset
+    if balance &lt; minimum:
+        proposal = &quot;FEE_DUE&quot;
+    else:
+        proposal = &quot;NO_FEE&quot;
+    draft = {
+        &quot;id&quot;: &quot;JULY-&quot; + str(balance),
+        &quot;question&quot;: f&quot;Does a Standard Savings balance of {balance} rupees incur the monthly fee?&quot;,
+        &quot;date&quot;: &quot;2026-07-15&quot;,
+        &quot;balance&quot;: balance,
+        &quot;source&quot;: source,
+        &quot;proposal&quot;: proposal,
+    }
+    print(&quot;DRAFT&quot;, draft[&quot;id&quot;], position, draft[&quot;date&quot;], draft[&quot;source&quot;], draft[&quot;proposal&quot;])
+    print(draft[&quot;question&quot;])
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">DRAFT JULY-4999 below 2026-07-15 SV-2#2 FEE_DUE
+Does a Standard Savings balance of 4999 rupees incur the monthly fee?
+DRAFT JULY-5001 above 2026-07-15 SV-2#2 NO_FEE
+Does a Standard Savings balance of 5001 rupees incur the monthly fee?
+</code></pre></details>
+<p>The two drafts cover opposite sides of the threshold. They leave out the balance where reviewers disagreed.</p>
+<p><strong>Experiment.</strong> Change only <code>include_boundary</code> to <code>True</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">DRAFT JULY-4999 below 2026-07-15 SV-2#2 FEE_DUE
+Does a Standard Savings balance of 4999 rupees incur the monthly fee?
+DRAFT JULY-5001 above 2026-07-15 SV-2#2 NO_FEE
+Does a Standard Savings balance of 5001 rupees incur the monthly fee?
+DRAFT JULY-5000 at 2026-07-15 SV-2#2 NO_FEE
+Does a Standard Savings balance of 5000 rupees incur the monthly fee?
+</code></pre></details>
+<p>The new pair adds a balance of exactly ₹5,000. It’s the one draft here that distinguishes “below” from “at or below.”</p>
+<p><strong>Checkpoint.</strong> Is the added case ready to score? It’s a draft generated from the same rule you’re checking. Have people verify the source, question, and proposed label independently.</p>
+<h5>Step 6 — Check provenance and permission before review</h5>
+<p>Try a draft that names the approved policy and records how it was created. It has no confirmed permission to reuse the source excerpt. <code>!=</code> means “is different from.” In this example the first check compares the reported source with the supplied source ID. The second looks for the documented scope of permission.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">draft = {
+    &quot;id&quot;: &quot;S-05&quot;,
+    &quot;source&quot;: &quot;SV-2#2&quot;,
+    &quot;origin&quot;: &quot;generated from July fee rule&quot;,
+    &quot;permission&quot;: None,
+}
+
+print(draft[&quot;id&quot;], draft[&quot;source&quot;], draft[&quot;origin&quot;])
+if draft[&quot;source&quot;] != &quot;SV-2#2&quot;:
+    print(&quot;HOLD: confirm the source&quot;)
+elif draft[&quot;permission&quot;] != &quot;practice-set reuse&quot;:
+    print(&quot;HOLD: confirm reuse permission&quot;)
+else:
+    print(&quot;READY FOR LABEL REVIEW&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-05 SV-2#2 generated from July fee rule
+HOLD: confirm reuse permission
+</code></pre></details>
+<p>You can trace the draft to the named excerpt. There is still no permission record for that use.</p>
+<p><strong>Experiment.</strong> Imagine the policy owner has provided permission for this practice set. Change only the value of <code>&quot;permission&quot;</code> to <code>&quot;practice-set reuse&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-05 SV-2#2 generated from July fee rule
+READY FOR LABEL REVIEW
+</code></pre></details>
+<p>The second check now passes. The change represents a verified permission in the fictional exercise. In real work, retain the owner’s permission record and its scope.</p>
+<p><strong>Checkpoint.</strong> Does a permission string prove you can reuse real material? It records a claim for the checker to use. A reviewer must verify the permission and separately check the draft’s label.</p>
+<h5>Step 7 — Keep accepted, held, and rejected drafts separate</h5>
+<p>Start with four complete practice records for the July Standard Savings task. The reviewer pairs and the adjudicator’s decision are supplied human judgments. Each case must have the applicable July source, recorded reuse permission, a verified balance, and a supported decision before its draft can be accepted.</p>
+<p>A function is a named group of instructions. <code>def review(case):</code> takes one draft and <code>return</code> hands back its first outcome. <code>decisions.get(case_id)</code> gives <code>None</code> when there’s no adjudication record. In <code>final, note = decision</code>, Python gives the two parts of the decision their own names. <code>not note</code> checks for an empty note here. For the known balances, compare the final label to the simple policy rule. A draft label is accepted only if it agrees with that final label.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cases = [
+    {&quot;id&quot;: &quot;S-01&quot;, &quot;balance&quot;: 4999, &quot;proposal&quot;: &quot;FEE_DUE&quot;,
+     &quot;source&quot;: &quot;SV-2#2&quot;, &quot;permission&quot;: &quot;practice-set reuse&quot;},
+    {&quot;id&quot;: &quot;S-02&quot;, &quot;balance&quot;: 5000, &quot;proposal&quot;: &quot;NO_FEE&quot;,
+     &quot;source&quot;: &quot;SV-2#2&quot;, &quot;permission&quot;: &quot;practice-set reuse&quot;},
+    {&quot;id&quot;: &quot;S-03&quot;, &quot;balance&quot;: None, &quot;proposal&quot;: &quot;FEE_DUE&quot;,
+     &quot;source&quot;: &quot;SV-2#2&quot;, &quot;permission&quot;: &quot;practice-set reuse&quot;},
+    {&quot;id&quot;: &quot;S-04&quot;, &quot;balance&quot;: 5001, &quot;proposal&quot;: &quot;FEE_DUE&quot;,
+     &quot;source&quot;: &quot;SV-2#2&quot;, &quot;permission&quot;: &quot;practice-set reuse&quot;},
+]
+reviews = {
+    &quot;S-01&quot;: (&quot;FEE_DUE&quot;, &quot;FEE_DUE&quot;),
+    &quot;S-02&quot;: (&quot;FEE_DUE&quot;, &quot;NO_FEE&quot;),
+    &quot;S-03&quot;: (&quot;NEEDS_REVIEW&quot;, &quot;NEEDS_REVIEW&quot;),
+    &quot;S-04&quot;: (&quot;NO_FEE&quot;, &quot;NO_FEE&quot;),
+}
+decisions = {&quot;S-02&quot;: (&quot;NO_FEE&quot;, &quot;SV-2#2 charges only below 5000.&quot;)}
+
+
+def review(case):
+    if case[&quot;source&quot;] != &quot;SV-2#2&quot;:
+        return &quot;HOLD: confirm applicable source&quot;
+    if case[&quot;permission&quot;] != &quot;practice-set reuse&quot;:
+        return &quot;HOLD: confirm reuse permission&quot;
+    balance = case[&quot;balance&quot;]
+    if balance is None:
+        return &quot;HOLD: verify balance&quot;
+
+    first, second = reviews[case[&quot;id&quot;]]
+    if first != second:
+        decision = decisions.get(case[&quot;id&quot;])
+        if decision is None:
+            return &quot;HOLD: adjudicate disagreement&quot;
+        final, note = decision
+        if not note:
+            return &quot;HOLD: record adjudication reason&quot;
+    else:
+        final = first
+
+    if final == &quot;NEEDS_REVIEW&quot;:
+        return &quot;HOLD: resolve reviewer concern&quot;
+    if balance &lt; 5000:
+        expected = &quot;FEE_DUE&quot;
+    else:
+        expected = &quot;NO_FEE&quot;
+    if final != expected:
+        return &quot;HOLD: recheck decision against policy&quot;
+    if case[&quot;proposal&quot;] != final:
+        return &quot;REJECT: draft label contradicts reviewed label&quot;
+    return &quot;ACCEPT: &quot; + final
+
+
+for case in cases:
+    print(case[&quot;id&quot;], review(case))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-01 ACCEPT: FEE_DUE
+S-02 ACCEPT: NO_FEE
+S-03 HOLD: verify balance
+S-04 REJECT: draft label contradicts reviewed label
+</code></pre></details>
+<p>S-02 reaches acceptance after its disagreement has a recorded, policy-backed resolution. S-03 stops before scoring because the balance is unknown. S-04 has a supported review decision and a conflicting proposed label.</p>
+<p><strong>Experiment.</strong> Change only the permission value for S-02 from <code>&quot;practice-set reuse&quot;</code> to <code>None</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S-01 ACCEPT: FEE_DUE
+S-02 HOLD: confirm reuse permission
+S-03 HOLD: verify balance
+S-04 REJECT: draft label contradicts reviewed label
+</code></pre></details>
+<p>S-02 now stops at the permission check. Its original reviewer labels and adjudication stay the same.</p>
+<p><strong>Checkpoint.</strong> Could this checker establish that a real dataset is ready to publish? It checks the supplied rows for this one fictional task. A real team still needs to verify evidence and permissions, review the actual text and policy scope, and preserve the case history before publication.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Write a guide another reviewer can follow</h5>
+<p>Write one sentence per label for verified balances of ₹4,999 and ₹5,000 and for an unknown balance. Give the approved monthly amount where the fee applies. Explain why a reviewer should record the policy’s effective date.</p>
+<h5>Practice 2. Resolve a disagreement without erasing it</h5>
+<p>S-02 is at ₹5,000 on July 15. Reviewer A wrote FEE_DUE and “balance is at the cutoff.” Reviewer B wrote NO_FEE and quoted “below ₹5,000.” Write a disagreement record. Include both original labels, the final label, and a reason. Say what you would do if you only had an undated copy of the policy.</p>
+<h5>Practice 3. Improve coverage without overstating it</h5>
+<p>A draft generator produces five questions about July balances below ₹5,000 and one about a balance above it. A teammate reports six draft cases and calls the coverage complete. Which test is missing for the difference between “below” and “at or below”? Write the new test with the source and expected label. Explain what the new count can tell you.</p>
+<h5>Practice 4. Choose what to accept, hold, or reject</h5>
+<p>Three drafts come with the following evidence. P cites SV-2#2 and has two matching labels but no verified reuse permission. Q uses a verified balance of ₹5,001 with an approved source and permission. Reviewers agree on NO_FEE, but the proposed label is FEE_DUE. R has verified source, permission, and balance of ₹4,999, and both reviewers and the draft say FEE_DUE. Decide what to do and what note to retain for each draft.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Label ₹4,999 FEE_DUE because it is one rupee below the July minimum. Record ₹100 per month. Label ₹5,000 NO_FEE because it equals the cutoff. Label an unknown balance NEEDS_REVIEW because you can’t compare an unknown value with ₹5,000. Record July 1, 2026, the effective date of SV-2, so another reviewer can check that it applied on July 15.</p>
+<h5>Solution 2</h5>
+<p>Keep the record for S-02 with A’s FEE_DUE and B’s NO_FEE. Record NO_FEE as the resolved label and cite SV-2#2. The balance equals the minimum and the fee applies only below it. With only an undated copy, hold the row and verify which approved policy applied on July 15 before resolving the disagreement.</p>
+<h5>Solution 3</h5>
+<p>The missing case is exactly ₹5,000. Use SV-2#2 on July 15 for Standard Savings and expect NO_FEE. Both versions of the rule agree at ₹4,999 and ₹5,001, so the exact threshold exposes the difference. The set now has seven drafts and includes the missing boundary. The count tells you nothing about how often customers ask each question or whether every draft label is right.</p>
+<h5>Solution 4</h5>
+<p>Hold P and record that reuse permission needs confirmation. Agreement does not provide permission. Reject Q as submitted and retain the reviewed NO_FEE label and the reason. ₹5,001 is above the minimum. Accept R for this fictional set and keep its source, recorded permission, and supporting labels. ₹4,999 is below the threshold, so the policy supports the proposed fee.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>A reviewer starts by reading another reviewer’s label. What would you change to collect independent judgments?</li><li>Two reviewers mark FEE_DUE for exactly ₹5,000. Which evidence should you use before accepting the label?</li><li>A dated source is missing for a disputed July question. What should the adjudicator record now?</li><li>An assistant gives a wrong amount for a case whose expected label is correct. Which record should hold the verdict on that reply?</li><li>Why should a draft with an unknown balance stay apart from a draft that asserts a fee at a verified ₹5,001?</li><li>A generated case cites a real policy. What else should you check before reusing it?</li><li>The draft generator and the validator apply the same cutoff. Why still ask a person to review the result?</li><li>The team fixes the instructions and resolves an old disagreement. Which records would you keep to explain the change?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Give both reviewers the same case and source, then collect their labels and evidence notes separately before discussing either answer.</li><li>Use the approved and applicable SV-2#2. It says below ₹5,000. At the cutoff, their shared label is wrong.</li><li>Hold it in quarantine with both original judgments and the reason. Ask the policy owner for an approved source and effective date.</li><li>Keep the expected label on the case. Store the verdict against the exact assistant response ID so other replies to the same question remain separate.</li><li>The unknown balance prevents a decision and calls for more evidence. The verified balance and applicable policy let a reviewer contradict and reject the second draft.</li><li>Confirm that the policy applies to the account and date, that reuse is permitted for the intended purpose, and that the question and proposed label agree with the source.</li><li>Both could apply the same mistaken interpretation. A reviewer should check the original evidence and test a boundary independently.</li><li>Keep the original labels and instruction version. Save the resolution, its evidence and reason, and the revised instructions separately. Recheck labels affected by the revised guide.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>You’re preparing the bank’s fictional practice evaluation set. Start with Step 7. Submit a short labeling guide, a disagreement record for S-02, and a rule for admitting generated drafts. Keep the approved July policy, questions, and original reviewer labels fixed.</p>
+<ol><li>In a fresh copy of Step 7, replace the <code>decisions</code> dictionary with <code>{}</code>. Run it. Which case must be held now? Write the adjudicator’s decision and reason from the full S-02 question and the approved source. Keep both original reviewer labels in your note.</li><li>In a fresh copy of the original Step 7, revise S-04. First write the corrected reference answer in your notes and keep the old answer with its rejection reason. Confirm that ₹5,001 is above the minimum and that the two existing NO_FEE labels support your revision. In the code, change only S-04’s proposal to <code>&quot;NO_FEE&quot;</code> and run again. Which row can now be accepted, and which held row still needs evidence?</li><li>Write a rule the bank can use to decide whether to accept, hold, or reject future drafts. Say what still needs a human check even when the program prints ACCEPT.</li></ol>
+<h5>Check your assignment</h5>
+<p>Your guide should mark balances below ₹5,000 FEE_DUE with ₹100 per month, balances at or above ₹5,000 NO_FEE, and cases missing applicable evidence NEEDS_REVIEW. In S-02, keep A’s FEE_DUE and B’s NO_FEE. Record NO_FEE as the resolution because SV-2#2 charges the fee only below the minimum and the stated balance equals it.</p>
+<p>The first run prints these lines.</p>
+<ol><li><code>S-01 ACCEPT: FEE_DUE</code></li><li><code>S-02 HOLD: adjudicate disagreement</code></li><li><code>S-03 HOLD: verify balance</code></li><li><code>S-04 REJECT: draft label contradicts reviewed label</code></li></ol>
+<p>The second run prints these lines.</p>
+<ol><li><code>S-01 ACCEPT: FEE_DUE</code></li><li><code>S-02 ACCEPT: NO_FEE</code></li><li><code>S-03 HOLD: verify balance</code></li><li><code>S-04 ACCEPT: NO_FEE</code></li></ol>
+<p>The corrected S-04 answer should say no below-minimum fee applies at ₹5,001. Accept after verifying the source, reuse permission, inputs, and reviewed label. Hold missing evidence or unresolved disagreements apart from the accepted set. Reject a draft that contradicts the reviewed label. The checker uses supplied fields. A human still needs to confirm the underlying source, permission, and question wording. Preserve rejected drafts and review notes when you release a corrected version.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Mixing case labels and reply verdicts.</strong> Link verdicts to the exact responses judged and expectations to the cases.</li><li><strong>Copying a first label.</strong> Record independent decisions before sharing them.</li><li><strong>Using consensus as proof.</strong> Check the applicable source, especially at the threshold.</li><li><strong>Counting unresolved drafts as coverage.</strong> Keep held drafts available for review and outside the scored set.</li><li><strong>Dropping source and permission history.</strong> Save the evidence, permitted use, and review record for each case.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>Supply the whole case and the same labeling instructions to both reviewers. Keep the independent labels. If they disagree, compare the evidence and record a separate resolution. Generated cases can cover an important edge quickly. Review their source, permission, and label before counting them in the set.</p>
+<p>The next topic in the complete curriculum is <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a> — required when publishing reviewed rows to the versioned dataset</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Review synthetic policy examples with two readers, adjudicate disagreements and quarantine ambiguous rows.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> A spreadsheet or text worksheet suffices for manual labels. Live synthetic generation is an optional P05 extension.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Submit a label guide, one disagreement record and a synthetic-data acceptance rule.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
