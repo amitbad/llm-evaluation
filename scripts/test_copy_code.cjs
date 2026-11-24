@@ -100,16 +100,27 @@ test("generated curriculum adds buttons to executable blocks and leaves transcri
     [...read("docs/lessons/" + id.toLowerCase() + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]);
   const rendered = [...html.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)];
   const wrapped = [...html.matchAll(/<div class="lesson-code">([\s\S]*?)<\/pre>\n<\/div>/g)];
-  const editor = '<a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a>';
+  const editorUrl = "https://www.online-python.com/";
+  const editor = `<a href="${editorUrl}" target="_blank" rel="noopener noreferrer">Open Python Editor</a>`;
+  const authoredEditor = `[Open Python Editor](${editorUrl})\n\n`;
+  const adjacentEditor = `<p>${editor}</p>\n`;
+  const executableSources = sources.filter(([, language]) => language !== "text");
   const escape = text => text.replace(/[&<>"']/g, char =>
     ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#x27;"})[char]);
   assert.deepEqual(rendered.map(([, language, code]) => [language, code]),
     sources.map(([, language, code]) => [language, escape(code)]));
   assert.deepEqual(wrapped.map(([, markup]) => markup.match(/class="language-(\w+)"/)[1]),
-    sources.filter(([, language]) => language !== "text").map(([, language]) => language));
-  for (const [, markup] of wrapped) {
+    executableSources.map(([, language]) => language));
+  for (const [index, wrapper] of wrapped.entries()) {
+    const [, markup] = wrapper;
+    const source = executableSources[index];
     assert.match(markup, /role="status"/);
     assert.match(markup, /<button type="button" class="lesson-copy-button">Copy Code<\/button>/);
-    assert.equal(markup.includes(editor), markup.includes('class="language-python"'));
+    if (source[1] === "python" && source.input.slice(0, source.index).endsWith(authoredEditor)) {
+      // Intermediate chapters can place the editor link directly before the block.
+      assert.equal(html.slice(0, wrapper.index).endsWith(adjacentEditor), true);
+    } else {
+      assert.equal(markup.includes(editor), source[1] === "python");
+    }
   }
 });

@@ -5545,34 +5545,399 @@ data-subject="Dataset Engineering" data-status="Needs Improvement" data-track="C
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m04-t01">
-  <p class="lesson-intro" data-lesson-search>A score cannot be reproduced if cases, labels and outputs drift independently.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Stable case and response IDs, data contracts, task metadata, source references, append-only runs, version manifests and validation.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Turn a small worksheet into JSON Lines, with a clear agreement about the fields and types.</li><li>Keep a case ID attached to the same question and a response ID attached to one captured reply.</li><li>Check required fields, value ranges, unique IDs, and source references.</li><li>Preserve old replies and scores when a verified label changes.</li><li>Create a version manifest that explains why the same replies can receive a different score.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>A teammate brings two reports to a Harbor Leaf Bank review. Yesterday one of two replies passed. Today both passed. You put the replies side by side and see the exact same wording in both reports. In the worksheet, though, the expected June fee changed from ₹80 to ₹0. Before crediting the chatbot, find out which policy supports that correction.</p>
+<p>The question asks whether a customer with exactly ₹4,000 in Standard Savings owed a fee on June 30, 2026. The saved reply says no. The old answer key says ₹80, but the approved June policy charges ₹80 only below ₹4,000. Before the correction, the right reply failed the check.</p>
+<p>You’ll preserve the old worksheet and score, make a corrected copy, and show how another reviewer could reproduce both results. The bank, records, and policy here are fictional. Allow about 4.5 hours for the worked examples, Python activities, and assignment. The chapter builds on the evidence and benchmark work in <a href="#m02-t02">Ground truth, references and benchmarks</a> and the field checks in <a href="#m03-t02">Structured output and schema validation</a>.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. Give each question a name that survives sorting</h5>
+<p>Suppose the June question sits on row 2. You sort the sheet by date, and now row 2 is a July question. A reviewer who wrote “row 2 failed” may now point to the wrong question. Give the June question its own name, <code>FEE-001</code>, and keep that name when you reorder the sheet or correct its answer key. That name is a <strong>stable case ID</strong>.</p>
+<p>The same case can receive a different reply each time the team runs the assistant. Give each captured reply its own <strong>response ID</strong>. <code>R-001</code> and <code>R-003</code> can both refer back to <code>FEE-001</code>. Each response ID identifies only one capture. Store the question and expected behaviour in the dataset. In a separate run record, save the response ID, case ID, exact reply, assistant version, and dataset version used. A captured reply may include prose even if the scorer reads a numeric amount from it. Keep the full reply with the amount the scorer used.</p>
+<p>The worksheet you deliberately maintain and check against sources is your <strong>golden dataset</strong>, or reference set. That name means reviewers intend to use it as the answer key. The mistake in the June case shows why the answer key still needs review.</p>
+<h5>2. Agree what every row means</h5>
+<p>A spreadsheet cell may show 80 as text. The scorer needs a whole number of rupees. If two people treat that cell differently, they can end up comparing different things.</p>
+<p>Write down the required field names, their types, and the limits you expect. This agreement is a <strong>data contract</strong>. Its field layout is the <strong>schema</strong>. In this lesson each case has an ID, task, question, date, balance, source reference, and expected fee. The date and task are <strong>metadata</strong>, or details about the case that help you interpret the question and label. Balance and expected fee must be whole numbers. The practice limits are 0 through 1,000,000 rupees for balance and 0 through 1,000 rupees for expected fee.</p>
+<p>To exchange the worksheet, write each case as one JSON object on its own line. This format is <strong>JSON Lines</strong>, or <strong>JSONL</strong>. The converter must turn the two numeric cells into integers. Once they’re JSON numbers, a later validator can detect a bad string, a missing field, or a value outside the agreed range.</p>
+<h5>3. Record where a label came from</h5>
+<p>A label of 80 in a cell is hard to trust if you don’t know which fee rule was used. Keep the source reference and the date beside the label. The record of where your evidence came from is called <strong>provenance</strong>.</p>
+<ul><li><strong>SV-1#2.</strong> Section 2 of the approved Standard Savings policy in effect January 1 through June 30, 2026. The minimum was ₹4,000. An ₹80 monthly fee applied below that balance.</li><li><strong>SV-2#2.</strong> Section 2 of the approved policy effective July 1, 2026. The minimum is ₹5,000. A ₹100 monthly fee applies below that balance.</li></ul>
+<p>Read the two policy dates before you read either amount. June 30 is the last day of SV-1. A balance of exactly ₹4,000 is at that policy’s minimum, so the expected fee is zero. Now try citing SV-2#2 instead. The section exists in the register, but its July start date rules it out for this question. A reference check can find a section. A reviewer still needs to check that it applied and supports the label.</p>
+<h5>4. Keep a record of changes</h5>
+<p>Save the original dataset as <code>fees-v1</code> and the corrected copy as <code>fees-v2</code>. Store a short note with the new version listing its name, its parent, the schema version, what changed, and why. This note is a <strong>version manifest</strong>. For the June correction it should name <code>FEE-001</code>, the old value 80, the new value 0, and the source section that explains the change.</p>
+<p>The original run belongs with the dataset and scorer it actually used. Keep it and add a separate report for scoring the same saved replies against the corrected labels. Saving new entries without rewriting past entries is called <strong>append-only</strong>. Keeping the artifacts separate lets a teammate answer two questions. What did we report then? What would those exact replies score with the corrected answer key?</p>
+<p>In the two-case example, the June reply fails against 80 and the July reply passes against 100. That gives one pass out of two. Correct the June label to zero and both replies pass. The change from one of two to two of two comes from the label correction. Use one reviewed dataset version and one scoring rule for both assistants before trying to compare their performance.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Make a worksheet row readable by a program</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“Did a fee apply at a balance of ₹4,999 on July 15?” It appears in case FEE-002.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-2#2 gives a ₹100 fee below ₹5,000. The worksheet stores “4999” and “100” in its balance and expected-fee cells.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>A saved reply says “A ₹100 monthly fee applies.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Start with the cell under the balance heading. The program reads it as the text <code>&quot;4999&quot;</code>. Convert it to the integer <code>4999</code>, then do the same for the expected fee so <code>&quot;100&quot;</code> becomes <code>100</code>. Keep FEE-002, the question, its date, and SV-2#2 in the record. Write the full record as one JSONL line. The unquoted numbers let a reader check their types without guessing from their appearance.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Leaving the amounts as strings is a field-type error, even if the numbers look right on the screen. Fix the mapping before scoring. Correct conversion only shows that the row can be read under the contract.</span></p>
+<h5>Example 2. Find a problem that valid JSON can hide</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“Did a fee apply at exactly ₹4,000 on June 30?” It appears in case FEE-001.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-1#2 was in effect on that date. The team has an approved source register with that exact section reference.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The saved reply says “No below-minimum fee applies.” In a practice copy, a second case uses FEE-001 again and cites SV-X#9.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Both records could parse as JSON and carry the fields you expect. Compare the case IDs and find that two rows use the same name. Look up the second source and find no matching reference. Stop before joining replies to those rows, because the scorer can’t choose a unique case or trace the second label.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Report a duplicate ID and unknown source. Determine whether the second row is a duplicate copy or a separate case. Remove a duplicate copy from the revision, or give a separate case its own ID and verified evidence. These checks don’t establish whether the surviving label agrees with policy.</span></p>
+<h5>Example 3. Explain a score change without a new reply</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Compare the saved June and July replies after auditing the answer key. The June balance is exactly ₹4,000 and the July balance is ₹4,999.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>SV-1#2 gives zero at the June minimum. SV-2#2 gives ₹100 below the July minimum.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>R-001 says “No below-minimum fee applies.” R-002 says “A ₹100 monthly fee applies.” The scorer uses amounts of 0 and 100 recorded from those replies.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>On fees-v1, compare 0 with the old June label of 80 and 100 with the July label of 100. Only July passes. Keep both replies and the same comparison rule. On fees-v2, change the June label to 0. The June comparison now passes, and July stays a pass.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The old label was wrong. Save the correction, publish the new manifest alongside the worksheet, and report the two counts with their dataset versions. The assistant’s replies did not change. If you want to compare two assistant versions, score both under the same reviewed dataset version.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Each example is a complete Python 3.10+ program with fictional data inside it. The worksheet slice is shown as text, so you can use it without spreadsheet software. The examples print JSONL or reports in the editor. They don’t call a model or change a file.</p>
+<ol><li>Select <a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a> beside the activity to open the editor.</li><li>Select <strong>Copy Code</strong> in the lesson and paste the entire block yourself, replacing whatever is already in the editor.</li><li>Click <strong>Run</strong> and compare the result with the first <strong>Expected output</strong>.</li><li>Predict the experiment result, make the specified edit, and run again. Check the second <strong>Expected output</strong>.</li></ol>
+<p>Keep indentation when you paste. If an edit causes an error, paste the original block and run it again before retrying the change.</p>
+</div></details>
+<h5>Step 1 — Find a question after the sheet is reordered</h5>
+<p>You’ll compare a physical row number with a lookup by ID. Square brackets hold an ordered list. Each pair in parentheses contains the case ID and a short question. <code>cases[0]</code> reads the first item because Python starts counting positions at zero. A <code>for</code> loop visits each pair and names the two values. The comparison <code>==</code> checks whether the current ID matches the one you want.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cases = [
+    (&quot;FEE-001&quot;, &quot;June 30 boundary&quot;),
+    (&quot;FEE-002&quot;, &quot;July 15 fee&quot;),
+]
+reverse_order = False
+if reverse_order:
+    cases.reverse()
+
+print(&quot;First row:&quot;, cases[0][0])
+for case_id, question in cases:
+    if case_id == &quot;FEE-001&quot;:
+        print(&quot;Lookup:&quot;, case_id, question)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">First row: FEE-001
+Lookup: FEE-001 June 30 boundary
+</code></pre></details>
+<p>The same case happens to be first and to match your ID.</p>
+<p><strong>Experiment.</strong> Change only <code>reverse_order</code> to <code>True</code>. Run again. <code>reverse()</code> flips the order of the list.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">First row: FEE-002
+Lookup: FEE-001 June 30 boundary
+</code></pre></details>
+<p>The first row now points to July. The lookup still finds the June question because the ID travels with it.</p>
+<p><strong>Checkpoint.</strong> Which identifier belongs in a saved judgment? Keep the case ID with the response ID. A row number can change when someone sorts the sheet.</p>
+<h5>Step 2 — Convert worksheet cells to JSONL</h5>
+<p>The worksheet slice below is in <strong>CSV</strong>, text with a header row and comma-separated cells. Triple quotes hold the whole worksheet as one string. <code>StringIO</code> lets the CSV reader read that string as if it were an open sheet of text. <code>csv.DictReader</code> uses the header names as dictionary keys. The loop uses <code>int()</code> to convert the two numeric cells. <code>json.dumps()</code> makes JSON text from one record. Each <code>print()</code> writes one whole JSON object on a line.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import csv
+import json
+from io import StringIO
+
+sheet = &quot;&quot;&quot;case_id,task,question,as_of,balance_rupees,source_ref,expected_fee_rupees
+FEE-001,monthly_fee,June boundary fee?,2026-06-30,4000,SV-1#2,80
+FEE-002,monthly_fee,July fee?,2026-07-15,4999,SV-2#2,100
+&quot;&quot;&quot;
+
+for row in csv.DictReader(StringIO(sheet)):
+    row[&quot;balance_rupees&quot;] = int(row[&quot;balance_rupees&quot;])
+    row[&quot;expected_fee_rupees&quot;] = int(row[&quot;expected_fee_rupees&quot;])
+    print(json.dumps(row))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;case_id&quot;: &quot;FEE-001&quot;, &quot;task&quot;: &quot;monthly_fee&quot;, &quot;question&quot;: &quot;June boundary fee?&quot;, &quot;as_of&quot;: &quot;2026-06-30&quot;, &quot;balance_rupees&quot;: 4000, &quot;source_ref&quot;: &quot;SV-1#2&quot;, &quot;expected_fee_rupees&quot;: 80}
+{&quot;case_id&quot;: &quot;FEE-002&quot;, &quot;task&quot;: &quot;monthly_fee&quot;, &quot;question&quot;: &quot;July fee?&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;balance_rupees&quot;: 4999, &quot;source_ref&quot;: &quot;SV-2#2&quot;, &quot;expected_fee_rupees&quot;: 100}
+</code></pre></details>
+<p>The balances and fees are JSON numbers without quotes. The source IDs and dates remain strings. Notice that the old June label is still present. The converter copies the values under the schema, so policy review is a separate step.</p>
+<p><strong>Experiment.</strong> Change only the last cell of the FEE-001 CSV line from <code>80</code> to <code>0</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;case_id&quot;: &quot;FEE-001&quot;, &quot;task&quot;: &quot;monthly_fee&quot;, &quot;question&quot;: &quot;June boundary fee?&quot;, &quot;as_of&quot;: &quot;2026-06-30&quot;, &quot;balance_rupees&quot;: 4000, &quot;source_ref&quot;: &quot;SV-1#2&quot;, &quot;expected_fee_rupees&quot;: 0}
+{&quot;case_id&quot;: &quot;FEE-002&quot;, &quot;task&quot;: &quot;monthly_fee&quot;, &quot;question&quot;: &quot;July fee?&quot;, &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;balance_rupees&quot;: 4999, &quot;source_ref&quot;: &quot;SV-2#2&quot;, &quot;expected_fee_rupees&quot;: 100}
+</code></pre></details>
+<p>Only the converted label changes. In a real review, save the corrected rows as a new version and record the evidence for the change.</p>
+<p><strong>Checkpoint.</strong> Does writing 0 without quotes prove the fee is zero? It shows the expected type. The June source is what supports the label.</p>
+<h5>Step 3 — Check field types and ranges</h5>
+<p>A row can contain every required field and still have values the scorer can’t use. Here you’ll check the two numeric fields. In <code>type(fee) is int</code>, <code>type()</code> looks up the kind of value and <code>is int</code> requires the exact whole-number type. That also excludes yes-or-no values, even though Python can count <code>True</code> as 1 in some comparisons. <code>and</code> makes Python check the range only after the value passes the type check. The <code>&lt;=</code> comparison includes each endpoint.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">row = {&quot;balance_rupees&quot;: 4000, &quot;expected_fee_rupees&quot;: &quot;80&quot;}
+balance = row.get(&quot;balance_rupees&quot;)
+fee = row.get(&quot;expected_fee_rupees&quot;)
+
+print(&quot;Balance valid:&quot;, type(balance) is int and 0 &lt;= balance &lt;= 1_000_000)
+print(&quot;Fee valid:&quot;, type(fee) is int and 0 &lt;= fee &lt;= 1000)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Balance valid: True
+Fee valid: False
+</code></pre></details>
+<p>The balance is an integer within the allowed range. The quote marks around 80 make it a string. <code>row.get(...)</code> returns <code>None</code> for a missing key, which would also fail the type check. The underscore in <code>1_000_000</code> groups the digits for reading.</p>
+<p><strong>Experiment.</strong> Remove the quotes around <code>&quot;80&quot;</code> and leave the rest of the row alone. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Balance valid: True
+Fee valid: True
+</code></pre></details>
+<p>An integer 80 passes the format check. It is still the wrong label for the June boundary case. A schema can tell you which values the format accepts. Use the approved rule to judge the label.</p>
+<p><strong>Checkpoint.</strong> Would an integer fee of 1001 pass? It meets the type rule but falls outside the practice range.</p>
+<h5>Step 4 — Find duplicate IDs and unknown references</h5>
+<p>Here the list has two entries with the same case ID. Check that each ID appears only once and each source resolves to the supplied register. A <strong>set</strong> keeps distinct values. <code>set()</code> starts one with no items. <code>case_id in seen</code> tests whether the current ID has appeared and <code>seen.add(case_id)</code> remembers it. The other membership check looks up the source reference.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">sources = {&quot;SV-1#2&quot;, &quot;SV-2#2&quot;}
+rows = [
+    (&quot;FEE-001&quot;, &quot;SV-1#2&quot;),
+    (&quot;FEE-001&quot;, &quot;SV-X#9&quot;),
+]
+seen = set()
+
+for case_id, source_ref in rows:
+    if case_id in seen:
+        print(&quot;Duplicate ID:&quot;, case_id)
+    seen.add(case_id)
+    if source_ref not in sources:
+        print(&quot;Unknown source:&quot;, source_ref)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Duplicate ID: FEE-001
+Unknown source: SV-X#9
+</code></pre></details>
+<p>The second row repeats the ID, so it can&#x27;t be reliably matched to a response. Its cited section is also missing from the source register.</p>
+<p><strong>Experiment.</strong> Change only <code>&quot;SV-X#9&quot;</code> to <code>&quot;SV-1#2&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Duplicate ID: FEE-001
+</code></pre></details>
+<p>Now the source exists. The ID is still repeated, so the row remains blocked. In a real dataset, verify the date and policy meaning before accepting the new reference.</p>
+<p><strong>Checkpoint.</strong> Should you give the duplicate a new ID automatically? First check whether it’s an accidental copy. A genuinely different question needs its own ID.</p>
+<h5>Step 5 — Store a new reply without replacing the old one</h5>
+<p>Imagine you’re asked to explain a score from yesterday, but someone pasted today’s wording over the reply you scored. Even if both replies say there was no fee, you’ve lost the exact words behind the old score. Give the second capture its own ID, R-003, and keep both linked to FEE-001.</p>
+<p>The dictionary uses a response ID as each key. If the proposed ID already exists, hold the incoming record. Otherwise, assignment to <code>history[new_id]</code> adds a new entry. The loop uses <code>history.items()</code> to read each ID with its record. It gives the four values in each record separate names so you can see the case, version, assistant, and exact reply.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">history = {
+    &quot;R-001&quot;: (&quot;FEE-001&quot;, &quot;fees-v1&quot;, &quot;assistant-a&quot;, &quot;No below-minimum fee applies.&quot;),
+}
+new_id = &quot;R-003&quot;
+new_record = (&quot;FEE-001&quot;, &quot;fees-v1&quot;, &quot;assistant-a&quot;, &quot;No fee at that balance.&quot;)
+
+if new_id in history:
+    print(&quot;Refused duplicate response ID:&quot;, new_id)
+else:
+    history[new_id] = new_record
+    print(&quot;Added:&quot;, new_id)
+
+for response_id, record in history.items():
+    case_id, version, assistant, reply = record
+    print(response_id, case_id, version, assistant, &quot;|&quot;, reply)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Added: R-003
+R-001 FEE-001 fees-v1 assistant-a | No below-minimum fee applies.
+R-003 FEE-001 fees-v1 assistant-a | No fee at that balance.
+</code></pre></details>
+<p>Both records point to one question. The separate IDs keep the captures distinct, including their wording.</p>
+<p><strong>Experiment.</strong> Change only <code>new_id</code> to <code>&quot;R-001&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Refused duplicate response ID: R-001
+R-001 FEE-001 fees-v1 assistant-a | No below-minimum fee applies.
+</code></pre></details>
+<p>The guard catches the collision. Without it, assigning a value to an existing key would replace the original record.</p>
+<p><strong>Checkpoint.</strong> Is this a permanent audit log? The code checks the rule in memory. An actual team must keep the run artifacts somewhere that preserves old entries and their versions.</p>
+<h5>Step 6 — Rescore the same replies against two versions</h5>
+<p>The saved June amount is 0 and the July amount is 100. Compare each with the original labels. June fails and July passes, giving one of two. On the corrected copy, change just the June label to zero and both pass. The loop below counts those passes. A function is a named block of work. <code>def score(labels, replies):</code> accepts a label dictionary and a reply list. Each time the amount matches, add one to <code>passes</code>. <code>return</code> hands back the count.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def score(labels, replies):
+    passes = 0
+    for case_id, amount in replies:
+        if amount == labels[case_id]:
+            passes = passes + 1
+    return passes
+
+
+replies = [(&quot;FEE-001&quot;, 0), (&quot;FEE-002&quot;, 100)]
+old_labels = {&quot;FEE-001&quot;: 80, &quot;FEE-002&quot;: 100}
+new_labels = old_labels.copy()
+new_labels[&quot;FEE-001&quot;] = 0
+
+print(&quot;fees-v1:&quot;, score(old_labels, replies), &quot;of&quot;, len(replies))
+print(&quot;fees-v2:&quot;, score(new_labels, replies), &quot;of&quot;, len(replies))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">fees-v1: 1 of 2
+fees-v2: 2 of 2
+</code></pre></details>
+<p><code>copy()</code> makes a separate dictionary here, where both values are integers. <code>len(replies)</code> gives the size of the same saved reply list. Only the June label changes which comparison succeeds.</p>
+<p><strong>Experiment.</strong> Set <code>new_labels[&quot;FEE-001&quot;]</code> to <code>80</code> instead of <code>0</code>. Run again to simulate copying the worksheet without correcting the label.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">fees-v1: 1 of 2
+fees-v2: 1 of 2
+</code></pre></details>
+<p>Both dictionaries now hold the same labels. A new version name alone changes no score. In a change log, distinguish a label correction from packaging a copy.</p>
+<p><strong>Checkpoint.</strong> If a score rises after a label correction, what would it take to show the assistant got better? Compare its old and new replies using the same reviewed dataset and rule.</p>
+<h5>Step 7 — Validate a revision and explain its score change</h5>
+<p>Start from two converted cases and two captured replies. Copy each case dictionary before editing the June label. Check required types and ranges, duplicate IDs, and whether every source reference is in the register. Save a manifest only for the valid revision. In this exercise the register is embedded in the program, and a reviewer has already checked the June policy.</p>
+<p>In <code>sorted(required - row.keys())</code>, the minus sign finds required fields that are missing. Sorting makes the reported order predictable. <code>continue</code> moves to the next row if a field is missing, so the program doesn’t read it. <code>errors.append(...)</code> adds a message to the end of a list. A loop builds a lookup from case ID to expected fee, then the scorer compares only the numeric amounts supplied with the saved replies. It uses exactly the same replies for both versions.</p>
+<p>Select <strong>Copy Code</strong>, paste the block into the editor, and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+
+def validate(rows, sources):
+    required = {&quot;case_id&quot;, &quot;task&quot;, &quot;question&quot;, &quot;as_of&quot;, &quot;balance_rupees&quot;,
+                &quot;source_ref&quot;, &quot;expected_fee_rupees&quot;}
+    errors = []
+    seen = set()
+    for row in rows:
+        missing = sorted(required - row.keys())
+        if missing:
+            errors.append(&quot;Missing fields: &quot; + &quot;, &quot;.join(missing))
+            continue
+        case_id = row[&quot;case_id&quot;]
+        for field in (&quot;case_id&quot;, &quot;task&quot;, &quot;question&quot;, &quot;as_of&quot;, &quot;source_ref&quot;):
+            if type(row[field]) is not str or not row[field].strip():
+                errors.append(&quot;Expected non-empty text: &quot; + field)
+        if type(case_id) is str:
+            if case_id in seen:
+                errors.append(&quot;Duplicate case ID: &quot; + case_id)
+            seen.add(case_id)
+        source_ref = row[&quot;source_ref&quot;]
+        if type(source_ref) is str and source_ref not in sources:
+            errors.append(&quot;Unknown source: &quot; + source_ref)
+        for field, maximum in ((&quot;balance_rupees&quot;, 1_000_000),
+                               (&quot;expected_fee_rupees&quot;, 1000)):
+            value = row[field]
+            if type(value) is not int or not 0 &lt;= value &lt;= maximum:
+                errors.append(&quot;Invalid whole-rupee field: &quot; + field)
+    return errors
+
+
+def score(rows, captured):
+    labels = {}
+    for row in rows:
+        labels[row[&quot;case_id&quot;]] = row[&quot;expected_fee_rupees&quot;]
+    passes = 0
+    for response_id, case_id, reply, amount in captured:
+        if amount == labels[case_id]:
+            passes = passes + 1
+    return passes
+
+
+sources = {&quot;SV-1#2&quot;, &quot;SV-2#2&quot;}
+original = [
+    {&quot;case_id&quot;: &quot;FEE-001&quot;, &quot;task&quot;: &quot;monthly_fee&quot;, &quot;question&quot;: &quot;June boundary fee?&quot;,
+     &quot;as_of&quot;: &quot;2026-06-30&quot;, &quot;balance_rupees&quot;: 4000, &quot;source_ref&quot;: &quot;SV-1#2&quot;,
+     &quot;expected_fee_rupees&quot;: 80},
+    {&quot;case_id&quot;: &quot;FEE-002&quot;, &quot;task&quot;: &quot;monthly_fee&quot;, &quot;question&quot;: &quot;July fee?&quot;,
+     &quot;as_of&quot;: &quot;2026-07-15&quot;, &quot;balance_rupees&quot;: 4999, &quot;source_ref&quot;: &quot;SV-2#2&quot;,
+     &quot;expected_fee_rupees&quot;: 100},
+]
+captured = [
+    (&quot;R-001&quot;, &quot;FEE-001&quot;, &quot;No below-minimum fee applies.&quot;, 0),
+    (&quot;R-002&quot;, &quot;FEE-002&quot;, &quot;A ₹100 monthly fee applies.&quot;, 100),
+]
+revised = []
+for row in original:
+    revised.append(row.copy())
+first = revised[0]
+first[&quot;expected_fee_rupees&quot;] = 0
+
+errors = validate(original, sources) + validate(revised, sources)
+if errors:
+    for error in errors:
+        print(error)
+    print(&quot;Revision rejected before scoring&quot;)
+else:
+    old_passes = score(original, captured)
+    new_passes = score(revised, captured)
+    manifest = {
+        &quot;dataset&quot;: &quot;fees-v2&quot;, &quot;parent&quot;: &quot;fees-v1&quot;, &quot;schema&quot;: 1,
+        &quot;case_id&quot;: first[&quot;case_id&quot;], &quot;old_fee_rupees&quot;: original[0][&quot;expected_fee_rupees&quot;],
+        &quot;new_fee_rupees&quot;: first[&quot;expected_fee_rupees&quot;], &quot;source&quot;: first[&quot;source_ref&quot;],
+        &quot;reason&quot;: &quot;June boundary is at the minimum&quot;, &quot;replay&quot;: &quot;saved R-001 and R-002&quot;,
+    }
+    print(json.dumps(manifest))
+    print(&quot;fees-v1:&quot;, old_passes, &quot;of&quot;, len(captured))
+    print(&quot;fees-v2:&quot;, new_passes, &quot;of&quot;, len(captured))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;dataset&quot;: &quot;fees-v2&quot;, &quot;parent&quot;: &quot;fees-v1&quot;, &quot;schema&quot;: 1, &quot;case_id&quot;: &quot;FEE-001&quot;, &quot;old_fee_rupees&quot;: 80, &quot;new_fee_rupees&quot;: 0, &quot;source&quot;: &quot;SV-1#2&quot;, &quot;reason&quot;: &quot;June boundary is at the minimum&quot;, &quot;replay&quot;: &quot;saved R-001 and R-002&quot;}
+fees-v1: 1 of 2
+fees-v2: 2 of 2
+</code></pre></details>
+<p>The manifest points to the original version, evidence, and saved replies. Both scores stay visible. Passing the field and reference checks allows this replay. The labels depend on the reviewer’s separate reading of the policy.</p>
+<p><strong>Experiment.</strong> Change only <code>first[&quot;expected_fee_rupees&quot;] = 0</code> to <code>first[&quot;expected_fee_rupees&quot;] = -1</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Invalid whole-rupee field: expected_fee_rupees
+Revision rejected before scoring
+</code></pre></details>
+<p>The integer −1 fails the range rule. The program stops before emitting a successful manifest or a revised score. Keep the old report and correct the proposed revision before comparing scores.</p>
+<p><strong>Checkpoint.</strong> What is the limit of this validator? It checks the named fields and references. It assumes the captured replies are correctly linked to known cases and leaves policy applicability and label accuracy to the reviewer.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Recover the case after a sort</h5>
+<p>A note says “row 2 failed.” In the old order row 2 was FEE-001. In the sorted sheet row 2 is FEE-002. R-001 and R-003 are two replies to FEE-001. Rewrite the note so a teammate can find the exact reply, assuming the reviewer meant the earlier capture. List the other records you need to reproduce the verdict.</p>
+<h5>Practice 2. Separate format errors from evidence errors</h5>
+<p>Assume two full rows exist. Both have case ID FEE-001. The second row has <code>&quot;balance_rupees&quot;: &quot;4000&quot;</code> and a source reference of <code>SV-X#9</code>. Its expected fee is the number 0. List the errors a validator can find. What must a reviewer still establish after these errors are repaired?</p>
+<h5>Practice 3. Choose the applicable policy</h5>
+<p>A record says a customer with exactly ₹4,000 owed ₹80 on June 30, 2026. It cites SV-2#2, which exists in the register. Explain why the case can pass the reference check and still fail source review. Give the corrected source and label.</p>
+<h5>Practice 4. Explain a report that looks better</h5>
+<p>The same two captured amounts are 0 and 100. The original labels are 80 and 100. The revised labels are 0 and 100. Work out both scores, then write what belongs in the revision manifest. A teammate says the assistant improved. What comparison would let you test that claim?</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Write “R-001 for FEE-001 failed under fees-v1.” The case ID finds the June question and R-001 selects its first captured reply. Retrieve that exact reply and the amount the scorer used, the original dataset version and policy reference, and the original scoring rule. A different capture under R-003 could contain different wording or an amount that scores differently.</p>
+<h5>Solution 2</h5>
+<p>The duplicate ID prevents a unique case lookup. The balance is text where the contract requires an integer. The source reference doesn’t exist in the register. Check whether the duplicate is an accidental copy and convert the balance only after verifying the cell. Once it has a documented source, a reviewer still needs to verify that source covers the case’s account, date and fee question and supports the label of zero.</p>
+<h5>Solution 3</h5>
+<p>SV-2#2 is a real section in the practice register. It became effective July 1, so it doesn’t govern June 30. Use SV-1#2. The balance equals the minimum, and SV-1 charges only below it, so the correct expected fee is 0.</p>
+<h5>Solution 4</h5>
+<p>The original score is one of two because 0 differs from 80 and 100 equals 100. The corrected score is two of two because 0 now equals 0 and the July comparison stays the same. Record the version and parent, schema version, case ID, old and new values, applicable source, and reason for the correction. Keep the original report and say which replies were replayed. To test whether the assistant improved, use comparable captures of both assistant versions and score them against the same reviewed dataset and rule.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>A teammate renames FEE-001 when correcting just its label. What could happen to earlier response records?</li><li>The expected-fee cell is “100” and its converted JSON still has quotes around 100. What should you check?</li><li>Two rows have different wording but the same case ID. What must you establish before changing an ID?</li><li>A reference exists, but the policy started one day after the case date. What can the validator conclude and what can the reviewer conclude?</li><li>An assistant gives identical wording in two separate captures. Why keep two response IDs?</li><li>The revised label is an integer −1. What should happen before any revised score is reported?</li><li>The same replies score higher against a new answer key. Which artifact should you inspect before attributing the change to the assistant?</li><li>What would you save so a teammate can reproduce yesterday’s score and also compare it with a corrected replay today?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Old captures still point to FEE-001. Renaming it could break the link and obscure that both versions test the same question. Keep the ID for a label correction.</li><li>The value is still text. Check whether the converter turned that numeric field into an integer before serializing the row.</li><li>Determine whether the rows are accidental duplicates or distinct cases. Distinct cases need unique IDs. Extra copies must not make one question count twice.</li><li>The validator can confirm a source reference exists. The reviewer should reject its use for this date and check the policy effective when the case occurred.</li><li>Each ID links to one capture. Its run metadata may differ even if the wording coincides.</li><li>The range check should reject the revision before scoring. Keep the old report available while investigating the bad value.</li><li>Inspect the manifest and case labels. If the capture and rule stayed the same, the score change reflects what the answer key accepts.</li><li>Keep the original cases and labels, source section, exact captured replies with IDs, scoring rule and original report. Record the corrected dataset version and replay as separate artifacts.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>A teammate corrected the June fee to zero and now needs to verify the source reference before releasing the revision. Keep the two original replies and all original rows unchanged. Use the code from Step 7.</p>
+<ol><li>Paste Step 7 into a fresh editor. Insert the line <code>first[&quot;source_ref&quot;] = &quot;SV-X#9&quot;</code> immediately after the assignment of the corrected fee. Run it. Record both output lines and explain what kept the replay from running.</li><li>Change only that new line so it assigns <code>&quot;SV-2#2&quot;</code>. Run again. Record the manifest and both scores. Decide whether you would accept the revision after reading the June case and the cited policy.</li><li>Change the same line to assign <code>&quot;SV-1#2&quot;</code>. Run again. Point to the date and policy wording that support zero. Keep both version names and scores in your note to the team. Explain that the replies and scoring rule stayed fixed, while the expected June fee changed from ₹80 to ₹0.</li></ol>
+<h5>Check your assignment</h5>
+<p>The first run prints these lines.</p>
+<ol><li><code>Unknown source: SV-X#9</code></li><li><code>Revision rejected before scoring</code></li></ol>
+<p>The second run prints these lines.</p>
+<ol><li><code>{&quot;dataset&quot;: &quot;fees-v2&quot;, &quot;parent&quot;: &quot;fees-v1&quot;, &quot;schema&quot;: 1, &quot;case_id&quot;: &quot;FEE-001&quot;, &quot;old_fee_rupees&quot;: 80, &quot;new_fee_rupees&quot;: 0, &quot;source&quot;: &quot;SV-2#2&quot;, &quot;reason&quot;: &quot;June boundary is at the minimum&quot;, &quot;replay&quot;: &quot;saved R-001 and R-002&quot;}</code></li><li><code>fees-v1: 1 of 2</code></li><li><code>fees-v2: 2 of 2</code></li></ol>
+<p>The reference exists, so the program reports a score. The cited policy applies from July 1 and doesn’t support the June label. Hold that revision. The last run prints the same three lines as the second run, with <code>&quot;source&quot;: &quot;SV-1#2&quot;</code> replacing <code>&quot;source&quot;: &quot;SV-2#2&quot;</code> in the manifest. Verify that section and keep the original report. The approved June boundary rule supports zero, and only the label changed the pass count. The same two replies were replayed in all comparisons that reached scoring.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Using row position as identity.</strong> Store stable case and response IDs before anyone sorts or filters the worksheet.</li><li><strong>Treating valid JSON as a valid dataset.</strong> Check the fields, types, ranges, IDs, and references before scoring.</li><li><strong>Treating a known source as the right source.</strong> Verify the account, effective date, and rule it supplies.</li><li><strong>Replacing old records with corrected data.</strong> Preserve the earlier report and record the reason for the new version.</li><li><strong>Calling a corrected score a model improvement.</strong> Compare assistants against the same reviewed answer key and scoring rule.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>Use stable IDs to connect named cases with exact captured replies. Convert worksheet records under a clear data contract and validate the result before scoring. Keep each label traceable to its source. When a label changes, record why in a new manifest and preserve earlier reports and captures. Replaying the same replies makes the effect of the revision visible.</p>
+<p>The next topic in the complete curriculum is <a href="#m04-t02">Annotation, adjudication and synthetic data</a>. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a>, <a href="#m03-t02">Structured output and schema validation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Convert a workbook slice to JSONL and validate field types, unique IDs and references.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P01–P04. The workbook slice is supplied in a format readable without spreadsheet software.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Create a revision that changes a label and generate a manifest explaining the effect on previous results.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
