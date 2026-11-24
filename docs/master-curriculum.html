@@ -6370,34 +6370,385 @@ data-subject="Dataset Engineering" data-status="New" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m04-t03">
-  <p class="lesson-intro" data-lesson-search>Aggregate gains may hide weak slices or reflect tuning on the evaluation set.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Representative and stratified sampling, rare-case oversampling, adversarial edge cases, grouped splits, deduplication, train/test contamination, dataset refresh and retirement.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Compare a sample with the questions it is meant to represent and plan coverage by question group.</li><li>Keep a deliberate stress check separate from an estimate of everyday performance.</li><li>Spot duplicate questions and keep related cases together when separating development from final evaluation.</li><li>Protect a final check from tuning and explain how to refresh or retire cases after a policy change.</li><li>Validate a small split, trace a label to its source, and print a versioned dataset draft.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>You ask Harbor Leaf Bank whether you’ll be charged at exactly the required balance. The new assistant says you’ll owe ₹100. The approved July rule says there’s no charge at that balance. At the release meeting, both versions have the same headline score, nine out of ten. Before the bank moves ahead, you want to know whether the new answer is the mistake that score is hiding.</p>
+<p>In the fictional review, eight questions are ordinary July fee lookups. Two ask about the balance right at the Standard Savings minimum. The old version passed seven ordinary cases and both cutoff cases. The new version passed all eight ordinary cases and only one cutoff case. Add each version’s passes. Both reach nine, but the new version got worse on the exact balance where a customer needs to know whether a charge applies.</p>
+<p>You’ll prepare questions for the next check, protect the final review set, and plan what to do when the bank changes its policy. All data, policies, and verdicts in this chapter are fictional. Allow about 5.5 hours. The required background is <a href="#m04-t01">Golden schemas, provenance and versioning</a>. The earlier <a href="#m04-t02">Annotation, adjudication and synthetic data</a> chapter helps with deciding which drafted cases to accept.</p>
+<h4>Beginner Explanation</h4>
+<h5>1. Check which customers your sample represents</h5>
+<p>Suppose ten customer questions arrive. Eight are ordinary fee questions and two ask about the cutoff. If you read five questions and all five are ordinary lookups, you have learned how the assistant handled those five. A <strong>sample</strong> is a subset you examine. A <strong>representative sample</strong> should resemble the population you want to describe on the characteristics that matter. Here the population is the set of eligible questions in the time window you picked.</p>
+<p>Write down a target of four ordinary questions and one cutoff question before reading any answers. Four out of five is 80% and one out of five is 20%, the same mix as eight and two out of ten. Put the eligible IDs into two piles and draw from each pile. This is <strong>stratified sampling</strong>, and each pile is a <strong>stratum</strong>. Draw without checking which cases passed. If all five selected cases still come from one date or account, report that limitation alongside the matched proportions.</p>
+<h5>2. Check hard cases more often for a different decision</h5>
+<p>One sampled cutoff question is easy to miss. Suppose an audit asks you to check four ordinary cases and four cutoff cases. In that audit half the cases are cutoff questions, compared with two in ten in the target traffic. Deliberately including more cases from a rare group is <strong>oversampling</strong>. A <strong>stress set</strong> is an evaluation set designed to probe difficult or high-consequence cases.</p>
+<p>For the new assistant in the opening example, all eight ordinary answers passed, and one of two cutoff answers passed. Imagine applying those same group rates to a different mix. In ten cases with the everyday mix, you would expect eight ordinary passes and one cutoff pass, or nine of ten. In an eight-case stress mix with four of each, the same rates would give four ordinary passes and two cutoff passes, or six of eight. The group rates stayed fixed in this calculation. Only how much each group contributes to the overall score changed.</p>
+<p>This stress mix gives cutoff failures more influence. Report the stress score under its own name. For an estimate of everyday performance, use a representative sample or trustworthy group rates combined using the actual traffic proportions. With only two cutoff observations, the true rate for that group is still uncertain.</p>
+<p>Try changing just one important detail, such as the balance from ₹4,999 to ₹5,000. An <strong>adversarial edge case</strong> here is a deliberately difficult test chosen to surface a likely error. The bank could set a practice requirement before testing. Include at least one verified exact-minimum case and pause release if any such case applies a charge. A reviewer still needs to verify each label against the policy. Passing the small set answers that release check and gives little evidence about rare failures outside it.</p>
+<h5>3. Protect questions used for the final check</h5>
+<p>A team can use some saved questions to improve its prompts or examples. Call those its <strong>development set</strong>. Reserve a separate set for checking how those changes work on unseen cases. That set is a <strong>holdout</strong>. If you tune using answers from the holdout, the final score can reward familiarity with that material. This is <strong>leakage</strong>, a form of train/test contamination. It can happen during prompt tuning or case selection even when no model weights are changed.</p>
+<p>Consider “Do I pay a fee at ₹5,000?” and “Is there a charge at the ₹5,000 minimum?” If both were made from the same fee guide, you could put them in different sets by mistake. Group cases by the policy or document family that links them. Give the whole family one destination. This is a <strong>grouped split</strong>. Preserve the source and family IDs so someone else can verify which cases travelled together.</p>
+<p>Put “What fee applies below ₹5,000?” beside “What fee applies above ₹5,000?” If you remove the second just because most words match, you lose a useful check. Now put two paraphrases of the exact same question side by side. Keeping both as separate cases can double the weight of one underlying test. <strong>Deduplication</strong> means finding repeated material and deciding whether to keep one copy or group related cases. Use similarity to flag pairs, then read both questions and their sources before deciding. Settle the family assignments before drawing samples for each side. If the available families leave a gap in coverage, report the gap and find suitable data.</p>
+<h5>4. Refresh the evaluation when policy changes</h5>
+<p>For this chapter, SV-2#2 sets the July Standard Savings minimum at ₹5,000. A ₹100 monthly fee applies below it. Imagine the bank approves a new fee guide, SV-3#2, for August 1, 2026 onward. Its minimum is ₹6,000 and its fee is ₹120 per month below that balance. Both are fictional policy excerpts for this lesson.</p>
+<p>Keep the frozen July holdout and its results. A question explicitly about July can still be correct as a historical case. If you’re checking the current policy, move July-only coverage out of that current check and keep it in the historical set. This is <strong>retirement</strong> from a specific evaluation. Add reviewed August cases in a new version. This is a <strong>refresh</strong>. Record the parent version, additions and retirements, their reasons, and who can see the new holdout.</p>
+<p>For this unseen-family check, give developers practice cases from other families. Keep the reserved guide, questions, labels, and close variants behind the review boundary. If developers need the August guide for tuning, record that use and reserve a different family for an unseen-family check. Preserve the old benchmark so you can replay it. A split check can catch some paths for leakage. You still need access controls and a record of what was actually used to tune.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Read the group scores before trusting the total</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>The bank asks whether it can release the new assistant after both versions get nine of ten July questions right.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The fictional question mix is eight ordinary lookups and two cutoff questions. SV-2#2 charges ₹100 only below ₹5,000. A charge at exactly ₹5,000 is a cutoff failure.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>In the illustrative review, the old assistant passed seven ordinary cases and both cutoff cases. The new assistant passed eight ordinary cases and one cutoff case. In the failed cutoff example it says, “A ₹100 monthly fee applies at ₹5,000.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Verify the failed claim against “below.” Add seven and two for the old total, then eight and one for the new total. Both are nine. Compare the cutoff results separately and the change is visible. For a practice stress mix with four cases of each kind, applying the same new-assistant group rates gives four ordinary successes and two cutoff successes, six of eight.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Investigate the cutoff regression before approving release. Keep the everyday and stress summaries labeled separately. Neither figure establishes a precise live failure rate on this small fictional set.</span></p>
+<h5>Example 2. Detect related cases on both sides of the split</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>A reviewer wants to know whether a final check is independent of the material used to tune the assistant.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The July fee guide supports no charge at exactly ₹5,000. The team keeps all cases derived from that guide in one document family.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>A saved reply says no charge for the held-out prompt “Is there a charge at the ₹5,000 minimum?” Development already contains “Do I pay a fee at exactly ₹5,000?”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Compare the full texts. The wording differs, but the balance, rule, and intended answer match. Check the source records and find the same fee-guide family in both sets. Move the family together if the split is still being planned. If developers already used one case to tune, record the exposure and choose a different family for an unseen final check.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The split cannot support an unseen-family claim. The held-out answer can still be correct for the policy. The problem is the evidence behind the benchmark claim.</span></p>
+<h5>Example 3. Keep a policy refresh traceable</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>A new fee guide takes effect on August 1. The team wants to check the new rule without losing the old benchmark.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>July’s SV-2#2 charges ₹100 below ₹5,000. August’s SV-3#2 charges ₹120 below ₹6,000. These versions are in the same fee-guide family.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>A saved July reply says, “At ₹5,999, no below-minimum fee applies.” The team drafts an August case at the same balance.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Check July against its own policy and keep the old verdict. Use the August source for the new case. Since 5999 is one below 6000, the expected new fee is ₹120. Have reviewers verify that label. Keep the new question in the reviewer-only fee-guide family and record the transition in a new version manifest. Keep July rows available for historical testing.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Replacing July’s labels in place would make old results hard to explain. Report August as a distinct check. For a fair comparison, rescore both versions on the same reviewed set under the same access rules.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Each block is a complete Python 3.10+ program with fictional inline examples. You’ll examine samples, compare simulated scores, and check a proposed dataset. There are no local files or model calls.</p>
+<ol><li>Select <strong>Open Python Editor</strong> beside the block.</li><li>Select <strong>Copy Code</strong> and paste the entire block into the editor yourself.</li><li>Click <strong>Run</strong> and check the first <strong>Expected output</strong>.</li><li>Predict the result of the experiment, make the specified edit, and compare the new result with the second <strong>Expected output</strong>.</li></ol>
+<p>Keep the spaces at the start of lines. If an experiment produces an error, paste the original code and run it before trying the edit again.</p>
+</div></details>
+<h5>Step 1 — Count the kinds of questions you sampled</h5>
+<p>The practice queue starts with eight ordinary lookups and ends with two cutoff questions. A list holds values in order. The expression <code>queue[start:start + 5]</code> takes five positions starting at <code>start</code>. Python counts from zero and stops before the second position. <code>sample.count(...)</code> counts how many entries equal a value.</p>
+<p>Copy the entire block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">queue = [&quot;ordinary&quot;] * 8 + [&quot;cutoff&quot;] * 2
+start = 0
+sample = queue[start:start + 5]
+
+print(&quot;Ordinary:&quot;, sample.count(&quot;ordinary&quot;))
+print(&quot;Cutoff:&quot;, sample.count(&quot;cutoff&quot;))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Ordinary: 5
+Cutoff: 0
+</code></pre></details>
+<p>Multiplying the list repeats its item. The plus sign joins the two lists. The first five positions all come from the ordinary group.</p>
+<p><strong>Experiment.</strong> Change only <code>start</code> to <code>5</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Ordinary: 3
+Cutoff: 2
+</code></pre></details>
+<p>The sample now reaches both cutoff questions. Picking five consecutive rows can change the mix whenever the queue is ordered.</p>
+<p><strong>Checkpoint.</strong> Did moving to a different part of the queue produce a representative sample? The new mix is three ordinary cases and two cutoff cases. The whole queue has eight and two. Inspect the mix before interpreting a score.</p>
+<h5>Step 2 — Select questions within each group</h5>
+<p>The bank has eight ordinary questions and four drafted cutoff questions available for this exercise. The target traffic card is still eight ordinary for every two cutoff questions. Use that card to plan a sample of five. <code>import random</code> loads Python’s standard random tools. <code>random.Random(7)</code> starts a local generator from seed 7. <code>sample(pool, count)</code> chooses distinct items from that pool. <code>len()</code> counts the selected IDs.</p>
+<p>Copy the entire block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import random
+
+ordinary = [&quot;R1&quot;, &quot;R2&quot;, &quot;R3&quot;, &quot;R4&quot;, &quot;R5&quot;, &quot;R6&quot;, &quot;R7&quot;, &quot;R8&quot;]
+cutoff = [&quot;C1&quot;, &quot;C2&quot;, &quot;C3&quot;, &quot;C4&quot;]
+cutoff_target = 1
+rng = random.Random(7)
+
+ordinary_sample = rng.sample(ordinary, 4)
+cutoff_sample = rng.sample(cutoff, cutoff_target)
+
+print(&quot;Ordinary selected:&quot;, len(ordinary_sample))
+print(&quot;Cutoff selected:&quot;, len(cutoff_sample))
+print(&quot;Total selected:&quot;, len(ordinary_sample) + len(cutoff_sample))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Ordinary selected: 4
+Cutoff selected: 1
+Total selected: 5
+</code></pre></details>
+<p>The groups are selected separately. Their combined proportion matches the traffic card for question type.</p>
+<p><strong>Experiment.</strong> Change only <code>cutoff_target</code> from <code>1</code> to <code>4</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Ordinary selected: 4
+Cutoff selected: 4
+Total selected: 8
+</code></pre></details>
+<p>The cutoff group now has half the slots. Save the selected IDs and rule for real evaluations. This exercise checks the mix. It gives no evidence that these questions cover every account, date, or wording.</p>
+<p><strong>Checkpoint.</strong> Would you present the eight-case stress set as typical traffic? Its cutoff share is four of eight, while the target share is two of ten.</p>
+<h5>Step 3 — Compare scores under two mixes</h5>
+<p>Use the new assistant’s group results from the worked example. Eight of eight ordinary cases passed. One of two cutoff cases passed. Dividing gives 1.0 and 0.5. Multiply each rate by the number of slots for that group and add the results. In a ten-slot everyday mix, eight ordinary slots contribute eight expected passes and two cutoff slots contribute one.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>. In <code>f&quot;{projected_score:.0%}&quot;</code>, the <code>f</code> lets Python insert a value and <code>.0%</code> formats a fraction as a percentage with no decimal places.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">ordinary_rate = 8 / 8
+cutoff_rate = 1 / 2
+total_slots = 10
+cutoff_slots = 2
+ordinary_slots = total_slots - cutoff_slots
+
+projected_passes = ordinary_slots * ordinary_rate + cutoff_slots * cutoff_rate
+projected_score = projected_passes / total_slots
+
+print(&quot;Mix:&quot;, ordinary_slots, &quot;ordinary and&quot;, cutoff_slots, &quot;cutoff&quot;)
+print(&quot;Illustrative score:&quot;, f&quot;{projected_score:.0%}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Mix: 8 ordinary and 2 cutoff
+Illustrative score: 90%
+</code></pre></details>
+<p>This is a calculation using the observed group rates from the fictional report. It gives no new test results.</p>
+<p><strong>Experiment.</strong> Change only <code>cutoff_slots</code> to <code>5</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Mix: 5 ordinary and 5 cutoff
+Illustrative score: 75%
+</code></pre></details>
+<p>Five ordinary slots contribute five expected passes and five cutoff slots contribute two and a half. A fractional expected count is possible because this is a projection, not a count of actual replies. The five cutoff slots give the weaker group more influence. Both group rates stayed fixed.</p>
+<p><strong>Checkpoint.</strong> Does the lower figure mean the assistant changed? The example changed only the weighting. Compare two assistants under the same mix if you want to study a change in the system.</p>
+<h5>Step 4 — Flag wording that deserves a closer look</h5>
+<p>Compare two draft questions. Strip a question mark with <code>replace()</code>, fold letter case with <code>casefold()</code>, and split at whitespace with <code>split()</code>. A <code>set</code> keeps each word once. The <code>&amp;</code> operator finds words both sets contain. The <code>|</code> operator finds words used in either set. Five shared words out of five distinct words give a score of 1.00. This ratio is called <strong>Jaccard similarity</strong>. The sample questions are both non-empty.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def words(question):
+    return set(question.casefold().replace(&quot;?&quot;, &quot;&quot;).split())
+
+
+first = &quot;What fee applies below 5000?&quot;
+second = &quot;What fee applies below 5000?&quot;
+left = words(first)
+right = words(second)
+overlap = len(left &amp; right)
+total = len(left | right)
+similarity = overlap / total
+
+print(&quot;Second question:&quot;, second)
+print(&quot;Shared and distinct:&quot;, overlap, &quot;of&quot;, total)
+print(&quot;Similarity:&quot;, f&quot;{similarity:.2f}&quot;)
+if similarity &gt;= 0.60:
+    print(&quot;REVIEW: similar wording&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Second question: What fee applies below 5000?
+Shared and distinct: 5 of 5
+Similarity: 1.00
+REVIEW: similar wording
+</code></pre></details>
+<p>Both questions use the same words, so they are worth checking for duplication.</p>
+<p><strong>Experiment.</strong> Change only <code>second</code> to <code>&quot;What fee applies above 5000?&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Second question: What fee applies above 5000?
+Shared and distinct: 4 of 6
+Similarity: 0.67
+REVIEW: similar wording
+</code></pre></details>
+<p>“Below” and “above” appear on different sides. Four other words are shared. The score still clears the review threshold, but the expected fee can differ. A sensible next step is to read the source and labels together.</p>
+<p><strong>Checkpoint.</strong> Would you delete the second case? It checks a different condition. Keep both if they are useful, and keep their shared document family from crossing the split.</p>
+<h5>Step 5 — Detect a document family on both sides</h5>
+<p>The first two rows are different questions from the same fee guide. A dictionary maps case IDs to family IDs. A second dictionary records which side each case is on. In <code>for case_id, family in families.items():</code>, the loop reads each key and value together. Add each family to the set for its side. Use <code>sorted()</code> to keep the overlap report in a predictable order.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">families = {&quot;F-01&quot;: &quot;fee-guide&quot;, &quot;F-02&quot;: &quot;fee-guide&quot;, &quot;S-01&quot;: &quot;statements&quot;}
+split = {&quot;F-01&quot;: &quot;development&quot;, &quot;F-02&quot;: &quot;holdout&quot;, &quot;S-01&quot;: &quot;holdout&quot;}
+groups = {&quot;development&quot;: set(), &quot;holdout&quot;: set()}
+
+for case_id, family in families.items():
+    groups[split[case_id]].add(family)
+
+overlap = sorted(groups[&quot;development&quot;] &amp; groups[&quot;holdout&quot;])
+print(&quot;Shared families:&quot;, overlap)
+if overlap:
+    print(&quot;HOLD: split crosses a family&quot;)
+else:
+    print(&quot;PASS: no recorded family overlap&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Shared families: [&#x27;fee-guide&#x27;]
+HOLD: split crosses a family
+</code></pre></details>
+<p>The fee family is present on both sides. A unique case ID for each question did not prevent that overlap.</p>
+<p><strong>Experiment.</strong> In the proposed split only, change F-02 from <code>&quot;holdout&quot;</code> to <code>&quot;development&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Shared families: []
+PASS: no recorded family overlap
+</code></pre></details>
+<p>Both fee questions now stay on the development side, leaving the distinct statements family for the final check. The recorded families are separated, though the holdout may now lack fee coverage. Check coverage before using it to decide release. This edit is suitable for a proposed split, before a holdout is frozen.</p>
+<p><strong>Checkpoint.</strong> Does the pass prove the holdout was unseen? The check only uses the recorded family assignments. Confirm the lineage of near-duplicates and check the access records.</p>
+<h5>Step 6 — Preserve a frozen holdout after exposure</h5>
+<p>Imagine the access log shows someone copied a fee guide from the final check into the tuning notes. Keep the original holdout so you can replay its report. For the next unseen-family check, set aside every row from that guide. In the program, <code>None</code> means no exposure was recorded. The loop uses <code>append()</code> to place each ID in one of two lists. The bracketed expression in the first <code>print</code> gathers the original IDs into a separate list.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">frozen = [(&quot;H-01&quot;, &quot;fee-guide&quot;), (&quot;H-02&quot;, &quot;statements&quot;)]
+exposed_family = None
+eligible = []
+retire = []
+
+for case_id, family in frozen:
+    if family == exposed_family:
+        retire.append(case_id)
+    else:
+        eligible.append(case_id)
+
+print(&quot;Frozen v1 IDs:&quot;, [case_id for case_id, family in frozen])
+print(&quot;Eligible for next check:&quot;, eligible)
+print(&quot;Retire from unseen-family check:&quot;, retire)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Frozen v1 IDs: [&#x27;H-01&#x27;, &#x27;H-02&#x27;]
+Eligible for next check: [&#x27;H-01&#x27;, &#x27;H-02&#x27;]
+Retire from unseen-family check: []
+</code></pre></details>
+<p>The frozen list and the eligible list contain the same IDs. In this toy log, neither family is recorded as exposed. Actual eligibility still depends on the completeness of the access and tuning history.</p>
+<p><strong>Experiment.</strong> Change only <code>exposed_family</code> to <code>&quot;fee-guide&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Frozen v1 IDs: [&#x27;H-01&#x27;, &#x27;H-02&#x27;]
+Eligible for next check: [&#x27;H-02&#x27;]
+Retire from unseen-family check: [&#x27;H-01&#x27;]
+</code></pre></details>
+<p>H-01 still belongs to the original version. It moves out of the next unseen-family check. Find replacement coverage from an unexposed family, review it, and record the retirement reason and replacement in a new manifest.</p>
+<p><strong>Checkpoint.</strong> Can you replay the old evaluation? Yes, using the saved original version. Record the exposure when reporting what that version can still support.</p>
+<h5>Step 7 — Check a draft refresh before using it</h5>
+<p>Use two frozen rows and a reviewed August draft. H-01 and H-03 belong to the same fee-guide family even though their policies have different effective dates. The first row belongs to a separate statements family. The supplied fictional evidence for ST-1#1 is “Monthly statements are available as PDF.” A reviewer checks its expected answer against that excerpt. For H-03, the reviewer uses SV-3#2 and confirms a balance of exactly ₹6,000 equals the new minimum, so no fee applies.</p>
+<p>A function groups the rows and finds problems before printing the new version. The source register maps each reference to its family. <code>continue</code> skips the rest of a row after the split or source check fails. The <code>+</code> operator builds a new list from the frozen rows and the draft. This program reads the old rows without editing them. <code>json.dumps()</code> writes one JSON object at a time, so the case lines are JSON Lines, or JSONL.</p>
+<p>Copy the block into the editor and click <strong>Run</strong>.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+
+def audit(rows, source_families):
+    groups = {&quot;development&quot;: set(), &quot;holdout&quot;: set()}
+    seen = set()
+    errors = []
+    for row in rows:
+        case_id = row[&quot;id&quot;]
+        if case_id in seen:
+            errors.append(&quot;Duplicate ID: &quot; + case_id)
+        seen.add(case_id)
+        side = row[&quot;split&quot;]
+        if side not in groups:
+            errors.append(&quot;Unknown split: &quot; + side)
+            continue
+        family = source_families.get(row[&quot;source&quot;])
+        if family is None:
+            errors.append(&quot;Unknown source: &quot; + row[&quot;source&quot;])
+            continue
+        groups[side].add(family)
+    for family in sorted(groups[&quot;development&quot;] &amp; groups[&quot;holdout&quot;]):
+        errors.append(&quot;Shared family: &quot; + family)
+    return errors
+
+
+sources = {&quot;ST-1#1&quot;: &quot;statements&quot;, &quot;SV-2#2&quot;: &quot;fee-guide&quot;, &quot;SV-3#2&quot;: &quot;fee-guide&quot;}
+frozen = [
+    {&quot;id&quot;: &quot;D-01&quot;, &quot;split&quot;: &quot;development&quot;, &quot;source&quot;: &quot;ST-1#1&quot;,
+     &quot;question&quot;: &quot;What format are monthly statements available in?&quot;, &quot;expected&quot;: &quot;PDF&quot;},
+    {&quot;id&quot;: &quot;H-01&quot;, &quot;split&quot;: &quot;holdout&quot;, &quot;source&quot;: &quot;SV-2#2&quot;,
+     &quot;question&quot;: &quot;Is a fee due at 5000 on July 15, 2026?&quot;, &quot;expected&quot;: &quot;NO_FEE&quot;},
+]
+candidate = {
+    &quot;id&quot;: &quot;H-03&quot;, &quot;split&quot;: &quot;holdout&quot;, &quot;source&quot;: &quot;SV-3#2&quot;,
+    &quot;question&quot;: &quot;Is a fee due at 6000 on August 1, 2026?&quot;, &quot;expected&quot;: &quot;NO_FEE&quot;,
+}
+proposed = frozen + [candidate]
+
+print(&quot;Frozen v1 rows:&quot;, len(frozen))
+errors = audit(proposed, sources)
+if errors:
+    for error in errors:
+        print(error)
+    print(&quot;HOLD: do not use draft split&quot;)
+else:
+    manifest = {
+        &quot;version&quot;: &quot;fees-v2-draft&quot;, &quot;parent&quot;: &quot;fees-v1&quot;,
+        &quot;added&quot;: [candidate[&quot;id&quot;]], &quot;holdout_access&quot;: &quot;reviewer-only&quot;,
+        &quot;scope&quot;: &quot;July history and August review reported separately&quot;,
+    }
+    print(&quot;Manifest:&quot;, json.dumps(manifest))
+    for row in proposed:
+        print(json.dumps(row))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Frozen v1 rows: 2
+Manifest: {&quot;version&quot;: &quot;fees-v2-draft&quot;, &quot;parent&quot;: &quot;fees-v1&quot;, &quot;added&quot;: [&quot;H-03&quot;], &quot;holdout_access&quot;: &quot;reviewer-only&quot;, &quot;scope&quot;: &quot;July history and August review reported separately&quot;}
+{&quot;id&quot;: &quot;D-01&quot;, &quot;split&quot;: &quot;development&quot;, &quot;source&quot;: &quot;ST-1#1&quot;, &quot;question&quot;: &quot;What format are monthly statements available in?&quot;, &quot;expected&quot;: &quot;PDF&quot;}
+{&quot;id&quot;: &quot;H-01&quot;, &quot;split&quot;: &quot;holdout&quot;, &quot;source&quot;: &quot;SV-2#2&quot;, &quot;question&quot;: &quot;Is a fee due at 5000 on July 15, 2026?&quot;, &quot;expected&quot;: &quot;NO_FEE&quot;}
+{&quot;id&quot;: &quot;H-03&quot;, &quot;split&quot;: &quot;holdout&quot;, &quot;source&quot;: &quot;SV-3#2&quot;, &quot;question&quot;: &quot;Is a fee due at 6000 on August 1, 2026?&quot;, &quot;expected&quot;: &quot;NO_FEE&quot;}
+</code></pre></details>
+<p>The printed manifest names the parent and the new row. The old July case stays in the historical coverage, and the draft adds August to the reviewer-only split. The manifest records the intended access rule. An actual system has to enforce it.</p>
+<p><strong>Experiment.</strong> In <code>candidate</code> only, change <code>&quot;split&quot;: &quot;holdout&quot;</code> to <code>&quot;split&quot;: &quot;development&quot;</code>. Run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Frozen v1 rows: 2
+Shared family: fee-guide
+HOLD: do not use draft split
+</code></pre></details>
+<p>The August source belongs to the same family as the July holdout row. The split check blocks the draft before it prints a manifest. Keep the family on one side. Prepare unrelated development examples or reserve a fresh, unexposed family for a future check.</p>
+<p><strong>Checkpoint.</strong> Could this audit check the correctness of every label? It checks IDs, split names, recorded sources, and family separation. Reviewers still need to check the labels and confirm that the recorded sources and access history are accurate.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Choose a sample for the decision</h5>
+<p>The bank has a target mix of eight ordinary questions and two cutoff questions. You have room for five cases. Plan a sample that matches the mix by question type. Your teammate suggests using the first five rows of the ordered queue from Step 1. What would their sample miss, and how would you choose cases within each group?</p>
+<h5>Practice 2. Explain different scores for the same assistant</h5>
+<p>Use the new assistant’s group rates from Example 1. Calculate the expected score under an eight-slot stress mix with four ordinary and four cutoff slots. A report compares that stress score with the nine of ten everyday score and says the assistant got worse. Explain the mistake.</p>
+<h5>Practice 3. Repair a split before and after exposure</h5>
+<p>F-01 and F-02 come from one fee-guide family. F-01 is in development and F-02 is in holdout. S-01 comes from a separate statements family. Explain a valid proposed split that keeps the fee cases in holdout. Then explain what to do if a developer already used F-01 to tune the assistant.</p>
+<h5>Practice 4. Plan a refresh without rewriting the past</h5>
+<p>A frozen July question asks about a balance of ₹5,999. Add a case with the same balance for August 1. Tell a teammate where the two expected answers come from, which scope each case belongs to, and what should go in the manifest. Explain what developers should get to practise the new policy.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Use four ordinary cases and one cutoff case. Four of five is 80% and one of five is 20%. The first five rows are all ordinary because the queue is ordered by type. Select from within each group without looking at its verdict, for example with a saved random selection. Report the group mix and note the other characteristics you haven’t checked.</p>
+<h5>Solution 2</h5>
+<p>All ordinary slots are expected to pass, so four slots contribute four. Half of the four cutoff slots are expected to pass, so they contribute two more. Six of eight is 75%. The nine of ten everyday score gives the stronger group eight slots instead of four. The different weights are enough to explain the two numbers. Compare assistants under the same mix and report the stress result separately.</p>
+<h5>Solution 3</h5>
+<p>In a proposed split, move F-01 to holdout with F-02 and keep S-01 in development. The two families are separated. If F-01 already influenced tuning, moving its row cannot make the family unseen. Record the exposure, preserve the old split for replay, and reserve another unexposed family for a new holdout. Check whether the replacement still covers the fee risk.</p>
+<h5>Solution 4</h5>
+<p>Under SV-2#2, ₹5,999 is above ₹5,000, so no fee applies in July. Under SV-3#2, ₹5,999 is below ₹6,000, so ₹120 per month applies in August. Retain July in the historical evaluation. Add a dated August case in a new version and record its source, reviewed label, parent version, access scope, and why coverage changed. Give developers cases from separate families for this unseen-family check. If they tune on the August guide, reserve a different family before making an unseen-family claim. Use dated scores when reporting the refresh.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>A review pulls five questions from an ordered queue and none are about the cutoff. What can you conclude?</li><li>Two assistants both pass nine out of ten. One fails a cutoff question the other passes. What evidence should you ask for before release?</li><li>Your report says a stress set passes six of eight. Why can’t you use 75% as the everyday score?</li><li>Two questions share only one changed word, “below” versus “above.” How should a duplicate check handle them?</li><li>A holdout and development set have no exactly equal strings. What other check can reveal related examples?</li><li>A team already tuned on a source family that it later moves into holdout. What claim must it give up about those examples?</li><li>A policy changes and an old benchmark row asks explicitly about July. How should you handle that row?</li><li>The split audit passes for a new version. What evidence would you still need before trusting a release score?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>You can describe the five reviewed cases. You have no cutoff observations. Check the sampling method and add the coverage needed for the decision.</li><li>Ask for the group counts and read the cutoff failure against the policy. The unchanged total can hide a loss in the affected group.</li><li>The stress set gives cutoff cases more weight than ordinary traffic does. Report its score for the stress purpose or use appropriate traffic weights and defensible group estimates.</li><li>Flag the pair and review the full questions, sources, and labels. The changed word can change the answer, so preserving both may be useful. Keep related cases within one side of the split.</li><li>Check for paraphrases and shared documents or derivation history. Compare recorded source-family IDs across the two sides.</li><li>It can no longer call the family unseen for that comparison. Preserve the earlier reports, record the exposure, and plan a fresh final check.</li><li>Keep the old version and the July label for historical testing. If the current policy report retires that case, record the retirement and review the new August case separately.</li><li>Confirm source and group assignments, check for near-duplicates and access or tuning history, and verify labels and coverage. The audit applies to the fields it was given.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>You’re preparing the August refresh. Use the Step 7 program. Keep the frozen July and statements rows unchanged. For the valid variant, collect the manifest separately from the three JSONL case lines in your notes. Include the split for each row and a short review note citing the August rule and showing how you verified the label.</p>
+<ol><li>In a fresh copy, change only the draft case’s <code>source</code> to <code>&quot;SV-X#2&quot;</code>. Run the program. Decide whether anyone should use the resulting split and identify the evidence you would request.</li><li>In a fresh copy of the original block, replace the draft H-03 with a new holdout case, H-04. Use source SV-3#2 and the question “What fee is due at 5999 on August 1, 2026?” Before typing <code>FEE_120</code> as the expected label, write down why <code>NO_FEE</code> would be right for that balance in July and wrong in August. Keep the two frozen rows in place and run the code. Check that the manifest adds only H-04.</li><li>Explain which resources developers can see, which cases the reviewers should keep reserved, and how you would report July and August results. Name a condition that would make you retire a case from an unseen evaluation.</li></ol>
+<h5>Check your assignment</h5>
+<p>The first run prints these lines.</p>
+<ol><li><code>Frozen v1 rows: 2</code></li><li><code>Unknown source: SV-X#2</code></li><li><code>HOLD: do not use draft split</code></li></ol>
+<p>You can’t trace the case to the recorded source register. Obtain the approved August policy and verify its applicability before trying again.</p>
+<p>The second run prints these lines.</p>
+<ol><li><code>Frozen v1 rows: 2</code></li><li><code>Manifest: {&quot;version&quot;: &quot;fees-v2-draft&quot;, &quot;parent&quot;: &quot;fees-v1&quot;, &quot;added&quot;: [&quot;H-04&quot;], &quot;holdout_access&quot;: &quot;reviewer-only&quot;, &quot;scope&quot;: &quot;July history and August review reported separately&quot;}</code></li><li><code>{&quot;id&quot;: &quot;D-01&quot;, &quot;split&quot;: &quot;development&quot;, &quot;source&quot;: &quot;ST-1#1&quot;, &quot;question&quot;: &quot;What format are monthly statements available in?&quot;, &quot;expected&quot;: &quot;PDF&quot;}</code></li><li><code>{&quot;id&quot;: &quot;H-01&quot;, &quot;split&quot;: &quot;holdout&quot;, &quot;source&quot;: &quot;SV-2#2&quot;, &quot;question&quot;: &quot;Is a fee due at 5000 on July 15, 2026?&quot;, &quot;expected&quot;: &quot;NO_FEE&quot;}</code></li><li><code>{&quot;id&quot;: &quot;H-04&quot;, &quot;split&quot;: &quot;holdout&quot;, &quot;source&quot;: &quot;SV-3#2&quot;, &quot;question&quot;: &quot;What fee is due at 5999 on August 1, 2026?&quot;, &quot;expected&quot;: &quot;FEE_120&quot;}</code></li></ol>
+<p>The new label follows from SV-3#2. ₹5,999 is one below ₹6,000, so the monthly fee is ₹120. Both fee versions stay in one family on the holdout side. For this unseen-family check, give developers cases from other families and keep the reserved guide, prompts, and labels within the review boundary. Report the July history and August results separately. If the team tunes on a reserved family, record the exposure and retire that family from the next unseen check. The printed draft is a reproducible fixture. A real release needs reviewed sources, coverage, and actual access control.</p>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Treating a convenient sample as typical.</strong> Record the question mix and how you selected within groups.</li><li><strong>Comparing aggregate scores under different weights.</strong> Compare like with like and show the difficult group.</li><li><strong>Removing near-duplicates by score alone.</strong> Read the full meaning and evidence before merging or grouping.</li><li><strong>Reshuffling an exposed family.</strong> Save the exposure history and reserve truly unexposed material.</li><li><strong>Updating a frozen set in place.</strong> Preserve the previous benchmark and explain the refresh or retirement in a new version.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>Select the everyday check and stress check to answer different questions. Inspect group scores and the case sources. Keep related examples together and preserve the final review boundary. When a source changes or a family is exposed, preserve the old evidence and record the decision in a new version.</p>
+<p>The next topic in the complete curriculum is <a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a>. In Quick Learning, use <strong>Next Lesson</strong> to follow your path’s sequence.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Split cases by document family, detect near-duplicates, and compare representative coverage with policy-weighted stress coverage.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02, P04 and P06 to group cases and compute coverage.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Explain how to handle a new policy release without exposing or silently changing the holdout.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
