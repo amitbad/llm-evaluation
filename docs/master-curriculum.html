@@ -6784,34 +6784,410 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m05-t01">
-  <p class="lesson-intro" data-lesson-search>Surface overlap offers a useful baseline for bounded tasks and can penalize correct paraphrases.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Token precision/recall/F1, n-grams, BLEU brevity and smoothing, sentence versus corpus BLEU, ROUGE-N and ROUGE-L, multiple references and optional chrF.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Count repeated words fairly and use the counts to explain token precision, recall, and F1.</li><li>Compare overlap of single words, neighboring words, and words that stay in order across gaps.</li><li>Explain how BLEU handles short replies and why a score over a set differs from an average of reply scores.</li><li>Use several approved phrasings, identify the scale of each metric, and spot a wrong summary that earns a high score.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>You check your balance before payday. It is ₹5,500, and you want to know whether Harbor Leaf Bank will charge its monthly savings fee. One draft says you’ll pay below ₹6,000. Another says you’ll pay below ₹5,000. At your balance, the two drafts give you opposite answers. Before putting either draft on the help page, the bank needs to see which one follows the July rule.</p>
+<p>The bank and replies are fictional. Read the approved summary first: “monthly fee applies below 5000.” Now compare “monthly fee applies below 6000” and “balances under 5000 incur a monthly charge.” The first shares four words with the approved line. The second shares only two. If you ranked them by the number of matching words, which would win? Keep that ranking beside your own reading of the policy. We&#x27;ll work out why they disagree.</p>
+<p>From <a href="#m02-t02">Ground truth, references and benchmarks</a>, bring the habit of checking an answer against approved evidence. <a href="#m03-t01">Exact match, normalization and rules</a> is a useful refresher on writing checks with clear rules. Here the approved rule is the July savings policy, SV-2#2. Amounts are in rupees, and the task is only to describe when the monthly fee applies.</p>
+<h4>Beginner Explanation</h4>
+<h5>Count what the two lines share</h5>
+<p>Put the approved line above the draft “fee fee applies.” Cross off the first “fee” in each line. When you reach the draft’s second “fee,” there’s no uncrossed “fee” left on the approved line. Cross off “applies” in both lines and you have two matches. That limit on how often a repeated word can count is called clipping.</p>
+<p>The bank has written a short line that is acceptable under the approved policy. That line is the reference. The reply we want to score is the candidate. In this lesson every piece between spaces is a token. That&#x27;s a convenient way of splitting these lowercase examples. A shared scoring tool might split punctuation differently, so record how you split the text when comparing scores.</p>
+<p>Now look at “monthly fee applies.” All three of its tokens appear in the five-token reference. Token precision is the fraction of candidate tokens that match, so precision is 3 ÷ 3 = 1. Token recall is the fraction of reference tokens recovered, so recall is 3 ÷ 5 = 0.60. The reply gets full precision even though it leaves out the condition customers need.</p>
+<p>F1 balances those two fractions. With the same clipped match count on both sides, double the three matches and divide by the total length of the two lines: 6 ÷ (3 + 5) = 0.75. This is the usual F1 calculation written using counts. That 0.75 is a text overlap score. It gives no special weight to the missing cutoff. Keep both precision and recall visible during review. A reply that contains every approved word and three extra words also gets a similar F1, 10 ÷ 13 ≈ 0.77. You’d investigate the missing condition in the first case and the added wording in the second.</p>
+<h5>Compare neighbors and words in order</h5>
+<p>Try a draft that puts the first two words in the opposite order, “fee monthly applies below 5000.” You still have all five words, but “monthly fee” is gone as a pair. Count one word at a time and you get all five matches. Slide a two-word window along each line and you find only two shared pairs, “applies below” and “below 5000.” A neighboring run of <code>n</code> tokens is an n-gram. A one-token run is a unigram and a two-token run is a bigram.</p>
+<p>ROUGE-N compares n-gram overlap against a reference. For instance ROUGE-2 counts bigrams. Reports can include precision, recall, and F1, so write down which one you used. Both lines above contain four pairs, and two match. The ROUGE-2 precision and recall are each 2 ÷ 4, so the F1 is 0.50. ROUGE-1 F1 is still 1.00. Original ROUGE paper</p>
+<p>Try removing “applies” instead. The line “monthly fee below 5000” shares four words that stay in the same order, even though the reference has a gap between “fee” and “below.” The longest list you can trace in both lines while preserving order is the longest common subsequence. ROUGE-L uses its length. Here its F1 is 2 × 4 ÷ (4 + 5) = 0.889. The gap is allowed, but reversing the line would prevent those same four words from all staying in order. When shared wording matters, the two methods tell you different things about the change. Original ROUGE paper</p>
+<h5>Ask whether a reply got a high score by saying very little</h5>
+<p>“Monthly fee” has perfect one-word and two-word precision against the reference. It could earn full credit if you only considered the words it used. Yet a customer still wouldn&#x27;t know when they pay. BLEU measures clipped n-gram precision across several lengths and reduces the score when the candidate is too short compared with the reference. This multiplier is the brevity penalty. If the candidate is two tokens and the reference is five, the multiplier is about 0.22. With perfect precision for the lengths we count, a teaching BLEU-2 score on a 0–100 scale falls from 100 to about 22.</p>
+<p>For BLEU-2, multiply the one-word precision by the two-word precision and take the square root. For example, with 0.80 and 0.75, multiply to get 0.60, then take the square root to get about 0.775. This is the geometric mean. BLEU-4 does the same with four precisions and a fourth root. Multiply by the brevity penalty, then by 100 for the scale used in this chapter.</p>
+<p>A sentence can share several individual words and still share zero pairs. The product then becomes zero. Some settings use a small substitute for an observed zero precision to make short sentences easier to compare. This is smoothing. The first missing order under the library setting used here counts as half a match for calculation purposes. The next missing order counts as a quarter. Keep the raw count visible so nobody mistakes a substitute for a match that occurred. Original BLEU paper · SacreBLEU implementation</p>
+<p>If you score two replies separately, then average their scores, each reply gets equal weight. Corpus BLEU, calculated over the whole set, adds match counts and possible counts first. It uses the total candidate and reference lengths for the brevity penalty. A five-word reply can contribute more possible pairs than a two-word reply. Record whether you used corpus BLEU or the mean of sentence BLEU before comparing reports.</p>
+<h5>Allow more than one acceptable wording</h5>
+<p>Ask two policy reviewers to write a short summary independently. If both summaries preserve the same rule, you can approve both and keep them with the benchmark. With multiple references, BLEU clips each n-gram against the largest count seen in any one reference and uses the closest reference length, preferring the shorter length on a tie. In <code>rouge-score</code>, the multiple-reference operation selects the best F1 separately for each requested metric. Our token F1 report similarly takes the best score against an individual approved line. Joining the approved lines into one long reference would describe a different scoring task. SacreBLEU implementation · Google Research rouge-score</p>
+<p>If you need to compare close spellings or forms of the same word, you can also count neighboring characters. For “fee,” the two-character pieces are “fe” and “ee.” “Fees” adds “es” while keeping both pieces. chrF is an optional metric that compares character runs of several lengths using precision and recall. It can give partial credit where whole words differ. Similar spellings can still express different facts. Original chrF paper</p>
+<p>Freeze the input, references, scoring options and implementation version before comparing two releases. When a review adds new acceptable wording, record that as a new reference version and rescore both releases with it. If both of the assistant’s replies are unchanged, a higher score after that edit tells you the scoring rule changed. To see whether a new assistant improved, first score both versions against the same approved references, then review the replies against the policy.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. A reply that leaves out the condition</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>When does the Standard Savings monthly fee apply?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The July policy says “monthly fee applies below 5000.”</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The fictional saved reply is “monthly fee applies.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>First write down the three matching words. All three candidate words match, giving 3 ÷ 3 = 1.00 precision. Only three of the five reference words match, giving 3 ÷ 5 = 0.60 recall. F1 is 6 ÷ 8 = 0.75. Read the reply as a customer and try to decide whether a balance of 4900 incurs the fee. The reply does not give you enough information.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Mark the reply incomplete based on the policy question. Use the recall result to flag it for inspection. A low recall score alone would also flag some valid paraphrases, so use the policy itself to decide which information is missing.</span></p>
+<h5>Example 2. Same words, different order</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Write a clean one-line summary of the July fee trigger.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>“monthly fee applies below 5000.”</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The fictional saved reply is “fee monthly applies below 5000.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Underline the matching words first. All five match. Next list the four candidate pairs: “fee monthly,” “monthly applies,” “applies below,” and “below 5000.” Only the last two appear as pairs in the reference. That gives ROUGE-2 F1 of 0.50. You can keep “monthly applies below 5000” in order in both lines, so the longest common subsequence has four tokens. ROUGE-L F1 is 8 ÷ 10 = 0.80.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Send the line back for a wording edit. The awkward order broke two pairs, but you can still read the cutoff as 5000. If a second draft scored just as low, you would still read it against the policy before deciding whether to fix its wording or correct a factual error.</span></p>
+<h5>Example 3. The scoring winner gets the policy wrong</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Summarize when a Standard Savings customer pays the monthly fee.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Keep the July rule fixed: “monthly fee applies below 5000.” The approved evidence says an exact balance of 5000 does not trigger the fee.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Two fictional saved replies are A, “balances under 5000 incur a monthly charge,” and B, “monthly fee applies below 6000.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Score both against the same approved line. A shares two tokens, giving F1 of 4 ÷ 12 = 0.3333. B shares four and gives 8 ÷ 10 = 0.8000. B also leads on bigram and in-order overlap. Now test the claim at a balance of 5500. B says a fee applies there. The July rule says it does not. A preserves the correct rule.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Record a wrong cutoff for B. Accept A on the supplied policy criterion and keep B as a case to inspect whenever a scoring rule changes. The evidence covers these two examples. It does not tell you how often the assistant gets the policy wrong.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Copy Code on each program, open the Python editor beside it, paste the entire program into the editor, and select Run. Compare the result with the lesson before making the experiment&#x27;s one change. Start from a fresh copy of the code for each activity. The replies and reviewer decisions are fictional, and all inputs are included in the programs. The programs compare text and report saved labels. They never call a model.</p>
+</div></details>
+<h5>Step 1 — Count repeated words fairly</h5>
+<p>Check how often a reply repeats “fee.” <code>split()</code> turns each line into a list of words. <code>Counter</code> (included with Python) counts how many times each word occurs. Putting <code>&amp;</code> between two counters keeps the smaller count for each shared word. <code>values()</code> gets just the counts, and <code>sum()</code> adds them. The <code>from ... import ...</code> line makes <code>Counter</code> available in this program.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from collections import Counter
+
+reference = &quot;monthly fee applies below 5000&quot;
+candidate = &quot;fee fee applies&quot;
+counts = Counter(candidate.split()) &amp; Counter(reference.split())
+
+print(&quot;Matched:&quot;, sum(counts.values()))
+print(&quot;Candidate tokens:&quot;, len(candidate.split()))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Matched: 2
+Candidate tokens: 3
+</code></pre></details>
+<p>The reference gives credit for one “fee” and for “applies.” <strong>Experiment.</strong> Set <code>candidate = &quot;monthly fee applies&quot;</code> and run again.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Matched: 3
+Candidate tokens: 3
+</code></pre></details>
+<p>“Monthly” earns the match the repeat could never earn, without changing candidate length. <strong>Checkpoint.</strong> Would a third “fee” earn another match? No, the reference has only one copy. When an overlap report rewards repetition, inspect its clipping rule before trusting it.</p>
+<h5>Step 2 — Find what a short reply leaves out</h5>
+<p>Measure the short reply from Example 1. <code>len()</code> counts the words on each side. <code>/</code> divides. The <code>:.2f</code> inside an <code>f&quot;...&quot;</code> print string shows the value inside braces with two digits after the decimal point.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from collections import Counter
+
+reference = &quot;monthly fee applies below 5000&quot;.split()
+candidate = &quot;monthly fee applies&quot;.split()
+matched = sum((Counter(candidate) &amp; Counter(reference)).values())
+
+print(f&quot;Precision: {matched / len(candidate):.2f}&quot;)
+print(f&quot;Recall: {matched / len(reference):.2f}&quot;)
+print(f&quot;F1: {2 * matched / (len(candidate) + len(reference)):.2f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Precision: 1.00
+Recall: 0.60
+F1: 0.75
+</code></pre></details>
+<p><strong>Experiment.</strong> Replace the candidate text inside the quotes with <code>monthly fee applies below 5000</code>. Keep the <code>.split()</code> and the reference as they are.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Precision: 1.00
+Recall: 1.00
+F1: 1.00
+</code></pre></details>
+<p>The same three words still match, and both added words match. The number of reference words stays five, so recall rises to five out of five. <strong>Checkpoint.</strong> Why did precision stay at 1.00? Before and after your edit, every word the candidate used was in the reference. Inspect missing policy conditions when precision is high and recall is low. Check the wording first when you see paraphrases.</p>
+<h5>Step 3 — Compare neighboring words</h5>
+<p>Score Example 2 by sliding a window along the words. <code>words[start:start + size]</code> takes the words from <code>start</code> up to the position before <code>start + size</code>. <code>range(len(words) - size + 1)</code> gives every starting position where a full window fits. <code>tuple()</code> makes an ordered group that a <code>Counter</code> can use as a key. In the loop, <code>sequence</code> takes the values 1 and 2 in turn. <code>def</code> gives the window-counting steps the name <code>runs</code>, and <code>return</code> passes the finished count back. <code>counts[group] += 1</code> adds one for the current window.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from collections import Counter
+
+def runs(words, size):
+    counts = Counter()
+    for start in range(len(words) - size + 1):
+        group = tuple(words[start:start + size])
+        counts[group] += 1
+    return counts
+
+reference = &quot;monthly fee applies below 5000&quot;.split()
+candidate = &quot;fee monthly applies below 5000&quot;.split()
+for sequence in (1, 2):
+    expected = runs(reference, sequence)
+    actual = runs(candidate, sequence)
+    matched = sum((actual &amp; expected).values())
+    total = sum(actual.values()) + sum(expected.values())
+    print(f&quot;ROUGE-{sequence} F1: {2 * matched / total:.2f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">ROUGE-1 F1: 1.00
+ROUGE-2 F1: 0.50
+</code></pre></details>
+<p><strong>Experiment.</strong> Change just the candidate to <code>monthly fee applies below 5000</code>, keeping <code>.split()</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">ROUGE-1 F1: 1.00
+ROUGE-2 F1: 1.00
+</code></pre></details>
+<p>The swap never changed the word counts. Fixing the order gives back the missing pairs “monthly fee” and “fee applies.” <strong>Checkpoint.</strong> Which score would an evaluator use to notice this swap? ROUGE-2 sees it. Use a separate readability review before deciding what the swap means for a customer.</p>
+<h5>Step 4 — Keep words in order across a gap</h5>
+<p>Follow “monthly” with your finger in both lines. In “monthly fee” the next word is “fee.” In “monthly below fee” you have to move past “below” to reach it. Your fingers moved forward in both lines, so the shared sequence still has two words. The program keeps track of how far that kind of match has gone as it reads longer beginnings of each line.</p>
+<p>In the function, one row of numbers records the best length so far for each beginning of <code>right</code>. <code>enumerate(right, 1)</code> supplies each word and its position starting at one. A matching word extends the answer for the two shorter beginnings by one, using <code>previous[j - 1]</code>. If words differ, <code>max()</code> chooses the better result from dropping one end word or the other. <code>current[-1]</code> means the last count built for this row, and <code>append()</code> adds a new count to it.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def shared_order(left, right):
+    previous = [0] * (len(right) + 1)
+    for word in left:
+        current = [0]
+        for j, other in enumerate(right, 1):
+            if word == other:
+                length = previous[j - 1] + 1
+            else:
+                length = max(previous[j], current[-1])
+            current.append(length)
+        previous = current
+    return previous[-1]
+
+reference = &quot;monthly fee applies below 5000&quot;.split()
+candidate = &quot;monthly fee below 5000&quot;.split()
+length = shared_order(candidate, reference)
+print(&quot;Shared in order:&quot;, length)
+print(f&quot;ROUGE-L F1: {2 * length / (len(candidate) + len(reference)):.4f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Shared in order: 4
+ROUGE-L F1: 0.8889
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only the candidate text to <code>5000 below fee monthly</code>. The words are the same as before.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Shared in order: 1
+ROUGE-L F1: 0.2222
+</code></pre></details>
+<p>The original four words can all be traced in order if you step over “applies.” After reversing them, any one word can match, but no pair stays in order. <strong>Checkpoint.</strong> Would token F1 change? No. The same four words still appear once each. A low ROUGE-L tells you that shared words moved or disappeared. Read the reply before attributing a meaning change.</p>
+<h5>Step 5 — See how BLEU treats short and unusual replies</h5>
+<p>Try a reply with four of the five reference words and no matching pairs. The scoring example uses up to two words at a time, so this is BLEU-2. <code>zip(words, words[1:])</code> lines up each word with its next neighbor. <code>sqrt()</code> takes a square root. <code>exp(x)</code> raises a fixed mathematical number, about 2.718, to the power <code>x</code>. For a short reply, the multiplier is <code>exp(1 - reference length / candidate length)</code>. With four versus five words, its input is −0.25, giving about 0.7788. Replies at least as long as the reference use a multiplier of 1. In the code, <code>min(0, ...)</code> keeps that exponent at or below zero. The <code>if</code> line changes the pair count used in the calculation only when smoothing is on and there were zero shared pairs.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from collections import Counter
+from math import exp, sqrt
+
+reference = &quot;monthly fee applies below 5000&quot;.split()
+candidate = &quot;fee monthly below applies&quot;.split()
+use_smoothing = False
+
+one = sum((Counter(candidate) &amp; Counter(reference)).values())
+pairs = Counter(zip(candidate, candidate[1:]))
+ref_pairs = Counter(zip(reference, reference[1:]))
+two = sum((pairs &amp; ref_pairs).values())
+pair_count = sum(pairs.values())
+adjusted = two
+if use_smoothing and two == 0:
+    adjusted = 0.5
+penalty = exp(min(0, 1 - len(reference) / len(candidate)))
+score = 100 * penalty * sqrt((one / len(candidate)) * (adjusted / pair_count))
+print(f&quot;Word matches: {one}/{len(candidate)}&quot;)
+print(f&quot;Pair matches: {two}/{pair_count}&quot;)
+print(f&quot;Brevity multiplier: {penalty:.4f}&quot;)
+print(f&quot;BLEU-2: {score:.2f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Word matches: 4/4
+Pair matches: 0/3
+Brevity multiplier: 0.7788
+BLEU-2: 0.00
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>use_smoothing = False</code> to <code>use_smoothing = True</code>. Keep the two lines of text fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Word matches: 4/4
+Pair matches: 0/3
+Brevity multiplier: 0.7788
+BLEU-2: 31.79
+</code></pre></details>
+<p>The score was zero because the two-word precision was zero. With smoothing, the calculation uses 0.5 ÷ 3 in its place. The square root is now about 0.4082 and multiplying by 0.7788 and 100 gives about 31.79. <strong>Checkpoint.</strong> Did this change create a matching pair? No, the counts were unchanged. When a score moves after a settings change, rerun both candidates with one shared setting before comparing them.</p>
+<h5>Step 6 — Score a set instead of averaging replies</h5>
+<p>Score a short reply and a longer reply separately, then score the same pair as a collection. <code>stats()</code> returns five values in a fixed order. The names on the left of <code>=</code> receive those values in that same order. When a score is calculated for the whole collection, <code>sum(row[i] for row in rows)</code> adds the same field from every row. <code>score(*totals)</code> passes the five values from <code>totals</code> as five inputs to <code>score</code>. <code>+=</code> adds a number to a running total. The expression in square brackets repeats the sum once per field. <code>rows[0]</code> is the first row, which tells Python how many fields to add.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from collections import Counter
+from math import exp, sqrt
+
+def stats(candidate, reference):
+    words = sum((Counter(candidate) &amp; Counter(reference)).values())
+    pairs = Counter(zip(candidate, candidate[1:]))
+    ref_pairs = Counter(zip(reference, reference[1:]))
+    pair_matches = sum((pairs &amp; ref_pairs).values())
+    return len(candidate), len(reference), words, pair_matches, sum(pairs.values())
+
+def score(length, ref_length, words, pair_matches, pairs):
+    penalty = exp(min(0, 1 - ref_length / length))
+    return 100 * penalty * sqrt((words / length) * (pair_matches / pairs))
+
+reference = &quot;monthly fee applies below 5000&quot;.split()
+candidates = [&quot;monthly fee&quot;, &quot;monthly fee applies below 6000&quot;]
+rows = []
+score_sum = 0
+for number, text in enumerate(candidates, 1):
+    row = stats(text.split(), reference)
+    rows.append(row)
+    value = score(*row)
+    score_sum += value
+    print(f&quot;Reply {number}: {value:.2f}&quot;)
+
+totals = [sum(row[i] for row in rows) for i in range(len(rows[0]))]
+print(f&quot;Mean of reply scores: {score_sum / len(rows):.2f}&quot;)
+print(f&quot;Collection score: {score(*totals):.2f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply 1: 22.31
+Reply 2: 77.46
+Mean of reply scores: 49.89
+Collection score: 53.94
+</code></pre></details>
+<p><strong>Experiment.</strong> In <code>candidates</code>, change <code>monthly fee applies below 6000</code> to <code>monthly fee applies below 5000</code>. Leave the first reply as it is.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply 1: 22.31
+Reply 2: 100.00
+Mean of reply scores: 61.16
+Collection score: 65.14
+</code></pre></details>
+<p>In the first run, the collection has six matching words out of seven and four matching pairs out of five. Its length multiplier uses seven candidate words and ten reference words. In the second run, the longer reply gains a word match and a pair match. It keeps its length, so the multiplier stays the same. <strong>Checkpoint.</strong> Why did the collection&#x27;s score differ from the average? The collection combines counts and lengths before applying the score. Confirm which calculation a report used before investigating a difference between reports. Both calculations can hide a wrong cutoff in a single reply.</p>
+<h5>Step 7 — Compare two replies against approved wording</h5>
+<p>Put the measurements beside a reviewer&#x27;s policy verdict. The programs above count shared words and runs. This one uses those same operations and also reads a label supplied by a reviewer who checked the cutoff independently. Both replies and labels are fictional. Both starting examples have enough words to count up to four at a time. The assignment also tries a shorter reply. The BLEU calculation follows the library settings described below for these inputs, and the ROUGE calculations report F1.</p>
+<p><code>Counter()</code> starts an empty count. <code>caps |= runs(reference, size)</code> keeps the largest count for each run across the approved references. <code>min(..., key=...)</code> chooses a length by the rule supplied in <code>key</code>. The <code>lambda</code> is a short, unnamed function. It returns two numbers to compare in order. The first is the distance from the candidate’s length, which <code>abs()</code> makes positive or zero. The second is the length itself, so a tie goes to the shorter one. <code>prod()</code> multiplies the precisions, and <code>**</code> raises the product to the power that gives the requested root. Four precisions give a power of one-quarter. <code>smoothing *= 2</code> doubles the divisor at each missing order. The loop returns zero if even the single words have no matches. In the print string, <code>:g</code> drops unnecessary decimal zeros, and <code>.4f</code> prints four decimal places.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from collections import Counter
+from math import exp, prod
+
+def runs(words, size):
+    return Counter(tuple(words[i:i + size])
+                   for i in range(len(words) - size + 1))
+
+def run_f1(candidate, reference, size):
+    actual = runs(candidate, size)
+    expected = runs(reference, size)
+    matched = sum((actual &amp; expected).values())
+    return 2 * matched / (sum(actual.values()) + sum(expected.values()))
+
+def ordered_f1(candidate, reference):
+    row = [0] * (len(reference) + 1)
+    for word in candidate:
+        next_row = [0]
+        for j, other in enumerate(reference, 1):
+            if word == other:
+                next_row.append(row[j - 1] + 1)
+            else:
+                next_row.append(max(row[j], next_row[-1]))
+        row = next_row
+    return 2 * row[-1] / (len(candidate) + len(reference))
+
+def bleu4(candidate, references):
+    length = len(candidate)
+    lengths = [len(reference) for reference in references]
+    closest = min(lengths, key=lambda size: (abs(size - length), size))
+    multiplier = exp(min(0, 1 - closest / length))
+    smoothing = 1
+    precisions = []
+    for size in range(1, min(4, length) + 1):
+        actual = runs(candidate, size)
+        caps = Counter()
+        for reference in references:
+            caps |= runs(reference, size)
+        matches = sum((actual &amp; caps).values())
+        if matches == 0 and size == 1:
+            return 0.0
+        if matches == 0:
+            smoothing *= 2
+            matches = 1 / smoothing
+        precisions.append(matches / sum(actual.values()))
+    return 100 * multiplier * prod(precisions) ** (1 / len(precisions))
+
+first = &quot;monthly fee applies below 5000&quot;.split()
+second = &quot;balances under 5000 incur a monthly charge&quot;.split()
+use_second_reference = False
+references = [first]
+if use_second_reference:
+    references.append(second)
+
+replies = [
+    (&quot;A&quot;, &quot;balances under 5000 incur a monthly charge&quot;, &quot;CORRECT&quot;),
+    (&quot;B&quot;, &quot;monthly fee applies below 6000&quot;, &quot;WRONG CUTOFF&quot;),
+]
+print(&quot;Approved wordings:&quot;, len(references))
+for name, text, policy_label in replies:
+    candidate = text.split()
+    token = max(run_f1(candidate, ref, 1) for ref in references)
+    rouge2 = max(run_f1(candidate, ref, 2) for ref in references)
+    rouge_l = max(ordered_f1(candidate, ref) for ref in references)
+    bleu = bleu4(candidate, references)
+    print(f&quot;{name} | token F1 {token:.4f} | BLEU {bleu:.4f}&quot;)
+    print(f&quot;  ROUGE-2 {rouge2:.4f} | ROUGE-L {rouge_l:.4f} | {policy_label}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Approved wordings: 1
+A | token F1 0.3333 | BLEU 7.8098
+  ROUGE-2 0.0000 | ROUGE-L 0.1667 | CORRECT
+B | token F1 0.8000 | BLEU 66.8740
+  ROUGE-2 0.7500 | ROUGE-L 0.8000 | WRONG CUTOFF
+</code></pre></details>
+<p>With one reference, B leads in all four columns, but a reviewer comparing the meaning with the policy sees the changed cutoff. The program prints that judgment from the label supplied with each reply.</p>
+<p><strong>Experiment.</strong> Change only <code>use_second_reference = False</code> to <code>use_second_reference = True</code>. The second approved wording encodes the same policy and was supplied separately for this teaching example. Both candidate replies and labels stay fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Approved wordings: 2
+A | token F1 1.0000 | BLEU 100.0000
+  ROUGE-2 1.0000 | ROUGE-L 1.0000 | CORRECT
+B | token F1 0.8000 | BLEU 66.8740
+  ROUGE-2 0.7500 | ROUGE-L 0.8000 | WRONG CUTOFF
+</code></pre></details>
+<p>A matches an approved wording exactly. B gains no new matching runs that raise its scores, and its cutoff is still wrong. <strong>Checkpoint.</strong> Could you claim the assistant got better after that edit? No reply changed. You changed which phrasings the scorer accepts. Freeze the new approved wording before using it to judge different replies, and label the reference change in the report.</p>
+<h6>Compare with the library definitions</h6>
+<p>Keep the July reference and both summaries exactly as printed. For SacreBLEU, the comparable configuration is case sensitive, with tokenizer <code>none</code> (use the supplied spaces), smoothing method <code>exp</code>, maximum order 4 and effective order enabled. Effective order stops at the number of token positions a short candidate actually has. With these first two candidates, orders one through four are available. For <code>rouge-score</code>, use <code>rouge2</code> and <code>rougeL</code> with stemming (reducing words such as “applies” to a common base) turned off, and read the <code>fmeasure</code> returned by <code>score(reference, candidate)</code>. For the second run use <code>score_multi(references, candidate)</code>. The fixture is deliberately lowercase and has simple spacing, so the two libraries see the same words as the lab. SacreBLEU v2.5.1 · Google Research rouge-score</p>
+<p>The printed values were cross-checked against SacreBLEU 2.5.1 and rouge-score 0.1.2. With both approved wordings, the libraries also give A BLEU 100.0000 and both ROUGE F1 scores 1.0000. You can finish the lab by comparing these results, with no additional setup. If you already have the prepared metric environment, use <code>BLEU(tokenize=&#x27;none&#x27;, smooth_method=&#x27;exp&#x27;, effective_order=True).sentence_score(candidate, references).score</code> and <code>RougeScorer([&#x27;rouge2&#x27;, &#x27;rougeL&#x27;], use_stemmer=False).score_multi(references, candidate)</code> on the same lines. Put the approved lines in a list of strings and pass the reply as one string. For B, BLEU&#x27;s four raw precision fractions are 4/5, 3/4, 2/3, and 1/2. Their product is 0.20, there is no brevity penalty, and the fourth root times 100 gives 66.8740. The reference has four pairs and B matches three, giving ROUGE-2 F1 of 0.7500. B has four words shared in order out of the ten combined words, giving ROUGE-L F1 of 0.8000. For A, the same calculation starts with two unigram matches and no matches for the longer orders, so the BLEU value uses smoothing at each of those orders. Report BLEU on its 0–100 scale and the lab&#x27;s token and ROUGE F1 values on 0–1. A comparison across releases also needs the same settings, tokenization rules, and approved texts.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Audit a surprising precision result</h5>
+<p>A reviewer scores “fee fee below” against “monthly fee applies below 5000” and reports perfect token precision. Count by hand, calculate precision, recall and F1, and state what you would check before accepting the report.</p>
+<h5>Practice 2. Choose an order-sensitive measurement</h5>
+<p>Compare “monthly fee below 5000” and “5000 below fee monthly” against “monthly fee applies below 5000.” Both use the same four words. Calculate each token F1 and ROUGE-L F1. Explain which value helps diagnose a reversal, and what you still need to read.</p>
+<h5>Practice 3. Decide whether two reports can be compared</h5>
+<p>One report lists 49.89 as the mean of per-reply BLEU-2. A second lists 53.94 as aggregate BLEU-2 over the same two replies from Step 6. It reports six word matches out of seven and four pair matches out of five with a brevity multiplier of about 0.6514. Reconstruct its score and explain whether the two reported numbers demonstrate an improvement.</p>
+<h5>Practice 4. Recommend a next check with incomplete evidence</h5>
+<p>A new assistant was given 0.80 token F1 for “monthly fee applies below 6000.” An older assistant was given 0.33 for “balances under 5000 incur a monthly charge.” The report shows one July reference, but omits the original question and says nothing about which policy was supplied to either assistant. What can you say about the scores? Which missing evidence would you request, and what decision would it support?</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Match one “fee” and one “below.” The second “fee” gets no credit because there is no second “fee” in the reference. Precision is 2 ÷ 3, about 0.667. Recall is 2 ÷ 5 = 0.40. F1 is 4 ÷ 8 = 0.50. Inspect whether the scorer allowed repeats to exceed reference counts. Read the candidate for the missing amount before accepting the reply.</p>
+<h5>Solution 2</h5>
+<p>Each candidate has four shared words out of nine words across the two lines, so token F1 is 8 ÷ 9, about 0.889 for both. In the first candidate all four shared words stay in reference order, giving ROUGE-L F1 of 8 ÷ 9, about 0.889. In the reversal at most one stays in order with the reference, giving 2 ÷ 9, about 0.222. ROUGE-L shows the order change. Read the summary to decide whether the new order affects meaning or only readability.</p>
+<h5>Solution 3</h5>
+<p>Multiply 6 ÷ 7 by 4 ÷ 5 to get about 0.686. Its square root is about 0.828. Multiply by 0.6514 and by 100 to get about 53.94, using the more precise values in Step 6. The quoted scores describe the same replies with different ways of combining them. To assess improvement, freeze the scoring method, the cases, and reference version, then score the two sets of candidate replies using the same settings.</p>
+<h5>Solution 4</h5>
+<p>Under the stated word rule, the reply containing 6000 overlaps more with the July reference. It would be wrong if both replies were meant to describe that July rule. Request the original question, the product and policy version that applied when it was asked, and the actual policy text supplied to each assistant. That evidence lets you judge whether the replies answered the same task and decide whether to inspect policy selection or the assistant&#x27;s use of the supplied policy. The two overlap values cannot identify the cause.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>A candidate adds a second copy of “below.” The reference has one. How do clipped matches and candidate length change?</li><li>A reply keeps three of the five reference words and adds no other words. A teammate says perfect precision means the reply is complete. What would you check?</li><li>If two summaries contain identical words shuffled into different positions, which measurements might change and which stays fixed?</li><li>Two sentences have some word matches, but every two-word match count is zero. A smoother raises BLEU-2 above zero. What actually changed?</li><li>A two-word candidate and a five-word candidate each get their own BLEU score. Why might the mean differ from the score for both together?</li><li>A valid paraphrase gets a high score after you add an approved reference. What evidence do you need before saying a new model improved?</li><li>Which reply should a customer get if the exact-looking line changes a cutoff and a lower-scoring paraphrase keeps the policy correct? What additional checks still matter?</li><li>A report puts BLEU 66.8740 next to ROUGE-L F1 0.8000. Can you rank those two values as measurements of the same kind of success?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>The match count for “below” stays one. Candidate length rises by one, which can lower precision.</li><li>Check recall and then the meaning of the missing words. The short reply in Example 1 omits the cutoff even though every word it uses matches.</li><li>Token F1 stays fixed if word counts stay fixed. The shuffle can break adjacent pairs and common ordered sequences, changing ROUGE-2, ROUGE-L, or BLEU.</li><li>The calculation uses a substitute for a zero precision. No observed match appeared. Keep the raw counts so readers can tell which orders needed smoothing.</li><li>An average gives each reply one vote. The collection score combines length and match counts first, so the longer reply contributes more possible words and pairs.</li><li>Rescore the old and new replies under the same frozen set of approved references, using identical scoring options. Check policy accuracy independently of overlap.</li><li>Prefer the paraphrase for the stated policy question. Still check that it is clear, complete for the original question, and based on the version the customer should receive.</li><li>No. BLEU here has a 0–100 scale and measures a blend of clipped precision and length. ROUGE-L F1 has a 0–1 scale and measures shared order. Rescaling the numbers would leave the two scoring rules different.</li></ol>
+</div></details>
+<h4>Independent Assignment</h4>
+<p>You are reviewing summaries before Harbor Leaf publishes a new savings help page. Use a fresh copy of Step 7 for each variant and keep <code>use_second_reference = False</code>. Keep reply B fixed as a comparison. Review each new A against the July policy first, then make the edit and run it. Copy the score lines into your notes. Write two sentences per variant explaining whether you would approve each candidate and whether using overlap alone would have led you there.</p>
+<ol><li>Replace the whole A row with <code>(&quot;A&quot;, &quot;monthly fee&quot;, &quot;INCOMPLETE&quot;),</code>. This is a short reply to the same question. Decide whether it tells a customer with a balance of 4900 what will happen.</li><li>Start again from Step 7. Replace the A row with <code>(&quot;A&quot;, &quot;monthly fee applies below 5000&quot;, &quot;CORRECT&quot;),</code>. Ask whether the four overlap measures now agree with the approved judgment, and what else you&#x27;d need before publishing a collection of answers.</li></ol>
+<h5>Answer key</h5>
+<p>For variant 1 the report prints <code>Approved wordings: 1</code>, then <code>A | token F1 0.5714 | BLEU 22.3130</code>, followed by two spaces and <code>ROUGE-2 0.4000 | ROUGE-L 0.5714 | INCOMPLETE</code>. For variant 2 it prints <code>Approved wordings: 1</code>, then <code>A | token F1 1.0000 | BLEU 100.0000</code>, followed by two spaces and <code>ROUGE-2 1.0000 | ROUGE-L 1.0000 | CORRECT</code>. Both runs end with <code>B | token F1 0.8000 | BLEU 66.8740</code>, then two spaces and <code>ROUGE-2 0.7500 | ROUGE-L 0.8000 | WRONG CUTOFF</code>.</p>
+<p>In variant 1, A leaves the customer with ₹4,900 guessing, and B would wrongly tell a customer with ₹5,500 to expect a charge. Hold both drafts. In variant 2, approve A for the July question. It copies the approved wording, so all four scores reach their maximum. You still have the same wrong cutoff in B. Before publishing a collection of replies, add reviewed cases at ₹4,999 and ₹5,000 and include a paraphrase you approved without looking at its score.</p>
+<h4>Common Mistakes</h4>
+<p>A percentage-looking score can hide a serious error. Before clearing a draft, check decision-critical details such as the amount, which account it applies to, and what happens at the boundary.</p>
+<p>A high precision with low recall can mean a reply left something out. It may also mean the approved line and the reply used different words. Read the pair before treating a recall drop as an omission.</p>
+<p>BLEU can change when smoothing, tokenization, or aggregation changes. Keep the raw counts and the settings beside a score. If a report omits those details, rerun the comparison under one shared setup.</p>
+<h4>Lesson Summary and Next Step</h4>
+<p>Start with the approved evidence. Token F1 measures shared counts, ROUGE-2 measures neighboring pairs, ROUGE-L follows shared words in order, and BLEU combines clipped precision at different lengths with a penalty for short answers. Use these measurements to flag a difference worth reading. Record which replies, references, settings and scale you used before comparing results. When a customer&#x27;s decision depends on a fact such as a cutoff, check the fact independently.</p>
+<p>In <a href="#m05-t02">M05-T02 — Embeddings and semantic similarity</a>, you&#x27;ll explore another way to compare wording when two answers share few words.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Count overlap by hand and in Python, then compare with sacreBLEU and rouge-score on frozen summaries.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 for counts and fractions. The library extension needs the prepared metric environment.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Rank a paraphrase and a false high-overlap answer, state the metric scale and explain the mismatch.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
