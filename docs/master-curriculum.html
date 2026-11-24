@@ -7213,34 +7213,402 @@ data-subject="Techniques" data-status="Needs Correction" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m05-t02">
-  <p class="lesson-intro" data-lesson-search>Cosine can find paraphrases while giving high scores to changed amounts or opposite meanings.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Vectors, cosine, embeddings from pretrained encoders, model/version effects, threshold calibration and triage.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Explain how a pretrained encoder turns a sentence into a vector and why its individual numbers usually need no human-readable labels.</li><li>Calculate cosine similarity for two short vectors and recognize when there is no usable score.</li><li>Compare paraphrases, wrong deadlines, and reversed policy claims without treating a similarity score as a verdict.</li><li>Test two thresholds on held-out replies, report their trade-offs, and identify which claims need a direct policy check.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Imagine you ordered a jacket online from Harbor Leaf Market. It arrived 20 days ago, and you haven&#x27;t worn it. You type “Can I get my money back?” The help page calls this “requesting a refund.” A person reading both phrases can see what you mean. A computer that only counts matching words has less to go on.</p>
+<p>Then the team sees “You may request a refund within 90 days of delivery.” It is nearly a word-for-word copy of the approved answer, except the store allows 30 calendar days, including day 30. A customer on day 45 would get the wrong impression from the 90-day reply.</p>
+<p>The store, policy, replies, and numerical vectors in this lesson are fictional. The store accepts refund requests for unused online purchases within 30 calendar days of delivery. The question we score is about that deadline for an eligible item. From <a href="#m02-t02">Ground truth, references and benchmarks</a>, bring an approved source for each fact. <a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a> explains why matching words can miss a paraphrase. <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> is useful here and required before building your own held-out split for threshold tuning.</p>
+<h4>Beginner Explanation</h4>
+<h5>Start with the words you can see</h5>
+<p>Put “You may request a refund within 30 days of delivery” above “Ask for your money back up to thirty calendar days after it arrives.” With case and punctuation set aside, the lines share just “days.” Read again without counting. “Money back” means a refund here, “arrives” marks delivery, and thirty is 30. Both give the same instruction for the same eligible purchase. A restatement that preserves the meaning is a <strong>paraphrase</strong>. Comparing the meanings rather than the written words is called <strong>semantic similarity</strong>.</p>
+<p>Watch what happens with “a refund is available during the first month.” It sounds close, but “first month” can be read in more than one way. A calendar month can have more or fewer than 30 days. When the deadline matters, send this wording for clarification. Being about the same event is a weaker claim than preserving the rule.</p>
+<h5>Give the computer something it can compare</h5>
+<p>Mark a starting point on a sheet of paper. Move three squares right and one up, then draw an arrow to that spot. Write the directions as <code>(3, 1)</code>. Swap them to <code>(1, 3)</code> and the arrow turns. This ordered group of numbers is a <strong>vector</strong>, and each number is a <strong>component</strong>. You needed two directions to draw the arrow, so the vector has two <strong>dimensions</strong>. A model can keep track of more dimensions than you can draw.</p>
+<p>For the demonstration, imagine that someone has already placed the approved reply at <code>(4, 0)</code> and the paraphrase at <code>(3, 1)</code>. These are hand-authored positions. An <strong>embedding</strong> is a numerical representation made by a model for text or another input. A sentence encoder is a model that takes text in and returns a vector. A <strong>pretrained encoder</strong> has already learned from examples before you use it here. Depending on what it learned, sentences about similar things can end up pointing in similar directions. Sentence-BERT research paper</p>
+<p>Real encoders often return many numbers so they can represent more patterns than our two-position sketch. You generally cannot point to one learned position and call it “refund” or “truth.” The positions work together. Even in this lesson we leave the two teaching positions unnamed. An evaluator compares the whole vectors and checks how well the scores work on reviewed examples.</p>
+<h5>Compare the directions</h5>
+<p>Draw an arrow from the origin, where both coordinates are zero, to <code>(4, 0)</code>. Now draw one to <code>(8, 0)</code>. The second goes twice as far, but both point straight right. The length of an arrow is its <strong>magnitude</strong>. If you want to know whether arrows point the same way, their lengths alone won&#x27;t help.</p>
+<p>Try a third arrow to <code>(3, 1)</code>. Multiply the numbers in matching positions and add the results. With <code>(4, 0)</code>, that gives <code>(4 × 3) + (0 × 1) = 12</code>. This is the <strong>dot product</strong>. Doubling one arrow doubles that number even when its direction stays fixed.</p>
+<p>To account for length, find the magnitude of each arrow. Square each component by multiplying it by itself, add the squares, then take the square root. The square root of 9 is 3 because 3 × 3 = 9. The reference length is √(16 + 0) = 4. The paraphrase length is √(9 + 1) = √10. Divide 12 by <code>4 × √10</code> and you get about 0.949. This is <strong>cosine similarity</strong>, the dot product divided by the product of the two magnitudes. It compares the angle between the arrows. SciPy cosine distance definition</p>
+<p>Cosine runs from −1 to 1 for nonzero vectors. A score of 1 means the same direction, 0 means a right angle, and −1 means opposite directions. These are directions in the model’s numbers. A score of −1 does not label a contradiction, and 0.949 does not mean a 94.9% chance the reply is correct. A vector of all zeros has no direction, so dividing by its length would be undefined. Record the score as unavailable. Also treat unequal vector lengths or vectors from different encoders as a setup problem, even when the scores would be convenient to compare.</p>
+<h5>Check the parts a score can miss</h5>
+<p>Read these three lines against the store&#x27;s rule.</p>
+<ul><li>“Ask for your money back up to thirty calendar days after it arrives” preserves the refund request, deadline, and starting event.</li><li>“You may request a refund within 90 days of delivery” changes the deadline. The topic remains the same and the numerical fact is wrong.</li><li>“You cannot request a refund within 30 days of delivery” keeps the number and reverses the permission. A small word changes whether the rest of the statement is allowed. That reversal is <strong>negation</strong>. Here it creates a <strong>contradiction</strong> with the policy.</li></ul>
+<p>“You may request a refund” is also about the right topic, but leaves the customer without a deadline. A related statement can be incomplete, wrong, or opposite in meaning. Another useful question is whether the policy actually guarantees the claim. That relationship is called <strong>entailment</strong>. The right to request a refund does not guarantee it will be approved. Cosine gives a direction comparison. Check the approved policy for facts, dates, conditions, and whether the reply says enough to answer the question.</p>
+<p>You can implement some factual checks as direct rules. For example, once the text has been reliably read as allowing a request within 90 days of delivery, 90 and 30 can be compared with an exact number check. Confirm the event and the unit before comparing the numbers. If the reply says “month,” mixes two deadlines, or leaves out the event, ask a reviewer to inspect the original text. The lesson&#x27;s code is given reviewed facts as inputs. It does not extract them from a sentence.</p>
+<h5>Choose which replies need attention</h5>
+<p>Suppose you have ten replies and enough time to read only a few right away. You can use the score to sort replies into a likely-match group and a group for closer reading. That first sorting step is called <strong>triage</strong>. A number you use to divide the groups is a <strong>threshold</strong>. Here we shortlist when the unrounded cosine is at least the threshold. Policy mismatches can still block a reply before that shortlist is used.</p>
+<p>To pick a threshold, start with a labeled practice set. The labels come from people who read the approved source and reply. Try more than one cutoff. Then test both on a separate, <strong>held-out</strong> set that wasn&#x27;t used to choose those cutoffs. Choosing a cutoff for the task using labeled examples is <strong>threshold calibration</strong>. If you choose a new cutoff after seeing the held-out results, get a fresh set for the next independent check.</p>
+<p>For a small development example, imagine four replies scored 0.96 (equivalent), 0.85 (equivalent), 0.93 (wrong deadline), and 0.84 (missing deadline). A cutoff of 0.90 shortlists two replies, one correct and one wrong, and misses one valid reply. A cutoff of 0.80 shortlists all four. It recovers the valid reply and adds one more false shortlist. A <strong>false shortlist</strong> here means a reply the score shortlisted that the reviewer did not consider equivalent. A <strong>missed match</strong> is an equivalent reply the score left out. The lab tests these same two preset cutoffs on a different set. Do not treat either number as a universal standard.</p>
+<p>When using real embeddings, save the encoder name and exact version, how you prepared the text, the reference wording, the scores or vectors, and the threshold alongside your labels. If the encoder changes, encode both sets of texts with the new encoder and compare the two scoring setups on the same reviewed cases. For example, a new encoder could give the same paraphrase 0.84 where the old one gave 0.93. Test both versions before reusing the old cutoff. An equal number of components does not make vectors from two models comparable. Keep actual failed requests, which produced no reply, in a separate count so they neither earn zero similarity nor inflate the number of wrong answers.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. A paraphrase loses on word overlap</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>How long after delivery can I ask for a refund on my unused online purchase?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>“You may request a refund within 30 days of delivery.” The policy counts calendar days and includes day 30.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The fictional saved reply says “Ask for your money back up to thirty calendar days after it arrives.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Lowercase the two lines, remove the final periods, and cross off the words they share. Only “days” matches, so the reference coverage is 1 ÷ 10 = 0.10. The supplied teaching vectors are <code>(4, 0)</code> and <code>(3, 1)</code>. Their cosine is 12 ÷ (4 × √10), about 0.949. Next check the text itself. “Ask for” preserves the permission, “thirty calendar days” preserves the deadline, and “after it arrives” preserves the starting event.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The reply fits the policy, so a rule that rejects it for low word overlap would make a mistake. Use this pair to test whether a new scoring setup can find equivalent wording. The invented cosine explains how the approach could help. It gives no measured result for a real encoder.</span></p>
+<h5>Example 2. Compare direction before comparing length</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Would a longer vector make a candidate seem more similar to the approved refund reply?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Keep the same reply and its teaching vector <code>(4, 0)</code>. Compare only the numbers in this example.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Use a fictional measurement for the same saved line before and after scaling. Its vector changes from <code>(3, 1)</code> to <code>(6, 2)</code>. This isolates length from changes in the reply.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The dot product goes from 4 × 3 + 0 × 1 = 12 to 4 × 6 + 0 × 2 = 24. The original length is √10. The second is √(36 + 4) = √40 = 2 × √10. The reference length stays 4. The new cosine is 24 ÷ (4 × 2 × √10), which is the original 0.949. If you instead turn the candidate arrow up to <code>(0, 3)</code>, the dot product becomes zero and cosine becomes 0.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Ranking these two scaled copies by dot product alone would reward a longer arrow even though it points the same way. The angle comparison avoids that effect. This deliberate scaling test does not tell you why a real encoder might produce a longer vector.</span></p>
+<h5>Example 3. The wrong deadline leads the ranking</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>On day 45 after delivery, can I still request a refund for an eligible item under the standard policy?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Use the same 30-day policy statement as evidence. Since 45 is greater than 30, the ordinary request window has closed.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>One fictional reply restates the correct rule as “Ask for your money back up to thirty calendar days after it arrives.” A second says “You may request a refund within 90 days of delivery.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The paraphrase scores 12 ÷ (4 × √10) ≈ 0.949. The 90-day reply uses the supplied vector <code>(4, 1)</code> and scores 16 ÷ (4 × √17) ≈ 0.970. Both clear a cutoff of 0.90. Now put the customer&#x27;s day 45 next to the two deadlines. It is past day 30, but still inside day 90. Following the higher-scoring reply would lead this customer to think the window was still open.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Block the 90-day reply for a policy mismatch. The paraphrase preserves the standard deadline, although a direct “the window has closed” would answer this customer&#x27;s specific question more completely. Keep the refund deadline check even if the similarity ranking looks strong across the rest of the set.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>For each step choose Copy Code, open the editor next to the program, paste the full code into the editor yourself, and choose Run. Compare the console with the first expected output. Make the one specified edit and run the program again. Each program starts from an empty editor and includes its own data. The numbers are hand-authored teaching fixtures, saved beside fictional replies so you can rerun a comparison. No program calls an encoder or measures a real assistant.</p>
+</div></details>
+<h5>Step 1 — Count the words before checking what they mean</h5>
+<p>Measure how many distinct words in the approved line reappear in two drafts. <code>lower()</code> makes the letters lowercase. <code>rstrip(&quot;.&quot;)</code> removes final periods, and <code>split()</code> breaks the line at whitespace. <code>set()</code> keeps one copy of each distinct word. <code>&amp;</code> keeps only the words in both sets. This coverage measure uses the number of distinct reference words as its denominator.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def words(text):
+    return set(text.lower().rstrip(&quot;.&quot;).split())
+
+reference = &quot;You may request a refund within 30 days of delivery.&quot;
+paraphrase = &quot;Ask for your money back up to thirty calendar days after it arrives.&quot;
+wrong = &quot;You may request a refund within 90 days of delivery.&quot;
+reference_words = words(reference)
+
+for label, reply in [(&quot;Paraphrase&quot;, paraphrase), (&quot;Wrong deadline&quot;, wrong)]:
+    shared = len(reference_words &amp; words(reply))
+    print(f&quot;{label}: {shared} of {len(reference_words)} reference words&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Paraphrase: 1 of 10 reference words
+Wrong deadline: 9 of 10 reference words
+</code></pre></details>
+<p><strong>Experiment.</strong> Replace the text of <code>paraphrase</code> with <code>Request a refund no later than 30 days after delivery.</code>. Keep the reference and the wrong reply fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Paraphrase: 6 of 10 reference words
+Wrong deadline: 9 of 10 reference words
+</code></pre></details>
+<p>The approved and revised lines share “request,” “a,” “refund,” “30,” “days,” and “delivery.” The score rises even though the paraphrase still gives the same deadline. <strong>Checkpoint.</strong> Which line would this counter rank first? The 90-day reply. Use the count to inspect wording changes and read the policy to make the decision.</p>
+<h5>Step 2 — Store two positions for a sentence</h5>
+<p>Look at the numbers attached to the approved line and its paraphrase. Parentheses and commas make a fixed ordered group, a <strong>tuple</strong>. Python starts counting positions at zero, so <code>[0]</code> reads the first component and <code>[1]</code> reads the second. <code>len()</code> counts components. The plotting values are supplied by hand in this program, independently of the words.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">reference = (4, 0)
+paraphrase = (3, 1)
+
+print(f&quot;Reference: {reference}&quot;)
+print(f&quot;Paraphrase: x={paraphrase[0]}, y={paraphrase[1]}&quot;)
+print(f&quot;Dimensions: {len(paraphrase)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reference: (4, 0)
+Paraphrase: x=3, y=1
+Dimensions: 2
+</code></pre></details>
+<p><strong>Experiment.</strong> Change the second component of <code>paraphrase</code> from <code>1</code> to <code>3</code>, giving <code>(3, 3)</code>. Predict which printed fields will change.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reference: (4, 0)
+Paraphrase: x=3, y=3
+Dimensions: 2
+</code></pre></details>
+<p>The point moves up but stays three steps to the right. It still has two components. <strong>Checkpoint.</strong> Could the change be interpreted as “more refund”? The coordinates provide no such label. In an evaluation, record how the vectors were made so a manually altered pair is never mistaken for output from an encoder.</p>
+<h5>Step 3 — Measure the length of an arrow</h5>
+<p>Use a supplied point for a refund reply to see what doubling the whole arrow does. At <code>(3, 4)</code>, the squares are 9 and 16, which add to 25. The square root gives 5. <code>** 2</code> squares a number. <code>sqrt()</code> comes from Python&#x27;s <code>math</code> module. In <code>x, y = point</code>, Python gives the two components the names on the left in order.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import sqrt
+
+point = (3, 4)
+scale = 1
+x, y = point
+x = x * scale
+y = y * scale
+squared_length = x ** 2 + y ** 2
+
+print(f&quot;Vector: ({x}, {y})&quot;)
+print(f&quot;Sum of squares: {squared_length}&quot;)
+print(f&quot;Magnitude: {sqrt(squared_length):.3f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Vector: (3, 4)
+Sum of squares: 25
+Magnitude: 5.000
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>scale = 1</code> to <code>scale = 2</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Vector: (6, 8)
+Sum of squares: 100
+Magnitude: 10.000
+</code></pre></details>
+<p>The two components double, each square quadruples, and the square root doubles the length. <strong>Checkpoint.</strong> What happened to the direction? It stayed fixed, because both components changed by the same positive factor. An evaluator who compares only length could report a change even though direction stays fixed.</p>
+<h5>Step 4 — Compare direction and handle a missing score</h5>
+<p>Multiply corresponding components to get the dot product. <code>zip(left, right)</code> supplies pairs of corresponding components, and <code>sum(a * b for a, b in ...)</code> adds their products. <code>hypot(*left)</code> passes the separate components to Python&#x27;s length function. <code>None</code> represents a missing result. The check for different lengths keeps <code>zip()</code> from quietly dropping an unmatched component.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import hypot
+
+def compare(left, right):
+    if len(left) != len(right):
+        return None
+    product = sum(a * b for a, b in zip(left, right))
+    lengths = hypot(*left) * hypot(*right)
+    if lengths == 0:
+        return None
+    return product, product / lengths
+
+reference = (4, 0)
+candidate = (3, 4)
+dot, score = compare(reference, candidate)
+print(f&quot;Dot product: {dot}&quot;)
+print(f&quot;Cosine: {score:.3f}&quot;)
+if compare(reference, (0, 0)) is None:
+    print(&quot;Zero vector: unavailable&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Dot product: 12
+Cosine: 0.600
+Zero vector: unavailable
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>candidate</code> to <code>(0, 5)</code>. Its length is still 5. Leave the separate zero-vector check alone.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Dot product: 0
+Cosine: 0.000
+Zero vector: unavailable
+</code></pre></details>
+<p>The reference arrow points right and the changed candidate points straight up. Both still have a length, so the division is <code>0 ÷ (4 × 5) = 0</code>. <strong>Checkpoint.</strong> Why does the last line still say “unavailable”? Its separate test uses <code>(0, 0)</code>, an arrow with no length at all. That would require dividing by zero, so the function returns no score. Keep these outcomes separate when counting low scores.</p>
+<h5>Step 5 — Rank saved replies and read the policy labels</h5>
+<p>Score three fictional refund replies with the same reference vector. A asks for money back within thirty days, B changes the window to 90 days, and C says “From delivery, you have 30 days to ask for your money back.” The reviewed policy judgment is already attached to each reply. The list <code>ranked</code> collects a tuple with the score first. <code>sort(reverse=True)</code> orders those tuples from highest to lowest, comparing the score before the other fields. There are no tied scores in this exercise. <code>:.3f</code> displays three decimal places.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import hypot
+
+def cosine(left, right):
+    return sum(a * b for a, b in zip(left, right)) / (hypot(*left) * hypot(*right))
+
+reference = (4, 0)
+replies = [
+    (&quot;A&quot;, (3, 1), &quot;correct paraphrase&quot;),
+    (&quot;B&quot;, (4, 1), &quot;wrong deadline&quot;),
+    (&quot;C&quot;, (4, 3), &quot;correct reordering&quot;),
+]
+ranked = []
+for name, vector, policy_label in replies:
+    ranked.append((cosine(reference, vector), name, policy_label))
+
+ranked.sort(reverse=True)
+for score, name, policy_label in ranked:
+    print(f&quot;{name}: {score:.3f} | {policy_label}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">B: 0.970 | wrong deadline
+A: 0.949 | correct paraphrase
+C: 0.800 | correct reordering
+</code></pre></details>
+<p><strong>Experiment.</strong> Imagine a different teaching setup records <code>(8, 1)</code> for reply C, “From delivery, you have 30 days to ask for your money back.” Change just C&#x27;s vector in the list and leave its policy label fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">C: 0.992 | correct reordering
+B: 0.970 | wrong deadline
+A: 0.949 | correct paraphrase
+</code></pre></details>
+<p>C&#x27;s arrow now points closer to the reference direction, so its rank rises. It is still the same reply. <strong>Checkpoint.</strong> Has the wrong deadline improved? B is unchanged. Keep reviewed labels and fixed replies when comparing scoring setups, and compare whole sets if you change encoders. This activity assumes valid nonzero vectors of equal length, as supplied.</p>
+<h5>Step 6 — Check the deadline independently</h5>
+<p>Change the number printed in a hypothetical reply. Keep its teaching vector fixed so you can see the difference between a similarity calculation and a deadline check. Both drafts allow a request and use the same starting event and units. The code inserts the reviewed day count into the text using braces in an <code>f&quot;...&quot;</code> string. <code>==</code> compares the reported and approved values. This exact comparison can run after those facts have been verified.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import hypot
+
+policy_days = 30
+reported_days = 90
+reply = f&quot;You may request a refund within {reported_days} days of delivery.&quot;
+reference = (4, 0)
+vector = (4, 1)
+product = sum(a * b for a, b in zip(reference, vector))
+score = product / (hypot(*reference) * hypot(*vector))
+
+print(reply)
+print(f&quot;Cosine: {score:.3f}&quot;)
+if reported_days == policy_days:
+    print(f&quot;Deadline: MATCH ({reported_days} == {policy_days})&quot;)
+else:
+    print(f&quot;Deadline: WRONG ({reported_days} != {policy_days})&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">You may request a refund within 90 days of delivery.
+Cosine: 0.970
+Deadline: WRONG (90 != 30)
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>reported_days = 90</code> to <code>reported_days = 30</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">You may request a refund within 30 days of delivery.
+Cosine: 0.970
+Deadline: MATCH (30 == 30)
+</code></pre></details>
+<p>The displayed number changes and the rule now passes. Cosine is identical because the program was given the same numbers for both runs. <strong>Checkpoint.</strong> Would a real encoder have to give both replies the same score? You would have to measure that. This controlled example shows why a direct check is valuable even if a similarity change is small. The check here covers the verified deadline, so a separate permission check is still needed before accepting “cannot.”</p>
+<h5>Step 7 — Try two thresholds on held-out refund replies</h5>
+<p>The refund team chose 0.90 and 0.80 using the earlier practice records. This program uses a different collection of frozen replies to compare what those choices would do. The team already read each reply and recorded whether it was equivalent to the approved answer. It also wrote down the day count and whether the reply allows or denies the request. Treat those supplied facts and labels as separate evidence. The toy vectors cannot supply either of them. Think of the rows as a saved snapshot from the scoring stage: you can compare the near misses again without regenerating the numbers. In a real experiment the snapshot would contain cached outputs from a named encoder. Here it contains hand-authored teaching values.</p>
+<p>The approved reference is “You may request a refund within 30 days of delivery.” Each record holds the case ID, the captured text, the teaching vector, the reviewed deadline in calendar days from delivery, the permission, and the equivalence label. If the trigger or units are unclear, the reviewer leaves the deadline missing. A request that produced no reply has <code>None</code> in its reply field. If a saved reply has no vector, the cosine function returns a missing result. The program uses <code>continue</code> to skip the rest of the loop for that record. <code>score is not None and ...</code> checks that a score exists before comparing it with a number. A missing score stays out of the shortlist counts, while a known policy mismatch can still block the reply. In <code>above = score &gt;= threshold</code>, the result is <code>True</code> when the score meets or exceeds the cutoff. <code>+= 1</code> adds one to a count. The route <code>CHECKED MATCH</code> means the supplied policy facts matched and the cosine met this illustrative cutoff.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import hypot
+
+def cosine(left, right):
+    if right is None or len(left) != len(right):
+        return None
+    lengths = hypot(*left) * hypot(*right)
+    if lengths == 0:
+        return None
+    return sum(a * b for a, b in zip(left, right)) / lengths
+
+reference = (4, 0)
+policy_days = 30
+threshold = 0.90
+cases = [
+    (&quot;H1&quot;, &quot;Ask for your money back up to thirty calendar days after it arrives.&quot;,
+     (3, 1), 30, &quot;allows&quot;, True),
+    (&quot;H2&quot;, &quot;You may request a refund within 90 days of delivery.&quot;,
+     (4, 1), 90, &quot;allows&quot;, False),
+    (&quot;H3&quot;, &quot;You cannot request a refund within 30 days of delivery.&quot;,
+     (4, -1), 30, &quot;denies&quot;, False),
+    (&quot;H4&quot;, &quot;From delivery, you have 30 days to ask for your money back.&quot;,
+     (4, 3), 30, &quot;allows&quot;, True),
+    (&quot;H5&quot;, &quot;You may request a refund.&quot;,
+     (3, 2), None, &quot;allows&quot;, False),
+    (&quot;H6&quot;, None, None, None, None, None),
+    (&quot;H7&quot;, &quot;Track the parcel in Orders.&quot;,
+     (3, 4), None, None, False),
+]
+
+scored = shortlisted = false_shortlist = missed = no_reply = 0
+print(f&quot;Threshold: {threshold:.2f}&quot;)
+for case_id, reply, vector, days, permission, equivalent in cases:
+    if reply is None:
+        no_reply += 1
+        print(f&quot;{case_id}: no reply | REQUEST ERROR&quot;)
+        continue
+
+    score = cosine(reference, vector)
+    above = score is not None and score &gt;= threshold
+    score_text = &quot;unavailable&quot;
+    if score is not None:
+        score_text = f&quot;{score:.3f}&quot;
+        scored += 1
+        if above:
+            shortlisted += 1
+            if not equivalent:
+                false_shortlist += 1
+        elif equivalent:
+            missed += 1
+
+    if permission == &quot;denies&quot;:
+        route = &quot;BLOCK (permission)&quot;
+    elif days is None or permission != &quot;allows&quot;:
+        route = &quot;REVIEW (missing facts)&quot;
+    elif days != policy_days:
+        route = f&quot;BLOCK (expected {policy_days}, found {days})&quot;
+    elif score is None:
+        route = &quot;REVIEW (vector)&quot;
+    elif above:
+        route = &quot;CHECKED MATCH&quot;
+    else:
+        route = &quot;REVIEW (low cosine)&quot;
+    print(f&quot;{case_id}: {score_text} | {route}&quot;)
+
+print(f&quot;Score only: {shortlisted}/{scored} shortlisted | &quot;
+      f&quot;false shortlists: {false_shortlist} | missed matches: {missed}&quot;)
+print(f&quot;Request errors: {no_reply}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Threshold: 0.90
+H1: 0.949 | CHECKED MATCH
+H2: 0.970 | BLOCK (expected 30, found 90)
+H3: 0.970 | BLOCK (permission)
+H4: 0.800 | REVIEW (low cosine)
+H5: 0.832 | REVIEW (missing facts)
+H6: no reply | REQUEST ERROR
+H7: 0.600 | REVIEW (missing facts)
+Score only: 3/6 shortlisted | false shortlists: 2 | missed matches: 1
+Request errors: 1
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>threshold = 0.90</code> to <code>threshold = 0.80</code>. Keep the saved text, approved facts, vectors, and reviewer labels fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Threshold: 0.80
+H1: 0.949 | CHECKED MATCH
+H2: 0.970 | BLOCK (expected 30, found 90)
+H3: 0.970 | BLOCK (permission)
+H4: 0.800 | CHECKED MATCH
+H5: 0.832 | REVIEW (missing facts)
+H6: no reply | REQUEST ERROR
+H7: 0.600 | REVIEW (missing facts)
+Score only: 5/6 shortlisted | false shortlists: 3 | missed matches: 0
+Request errors: 1
+</code></pre></details>
+<p>At 0.90, the score alone would shortlist H1, H2, and H3. At 0.80, H4 meets the cutoff exactly and H5 also clears it. H4 preserves the required facts, so it moves out of the low-cosine review queue. H5 stays in review because it omits the deadline. H2 and H3 stay blocked. The summary counts errors from using the score alone, while each printed route also uses the supplied policy facts. To express the score-only error as a share of the shortlist, use 2 of 3 at 0.90 and 3 of 5 at 0.80. Quote the counts too. The lower cutoff adds one false shortlist even though the fraction of shortlists that are false falls.</p>
+<p><strong>Checkpoint.</strong> What can you report to the team? On these six scored replies, the lower cutoff recovered one reviewed match and added one false shortlist. The independent rule caught that extra shortlist and kept the two explicit mismatches blocked. Report the failed request separately. Neither cutoff is validated for live traffic by these six hand-authored cases.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Find the actual paraphrase</h5>
+<p>The approved rule allows a request up to and including calendar day 30 after delivery. Which is an equivalent restatement: “Ask for your money back up to thirty calendar days after it arrives,” “A refund is available during the first month,” or “You cannot request a refund within 30 days of delivery”? Give the reason for your choice and the next action for the other two.</p>
+<h5>Practice 2. Compare arrows by hand</h5>
+<p>The approved vector is <code>(4, 0)</code>. One supplied vector is <code>(3, 4)</code> and another is <code>(6, 8)</code>. Find the dot product, candidate length, and cosine for each comparison. Which ranks higher? What would a dot-product-only ranking show?</p>
+<h5>Practice 3. Diagnose a false shortlist</h5>
+<p>A reply to an eligible customer on day 40 says “You may request a refund within 90 days of delivery” and scores 0.970. Another says “You may request a refund” and scores 0.832. With a 0.80 cutoff, which replies reach the shortlist? Use the policy to decide their individual routes and explain why they differ.</p>
+<h5>Practice 4. Choose evidence before raising a cutoff</h5>
+<p>Your team has labeled 80 practice replies and has 25 held-out replies it has never read. The practice set includes correct paraphrases and wrong deadlines but no reversed permissions. A new encoder calls many short replies more similar than the earlier encoder did. Describe what to keep fixed, how to compare the two encoders and candidate thresholds, and what evidence the team still needs.</p>
+<h4>Independent Assignment</h4>
+<p>You own the refund queue for this trial. Use the approved reference, eligibility and deadline from the setup and all seven captured records, vectors, and labels in Step 7. Before running anything, pick H4 and H5 and decide which should be eligible for a checked match. Then write down which cases need a numeric check, a permission check, a closer read, or a separate retry.</p>
+<p>The full executable answer key is the Step 7 program. Use Copy Code on that block for each variant. Make a fresh copy each time, keep the same reference and evidence, and change only <code>threshold</code>. Use 0.95 for variant A and 0.60 for variant B. Predict each route and record the number of false shortlists, missed matches, and request errors. Compare both variants with 0.90 and 0.80. These are trial cutoffs for inspecting the fixture. Spending the held-out set on further tuning would call for another independent test.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>The first choice preserves the event, the 30-day limit, and the permission to request. Ask a policy reviewer to clarify “first month” because the wording may move the cutoff or describe approval rather than a request. Block the third choice because the denial directly conflicts with permission. Shared words are compatible with both a correct answer and a denial of the right.</p>
+<h5>Solution 2</h5>
+<p>The reference length is 4. For <code>(3, 4)</code>, the dot product is 4 × 3 + 0 × 4 = 12 and length is √(9 + 16) = 5. Cosine is 12 ÷ (4 × 5) = 0.60. For <code>(6, 8)</code>, the dot product is 24 and the length is √(36 + 64) = 10. Cosine is 24 ÷ (4 × 10) = 0.60. The scores tie because the arrows point the same way. The raw dot products would give the second arrow a higher rank because it is longer.</p>
+<h5>Solution 3</h5>
+<p>Both scores clear 0.80. The first reply should be blocked. A 90-day window permits a request on day 40, but the approved 30-day window has closed. Send the second for review or revision because it omits the deadline. A missing deadline is different evidence from an explicit wrong deadline, even though neither reply should be published to this customer.</p>
+<h5>Solution 4</h5>
+<p>Run both versions on the same practice replies and reference text. Within each run, use that version to encode both sides of every comparison. Pick the cutoffs from the practice results, then open the 25 held-out replies and count both kinds of mistake. Read the replies where the versions disagree. The practice set never asked either encoder to distinguish “you can” from “you cannot.” Add reviewed examples of that contrast to future practice and test sets, and keep the direct permission and deadline checks while you collect that evidence.</p>
+<h5>Assignment answer key</h5>
+<p>H4 states the correct deadline and qualifies when its score meets the cutoff. H5 never provides a deadline and always needs review. The two explicit mismatches are H2 (days) and H3 (permission). Review H7 as an off-topic reply that does not provide the facts, and investigate H6 as a failed request separately.</p>
+<p>For variant A, the exact changed lines from the 0.90 run are <code>Threshold: 0.95</code>, <code>H1: 0.949 | REVIEW (low cosine)</code>, and <code>Score only: 2/6 shortlisted | false shortlists: 2 | missed matches: 2</code>. Every other line is as printed for 0.90, including <code>Request errors: 1</code>. The raw shortlist is just H2 and H3. The higher bar leaves both correct replies in review and does not remove either explicit error from the raw shortlist.</p>
+<p>For variant B, the exact changed lines from the 0.90 run are <code>Threshold: 0.60</code>, <code>H4: 0.800 | CHECKED MATCH</code>, and <code>Score only: 6/6 shortlisted | false shortlists: 4 | missed matches: 0</code>. Every other line is as printed for 0.90, including <code>Request errors: 1</code>. Now even H7 clears the raw threshold. The policy route still sends it to review. If reviewer time is scarce, the extra score-only candidates matter. This tiny fixture supports comparing routes and writing more tests. It gives no estimate of live performance.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Two encoders both output vectors of length 384. Can you score a reply from one against a reference from the other? How would you compare the setups fairly?</li><li>You change <code>(3, 1)</code> to <code>(3, 3)</code>. What changed about the arrow, and why does the vector still have two dimensions?</li><li>Why can the dot product increase when a candidate arrow points exactly the same way as before?</li><li>What is the magnitude of <code>(0, -5)</code>? Why does a component with a negative sign still add to length?</li><li>Two nonzero arrows point at right angles. A third vector is all zeros. Which comparison can legitimately produce a cosine of zero?</li><li>A valid paraphrase falls from 0.93 to 0.84 when evaluated with a new encoder. What should the team check before calling the reply worse?</li><li>A reply says “You cannot request a refund within 30 days of delivery” and scores 0.970. Which piece of the reply needs a separate check, and why is the number insufficient?</li><li>In Step 7, you read the held-out results and then choose a third cutoff. Can you use the same held-out cases to report an independent result for that new choice?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Equal length gives the same number of positions, but the positions were learned in different models. Score complete pairs with each encoder separately, then compare where their rankings and decisions differ on the same reviewed examples.</li><li>The first component stays at 3 and the second rises from 1 to 3. The arrow turns upward. There are still two component positions, since the repeated value 3 occupies both positions. The lesson assigns neither component a meaning such as “refund.”</li><li>Doubling the candidate doubles each matching-position product and therefore their sum. Its magnitude doubles too, so the cosine ratio remains the same.</li><li>Square 0 and −5 to get 0 and 25. Their sum is 25 and its square root is 5. Squaring makes the contribution nonnegative.</li><li>The right-angle pair has valid lengths and a dot product of zero, so its cosine is zero. The all-zero vector makes the denominator zero and leaves the score undefined.</li><li>Confirm the reply and approved evidence were held fixed, and score both texts with each version. Reread the paraphrase against the policy. The score may reflect the change of encoder rather than a change in the text or its correctness.</li><li>Check permission. “Cannot” denies an action the approved policy permits. Both lines can contain 30 and still give opposite instructions.</li><li>The revised choice has already seen those cases through the results, so they now serve as development evidence. Report the tuning honestly and test the revised cutoff on new held-out cases.</li></ol>
+</div></details>
+<h4>Common Mistakes</h4>
+<p>A large score can make it tempting to clear a reply immediately. Read the deadline, permission, and event first. If you cannot verify a fact from the text and the approved source, route it to review.</p>
+<p>Avoid comparing scores from different model versions as if the vectors shared one set of directions. Freeze and record the settings. When a setup changes, score a common set of reference and reply pairs with each version.</p>
+<p>Count failures to capture a reply separately. A missing response cannot tell you whether two answers use similar wording or preserve the same rule. Giving it a score of zero would mix operational reliability with text comparison.</p>
+<h4>Lesson Summary and Next Step</h4>
+<p>A sentence encoder represents text as a vector. Cosine compares the direction of two vectors, which can help you find paraphrases worth inspecting. An approved source and direct checks still decide whether a reply preserves the policy. Use reviewed cases to choose a trial cutoff, hold back separate examples for comparison, and report how many replies enter the review queue along with the types of error you observed.</p>
+<p>Next, <a href="#m05-t03">Combining evaluators and handling uncertainty</a> uses several checks together and asks what to do when their results disagree.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t02">Ground truth, references and benchmarks</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a>, <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> — required when building your own held-out split for threshold tuning</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Compute cosine on toy vectors, then compare cached embedding results for near-miss answers.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 for cosine on supplied vectors. Use cached weights only for the optional live encoder.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Evaluate two thresholds on held-out data and explain which factual errors go to deterministic checks.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>

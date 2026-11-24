@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated **2026-11-24**. The last verified live release is `aa01ca7`. Thirteen topics have authored chapters locally through M05-T01. The other 40 topics retain their outlines.
+Last updated **2026-11-24**. The last verified live release is `aa01ca7`. Fourteen topics have authored chapters locally through M05-T02. The other 39 topics retain their outlines.
 
 ## Implemented milestones
 
@@ -50,6 +50,7 @@ Last updated **2026-11-24**. The last verified live release is `aa01ca7`. Thirte
 | M04-T02, Annotation, adjudication and synthetic data | **Rewritten — Awaiting Human Teaching Review.** Expanded the outline into three worked demonstrations, seven standalone activities, four solved exercises, eight explained knowledge checks, and an assignment on independent labels, a documented resolution, and admission rules for fictional drafts. |
 | M04-T03, Sampling, holdouts, leakage and maintenance | **Rewritten — Awaiting Human Teaching Review.** Expanded the outline into three demonstrations, seven standalone activities, four solved exercises, eight explained knowledge checks, and an assignment that checks a grouped holdout and prints a versioned refresh draft. |
 | M05-T01, Token F1, BLEU, ROUGE and reference metrics | **Rewritten — Awaiting Human Teaching Review.** Expanded the outline into three demonstrations, seven standalone activities, four solved exercises, eight explained knowledge checks, and an assignment on a short reply and an exact approved reply. |
+| M05-T02, Embeddings and semantic similarity | **Rewritten — Awaiting Human Teaching Review.** A single refund-policy case connects three worked demonstrations, seven standalone activities, four solved exercises, eight explained knowledge checks, and a two-variant threshold assignment. |
 
 ## Tested
 
@@ -96,6 +97,7 @@ Last updated **2026-11-24**. The last verified live release is `aa01ca7`. Thirte
 - For M04-T02, all 16 fresh Python 3.12.7 runs matched their documented outputs, including seven baselines, seven experiments, and two assignment variants. Curriculum synchronization and static validation of 30 public files passed. All 29 checked-in non-browser tests passed with eleven authored chapters. The generated change was confined to the shared M04-T02 chapter.
 - For M04-T03, all 16 fresh Python 3.12.7 runs matched their documented outputs, including seven baselines, seven experiments, and two assignment variants. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with twelve authored chapters. The generated change was confined to the shared M04-T03 chapter.
 - For M05-T01, all 16 fresh Python 3.12.7 runs matched their documented outputs, including seven baselines, seven experiments, and two assignment variants. SacreBLEU 2.5.1 and rouge-score 0.1.2 matched eight frozen candidate/reference configurations. SacreBLEU also matched both BLEU-2 corpus results. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with thirteen authored chapters. The generated change was confined to the shared M05-T01 chapter.
+- For M05-T02, seven baselines, seven experiments, and two assignment variants matched exact expected output in fresh Python 3.12.7 processes. One additional missing-score run confirmed that a missing direction cannot override a known wrong deadline. Independent exact arithmetic confirmed the four cutoffs and the scaled-vector cosine. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with fourteen authored chapters. The generated change was confined to the shared M05-T02 chapter.
 
 ## Manually verified
 
@@ -107,7 +109,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
 4. **M01-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to explain what “that” refers to, run a block using the editor link, and use the assignment records to distinguish an omitted fee paragraph from an answer that contradicts it. Record where the learner needed help before approving the reference.
-5. The owner requested the Module 3 and Module 4 chapters and M05-T01 while earlier chapters awaited human review. M05-T02, Embeddings and semantic similarity, is the next unfinished topic.
+5. The owner requested the Module 3 and Module 4 chapters and M05-T01 through M05-T02 while earlier chapters awaited human review. M05-T03, Combining evaluators and handling uncertainty, is the next unfinished topic.
 6. In Chrome and Safari, open an authored lesson in both learning modes. Scroll to verify the wide Listen sidebar stays below the site header. Check for page overflow with a long code line and a long section name. At a narrower width, verify that keyboard users can open and close Listen and that audio continues when the disclosure closes. Test speed, highlighting, and lesson switches in both themes. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Sticky positioning, visual wrapping, and native audio behavior remain unverified.
 7. **M01-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run an activity in the editor, explain what changing temperature and top-p did, and use the saved comparison to distinguish a wrong answer from a change in the model or prompt.
 8. **M02-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run a rule check, explain why a correct claim can still need a groundedness review, and defend their first action on the assignment.
@@ -120,6 +122,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 15. **M04-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to resolve the exact-cutoff disagreement without erasing either label, run an editor activity, and explain why a policy-backed label alone doesn’t settle permission to reuse a draft.
 16. **M04-T03 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to explain why equal headline scores can hide a cutoff regression, run the split audit in the editor, and explain how the August draft preserves the July evidence.
 17. **M05-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to decide which July reply a customer should see, run the multiple-reference experiment in the editor, and explain why a score change can reflect new approved wording while the saved replies stayed the same.
+18. **M05-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to calculate one cosine by hand, run both threshold examples in the editor, and explain why the wrong deadline and reversed permission stay blocked. Browser verification in both learning modes remains pending.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).
 
