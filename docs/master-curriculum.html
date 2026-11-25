@@ -7634,34 +7634,413 @@ data-subject="Techniques" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m05-t03">
-  <p class="lesson-intro" data-lesson-search>An aggregate can hide an unacceptable error or an evaluator failure.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Hard gates, rule plus proxy cascades, metric applicability, score vectors, disagreement, human escalation and threshold trade-offs.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Explain why exact match, word overlap, semantic similarity, policy rules, and human review can give different results for the same reply.</li><li>Keep each evaluation result visible and combine selected quality scores with explicit weights.</li><li>Use a hard gate for an established policy violation and send cases with unresolved evidence to review.</li><li>Compare routing policies on fixed replies using coverage, error counts, and review workload.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Your parcel arrived 28 days ago. You still have the receipt and want to ask for a refund next week. One draft reply gives you 90 days. Another says you have 30 days from delivery and asks you to keep the receipt. If you wait a week, the two replies lead you to opposite conclusions. As the reviewer at Harbor Leaf Market, you need to decide which draft the customer can rely on.</p>
+<p>In this fictional exercise, Harbor Leaf’s refund policy <code>refund-1</code> allows requests for unused online purchases through calendar day 30 after delivery, with a valid receipt. The item is assumed eligible. Refund questions in the exercise ask for the deadline and the receipt requirement. The reference is “Request a refund within 30 calendar days of delivery with a valid receipt.” A separate question about finding the help button uses its own reference. The replies and sample scores are teaching data.</p>
+<p>Allow about five hours. Bring the checks from <a href="#m03-t01">Exact match, normalization and rules</a> and the evidence notes from <a href="#m03-t03">Rubrics and a first human evaluation</a>. <a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a> and <a href="#m05-t02">Embeddings and semantic similarity</a> help explain the two kinds of similarity. Use the latter before tuning a cutoff on your own data. This lesson uses supplied demonstration scores and preset cutoffs.</p>
+<h4>Beginner Explanation</h4>
+<h5>Check one thing at a time</h5>
+<p>Compare the approved line with “You have up to thirty calendar days after your parcel arrives to ask for your money back. Bring a valid receipt.” The letters differ, but you can still find the right deadline, starting event, and receipt requirement.</p>
+<p>An <strong>evaluator</strong> checks one or more qualities of a reply. An exact-match evaluator asks whether two strings are identical. It is useful when only one output is allowed, such as a specified refund status code. Here it reports different text for a paraphrase the store can use.</p>
+<p>Now replace the approved line’s “30” with “90.” Eleven of its twelve distinct words still match. That fraction is a simple example of <strong>lexical similarity</strong>, which measures overlap in wording. A <strong>semantic similarity</strong> score estimates closeness in meaning. It can give a paraphrase a strong score and also give a wrong deadline a strong score because most of the sentence is still about the same rule. Similarity serves as a <strong>proxy</strong>, an indirect signal for what you really want to know. A score of 96 on a 0–100 scale is a measurement under that scoring method, with no established probability of correctness.</p>
+<p>A direct <strong>rule-based evaluator</strong> can compare a reliably recorded day count with 30. A human reviewer can decide whether “first month” supplies a precise deadline, or whether “proof of purchase” promises to accept something the policy does not allow. Reviewers use the question, the reply, the authoritative policy, and a scoring guide. Two reviewers can still disagree. Keep their evidence and resolve the disputed criterion before treating a label as settled.</p>
+<h5>Keep the individual results</h5>
+<p>Imagine reading “Request a refund within 30 calendar days of delivery.” The deadline check passes. The reply supplies no evidence about the required receipt. A high similarity score tells you it resembles the reference. The combination tells you where to look next.</p>
+<p>Keep a <strong>score vector</strong>, the collection of results for a reply, before making a decision. It can contain both numbers and labels. For example, record exact match as DIFFERENT, word coverage as 9/12, semantic similarity as 96, deadline as PASS, and receipt as UNKNOWN. Each field measures a <strong>dimension</strong>, one aspect of the reply. Make it possible to see where the methods agreed, where they disagreed, and why.</p>
+<p>Put the deadline result beside two questions. For “How long do I have?”, a reply that skips the deadline leaves you with UNKNOWN. For “Where is the refund help button?”, you never needed the deadline, so write N/A. A check that has a job in this case is <strong>applicable</strong>. If a scorer tries to check the first reply and times out, write ERROR for that scorer. Each label sends you somewhere different. Read the first reply again, check the button location for the second, or investigate the scorer that timed out.</p>
+<h5>Use a score for the right job</h5>
+<p>Suppose a reply scores 96 for clarity and 80 for giving a useful next step. Harbor Leaf gives clarity three quarters of the influence and the next step one quarter. Three quarters of 96 is 72. One quarter of 80 is 20. Add them to get 92. This is a <strong>weighted score</strong>. The weights add to one, so scores on a 0–100 scale produce a summary on that same scale. Clarity here rates how easy the reply is to read. Usefulness rates whether it gives an actionable next step. The lesson supplies these ratings as fictional inputs.</p>
+<p>Keep the summary focused on those two qualities. Counting exact match, word overlap, and semantic similarity as three votes for correctness would give repeated influence to related signals. Their agreement can still be useful as a debugging clue.</p>
+<p>Suppose a reply gives 90 days, looks clear, and tells the customer to use the Returns button. It can still score 92 for presentation. The wrong deadline should stop it. A <strong>hard gate</strong> blocks acceptance when a critical check fails, regardless of the presentation score. Harbor Leaf uses hard gates for confirmed errors in the deadline or receipt statement. A gate needs trustworthy input. Ask for evidence when you cannot establish the fact it checks.</p>
+<h5>Decide in a predictable order</h5>
+<p>Harbor Leaf uses the following decision table. An earlier row takes priority over a later row. A sequence where earlier rules can settle a case before later checks is a <strong>cascade</strong>. In this lesson the hard policy checks come first, followed by similarity triage. <strong>Triage</strong> means deciding which cases need a person’s attention.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Evidence in the saved case</th><th scope="col">Decision</th><th scope="col">What happens next</th></tr></thead><tbody><tr><td>An applicable policy fact is confirmed wrong</td><td>REJECT</td><td>Record the mismatch and hold the reply.</td></tr><tr><td>A required fact is unresolved or its check is unavailable</td><td>REVIEW</td><td>Retrieve the approved source, inspect the wording, or repair the check.</td></tr><tr><td>Semantic similarity is required but the score is unavailable or below the preset cutoff</td><td>REVIEW</td><td>Inspect the saved reply or rerun the scorer.</td></tr><tr><td>Presentation is below 80</td><td>REVIEW</td><td>Ask a reviewer to inspect clarity and the next step.</td></tr><tr><td>All applicable checks clear their rules</td><td>ACCEPT</td><td>Record which checks supported acceptance.</td></tr></tbody></table></div>
+<p>Routing version <code>routing-v1</code> uses 85 as its semantic cutoff, and values at least 85 clear that check. The value is an illustrative choice. A slightly lower score should prioritize review under this policy. It cannot prove a factual error. A question with an unclear purchase channel, a reference lacking its effective date, or a phrase such as “first month” needs better evidence. If the evidence already proves a violation, an unavailable similarity score does not erase it.</p>
+<p>Suppose seven cases arrive and the system makes three automatic decisions. The automatic decision <strong>coverage</strong> is 3 out of 7. If all three agree with independent human outcomes, the observed automatic error count is 0 out of 3 checked decisions. Divide by every case for coverage and only by checked automatic decisions for the error rate. The other four require attention. At an assumed four minutes each, the review queue takes 16 minutes. Lowering a cutoff may reduce that workload and can also admit additional mistakes. Compare both quantities on fixed replies and review the cases that moved.</p>
+<h5>Leave the next reviewer enough evidence</h5>
+<p>Save the case ID, question, reference and source version, captured reply, individual evaluator outputs, routing version, automatic decision, reason, and any later reviewer outcome. This is an <strong>audit record</strong> because another person can trace the decision using the same inputs. Keep the initial route even after a reviewer resolves the case. Changing the routing version can change the automatic decision without changing what the assistant said.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. The checks disagree about two refund replies</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>For an eligible item, how long do I have to request a refund and do I need my receipt?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Under <code>refund-1</code>, “Request a refund within 30 calendar days of delivery with a valid receipt.”</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>A says “You have up to thirty calendar days after your parcel arrives to ask for your money back. Bring a valid receipt.” B repeats the approved wording with “90” in place of “30.” Both replies are fictional.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Exact match reports DIFFERENT for both. Counting unique reference words after removing case and punctuation gives A five matches out of twelve and B eleven out of twelve. The supplied semantic scores are 92 and 98. Then check the policy facts. A preserves the delivery event, 30-day deadline, and valid receipt requirement. B makes an explicit wrong deadline claim, even though its receipt statement is right.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>With presentation above 80 for both, the cascade can accept A and rejects B. Exact match and word overlap explain how the surface changed. The direct comparison with the approved text supports the release decision. These similarity scores describe the fictional case only.</span></p>
+<h5>Example 2. A presentation score cannot clear a failed gate</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>How do I start a refund, and what is the deadline for this eligible item?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The deadline is 30 calendar days from delivery with a valid receipt. Use the same deadline and eligibility rule as in Example 1.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>B says “Request a refund within 90 calendar days of delivery with a valid receipt.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Give the reply the supplied clarity rating of 96 and next-step usefulness rating of 80. The presentation score is 0.75 × 96 + 0.25 × 80 = 92. Imagine instead averaging its semantic score of 98, presentation of 92, and a deadline failure coded as 0. The average is 190 ÷ 3 ≈ 63.3. An illustrative cutoff of 60 would accept it. The actual decision table compares the recorded 90 with the approved 30 first and rejects it.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Hold the draft and tell the writer exactly what needs fixing. The 92 still says the draft was easy to read and gave a useful next step. Ask the writer to keep those strengths and change the deadline from 90 to 30. Simply moving the average cutoff would leave the wrong claim in the reply.</span></p>
+<h5>Example 3. High scores leave an unresolved deadline</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>What is the deadline for an eligible order, and what do I need?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The saved reference quotes 30 calendar days after delivery and a valid receipt, under <code>refund-1</code>.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>C says “During the first month after arrival, ask for your money back with a valid receipt.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The sample semantic score is 94. Its presentation score is 0.75 × 92 + 0.25 × 88 = 91. The receipt is verified. “First month” supplies no unambiguous calendar-day count, so the deadline stays UNKNOWN. Route C to REVIEW even though the scores clear their cutoffs. Ask a reviewer to check the effective policy for this order and determine whether the local help text gives “first month” a precise definition. Preserve the original reply while doing so.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The audit row reads <code>C | refund-1 | routing-v1 | deadline UNKNOWN | receipt PASS | semantic 94 | presentation 91 | REVIEW: deadline | human outcome PENDING</code>. If the appropriate source cannot resolve the phrase, the reviewer can record that the reply needs rewriting before release. The available evidence does not establish that the assistant explicitly claimed a wrong number.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Select Copy Code, open the editor next to the example, paste the entire program, and select Run. Check the first output before making the experiment’s one change. Start each step in an empty editor. All data are inline. The examples calculate simple comparisons and replay clearly labeled fictional scores or reviewed facts. They make no model or network calls.</p>
+</div></details>
+<h5>Step 1 — Compare exact match with shared words</h5>
+<p>See how two checks react to the same paraphrase. <code>==</code> compares both full strings. <code>lower()</code> makes the letters lowercase, <code>replace(&quot;.&quot;, &quot;&quot;)</code> removes periods, and <code>split()</code> separates words at spaces. <code>set()</code> keeps one copy of each word. <code>&amp;</code> finds the words in both sets.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">reference = &quot;Request a refund within 30 calendar days of delivery with a valid receipt.&quot;
+candidate = &quot;You have up to thirty calendar days after your parcel arrives to ask for your money back. Bring a valid receipt.&quot;
+
+def words(text):
+    return set(text.lower().replace(&quot;.&quot;, &quot;&quot;).split())
+
+expected = words(reference)
+shared = expected &amp; words(candidate)
+print(f&quot;Exact match: {candidate == reference}&quot;)
+print(f&quot;Distinct reference words shared: {len(shared)}/{len(expected)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: False
+Distinct reference words shared: 5/12
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>candidate</code> to <code>reference</code> by replacing the text and its quotes on the assignment line with the bare name <code>reference</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact match: True
+Distinct reference words shared: 12/12
+</code></pre></details>
+<p>The program now compares a copy of the approved sentence to itself. Both scores improve, while the original paraphrase already conveyed the required facts. <strong>Checkpoint.</strong> What did <code>False</code> mean in the first run? The strings differed. To decide if this is a problem, read the deadline and receipt statement.</p>
+<h5>Step 2 — Check the deadline independently</h5>
+<p>Keep the wording pattern fixed and change only the number. For these two controlled replies, <code>stated_days</code> supplies both the text and the verified day count. An <code>f&quot;...&quot;</code> string inserts a value at the braces. This program compares a known value. It does not extract numbers from arbitrary text.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">approved_days = 30
+stated_days = 30
+reference = &quot;Request a refund within 30 calendar days of delivery with a valid receipt.&quot;
+candidate = f&quot;Request a refund within {stated_days} calendar days of delivery with a valid receipt.&quot;
+expected = set(reference.lower().split())
+shared = expected &amp; set(candidate.lower().split())
+
+print(candidate)
+print(f&quot;Distinct reference words shared: {len(shared)}/{len(expected)}&quot;)
+if stated_days == approved_days:
+    print(&quot;Deadline: PASS&quot;)
+else:
+    print(f&quot;Deadline: FAIL (expected {approved_days}, found {stated_days})&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Request a refund within 30 calendar days of delivery with a valid receipt.
+Distinct reference words shared: 12/12
+Deadline: PASS
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>stated_days = 30</code> to <code>stated_days = 90</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Request a refund within 90 calendar days of delivery with a valid receipt.
+Distinct reference words shared: 11/12
+Deadline: FAIL (expected 30, found 90)
+</code></pre></details>
+<p>Only one word becomes a mismatch, yet the date limit becomes wrong. <strong>Checkpoint.</strong> Could you compare 30 calendar days with 30 business days using this rule? You need to verify the units and starting event first. The program can safely compare values once they refer to the same thing.</p>
+<h5>Step 3 — Combine two presentation ratings</h5>
+<p>Use the supplied human-style ratings to summarize how readable and useful a reply is. <code>1 - clarity_weight</code> gives the remaining share to usefulness, so the weights always total one. In a print string, <code>:.2f</code> formats a number to two decimal places.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">clarity = 96
+usefulness = 80
+clarity_weight = 0.75
+usefulness_weight = 1 - clarity_weight
+clarity_part = clarity_weight * clarity
+usefulness_part = usefulness_weight * usefulness
+
+print(f&quot;Clarity contribution: {clarity_part:.2f}&quot;)
+print(f&quot;Usefulness contribution: {usefulness_part:.2f}&quot;)
+print(f&quot;Presentation: {clarity_part + usefulness_part:.2f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Clarity contribution: 72.00
+Usefulness contribution: 20.00
+Presentation: 92.00
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>clarity_weight = 0.75</code> to <code>clarity_weight = 0.50</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Clarity contribution: 48.00
+Usefulness contribution: 40.00
+Presentation: 88.00
+</code></pre></details>
+<p>The lower rating now has more influence, so the total drops by four. <strong>Checkpoint.</strong> Did the reply become less useful? Both input ratings stayed fixed. Record the weights so an evaluator can distinguish a change in the summary rule from a change in the reply.</p>
+<h5>Step 4 — Block a confirmed critical failure</h5>
+<p>Replay a saved draft with strong presentation. Check the deadline before looking at the score. An <code>if</code> branch runs when its condition holds. <code>elif</code> tries another condition only when the first one was false. <code>!=</code> tests whether two values differ.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">stated_days = 30
+approved_days = 30
+presentation = 0.75 * 96 + 0.25 * 80
+
+if stated_days != approved_days:
+    decision = &quot;REJECT (wrong deadline)&quot;
+elif presentation &lt; 80:
+    decision = &quot;REVIEW (presentation)&quot;
+else:
+    decision = &quot;ACCEPT&quot;
+
+print(f&quot;Presentation: {presentation:.2f}&quot;)
+print(decision)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Presentation: 92.00
+ACCEPT
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>stated_days = 30</code> to <code>stated_days = 90</code>. Keep the ratings fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Presentation: 92.00
+REJECT (wrong deadline)
+</code></pre></details>
+<p>The first branch applies as soon as the required values differ. <strong>Checkpoint.</strong> Could presentation 100 rescue the reply under this rule? The score does not enter the rejection branch. This step assumes the unit, starting event, and receipt rule have already been confirmed.</p>
+<h5>Step 5 — Find useful disagreements</h5>
+<p>Compare a semantic shortlist label with the policy check result. Map a supplied semantic score of at least 85 to “likely match.” Only map PASS or FAIL policy outcomes to Boolean values. <code>in</code> checks membership in a group, and <code>continue</code> skips to the next case after printing that a row awaits evidence.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">reports = [
+    (&quot;A&quot;, 92, &quot;PASS&quot;),
+    (&quot;B&quot;, 98, &quot;FAIL&quot;),
+    (&quot;C&quot;, 94, &quot;UNKNOWN&quot;),
+]
+for case_id, semantic, policy in reports:
+    if policy not in (&quot;PASS&quot;, &quot;FAIL&quot;):
+        print(f&quot;{case_id}: policy evidence unresolved&quot;)
+        continue
+    likely_match = semantic &gt;= 85
+    supported = policy == &quot;PASS&quot;
+    label = &quot;agree&quot; if likely_match == supported else &quot;disagree&quot;
+    print(f&quot;{case_id}: {label}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: agree
+B: disagree
+C: policy evidence unresolved
+</code></pre></details>
+<p><strong>Experiment.</strong> Imagine the semantic scorer flags B as less similar. Change only its score from <code>98</code> to <code>79</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: agree
+B: agree
+C: policy evidence unresolved
+</code></pre></details>
+<p>Before the edit, the similarity scorer would put B in the likely-match pile while the policy rule would hold it back. After the edit, both point to holding B back. The draft still says 90 days, so the deadline verdict stays FAIL. <strong>Checkpoint.</strong> Why didn&#x27;t C appear in either pile? You have a semantic score, but you still need evidence about what “first month” means. Send that question to the reviewer.</p>
+<h5>Step 6 — Route missing evidence and borderline scores</h5>
+<p>Decide which cases to accept, reject, or send to a reviewer. The deadline results and semantic scores below are supplied teaching inputs. <code>return</code> ends a function with its result, so the sequence implements priority. A score can be <code>None</code> to represent an unavailable value. Use <code>is None</code> so that a real score of zero still reaches the threshold comparison.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def route(deadline, semantic):
+    if deadline == &quot;FAIL&quot;:
+        return &quot;REJECT (deadline)&quot;
+    if deadline == &quot;UNKNOWN&quot;:
+        return &quot;REVIEW (deadline)&quot;
+    if semantic is None:
+        return &quot;REVIEW (scorer unavailable)&quot;
+    if semantic &lt; 85:
+        return &quot;REVIEW (borderline similarity)&quot;
+    return &quot;ACCEPT&quot;
+
+cases = [
+    (&quot;A&quot;, &quot;PASS&quot;, 92),
+    (&quot;B&quot;, &quot;FAIL&quot;, 98),
+    (&quot;C&quot;, &quot;UNKNOWN&quot;, 94),
+    (&quot;F&quot;, &quot;PASS&quot;, None),
+    (&quot;G&quot;, &quot;PASS&quot;, 83),
+]
+
+for name, deadline, semantic in cases:
+    print(f&quot;{name}: {route(deadline, semantic)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: ACCEPT
+B: REJECT (deadline)
+C: REVIEW (deadline)
+F: REVIEW (scorer unavailable)
+G: REVIEW (borderline similarity)
+</code></pre></details>
+<p><strong>Experiment.</strong> Suppose a reviewer finds a definition that resolves C’s deadline and records it as confirmed in a trial copy. Change only C’s <code>deadline</code> from <code>&quot;UNKNOWN&quot;</code> to <code>&quot;PASS&quot;</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: ACCEPT
+B: REJECT (deadline)
+C: ACCEPT
+F: REVIEW (scorer unavailable)
+G: REVIEW (borderline similarity)
+</code></pre></details>
+<p>C now clears the gate and reaches the similarity check. <strong>Checkpoint.</strong> Could a high score have supplied that definition? The score compares wording or meaning under its method. The authoritative document supplies the actual deadline. This exercise considers only the deadline and similarity, with other facts assumed confirmed.</p>
+<h5>Step 7 — Build an auditable cascade</h5>
+<p>Combine the earlier checks on seven saved replies. The program computes exact match, word coverage, policy verdicts, presentation, and routing. The semantic numbers and two presentation ratings on each row are fictional inputs. The last value is a separate, fictional human disposition. It lets you check the automatic decisions. It never enters the automatic routing function.</p>
+<p>A case has a task so the program knows which question and reference to use. A receipt value of <code>True</code> means it was verified that the reply requires a valid receipt. <code>False</code> means the reply explicitly waives it. <code>None</code> means the required fact is unresolved. For the navigation task, the day and receipt checks are N/A. The approved help location still matters, so its check uses the fixed reference route. In this exercise the navigation reply has exactly that wording. A reference to the correct route in other words would go to review. The task, rather than the score label, tells the router whether semantic similarity is required.</p>
+<p>The policy checks use only verified calendar-day counts from delivery. A dictionary stores values under names such as <code>&quot;question&quot;</code>. <code>record[&quot;decision&quot;]</code> looks up the decision. In <code>90 * 0.75 + 80 * 0.25</code>, the shares total one. The <code>for</code> loop saves each record and prints its route. The square brackets in <code>auto</code> collect records whose decision is ACCEPT or REJECT. <code>checked</code> keeps just the automatic decisions with a human outcome. <code>sum()</code> counts disagreements by adding one for each true comparison.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">reference = &quot;Request a refund within 30 calendar days of delivery with a valid receipt.&quot;
+help_reference = &quot;Open Orders and select Contact support for the purchase.&quot;
+refund_policy = &quot;refund-1&quot;
+routing_version = &quot;routing-v1&quot;
+cutoff = {&quot;routing-v1&quot;: 85, &quot;routing-v2&quot;: 80, &quot;routing-v3&quot;: 95}[routing_version]
+questions = {
+    &quot;refund&quot;: &quot;What is the refund deadline and what do I need?&quot;,
+    &quot;help&quot;: &quot;Where is the refund help button?&quot;,
+}
+cases = [
+    (&quot;A&quot;, &quot;refund&quot;, &quot;You have up to thirty calendar days after your parcel arrives to ask for your money back. Bring a valid receipt.&quot;, 30, True, 92, 96, 80, &quot;ACCEPT&quot;),
+    (&quot;B&quot;, &quot;refund&quot;, &quot;Request a refund within 90 calendar days of delivery with a valid receipt.&quot;, 90, True, 98, 96, 80, &quot;REJECT&quot;),
+    (&quot;C&quot;, &quot;refund&quot;, &quot;During the first month after arrival, ask for your money back with a valid receipt.&quot;, None, True, 94, 92, 88, &quot;PENDING&quot;),
+    (&quot;D&quot;, &quot;refund&quot;, &quot;Request a refund within 30 calendar days of delivery.&quot;, 30, None, 96, 96, 88, &quot;REJECT&quot;),
+    (&quot;E&quot;, &quot;help&quot;, help_reference, None, None, &quot;N/A&quot;, 80, 92, &quot;ACCEPT&quot;),
+    (&quot;F&quot;, &quot;refund&quot;, reference, 30, True, &quot;ERROR&quot;, 88, 88, &quot;ACCEPT&quot;),
+    (&quot;G&quot;, &quot;refund&quot;, &quot;Keep the valid receipt. Count 30 calendar days from when the package arrives to request your refund.&quot;, 30, True, 83, 88, 92, &quot;ACCEPT&quot;),
+]
+
+def words(text):
+    return set(text.lower().replace(&quot;.&quot;, &quot;&quot;).replace(&quot;,&quot;, &quot;&quot;).split())
+
+def route(deadline, receipt, help_route, semantic_required, semantic, presentation):
+    if &quot;FAIL&quot; in (deadline, receipt):
+        return &quot;REJECT&quot;, &quot;policy mismatch&quot;
+    if &quot;UNKNOWN&quot; in (deadline, receipt, help_route):
+        return &quot;REVIEW&quot;, &quot;policy evidence&quot;
+    if semantic_required and semantic == &quot;ERROR&quot;:
+        return &quot;REVIEW&quot;, &quot;scorer error&quot;
+    if semantic_required and semantic == &quot;N/A&quot;:
+        return &quot;REVIEW&quot;, &quot;missing semantic score&quot;
+    if semantic_required and semantic &lt; cutoff:
+        return &quot;REVIEW&quot;, &quot;low semantic score&quot;
+    if presentation &lt; 80:
+        return &quot;REVIEW&quot;, &quot;presentation&quot;
+    return &quot;ACCEPT&quot;, &quot;checks cleared&quot;
+
+records = []
+for name, task, reply, days, valid_receipt, semantic, clarity, usefulness, human in cases:
+    approved = reference if task == &quot;refund&quot; else help_reference
+    exact = reply == approved
+    shared = len(words(reply) &amp; words(approved))
+    deadline = receipt = help_route = &quot;N/A&quot;
+    if task == &quot;refund&quot;:
+        deadline = &quot;UNKNOWN&quot; if days is None else (&quot;PASS&quot; if days == 30 else &quot;FAIL&quot;)
+        receipt = &quot;UNKNOWN&quot; if valid_receipt is None else (&quot;PASS&quot; if valid_receipt else &quot;FAIL&quot;)
+    else:
+        help_route = &quot;PASS&quot; if exact else &quot;UNKNOWN&quot;
+
+    presentation = 0.75 * clarity + 0.25 * usefulness
+    decision, reason = route(deadline, receipt, help_route, task == &quot;refund&quot;, semantic, presentation)
+    record = {
+        &quot;id&quot;: name, &quot;question&quot;: questions[task], &quot;reference&quot;: approved, &quot;candidate&quot;: reply,
+        &quot;refund_policy&quot;: refund_policy, &quot;routing_version&quot;: routing_version,
+        &quot;exact&quot;: exact, &quot;shared&quot;: shared, &quot;reference_words&quot;: len(words(approved)),
+        &quot;deadline&quot;: deadline, &quot;receipt&quot;: receipt, &quot;help_route&quot;: help_route, &quot;semantic&quot;: semantic,
+        &quot;clarity&quot;: clarity, &quot;usefulness&quot;: usefulness, &quot;presentation&quot;: presentation,
+        &quot;decision&quot;: decision, &quot;reason&quot;: reason, &quot;human&quot;: human,
+    }
+    records.append(record)
+    print(f&quot;{name}: {decision} ({reason}) | semantic {semantic} | presentation {presentation:.2f} | human {human}&quot;)
+
+auto = [r for r in records if r[&quot;decision&quot;] != &quot;REVIEW&quot;]
+checked = [r for r in auto if r[&quot;human&quot;] != &quot;PENDING&quot;]
+errors = sum(r[&quot;decision&quot;] != r[&quot;human&quot;] for r in checked)
+print(f&quot;{routing_version} | semantic cutoff {cutoff}&quot;)
+print(f&quot;Auto coverage: {len(auto)}/{len(records)} | errors: {errors}/{len(checked)}&quot;)
+print(f&quot;Review queue: {len(records) - len(auto)}&quot;)
+audit = records[2]
+print(f&#x27;Audit {audit[&quot;id&quot;]} | {audit[&quot;refund_policy&quot;]} | {audit[&quot;routing_version&quot;]} | deadline {audit[&quot;deadline&quot;]} | receipt {audit[&quot;receipt&quot;]}&#x27;)
+print(f&#x27;Reference: {audit[&quot;reference&quot;]}&#x27;)
+print(f&#x27;Candidate: {audit[&quot;candidate&quot;]}&#x27;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: ACCEPT (checks cleared) | semantic 92 | presentation 92.00 | human ACCEPT
+B: REJECT (policy mismatch) | semantic 98 | presentation 92.00 | human REJECT
+C: REVIEW (policy evidence) | semantic 94 | presentation 91.00 | human PENDING
+D: REVIEW (policy evidence) | semantic 96 | presentation 94.00 | human REJECT
+E: ACCEPT (checks cleared) | semantic N/A | presentation 83.00 | human ACCEPT
+F: REVIEW (scorer error) | semantic ERROR | presentation 88.00 | human ACCEPT
+G: REVIEW (low semantic score) | semantic 83 | presentation 89.00 | human ACCEPT
+routing-v1 | semantic cutoff 85
+Auto coverage: 3/7 | errors: 0/3
+Review queue: 4
+Audit C | refund-1 | routing-v1 | deadline UNKNOWN | receipt PASS
+Reference: Request a refund within 30 calendar days of delivery with a valid receipt.
+Candidate: During the first month after arrival, ask for your money back with a valid receipt.
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>routing_version = &quot;routing-v1&quot;</code> to <code>routing_version = &quot;routing-v2&quot;</code>. Use the same captured replies and evaluator results.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: ACCEPT (checks cleared) | semantic 92 | presentation 92.00 | human ACCEPT
+B: REJECT (policy mismatch) | semantic 98 | presentation 92.00 | human REJECT
+C: REVIEW (policy evidence) | semantic 94 | presentation 91.00 | human PENDING
+D: REVIEW (policy evidence) | semantic 96 | presentation 94.00 | human REJECT
+E: ACCEPT (checks cleared) | semantic N/A | presentation 83.00 | human ACCEPT
+F: REVIEW (scorer error) | semantic ERROR | presentation 88.00 | human ACCEPT
+G: ACCEPT (checks cleared) | semantic 83 | presentation 89.00 | human ACCEPT
+routing-v2 | semantic cutoff 80
+Auto coverage: 4/7 | errors: 0/4
+Review queue: 3
+Audit C | refund-1 | routing-v2 | deadline UNKNOWN | receipt PASS
+Reference: Request a refund within 30 calendar days of delivery with a valid receipt.
+Candidate: During the first month after arrival, ask for your money back with a valid receipt.
+</code></pre></details>
+<p>G alone moves from review to acceptance. Its policy checks already passed, and 83 is now enough to clear the similarity check. B stays rejected. C needs a policy definition, D needs the receipt condition added, and F needs a scorer rerun or manual fallback. D&#x27;s human outcome is REJECT because a reviewer has already confirmed the omission in the full text. The audit keeps the initial REVIEW to show how the case got to that person. E needed no semantic score. F needed one and its evaluator did not return a usable value.</p>
+<p><strong>Checkpoint.</strong> Which denominator would you use for 0 automatic errors under <code>routing-v2</code>? Use four, the automatic decisions with completed human labels. The seven cases are the denominator for coverage. At four minutes per reviewed case, this experiment saves an estimated four minutes on the fixture. A broader test with independent labels would be needed before changing a live workflow.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Read the disagreement</h5>
+<p>A valid paraphrase of the deadline and receipt policy fails exact match and has a strong semantic score. A near copy changes 30 to 90 and has an even higher semantic score. Which results are expected? What evidence would you use to decide which reply to release?</p>
+<h5>Practice 2. Calculate a presentation summary</h5>
+<p>A draft scores 88 for clarity and 64 for usefulness. Use clarity weight 0.75 and usefulness weight 0.25. Calculate both contributions and the presentation score. Then give the new score if both weights are 0.50 and explain what changed.</p>
+<h5>Practice 3. Apply a critical rule</h5>
+<p>A reply gives the correct 30 calendar days from delivery and explicitly says a valid receipt is optional. Presentation is 92 and semantic similarity is 97. Show the decision without a gate if someone averages those scores with a policy fail of zero and accepts at 60. Then show the decision using the approved cascade.</p>
+<h5>Practice 4. Set the review priority</h5>
+<p>C has a high semantic score and an unclear deadline. E answers only where to find the help button and has N/A for the deadline. F quotes the right facts but its semantic scorer timed out. Assuming the presentation scores clear the cutoff, route each case. Which would you review with a policy specialist, and which would you investigate with the evaluator owner?</p>
+<h4>Independent Assignment</h4>
+<p>You are deciding whether Harbor Leaf should trial a different review rule. Use the two approved references, seven saved replies, critical facts, presentation weights, and scorer outputs in Step 7. Predict each case’s automatic route before running the code. Explain why C and D still require review despite their high scores, and distinguish F’s evaluator error from E’s N/A.</p>
+<p>The complete runnable answer key is the Step 7 program. Select Copy Code there and make a fresh copy for each variant. In variant A, set <code>routing_version</code> to <code>&quot;routing-v3&quot;</code> and keep all evidence fixed. In variant B, keep <code>routing-v1</code>, then simulate a successful rerun of F&#x27;s scorer by replacing only the <code>&quot;ERROR&quot;</code> in F’s row with <code>90</code>. Record coverage, checked automatic errors, reviews, and estimated review time at four minutes per case. Defend a routing choice for the fixture and name the evidence you would collect before wider use.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Exact match reports a difference for both because their characters differ from the approved reference. The semantic scores can both be high because both replies discuss the refund window and receipt. Compare the actual deadline, starting event, and receipt statement with the approved policy. The paraphrase preserves those facts. The 90-day claim fails the deadline rule.</p>
+<h5>Solution 2</h5>
+<p>The clarity contribution is 0.75 × 88 = 66 and usefulness contributes 0.25 × 64 = 16. The sum is 82. Equal weights give 44 + 32 = 76. Giving more weight to the lower rating reduced the aggregate. The underlying ratings did not change.</p>
+<h5>Solution 3</h5>
+<p>Add the two scores and the zero for the policy failure. You get 189. Divide by three and the score is 63, which clears 60. Now read the sentence about the receipt on its own. It says the customer can skip something the store requires. The cascade rejects the draft at that rule. The repair is to state the requirement and check the new wording against the same source.</p>
+<h5>Solution 4</h5>
+<p>Route C to policy review. Check the dated source and whether it defines “first month” exactly. E can be accepted if its location is confirmed because it answers a separate navigation question. Route F to review and ask the evaluator owner to rerun or diagnose the timeout. The error belongs to the evaluation run. The saved reply can still be checked by a reviewer while the scorer is unavailable.</p>
+<h5>Assignment answer key</h5>
+<p>For variant A, the only changed output lines from the Step 7 baseline are <code>A: REVIEW (low semantic score) | semantic 92 | presentation 92.00 | human ACCEPT</code>, <code>routing-v3 | semantic cutoff 95</code>, <code>Auto coverage: 2/7 | errors: 0/2</code>, <code>Review queue: 5</code>, and <code>Audit C | refund-1 | routing-v3 | deadline UNKNOWN | receipt PASS</code>. Five reviews would take an estimated 20 minutes. The higher cutoff moves A to review without helping with either high-scoring policy problem.</p>
+<p>For variant B, the only changed output lines from the Step 7 baseline are <code>F: ACCEPT (checks cleared) | semantic 90 | presentation 88.00 | human ACCEPT</code>, <code>Auto coverage: 4/7 | errors: 0/4</code>, and <code>Review queue: 3</code>. Three reviews would take an estimated 12 minutes. F moves because its required evidence is now present. Raising or lowering the cutoff alone could not supply that evidence.</p>
+<p>For this fixture <code>routing-v2</code> saves one review while reaching the same observed error count. Variant B shows a different way to save a review by repairing the evaluator. Retain checks for the 30-day limit and receipt on every relevant case. To defend a change beyond this fixture, test more independently labeled replies, including deadline mistakes, receipt omissions, paraphrases around the cutoff, and scorer failures. Report any labels still pending.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Exact match rejects a correct paraphrase. When would exact match be an appropriate authority?</li><li>Three wording-oriented scores all rise after a rewrite. Why might giving them each a separate vote overstate the evidence?</li><li>You increase the weight of the higher presentation rating. What happens to the score if the ratings remain fixed?</li><li>A receipt statement is confirmed false and similarity is unavailable. Which branch should run first?</li><li>Why should the deadline check for a help-button question use N/A?</li><li>A case with a strong aggregate says “first month.” What evidence would justify taking it out of review?</li><li>How would you report a replay with three automatic decisions, one of them awaiting a human label, and no errors among the other two?</li><li>Exactly the same reply moves to acceptance when the routing version changes. What must the team preserve to explain the move?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Use it when the agreed task requires one exact output, such as a fixed status code. A policy answer in prose can express the same facts with different words.</li><li>These measures all react to properties of the same wording. Their agreement can be informative, but it gives no independent evidence about whether the answer matches the policy.</li><li>The aggregate rises, because a larger share goes to the higher rating. The change describes the scoring rule.</li><li>Reject at the policy gate. The explicit contradiction is already supported by the approved source. Log the unavailable similarity separately.</li><li>The question concerns a user-interface location. A deadline would answer a different question. N/A says the check had no job in this case, so it should neither hurt the score nor disappear as a timeout.</li><li>Check the authoritative policy version and the context for that order. If that evidence gives an unambiguous 30-calendar-day meaning and supports the other facts, document it. If it leaves the deadline unclear, keep or resolve the review by requiring a rewrite.</li><li>Report zero errors out of two checked automatic decisions and one automatic decision awaiting a label. Give coverage as three out of the total number of attempted cases if that total is available.</li><li>Keep the captured reply, question, reference, policy version, original scores, earlier decision, and both routing versions. The difference can then be traced to the actual rule change.</li></ol>
+</div></details>
+<h4>Common Mistakes</h4>
+<p>Mixing hard requirements into one average can hide bad advice. Check the policy facts first, then use presentation and similarity for their stated jobs.</p>
+<p>A missing input, a scorer error, and a check that does not apply deserve separate labels. Otherwise you cannot tell whether to inspect the reply, fix the evaluator, or leave the check out of that task.</p>
+<p>A smaller review queue can come with more mistakes. When a rule changes, compare automatic errors and coverage on the same cases and include the number of checked labels. Write down any assumed review cost so another person can recalculate it.</p>
+<h4>Lesson Summary and Next Step</h4>
+<p>A useful evaluation records what every method measured and lets confirmed critical failures stop a reply. A rule followed by similarity triage and human review gives you a reason for each route. Keep the evidence, versions, and reviewer’s decision so you can replay a policy change without losing what happened before.</p>
+<p>Next, <a href="#m06-t01">Pointwise LLM-as-a-Judge</a> looks at checking a single saved reply with a model and verifying the model’s verdict against evidence.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a>, <a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a>, <a href="#m05-t02">Embeddings and semantic similarity</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m05-t02">Embeddings and semantic similarity</a> — required when tuning a semantic triage threshold instead of consuming supplied proxy scores</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Apply a numeric gate, semantic triage and human review to one fixture and compare with a single averaged score.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 for ordered checks and P06 for counts and rates.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Propose and defend an escalation rule with coverage and error counts.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
