@@ -10600,34 +10600,637 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m07-t03">
-  <p class="lesson-intro" data-lesson-search>A regression decision depends on what changed, what was held fixed and which risks matter.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Paired offline experiments, locked baselines, key slices, noninferiority margins, guardrails, offline versus randomized online A/B effects and regression reporting.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Lock a baseline and design a paired comparison that isolates a model change, a prompt change, or a deliberate bundle.</li><li>Calculate pass rates, improvements and regressions, and check where gains or losses occur by policy segment.</li><li>Distinguish an offline replay from a randomized online A/B and audit assignment, exposure, and outcome counts.</li><li>Use uncertainty, a noninferiority margin, critical policy gates, and operational guardrails to write a release recommendation.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Put two saved refund questions on your desk. On C01, both assistants give the right answer. On C02, the proposed assistant tells the shopper to bring a valid receipt and the current assistant leaves that out. If someone asks you to ship the proposed version, start by naming what you have seen: one extra correct answer on two questions. Then ask to see the cases where the current assistant was already getting the answer right.</p>
+<p>All cases, models, costs, and timings here are fictional. The approved policy, <code>refund-1</code>, allows a request for an eligible unused online order through calendar day 30 after delivery, with a valid receipt. Day 30 is included. The assistant must ask for the delivery date when the deadline cannot be established.</p>
+<p>Allow about six hours. Start with <a href="#m02-t03">Offline, online and the evaluation lifecycle</a> and <a href="#m07-t02">Confidence intervals, significance and sample size</a>. <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> helps you build a comparison set. <a href="#m07-t01">Variance, repetition and score aggregation</a> explains why repeated judgments on the same replies leave the number of independent cases unchanged.</p>
+<h4>Beginner Explanation</h4>
+<h5>Start with the exact comparison</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Case</th><th scope="col">Current</th><th scope="col">Proposed</th></tr></thead><tbody><tr><td>C01</td><td>PASS</td><td>PASS</td></tr><tr><td>C02</td><td>FAIL</td><td>PASS</td></tr></tbody></table></div>
+<p>In two matched cases the proposed version gained one pass and lost none. That is evidence about these two questions. Now imagine it wrongly tells someone on day 45 that they still have time. The next question in the test could change the launch decision.</p>
+<p>The current configuration is the <strong>baseline</strong>. Freeze its resolved model version, prompt text and version, generation settings, tools or policy source, and response-handling rules. The proposed configuration is the <strong>candidate</strong>. Give both a stable configuration ID. Save the dataset, rubric, judge settings, run ID, and the captured responses so a colleague can replay the comparison. This is a <strong>locked baseline</strong> because a later re-run can identify the exact version used.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Question you want to answer</th><th scope="col">Change on purpose</th><th scope="col">Keep fixed</th></tr></thead><tbody><tr><td>Does a different model help?</td><td>Model A to Model B</td><td>Prompt, policy input, cases, rubric, and comparable generation and retry settings</td></tr><tr><td>Does the prompt help?</td><td>V1 to V2</td><td>Model, policy input, cases, generation settings, and evaluation</td></tr><tr><td>Is the complete package better?</td><td>A documented bundle</td><td>Cases and evaluation rules. Record every intentional change.</td></tr><tr><td>What happens to real users?</td><td>Randomly assigned complete variants</td><td>Eligibility, outcome definitions, collection rules, and the comparison window</td></tr></tbody></table></div>
+<p>Check the effective settings rather than just the settings you requested. One model can obey a format instruction that another ignores, take longer at the same workload, or fail in a different way. Decide what to do if a setting has no equivalent. If you customize the prompt or retry policy for one model, the result measures a bundle. Treat invalid or missing results consistently. Keep them out of binary accuracy, report them in coverage, and inspect whether they cluster in a hard segment.</p>
+<h5>Pair the cases and count gains and losses</h5>
+<p>Join both replies on the same case ID, then place each complete pair in one of four groups. Both pass and both fail are agreements. A baseline-only pass is a regression. A candidate-only pass is an improvement. For example, 1 both-pass, 1 baseline-only, 2 candidate-only and 0 both-fail gives baseline 2/4 = 50% and candidate 3/4 = 75%. The difference is +25 percentage points. Relative to 50%, the increase is 25 ÷ 50 = 50%. When the baseline is zero, the relative increase is undefined.</p>
+<p>The net paired gain is two improvements minus one regression, or one additional pass across four cases. A positive total can hide a real loss. Read the baseline-only rows. A comparison on four cases with both conditions fixed still describes those four held-out cases. Repeat it if generation varies, and group related cases before drawing statistical conclusions. If one side has an unreadable verdict, report both configurations’ valid coverage and restrict the paired effect to the same complete case IDs. A candidate with 6 valid passes out of 7 valid answers could look better partly because its toughest case was omitted.</p>
+<h5>Change one factor and look at the interaction</h5>
+<p>Try four combinations on the same known-answer cases, using Model A or B and Prompt V1 or V2. Compare A/V1 with A/V2 to isolate the prompt on A. Compare A/V1 with B/V1 to isolate the model under V1. A two-by-two matrix also lets you check whether the effect of V2 is the same on B. If the prompt adds no passes on A and one on B, the observed prompt benefit depends on the model. That pattern is an <strong>interaction</strong> in this fixture.</p>
+<p>Put C02 and C03 side by side. The reminder to mention both refund conditions helps on C02. On C03, the new reply asks for an order number before answering a question whose answer is already in the policy. Compare both replies using the same rubric. Then imagine that you also swapped the model. You could see whether the bundle improved, but the comparison would give you no way to tell which edit produced the change. That attribution problem is <strong>confounding</strong>.</p>
+<h5>Check where the improvement happened</h5>
+<p>Group questions by the policy situation they test. These groups are <strong>segments</strong>, or slices. Look at routine, receipt, outside-window, and ambiguous questions separately. If the candidate gains two routine passes but loses one outside-window case, the overall rate can rise while the replies with the most serious consequences get worse.</p>
+<p>Before testing, decide how much loss in a key segment would be acceptable for a given trade-off. Suppose faster delivery is worth at most a three-point drop in accurate routine guidance. That is a <strong>noninferiority margin</strong> of −3 points for candidate minus baseline. An appropriate confidence bound above −3 would support the claim that the drop is smaller than the allowance under the design. A bound at −8 leaves too much uncertainty even when the observed difference is −1. For example, for a 5% one-sided decision, use an appropriate one-sided 95% lower bound. A lower limit of −2 clears the −3 margin. The previous lesson shows how pairing changes uncertainty. Choose a method appropriate for that design before examining the result. An equality test with a large p-value cannot establish noninferiority. CONSORT extension on noninferiority margins</p>
+<p>The lab’s segment review uses an observed drop as a screening signal and gives no formal noninferiority conclusion. For eight prepared cases, report the effect and the exact paired test from M07-T02 as illustrative evidence. A nonsignificant result leaves the comparison open. A significant result would still need adequate coverage, practical benefit, and critical checks. Plan the primary comparison and a fresh confirmatory set before picking a winner from several alternatives.</p>
+<h5>Use accuracy with the other release evidence</h5>
+<p>Choose a primary metric before looking at results. Offline, Harbor Leaf uses policy-correct pass rate. Record response time, cost per response, invalid-verdict rate, and coverage as separate measures. Report which attempts enter the latency and cost summaries. In a larger study inspect slow-tail latency as well as the mean. Online, you might also measure resolution without repeat contact and inspect satisfaction or escalation rate if you can measure them fairly. A user feeling reassured does not verify a 90-day promise.</p>
+<p>A <strong>critical gate</strong> blocks on a verified wrong deadline or explicit receipt waiver. <strong>Operational guardrails</strong> limit mean latency and estimated cost in the toy lab. Set a practical floor for the observed gain so a tiny improvement does not justify an expensive change. Under the fictional rules, say HOLD when a blocking requirement fails, REVIEW when coverage, uncertainty or other evidence leaves the case open, and RELEASE only when the documented evidence clears the rules. In a real rollout, also plan monitoring and rollback.</p>
+<h5>Randomize users when the question is about live effects</h5>
+<p>The offline comparison asks how both configurations answer the same prepared cases. A live A/B asks what happens when eligible users are assigned different variants. Lock eligibility before assignment. Randomly allocate users, keep each user on their assigned variant, and keep the same observation window and outcome definition. An <strong>exposure</strong> is a logged opportunity to see the assigned assistant. Record both assignment and exposure. A user who falls back to the old route still belongs to the group they were assigned when you estimate the effect of assigning the new variant.</p>
+<p>For the teaching pilot, plan a 50/50 split and observe seven days with a fixed 24-hour resolution window per user. Estimate resolved requests per assigned user and prespecify deadline errors and latency as guardrails. Do not repeatedly peek at the primary outcome and stop as soon as it looks favorable. Stop or pause early for verified critical harm, missing exposure logs, or a broken assignment mechanism. Follow-up outside the planned window needs its own plan.</p>
+<p>If the observed assignment proportions differ unexpectedly from the planned allocation, investigate <strong>sample-ratio mismatch</strong> before interpreting the outcome. Exposure can also differ while assignment is balanced. Check eligibility, assignment code, routing, and logging in order. A person seeing both variants is <strong>contamination</strong>. Inspect that case separately without silently dropping it from the assigned arm. Fabijan et al., Diagnosing Sample Ratio Mismatch</p>
+<p>The lab simulates assignment, exposure, and outcomes so you can debug an exposure gap. The output does not produce a live A/B effect or authorize a rollout.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Keep the gain and the regression in view</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Should we replace Prompt V1 after the first two cases favor Prompt V2?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Use the same Model A, policy, judge, and rubric. A receipt question needs a direct statement that a valid receipt is required.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>On C01 both versions pass. On C02 V1 omits the receipt and V2 supplies it. Add C03, where V1 answers the direct receipt question and V2 asks for an order number instead, and C04, where V1 omits the receipt and V2 gives the rule.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The four pairs contain one both-pass, one baseline-only, two candidate-only and no both-fail. V1 passes 2/4 and V2 passes 3/4, a gain of 25 points or a 50% relative increase. The saved V2 run still regresses on C03. Its reply suggests the order-number instruction is involved. Another controlled replay can check whether that pattern repeats.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Keep the C03 ID and both replies in the regression report. Inspect whether the instruction to ask for order details overrides direct receipt guidance. Four hand-picked cases cannot establish the size of a production gain.</span></p>
+<h5>Example 2. Separate the model and prompt edits</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Which change explains the improvement from A/V1 to B/V2?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Compare the same four saved cases with a fixed policy and rubric. A direct receipt question must be answered, and a missing delivery date must prompt clarification.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The table below lists the fictional judged results. All four combinations use the same case IDs.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>With V1 fixed, replacing A with B changes 2/4 to 3/4, a 25-point gain. With V2 fixed it changes 2/4 to 4/4, a 50-point gain. On A, changing the prompt has a net gain of zero. On B, the same prompt change gains one pass. The prompt effect differs with the model in this fixture.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Record both one-factor comparisons. A/V1 to B/V2 alone cannot assign the gain to a specific component. Repeat the controlled comparison on representative held-out cases before extrapolating.</span></p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Case</th><th scope="col">A/V1</th><th scope="col">A/V2</th><th scope="col">B/V1</th><th scope="col">B/V2</th></tr></thead><tbody><tr><td>C01</td><td>PASS</td><td>PASS</td><td>PASS</td><td>PASS</td></tr><tr><td>C02</td><td>FAIL</td><td>PASS</td><td>PASS</td><td>PASS</td></tr><tr><td>C03</td><td>PASS</td><td>FAIL</td><td>PASS</td><td>PASS</td></tr><tr><td>C07</td><td>FAIL</td><td>FAIL</td><td>FAIL</td><td>PASS</td></tr></tbody></table></div>
+<h5>Example 3. Inspect the strongest headline result</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Should Harbor Leaf release the highest-scoring alternative in the eight-case replay?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Use <code>refund-1</code>. A verified critical error, mean latency over 900 ms, or estimated mean cost over $0.025 per captured reply triggers HOLD. Incomplete pairs or insufficient statistical evidence require REVIEW.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>A/V1 passes 5/8. A/V2 passes 6/8 with 550 ms and $0.012. B/V2 passes 7/8 with 700 ms and $0.023, but its C05 reply says day 45 is still within a 90-day window. Both candidates have 8/8 paired coverage.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>A/V2 gains two cases and loses one, for +12.5 points and exact paired p = 1.00000. B/V2 gains three and loses C05, for +25 points and p = 0.62500. Outside-window performance falls from 2/2 to 1/2 for B/V2. Costs and latencies are fictional, and both means clear their limits.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Write REVIEW beside A/V2. Preserve its C03 regression and collect more matched cases. Write HOLD beside B/V2 and attach the C05 reply. A customer on day 45 would be told to file a request after the approved 30-day window closed. Repair that behavior, then test it on fresh outside-window cases. The accuracy and timing results belong in the report alongside the policy evidence.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Select Copy Code, open the editor next to the activity, paste the full program, and select Run. Compare the first output, predict the experimental change, and then make the one documented edit. Start every activity in a fresh editor. All data are inline and fictional. The programs compare frozen records and never call a model.</p>
+</div></details>
+<h5>Step 1 — Count changes on two matched questions</h5>
+<p>Read each case ID and the two labels together. A tuple groups the three values. The <code>for</code> loop gives them names once per row. Adding Boolean conditions with <code>sum()</code> counts how often each one is true.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">rows = [(&quot;C01&quot;, &quot;PASS&quot;, &quot;PASS&quot;), (&quot;C02&quot;, &quot;FAIL&quot;, &quot;PASS&quot;)]
+for case, baseline, candidate in rows:
+    print(f&quot;{case}: {baseline} -&gt; {candidate}&quot;)
+gains = sum(a == &quot;FAIL&quot; and b == &quot;PASS&quot; for _, a, b in rows)
+losses = sum(a == &quot;PASS&quot; and b == &quot;FAIL&quot; for _, a, b in rows)
+print(f&quot;Improvements: {gains} | regressions: {losses}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">C01: PASS -&gt; PASS
+C02: FAIL -&gt; PASS
+Improvements: 1 | regressions: 0
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only the candidate’s C01 label to FAIL. Predict which count moves.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">C01: PASS -&gt; FAIL
+C02: FAIL -&gt; PASS
+Improvements: 1 | regressions: 1
+</code></pre></details>
+<p>The same number of improvements now comes with a regression. <strong>Checkpoint.</strong> What should you open next? Read both C01 replies and the policy before deciding whether the regression is trustworthy or serious.</p>
+<h5>Step 2 — Recalculate percentages when the denominator changes</h5>
+<p>Turn PASS into 1 and FAIL into 0. Divide each sum by the same length. <code>:.1%</code> prints a fraction as a percentage. Relative improvement divides the rate change by the baseline rate and needs a nonzero baseline.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">pairs = [(&quot;C01&quot;, 1, 1), (&quot;C02&quot;, 0, 1)]
+a = sum(baseline for _, baseline, _ in pairs) / len(pairs)
+b = sum(candidate for _, _, candidate in pairs) / len(pairs)
+print(f&quot;{len(pairs)} paired cases | baseline {a:.1%} | candidate {b:.1%}&quot;)
+print(f&quot;Absolute gain: {100 * (b - a):+.1f} pp&quot;)
+print(f&quot;Relative gain: {(b - a) / a:+.1%}&quot; if a else &quot;Relative gain: unavailable&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">2 paired cases | baseline 50.0% | candidate 100.0%
+Absolute gain: +50.0 pp
+Relative gain: +100.0%
+</code></pre></details>
+<p><strong>Experiment.</strong> Add <code>(&quot;C09&quot;, 0, 0)</code>, a both-fail case, to the list. Predict the absolute and relative changes.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">3 paired cases | baseline 33.3% | candidate 66.7%
+Absolute gain: +33.3 pp
+Relative gain: +100.0%
+</code></pre></details>
+<p>There is still one net additional pass. It is now one in three instead of one in two. The candidate still passes twice as many questions as the baseline. <strong>Checkpoint.</strong> Which statistic tells you the extra passes per 100 comparable questions? The percentage-point change expresses that directly.</p>
+<h5>Step 3 — Find a prompt regression without moving the model</h5>
+<p>Freeze Model A. The two fictional prompt outcomes are compared by case. A list expression keeps the case IDs that meet its condition. Printing the lists tells you which replies to open.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">model = &quot;A&quot;
+rows = [(&quot;C01&quot;, &quot;PASS&quot;, &quot;PASS&quot;), (&quot;C02&quot;, &quot;FAIL&quot;, &quot;PASS&quot;), (&quot;C03&quot;, &quot;PASS&quot;, &quot;PASS&quot;)]
+gains = [case for case, old, new in rows if old == &quot;FAIL&quot; and new == &quot;PASS&quot;]
+regressions = [case for case, old, new in rows if old == &quot;PASS&quot; and new == &quot;FAIL&quot;]
+print(f&quot;Model {model} | V1 vs V2&quot;)
+print(f&quot;Improvements: {&#x27;, &#x27;.join(gains) or &#x27;none&#x27;}&quot;)
+print(f&quot;Regressions: {&#x27;, &#x27;.join(regressions) or &#x27;none&#x27;}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Model A | V1 vs V2
+Improvements: C02
+Regressions: none
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only the V2 verdict on C03 to FAIL. This is a saved counterfactual in which a request for order details replaced the direct receipt answer.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Model A | V1 vs V2
+Improvements: C02
+Regressions: C03
+</code></pre></details>
+<p>The gain on C02 survives, but a new regression appears. <strong>Checkpoint.</strong> Can you explain it from the label alone? Open C03’s frozen replies. A label is a pointer to the evidence, and the unchanged model helps isolate the prompt comparison.</p>
+<h5>Step 4 — Compare models and prompts on a shared subset</h5>
+<p>Use C01, C02, C03, and C07 from the four-way table. Each dictionary key gives a model and prompt. Its tuple follows the same ordered case IDs. <code>sum(bits)</code> counts passes. Subtract two rates within the same row or column of the conceptual matrix to isolate the changed factor.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cases = (&quot;C01&quot;, &quot;C02&quot;, &quot;C03&quot;, &quot;C07&quot;)
+verdicts = {
+    &quot;A/V1&quot;: (1, 0, 1, 0), &quot;A/V2&quot;: (1, 1, 0, 0),
+    &quot;B/V1&quot;: (1, 1, 1, 0), &quot;B/V2&quot;: (1, 1, 1, 1),
+}
+rates = {name: sum(bits) / len(cases) for name, bits in verdicts.items()}
+for name, rate in rates.items():
+    print(f&quot;{name}: {sum(verdicts[name])}/{len(cases)} ({rate:.0%})&quot;)
+for label, old, new in [
+    (&quot;Model change under V1&quot;, &quot;A/V1&quot;, &quot;B/V1&quot;), (&quot;Model change under V2&quot;, &quot;A/V2&quot;, &quot;B/V2&quot;),
+    (&quot;Prompt change on A&quot;, &quot;A/V1&quot;, &quot;A/V2&quot;), (&quot;Prompt change on B&quot;, &quot;B/V1&quot;, &quot;B/V2&quot;),
+]:
+    print(f&quot;{label}: {100 * (rates[new] - rates[old]):+.0f} pp&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A/V1: 2/4 (50%)
+A/V2: 2/4 (50%)
+B/V1: 3/4 (75%)
+B/V2: 4/4 (100%)
+Model change under V1: +25 pp
+Model change under V2: +50 pp
+Prompt change on A: +0 pp
+Prompt change on B: +25 pp
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only the last value in B/V2 to <code>0</code>, a failure on C07.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A/V1: 2/4 (50%)
+A/V2: 2/4 (50%)
+B/V1: 3/4 (75%)
+B/V2: 3/4 (75%)
+Model change under V1: +25 pp
+Model change under V2: +25 pp
+Prompt change on A: +0 pp
+Prompt change on B: +0 pp
+</code></pre></details>
+<p>Both comparisons that use B/V2 move. The model change on V1 stays fixed. <strong>Checkpoint.</strong> Could the original jump from A/V1 to B/V2 uniquely identify the prompt effect? No. Compare the held-fixed pairs and report that the observed interaction disappears in the edited fixture.</p>
+<h5>Step 5 — Apply a latency and cost guardrail</h5>
+<p>Use a simplified gate example with a hypothetical result that has already met its coverage and uncertainty criteria. The numbers are illustrative planning inputs, in milliseconds and U.S. dollars per captured reply. Each branch is checked in order. <code>elif</code> only runs if the preceding condition was false.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">baseline_accuracy, candidate_accuracy = 0.625, 0.875
+latency_ms, cost, critical_count = 700, 0.023, 0
+if critical_count or latency_ms &gt; 900 or cost &gt; 0.025:
+    decision = &quot;HOLD&quot;
+elif candidate_accuracy - baseline_accuracy &lt; 0.10:
+    decision = &quot;REVIEW&quot;
+else:
+    decision = &quot;RELEASE&quot;
+
+print(f&quot;Accuracy: {baseline_accuracy:.1%} -&gt; {candidate_accuracy:.1%}&quot;)
+print(f&quot;Mean latency: {latency_ms} ms | estimated cost: ${cost:.3f} | critical: {critical_count}&quot;)
+print(f&quot;Recommendation: {decision}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Accuracy: 62.5% -&gt; 87.5%
+Mean latency: 700 ms | estimated cost: $0.023 | critical: 0
+Recommendation: RELEASE
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>latency_ms</code> from <code>700</code> to <code>950</code>. Predict whether the accuracy line changes.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Accuracy: 62.5% -&gt; 87.5%
+Mean latency: 950 ms | estimated cost: $0.023 | critical: 0
+Recommendation: HOLD
+</code></pre></details>
+<p>The 950 ms mean breaches the 900 ms guardrail. <strong>Checkpoint.</strong> Would a better pass rate resolve it? Investigate latency under the planned workload or revise the service design before trying the release check again. The full lab also checks case coverage and statistical evidence.</p>
+<h5>Step 6 — Check the outside-window slice</h5>
+<p>Group the eight fictional cases by their policy situation. <code>dict.setdefault()</code> gets a group’s list, creating an empty list if needed. Each slice prints pass counts on its own matched denominator.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">rows = [
+    (&quot;C01&quot;, &quot;routine&quot;, 1, 1), (&quot;C02&quot;, &quot;routine&quot;, 0, 1),
+    (&quot;C03&quot;, &quot;receipt&quot;, 1, 1), (&quot;C04&quot;, &quot;receipt&quot;, 0, 1),
+    (&quot;C05&quot;, &quot;outside&quot;, 1, 0), (&quot;C06&quot;, &quot;outside&quot;, 1, 1),
+    (&quot;C07&quot;, &quot;ambiguous&quot;, 0, 1), (&quot;C08&quot;, &quot;ambiguous&quot;, 1, 1),
+]
+groups = {}
+for _, segment, a, b in rows:
+    groups.setdefault(segment, []).append((a, b))
+for segment, pairs in groups.items():
+    left, right = (sum(column) for column in zip(*pairs))
+    print(f&quot;{segment}: {left}/{len(pairs)} -&gt; {right}/{len(pairs)}&quot;)
+print(f&quot;Overall: {sum(row[2] for row in rows)}/{len(rows)} -&gt; {sum(row[3] for row in rows)}/{len(rows)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">routine: 1/2 -&gt; 2/2
+receipt: 1/2 -&gt; 2/2
+outside: 2/2 -&gt; 1/2
+ambiguous: 1/2 -&gt; 2/2
+Overall: 5/8 -&gt; 7/8
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only C06’s candidate result from <code>1</code> to <code>0</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">routine: 1/2 -&gt; 2/2
+receipt: 1/2 -&gt; 2/2
+outside: 2/2 -&gt; 0/2
+ambiguous: 1/2 -&gt; 2/2
+Overall: 5/8 -&gt; 6/8
+</code></pre></details>
+<p>Open the outside row after the edit, before reading the overall line. The baseline still passes both cases, and the candidate passes neither. Now look at the overall line. The gains on other questions still put the candidate ahead. <strong>Checkpoint.</strong> Which replies would you open first? Open C05 and C06. Those two cases identify a slice to investigate and give a direct reason to collect more questions about expired windows.</p>
+<h5>Step 7 — Report a decision without overwriting the failure</h5>
+<p>Replay five selected cases from the held-out table. The historical tuples store baseline and candidate verdicts plus the critical flag. The replay copies the dictionary and replaces only the affected tuple. The replacement stands for a new frozen reply that correctly tells the day-45 customer the deadline has passed. For uncertainty, <code>comb()</code> counts equally likely directions in the discordant-pair test from M07-T02.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import comb
+
+experiment, dataset, rubric = &quot;refund-subset-1&quot;, &quot;refund-holdout-73&quot;, &quot;refund-binary-v1&quot;
+baseline, candidate = &quot;A/V1&quot;, &quot;B/V2&quot;
+revision = &quot;baseline&quot;
+history = {
+    &quot;C01&quot;: (&quot;routine&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    &quot;C02&quot;: (&quot;routine&quot;, &quot;FAIL&quot;, &quot;PASS&quot;, False),
+    &quot;C03&quot;: (&quot;receipt&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    &quot;C05&quot;: (&quot;outside&quot;, &quot;PASS&quot;, &quot;FAIL&quot;, True),
+    &quot;C07&quot;: (&quot;ambiguous&quot;, &quot;FAIL&quot;, &quot;PASS&quot;, False),
+}
+rows = history.copy()
+if revision == &quot;deadline-repair&quot;:
+    rows[&quot;C05&quot;] = (&quot;outside&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False)
+paired = [row for row in rows.values() if all(label in (&quot;PASS&quot;, &quot;FAIL&quot;) for label in row[1:3])]
+n = len(paired)
+a = sum(row[1] == &quot;PASS&quot; for row in paired)
+b = sum(row[2] == &quot;PASS&quot; for row in paired)
+wins = sum(row[1:3] == (&quot;FAIL&quot;, &quot;PASS&quot;) for row in paired)
+losses = sum(row[1:3] == (&quot;PASS&quot;, &quot;FAIL&quot;) for row in paired)
+m = wins + losses
+p = min(1.0, 2 * sum(comb(m, k) for k in range(min(wins, losses) + 1)) / 2 ** m)
+critical = [case for case, row in rows.items() if row[3]]
+latency_ms, cost = 700, 0.023
+gain = (b - a) / n
+if critical or latency_ms &gt; 900 or cost &gt; 0.025:
+    decision = &quot;HOLD&quot;
+elif n &lt; len(rows) or gain &lt; 0.10 or p &gt; 0.05:
+    decision = &quot;REVIEW&quot;
+else:
+    decision = &quot;RELEASE&quot;
+
+print(f&quot;{experiment} | {dataset} | {rubric} | {revision}&quot;)
+print(f&quot;{baseline} {a}/{n} -&gt; {candidate} {b}/{n} | coverage {n}/{len(rows)}&quot;)
+print(f&quot;Gain {100*gain:+.1f} pp | improvements {wins} | regressions {losses} | exact p {p:.5f}&quot;)
+print(f&quot;Outside slice: {history[&#x27;C05&#x27;][1]} -&gt; {rows[&#x27;C05&#x27;][2]}&quot;)
+print(f&quot;Mean latency {latency_ms} ms | cost ${cost:.3f} | critical {&#x27;,&#x27;.join(critical) or &#x27;none&#x27;}&quot;)
+print(f&quot;Audit C05 B: original {history[&#x27;C05&#x27;][2:]} | replay {rows[&#x27;C05&#x27;][2:]}&quot;)
+print(f&quot;Recommendation: {decision}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-subset-1 | refund-holdout-73 | refund-binary-v1 | baseline
+A/V1 3/5 -&gt; B/V2 4/5 | coverage 5/5
+Gain +20.0 pp | improvements 2 | regressions 1 | exact p 1.00000
+Outside slice: PASS -&gt; FAIL
+Mean latency 700 ms | cost $0.023 | critical C05
+Audit C05 B: original (&#x27;FAIL&#x27;, True) | replay (&#x27;FAIL&#x27;, True)
+Recommendation: HOLD
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>revision = &quot;deadline-repair&quot;</code> and predict which gate still needs evidence.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-subset-1 | refund-holdout-73 | refund-binary-v1 | deadline-repair
+A/V1 3/5 -&gt; B/V2 5/5 | coverage 5/5
+Gain +40.0 pp | improvements 2 | regressions 0 | exact p 0.50000
+Outside slice: PASS -&gt; PASS
+Mean latency 700 ms | cost $0.023 | critical none
+Audit C05 B: original (&#x27;FAIL&#x27;, True) | replay (&#x27;PASS&#x27;, False)
+Recommendation: REVIEW
+</code></pre></details>
+<p>The recorded critical block disappears in the replay. With only two discordant cases and p = 0.50000, the plan still calls for more evidence. <strong>Checkpoint.</strong> Which run belongs in the release history? Both do. Keep the earlier failed reply and identify the new captured reply as a separate record.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Count improvements and regressions</h5>
+<p>Use C01–C04 from the Prompt V1/V2 demonstration. Count all four pair categories. Which case should the prompt author inspect first?</p>
+<h5>Practice 2. Explain the two gains</h5>
+<p>For V1’s 2/4 and V2’s 3/4, calculate absolute and relative gain. Now add a both-fail case. Does the relative gain change? Which denominator changed?</p>
+<h5>Practice 3. Diagnose a bundle</h5>
+<p>Someone wants to credit Prompt V2 for all of the improvement from A/V1 to B/V2 in the four-way table. State which two pairs isolate the prompt changes. Explain why the numbers differ and how you would confirm that difference.</p>
+<h5>Practice 4. Apply a release rule</h5>
+<p>The candidate scores 7/8 versus 5/8, clears the latency and cost limits, and has full paired coverage. It also says 90 days on C05. Decide what to do now. If a replay fixes C05 and exact p is 0.25000, state the next decision and what evidence is still needed.</p>
+<h4>Independent Assignment</h4>
+<p>Use the full Guided Engineering Lab program as the standalone answer key. Compare A/V1 with A/V2 and B/V1, then inspect B/V2 as a bundled candidate. Verify the stable IDs, rubric, response text, coverage, and the one-factor comparisons. Compute improvement and regression counts on the matched denominator. Report each slice, latency and cost mean, critical status, and the statistical result. Explain why a higher scored accuracy alone does not name a release candidate.</p>
+<p>For variant A, start from the baseline and set <code>revision = &quot;latency-retry&quot;</code>. B/V1 gets a new operational replay with lower mean latency and the same invalid C04 verdict. For variant B, start from the lab’s deadline-repair replay and change only <code>cost_override = None</code> to <code>cost_override = 31</code>, an illustrative 31 millidollars per captured B/V2 reply. Save what changed and explain why earlier captured outcomes remain in the audit.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>C01 is both-pass. C03 is baseline-only. C02 and C04 are candidate-only. There are zero both-fail pairs. Open C03 first. The new prompt asks for an order number instead of telling a customer a valid receipt is required.</p>
+<h5>Solution 2</h5>
+<p>The rates are 50% and 75%, so the absolute gain is 25 points and the relative gain is 25/50 = 50%. Adding a both-fail case gives 2/5 = 40% and 3/5 = 60%. The absolute gain is now 20 points. The relative gain stays 20/40 = 50%, since the same number of cases passed in each configuration and only the common denominator changed.</p>
+<h5>Solution 3</h5>
+<p>Compare A/V1 with A/V2, then B/V1 with B/V2. The prompt changes 2/4 to 2/4 on A and 3/4 to 4/4 on B. The observed prompt effect depends on the model on this subset. Repeat the comparison on a fresh common set under locked generation settings. The jump across both factors cannot isolate either cause.</p>
+<h5>Solution 4</h5>
+<p>HOLD. Day 45 exceeds the verified 30-day limit. The saved critical violation blocks release despite the other results. The fixed replay moves to REVIEW because p = 0.25000 does not clear the 0.05 rule. Collect more representative matched cases under the fixed configuration and inspect outside-window results before authorizing a rollout.</p>
+<h5>Lab and assignment answer key</h5>
+<p>In the original lab, A/V2 goes to REVIEW because the paired test leaves the gain uncertain. B/V1 goes to HOLD because its mean latency breaches the guardrail. It also lacks a complete paired verdict for C04. B/V2 has the highest scored accuracy and goes to HOLD on C05. The deadline repair changes B/V2 to REVIEW. It removes the critical block and improves the outside-window slice while leaving insufficient paired statistical evidence.</p>
+<p>For variant A the exact changed lines from the lab baseline are <code>refund-factorial-73 | refund-holdout-73 | refund-binary-v1 | refund-1 | latency-retry</code>, <code>B/V1: valid 7/8 | score 6/7 | missing none | invalid C04 | mean 700 ms | cost $0.018</code>, and <code>  critical none | decision REVIEW (coverage, paired uncertainty)</code>. Replace only the B/V1 recommendation line with the last value. Every other line stays the same.</p>
+<p>For variant B the exact changed lines from the deadline-repair run are <code>B/V2: valid 8/8 | score 8/8 | missing none | invalid none | mean 700 ms | cost $0.031</code> and <code>  critical none | decision HOLD (cost)</code>. Replace only the B/V2 recommendation line with the last value. Every other line stays the same.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Two runs use the same prompt but different models and different context limits. What comparison can you defend?</li><li>What must you record to reproduce a locked baseline?</li><li>Why are 6/7 for a candidate and 5/8 for a baseline insufficient to compute paired gain?</li><li>The candidate gains three cases and loses one. What should a regression report include?</li><li>What is the difference between a gain from 50% to 75% in percentage points and in relative terms?</li><li>Why can testing only A/V1 and B/V2 hide an interaction?</li><li>A simulation has four assigned users per arm and one fewer B exposure. Is that automatically a sample-ratio mismatch?</li><li>The paired equality test is nonsignificant and the candidate has a verified critical error. Can the result establish noninferiority or support release?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Describe a comparison of the two documented bundles. To isolate the model effect, align the limits where possible or explicitly account for the intended difference.</li><li>Save model and prompt versions, effective settings, policy, compatible cases, judge and rubric, run ID, and raw responses with their outcome-handling rules.</li><li>First find the case IDs both sides scored validly. Score both configurations on those same IDs and report the excluded case.</li><li>Record both gains and losses, the IDs and policy evidence for changed cases, segment counts, coverage, and which candidate conditions changed.</li><li>It is +25 percentage points and +50% relative to the 50% baseline.</li><li>The two factors changed together. Holding the model fixed at each level can reveal two different prompt effects.</li><li>The assigned ratio is on plan in that toy setup. The exposure gap warrants investigation. Check routing and logging and keep the unexposed user in the assigned-group analysis.</li><li>The equality test does not settle the noninferiority margin. The verified critical error independently triggers HOLD under the rule.</li></ol>
+</div></details>
+<h4>Guided Engineering Lab</h4>
+<h5>Which LLM Configuration Should We Release?</h5>
+<p>Harbor Leaf currently uses A/V1. The three alternatives change the prompt, the model, or both. Your task is to defend a release recommendation against the written policy. The offline comparison asks how each configuration handled the same eight frozen questions. A separate simulated pilot asks whether user routing and logging are ready for an eventual randomized test.</p>
+<p>The manifest in the program freezes the model and prompt versions, <code>refund-holdout-73</code>, <code>refund-binary-v1</code>, <code>refund-1</code>, and a common evaluator and generation configuration. The prompt change adds a reminder to state both policy conditions and asks for details when information is missing. The synthetic A/V2 capture on C03 applies that last instruction too broadly. All outcomes and timings are teaching records.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Preparation skills"><table><caption>Preparation skills</caption><thead><tr><th scope="col">ID</th><th scope="col">Segment</th><th scope="col">Question and expected behavior</th><th scope="col">A/V1</th><th scope="col">A/V2</th><th scope="col">B/V1</th><th scope="col">B/V2</th></tr></thead><tbody><tr><td>C01</td><td>Routine</td><td>When can I request a refund? Give 30 days from delivery and valid receipt.</td><td>PASS</td><td>PASS</td><td>PASS</td><td>PASS</td></tr><tr><td>C02</td><td>Routine</td><td>What do I need to file an eligible request? Give the deadline and valid receipt.</td><td>FAIL</td><td>PASS</td><td>PASS</td><td>PASS</td></tr><tr><td>C03</td><td>Receipt</td><td>Do I need a receipt? Say a valid receipt is required.</td><td>PASS</td><td>FAIL</td><td>PASS</td><td>PASS</td></tr><tr><td>C04</td><td>Receipt</td><td>Can I request a refund without my receipt? State the requirement.</td><td>FAIL</td><td>PASS</td><td>INVALID</td><td>PASS</td></tr><tr><td>C05</td><td>Outside</td><td>My eligible order arrived 45 days ago. Can I still request a refund? Say the window has ended.</td><td>PASS</td><td>PASS</td><td>PASS</td><td>FAIL, critical</td></tr><tr><td>C06</td><td>Outside</td><td>Can I still ask after 32 days from delivery? Say the window has ended.</td><td>PASS</td><td>PASS</td><td>PASS</td><td>PASS</td></tr><tr><td>C07</td><td>Ambiguous</td><td>I bought this recently. Can I request a refund? Ask when it was delivered.</td><td>FAIL</td><td>FAIL</td><td>FAIL</td><td>PASS</td></tr><tr><td>C08</td><td>Ambiguous</td><td>I cannot remember when my order arrived. Do I qualify? Ask for the delivery date.</td><td>PASS</td><td>PASS</td><td>PASS</td><td>PASS</td></tr></tbody></table></div>
+<p>A PASS communicates the expected behavior in the table. A required omission is FAIL. A verified wrong deadline or explicit receipt waiver is critical. An unreadable evaluator verdict is INVALID. Keep its available captured answer and judge the critical facts independently. A row absent from the run is missing. It contributes neither a pass nor a valid verdict. The complete text of the captures and the evidence-backed rubric labels are inline in the program. Multiple cells reuse a reply template to keep the fixture readable.</p>
+<h5>Work the first cases by hand</h5>
+<ol><li>Compare A/V1 and A/V2 on C01 and C02. Write one both-pass and one candidate-only. Then add C03. Open both frozen texts to see how the order-number request fails the direct receipt question.</li><li>Inspect B/V2’s C05. Day 45 exceeds 30. The saved reply says 90. Write FAIL and critical by the approved source, even if every other B/V2 reply passes.</li><li>Inspect B/V1’s C04. Its reply states the receipt requirement, but the recorded judgment is unreadable. Keep that text and flag the invalid verdict. A/V1 and B/V1 have seven complete pairs. Use those same seven for the paired effect.</li><li>Calculate valid accuracy, paired gain, regressions, and each slice. Compute mean latency and cost over captured replies, including C04’s capture. Cost comes from illustrative millidollars, or thousandths of a U.S. dollar.</li><li>Apply the fixture rules. HOLD on a critical error, mean latency over 900 ms, or mean estimated cost over $0.025. REVIEW if any pair is incomplete, a slice loses more than 25 points or has no paired evidence, the observed paired gain is below 10 points, or the nominal exact p exceeds 0.05. Otherwise report RELEASE under the stated offline rule. These tiny slice screens do not prove noninferiority. The p-values are exploratory because the fixture compares several candidates. A live release would require a prespecified confirmatory comparison on new cases.</li><li>Audit the simulated pilot. For each pair of eligible users the fixture randomly selects who gets A first, then assigns the other to B. Check all eight assignments against the planned 4/4 split. Keep the unexposed user in the assigned-group outcome calculation. Report the exposure gap and stop to diagnose it before interpreting the apparent gain.</li></ol>
+<h5>Run the audit</h5>
+<p>The program turns each capture into a dictionary record. <code>index_records()</code> rejects unexpected or duplicate case IDs and unrecognized verdicts. Missing planned IDs remain visible in the coverage report. The paired calculation uses only case IDs with two valid verdicts. <code>report</code> prints overall and slice rates, and <code>decision</code> applies blockers before review conditions. The exact paired calculation counts discordant directions as in M07-T02.</p>
+<p>The replay keeps immutable original records as tuples and makes new records for any repair. The simulated user allocation uses <code>Random(73)</code>, a local deterministic source for the displayed assignment order. <code>None</code> means the assigned user did not receive the assistant. The resolution outcomes are supplied teaching values, including an observed unresolved outcome for the unexposed user. The lab does not invent a resolution label because exposure is missing. The pilot checks its exactly balanced allocation before looking for crossover or missing exposure. This simulation describes what a later routing check could look like, even though the offline report has not cleared B/V2.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import comb
+from random import Random
+from statistics import mean
+
+experiment, dataset, rubric, source = &quot;refund-factorial-73&quot;, &quot;refund-holdout-73&quot;, &quot;refund-binary-v1&quot;, &quot;refund-1&quot;
+policy = &quot;Eligible unused online orders: through calendar day 30 after delivery, with a valid receipt.&quot;
+generation = &quot;temperature 0 | context cap 4096 | output cap 120 | no retries&quot;
+evaluator = &quot;reviewed-fixture-r1&quot;
+prompts = {
+    &quot;prompt-v1&quot;: &quot;Answer refund questions using the supplied policy.&quot;,
+    &quot;prompt-v2&quot;: &quot;Answer from the policy. State both conditions when asked about eligibility. Ask for order details when needed.&quot;,
+}
+revision = &quot;baseline&quot;
+cost_override = None
+manifest = {
+    &quot;A/V1&quot;: (&quot;model-a-r1&quot;, &quot;prompt-v1&quot;, 500, 10),
+    &quot;A/V2&quot;: (&quot;model-a-r1&quot;, &quot;prompt-v2&quot;, 550, 12),
+    &quot;B/V1&quot;: (&quot;model-b-r1&quot;, &quot;prompt-v1&quot;, 950, 18),
+    &quot;B/V2&quot;: (&quot;model-b-r1&quot;, &quot;prompt-v2&quot;, 700, 23),
+}
+# ID -&gt; slice, frozen question, expected behavior.
+cases = {
+    &quot;C01&quot;: (&quot;routine&quot;, &quot;When can I request a refund?&quot;, &quot;deadline and valid receipt&quot;),
+    &quot;C02&quot;: (&quot;routine&quot;, &quot;What do I need to file an eligible request?&quot;, &quot;deadline and valid receipt&quot;),
+    &quot;C03&quot;: (&quot;receipt&quot;, &quot;Do I need a receipt?&quot;, &quot;valid receipt required&quot;),
+    &quot;C04&quot;: (&quot;receipt&quot;, &quot;Can I request a refund without my receipt?&quot;, &quot;valid receipt required&quot;),
+    &quot;C05&quot;: (&quot;outside&quot;, &quot;My eligible order arrived 45 days ago. Can I still request a refund?&quot;, &quot;window ended&quot;),
+    &quot;C06&quot;: (&quot;outside&quot;, &quot;Can I still ask after 32 days from delivery?&quot;, &quot;window ended&quot;),
+    &quot;C07&quot;: (&quot;ambiguous&quot;, &quot;I bought this recently. Can I request a refund?&quot;, &quot;ask when delivered&quot;),
+    &quot;C08&quot;: (&quot;ambiguous&quot;, &quot;I cannot remember when my order arrived. Do I qualify?&quot;, &quot;ask when delivered&quot;),
+}
+# Reply ID -&gt; captured text, reviewed label, verified critical flag.
+replies = {
+    &quot;complete&quot;: (&quot;Request through calendar day 30 after delivery with a valid receipt.&quot;, &quot;PASS&quot;, False),
+    &quot;omit&quot;: (&quot;Request through calendar day 30 after delivery.&quot;, &quot;FAIL&quot;, False),
+    &quot;receipt&quot;: (&quot;A valid receipt is required to request a refund.&quot;, &quot;PASS&quot;, False),
+    &quot;order-number&quot;: (&quot;Please give your order number first.&quot;, &quot;FAIL&quot;, False),
+    &quot;expired&quot;: (&quot;The 30-calendar-day window after delivery has ended.&quot;, &quot;PASS&quot;, False),
+    &quot;wrong&quot;: (&quot;You can still request a refund. You have 90 days after delivery with a valid receipt.&quot;, &quot;FAIL&quot;, True),
+    &quot;clarify&quot;: (&quot;When was the order delivered? The window starts on delivery.&quot;, &quot;PASS&quot;, False),
+    &quot;vague&quot;: (&quot;It depends. Please contact support.&quot;, &quot;FAIL&quot;, False),
+}
+captures = {
+    &quot;A/V1&quot;: (&quot;complete&quot;, &quot;omit&quot;, &quot;receipt&quot;, &quot;order-number&quot;, &quot;expired&quot;, &quot;expired&quot;, &quot;vague&quot;, &quot;clarify&quot;),
+    &quot;A/V2&quot;: (&quot;complete&quot;, &quot;complete&quot;, &quot;order-number&quot;, &quot;receipt&quot;, &quot;expired&quot;, &quot;expired&quot;, &quot;vague&quot;, &quot;clarify&quot;),
+    &quot;B/V1&quot;: (&quot;complete&quot;, &quot;complete&quot;, &quot;receipt&quot;, &quot;receipt&quot;, &quot;expired&quot;, &quot;expired&quot;, &quot;vague&quot;, &quot;clarify&quot;),
+    &quot;B/V2&quot;: (&quot;complete&quot;, &quot;complete&quot;, &quot;receipt&quot;, &quot;receipt&quot;, &quot;wrong&quot;, &quot;expired&quot;, &quot;clarify&quot;, &quot;clarify&quot;),
+}
+valid_labels = (&quot;PASS&quot;, &quot;FAIL&quot;)
+
+def index_records(expected, rows):
+    indexed = {}
+    for case, reply, label, latency, cost in rows:
+        if case not in expected or case in indexed:
+            raise ValueError(f&quot;Unexpected or duplicate case ID: {case}&quot;)
+        if reply not in replies or label not in (*valid_labels, &quot;INVALID&quot;):
+            raise ValueError(f&quot;Invalid capture or verdict for {case}&quot;)
+        indexed[case] = (reply, label, latency, cost)
+    return indexed
+
+assert set(manifest) == set(captures)
+assert all(prompt in prompts for _, prompt, _, _ in manifest.values())
+assert all(len(keys) == len(cases) for keys in captures.values())
+history = {}
+for name, (_, _, latency, cost) in manifest.items():
+    rows = []
+    for i, (case, reply) in enumerate(zip(cases, captures[name])):
+        label = &quot;INVALID&quot; if (name, case) == (&quot;B/V1&quot;, &quot;C04&quot;) else replies[reply][1]
+        rows.append((case, reply, label, latency + 10 * i - 35, cost))
+    history[name] = tuple(rows)
+
+audit = {}
+for name, frozen in history.items():
+    replay = []
+    for case, reply, label, latency, cost in frozen:
+        if revision == &quot;deadline-repair&quot; and (name, case) == (&quot;B/V2&quot;, &quot;C05&quot;):
+            reply, label = &quot;expired&quot;, &quot;PASS&quot;
+        if revision == &quot;latency-retry&quot; and name == &quot;B/V1&quot;:
+            latency -= 250
+        if cost_override is not None and name == &quot;B/V2&quot;:
+            cost = cost_override
+        replay.append((case, reply, label, latency, cost))
+    audit[name] = index_records(cases, replay)
+
+def paired(left, right, case_ids):
+    ids = [case for case in case_ids if case in left and case in right
+           and left[case][1] in valid_labels and right[case][1] in valid_labels]
+    labels = [(left[case][1], right[case][1]) for case in ids]
+    counts = tuple(labels.count(item) for item in
+                   ((&quot;PASS&quot;, &quot;PASS&quot;), (&quot;PASS&quot;, &quot;FAIL&quot;), (&quot;FAIL&quot;, &quot;PASS&quot;), (&quot;FAIL&quot;, &quot;FAIL&quot;)))
+    return ids, counts
+
+def exact_p(losses, gains):
+    discordant = losses + gains
+    return min(1.0, 2 * sum(comb(discordant, k) for k in range(min(losses, gains) + 1)) / 2 ** discordant)
+
+def guard_decision(critical, latency, cost, n, planned, gain, p, slice_alert):
+    blockers = []
+    if critical:
+        blockers.append(&quot;critical&quot;)
+    if latency is not None and latency &gt; 900:
+        blockers.append(&quot;latency&quot;)
+    if cost is not None and cost &gt; 25:
+        blockers.append(&quot;cost&quot;)
+    if blockers:
+        return &quot;HOLD (&quot; + &quot;, &quot;.join(blockers) + &quot;)&quot;
+    review = []
+    if n &lt; planned or not n or latency is None or cost is None:
+        review.append(&quot;coverage&quot;)
+    if slice_alert:
+        review.append(&quot;slice&quot;)
+    if gain is not None and gain &lt; 0.10:
+        review.append(&quot;practical gain&quot;)
+    if p is None or p &gt; 0.05:
+        review.append(&quot;paired uncertainty&quot;)
+    return &quot;REVIEW (&quot; + &quot;, &quot;.join(review) + &quot;)&quot; if review else &quot;RELEASE&quot;
+
+def show_baseline(name, records):
+    valid = [row for row in records.values() if row[1] in valid_labels]
+    invalid = &quot;,&quot;.join(case for case, row in records.items() if row[1] == &quot;INVALID&quot;) or &quot;none&quot;
+    missing = &quot;,&quot;.join(case for case in cases if case not in records) or &quot;none&quot;
+    score = f&quot;{sum(row[1] == &#x27;PASS&#x27; for row in valid)}/{len(valid)}&quot; if valid else &quot;unavailable&quot;
+    latency = mean(row[2] for row in records.values()) if records else None
+    cost = mean(row[3] for row in records.values()) if records else None
+    ops = f&quot;mean {latency:.0f} ms | cost ${cost/1000:.3f}&quot; if records else &quot;operations unavailable&quot;
+    print(f&quot;{name}: valid {len(valid)}/{len(cases)} | score {score} | missing {missing} | invalid {invalid} | {ops}&quot;)
+    return latency, cost
+
+print(f&quot;{experiment} | {dataset} | {rubric} | {source} | {revision}&quot;)
+print(f&quot;Locked settings: {generation} | evaluator {evaluator}&quot;)
+left = audit[&quot;A/V1&quot;]
+show_baseline(&quot;A/V1&quot;, left)
+for name in (&quot;A/V2&quot;, &quot;B/V1&quot;, &quot;B/V2&quot;):
+    right = audit[name]
+    latency, cost = show_baseline(name, right)
+    ids, (both, losses, gains, neither) = paired(left, right, cases)
+    n = len(ids)
+    gain = (gains - losses) / n if n else None
+    relative = (gains - losses) / (both + losses) if both + losses else None
+    p = exact_p(losses, gains) if n else None
+    change = f&quot;{100*gain:+.1f} pp, rel {relative:+.1%}&quot; if relative is not None else (
+        f&quot;{100*gain:+.1f} pp, rel unavailable&quot; if n else &quot;unavailable&quot;)
+    p_text = f&quot;{p:.5f}&quot; if p is not None else &quot;unavailable&quot;
+    print(f&quot;  paired {n}/{len(cases)} | both {both}, +{gains}, -{losses}, neither {neither} | gain {change} | p {p_text}&quot;)
+    print(&quot;  changed: gains &quot; + (&quot;,&quot;.join(case for case in ids if left[case][1] == &quot;FAIL&quot; and right[case][1] == &quot;PASS&quot;) or &quot;none&quot;)
+          + &quot; | regressions &quot; + (&quot;,&quot;.join(case for case in ids if left[case][1] == &quot;PASS&quot; and right[case][1] == &quot;FAIL&quot;) or &quot;none&quot;))
+    slices, slice_alert = [], False
+    for segment in (&quot;routine&quot;, &quot;receipt&quot;, &quot;outside&quot;, &quot;ambiguous&quot;):
+        group = [case for case, data in cases.items() if data[0] == segment]
+        matched, (tie, bad, good, failed) = paired(left, right, group)
+        slices.append(f&quot;{segment} {tie+bad}-&gt;{tie+good}/{len(matched)}&quot;)
+        slice_alert |= not matched or (good - bad) / len(matched) &lt; -0.25
+    print(&quot;  slices &quot; + &quot; | &quot;.join(slices))
+    critical = [case for case, row in right.items() if replies[row[0]][2]]
+    result = guard_decision(critical, latency, cost, n, len(cases), gain, p, slice_alert)
+    print(f&quot;  critical {&#x27;,&#x27;.join(critical) or &#x27;none&#x27;} | decision {result}&quot;)
+old = next(row[1:3] for row in history[&quot;B/V2&quot;] if row[0] == &quot;C05&quot;)
+new = audit[&quot;B/V2&quot;][&quot;C05&quot;][:2]
+print(f&quot;Audit B/V2 C05: {&#x27;/&#x27;.join(old)} -&gt; {&#x27;/&#x27;.join(new)}&quot;)
+
+rng = Random(73)
+users = [f&quot;U{i:02d}&quot; for i in range(1, 9)]
+resolved = {&quot;U01&quot;, &quot;U02&quot;, &quot;U04&quot;, &quot;U05&quot;, &quot;U08&quot;}
+logs = []
+for first, second in zip(users[::2], users[1::2]):
+    arms = (&quot;A&quot;, &quot;B&quot;) if rng.random() &lt; 0.5 else (&quot;B&quot;, &quot;A&quot;)
+    for user, arm in zip((first, second), arms):
+        logs.append((user, arm, None if user == &quot;U03&quot; else arm, user in resolved))
+
+print(&quot;Simulated online pilot | seed 73 | seven days | 24h outcome&quot;)
+for user, assigned, exposed, success in logs:
+    print(f&quot;  {user} assigned {assigned} | exposure {exposed or &#x27;none&#x27;} | resolved {int(success)}&quot;)
+for arm in (&quot;A&quot;, &quot;B&quot;):
+    assigned = [row for row in logs if row[1] == arm]
+    print(f&quot;  {arm}: assigned {len(assigned)} | exposed {sum(row[2] == arm for row in assigned)}&quot;
+          f&quot; | resolved {sum(row[3] for row in assigned)}/{len(assigned)} assigned&quot;)
+def pilot_status(logs):
+    if [sum(row[1] == arm for row in logs) for arm in (&quot;A&quot;, &quot;B&quot;)] != [4, 4]:
+        return &quot;pause for assignment mismatch&quot;
+    if any(exposed is not None and exposed != assigned for _, assigned, exposed, _ in logs):
+        return &quot;pause for crossover&quot;
+    if any(row[2] is None for row in logs):
+        return &quot;pause for missing exposure&quot;
+    return &quot;continue monitoring&quot;
+
+print(f&quot;Pilot: {pilot_status(logs)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-factorial-73 | refund-holdout-73 | refund-binary-v1 | refund-1 | baseline
+Locked settings: temperature 0 | context cap 4096 | output cap 120 | no retries | evaluator reviewed-fixture-r1
+A/V1: valid 8/8 | score 5/8 | missing none | invalid none | mean 500 ms | cost $0.010
+A/V2: valid 8/8 | score 6/8 | missing none | invalid none | mean 550 ms | cost $0.012
+  paired 8/8 | both 4, +2, -1, neither 1 | gain +12.5 pp, rel +20.0% | p 1.00000
+  changed: gains C02,C04 | regressions C03
+  slices routine 1-&gt;2/2 | receipt 1-&gt;1/2 | outside 2-&gt;2/2 | ambiguous 1-&gt;1/2
+  critical none | decision REVIEW (paired uncertainty)
+B/V1: valid 7/8 | score 6/7 | missing none | invalid C04 | mean 950 ms | cost $0.018
+  paired 7/8 | both 5, +1, -0, neither 1 | gain +14.3 pp, rel +20.0% | p 1.00000
+  changed: gains C02 | regressions none
+  slices routine 1-&gt;2/2 | receipt 1-&gt;1/1 | outside 2-&gt;2/2 | ambiguous 1-&gt;1/2
+  critical none | decision HOLD (latency)
+B/V2: valid 8/8 | score 7/8 | missing none | invalid none | mean 700 ms | cost $0.023
+  paired 8/8 | both 4, +3, -1, neither 0 | gain +25.0 pp, rel +40.0% | p 0.62500
+  changed: gains C02,C04,C07 | regressions C05
+  slices routine 1-&gt;2/2 | receipt 1-&gt;2/2 | outside 2-&gt;1/2 | ambiguous 1-&gt;2/2
+  critical C05 | decision HOLD (critical)
+Audit B/V2 C05: wrong/FAIL -&gt; wrong/FAIL
+Simulated online pilot | seed 73 | seven days | 24h outcome
+  U01 assigned A | exposure A | resolved 1
+  U02 assigned B | exposure B | resolved 1
+  U03 assigned B | exposure none | resolved 0
+  U04 assigned A | exposure A | resolved 1
+  U05 assigned B | exposure B | resolved 1
+  U06 assigned A | exposure A | resolved 0
+  U07 assigned A | exposure A | resolved 0
+  U08 assigned B | exposure B | resolved 1
+  A: assigned 4 | exposed 4 | resolved 2/4 assigned
+  B: assigned 4 | exposed 3 | resolved 3/4 assigned
+Pilot: pause for missing exposure
+</code></pre></details>
+<p><strong>Controlled experiment.</strong> Set <code>revision = &quot;deadline-repair&quot;</code>. Substitute the saved correct B/V2 reply on C05, “The 30-calendar-day window after delivery has ended.” Keep the baseline, four configuration manifests, scores from other cases, and operational measurements fixed. The wrong reply remains in <code>history</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-factorial-73 | refund-holdout-73 | refund-binary-v1 | refund-1 | deadline-repair
+Locked settings: temperature 0 | context cap 4096 | output cap 120 | no retries | evaluator reviewed-fixture-r1
+A/V1: valid 8/8 | score 5/8 | missing none | invalid none | mean 500 ms | cost $0.010
+A/V2: valid 8/8 | score 6/8 | missing none | invalid none | mean 550 ms | cost $0.012
+  paired 8/8 | both 4, +2, -1, neither 1 | gain +12.5 pp, rel +20.0% | p 1.00000
+  changed: gains C02,C04 | regressions C03
+  slices routine 1-&gt;2/2 | receipt 1-&gt;1/2 | outside 2-&gt;2/2 | ambiguous 1-&gt;1/2
+  critical none | decision REVIEW (paired uncertainty)
+B/V1: valid 7/8 | score 6/7 | missing none | invalid C04 | mean 950 ms | cost $0.018
+  paired 7/8 | both 5, +1, -0, neither 1 | gain +14.3 pp, rel +20.0% | p 1.00000
+  changed: gains C02 | regressions none
+  slices routine 1-&gt;2/2 | receipt 1-&gt;1/1 | outside 2-&gt;2/2 | ambiguous 1-&gt;1/2
+  critical none | decision HOLD (latency)
+B/V2: valid 8/8 | score 8/8 | missing none | invalid none | mean 700 ms | cost $0.023
+  paired 8/8 | both 5, +3, -0, neither 0 | gain +37.5 pp, rel +60.0% | p 0.25000
+  changed: gains C02,C04,C07 | regressions none
+  slices routine 1-&gt;2/2 | receipt 1-&gt;2/2 | outside 2-&gt;2/2 | ambiguous 1-&gt;2/2
+  critical none | decision REVIEW (paired uncertainty)
+Audit B/V2 C05: wrong/FAIL -&gt; expired/PASS
+Simulated online pilot | seed 73 | seven days | 24h outcome
+  U01 assigned A | exposure A | resolved 1
+  U02 assigned B | exposure B | resolved 1
+  U03 assigned B | exposure none | resolved 0
+  U04 assigned A | exposure A | resolved 1
+  U05 assigned B | exposure B | resolved 1
+  U06 assigned A | exposure A | resolved 0
+  U07 assigned A | exposure A | resolved 0
+  U08 assigned B | exposure B | resolved 1
+  A: assigned 4 | exposed 4 | resolved 2/4 assigned
+  B: assigned 4 | exposed 3 | resolved 3/4 assigned
+Pilot: pause for missing exposure
+</code></pre></details>
+<h5>Troubleshoot and write the engineering handoff</h5>
+<p>If B/V1 appears to have eight valid verdicts, inspect C04. An unreadable judgment stays invalid even with a readable reply. If C05 still fails in the repair, check that the revision is set and that the audit prints <code>wrong/FAIL -&gt; expired/PASS</code>. If the pilot differs, restore the seeded assignment and count by assigned arm before looking at the exposure field.</p>
+<p>A report you could hand to the next reviewer reads “Keep A/V1 in place. A/V2 needs more paired evidence, and B/V1 exceeds the latency limit and has an invalid verdict on C04. Hold B/V2. It gains three cases and loses one across eight matched questions, for +25 pp at nominal p = 0.62500. C05 promises 90 days against the 30 days in <code>refund-1</code>. Keep the original reply, review the deadline repair on new matched cases, and pause the simulated pilot while investigating U03’s missing exposure.”</p>
+<p>The repair clears the critical gate and yields eight passes. It does not provide enough paired statistical evidence under this plan. A targeted change after observing a known failure also needs an independently chosen test set. The new recommendation in this replay is REVIEW. Separately, the pilot has four assigned users per arm and one unexposed B user. Its assigned-user outcome rates are 2/4 and 3/4. Pause to diagnose the missed exposure. Do not use these toy outcomes to approve live traffic.</p>
+<p>Complete the lab when you can reproduce both outputs, show the C03 prompt regression and the C05 policy evidence, reconcile the B/V1 denominators, explain why the repaired replay still goes to review, and hand over the exposure and assignment counts. An instructor can substitute actual frozen replies without changing the offline workflow. Supply a unique case ID, segment, question, expected behavior and versioned source, configuration ID and resolved model/prompt/settings, captured answer and adjudicated verdict, critical evidence, timestamps or run ID, latency, and a cost estimate with units. Record failed attempts and invalid judgments separately. Anonymize captures before adding them to an evaluation set.</p>
+<h4>Common Mistakes</h4>
+<p>Compare the same case IDs before subtracting pass rates. Log missing and invalid results, including the hardest slice.</p>
+<p>Use matched one-factor rows to attribute a change. For a bundle, name both changes and limit the conclusion to the bundle.</p>
+<p>Check critical evidence and operational guardrails alongside uncertainty. For online tests inspect assignment, exposure, and outcomes before interpreting effects.</p>
+<h4>Lesson Summary and Next Step</h4>
+<p>Lock the baseline, change one factor when attribution matters, and keep improvements and regressions by case ID. Report coverage, uncertainty, critical facts, and operating costs before making a release recommendation. A simulated pilot teaches how to read logs. A live randomized test requires its own design and evidence.</p>
+<p>Next, <a href="#m08-t01">Ingestion, chunking and ranked retrieval</a> examines how to evaluate the evidence a retrieval system brings back before the assistant answers.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t03">Offline, online and the evaluation lifecycle</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Compare frozen prompt versions on the same case IDs, then simulate a user-randomized A/B with exposure logs.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 for paired comparisons and simulated exposure logs.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Write a rollout recommendation with effect size, uncertainty, guardrails, confounds and stopping criteria.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>

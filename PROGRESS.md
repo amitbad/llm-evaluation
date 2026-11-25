@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated **2026-11-25**. The last verified live release is `aa01ca7`. Twenty topics have authored chapters locally through M07-T02. The other 33 topics retain their outlines.
+Last updated **2026-11-25**. The last verified live release is `aa01ca7`. Twenty-one topics have authored chapters locally through M07-T03. The other 32 topics retain their outlines.
 
 ## Implemented milestones
 
@@ -57,6 +57,7 @@ Last updated **2026-11-25**. The last verified live release is `aa01ca7`. Twenty
 | M06-T03, Pairwise comparisons and ranking | **Rewritten — Awaiting Human Teaching Review.** Three demonstrations, seven standalone activities, four solved exercises, eight explained knowledge checks, and two assignment variants cover policy-first comparisons, reversed displays, and auditable ranking. |
 | M07-T01, Variance, repetition and score aggregation | **Rewritten — Awaiting Human Teaching Review.** Three demonstrations, seven standalone activities, four solved exercises, eight explained checks, and a two-variant assignment cover observed spread, coverage, and an auditable policy gate. |
 | M07-T02, Confidence intervals, significance and sample size | **Rewritten — Awaiting Human Teaching Review.** Seven standalone activities, a separate 202-case engineering lab, and two assignment variants show how to report paired uncertainty and keep statistical and policy release checks separate. |
+| M07-T03, Comparing models, prompts and A/B variants | **Rewritten — Awaiting Human Teaching Review.** Seven activities, three worked demonstrations, four solved exercises, eight knowledge checks, and a four-configuration engineering lab with a simulated pilot and two assignment variants. |
 
 ## Tested
 
@@ -110,6 +111,7 @@ Last updated **2026-11-25**. The last verified live release is `aa01ca7`. Twenty
 - For M06-T03, seven baselines, seven experiments, both assignment variants, and an extra run with twelve audit assertions passed in fresh Python 3.12.7 processes. Independent checks confirmed points, coverage, reversed-slot interpretation, and cycles. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with eighteen authored chapters. The generated M06-T03 edit preserves the existing M06-T02 panel. All judge results are fictional.
 - For M07-T01, seven baselines, seven experiments, both assignment variants, and one run with twelve audit assertions passed in fresh Python 3.12.7 processes. Independent arithmetic checked means, medians, ranges, population variance and standard deviation, the sample-variance contrast, aggregation, and coverage. Synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with nineteen authored chapters. Only the shared M07-T01 panel changed in the generated HTML. The replay data are fictional.
 - For M07-T02, seven core baselines, seven experiments, both lab runs, both assignment variants, and one run with twelve boundary and audit assertions passed in fresh Python 3.12.7 processes. Independent checks covered Wilson limits and widths, the precision grid, exact paired p-values, the bootstrap distribution, coverage, and release decisions. All 29 non-browser tests, curriculum synchronization, and static validation of 30 public files passed with twenty authored chapters. The guided navigation test now checks the seven activities and the additional lab separately. All evidence is fictional.
+- For M07-T03, seven baselines, seven experiments, both lab runs, both assignment variants, and two boundary or historical-audit runs passed in fresh Python 3.12.7 processes. Independent checks confirmed paired denominators, effect calculations, slices, exact paired probabilities, latency, and costs. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with twenty-one authored chapters. Only the shared M07-T03 panel changed in generated HTML. All evidence is fictional.
 
 ## Manually verified
 
@@ -121,7 +123,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
 4. **M01-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to explain what “that” refers to, run a block using the editor link, and use the assignment records to distinguish an omitted fee paragraph from an answer that contradicts it. Record where the learner needed help before approving the reference.
-5. The owner requested the Module 3 through Module 6 chapters and M07-T01 and M07-T02 while earlier chapters awaited human review. M07-T03, Comparing models, prompts and A/B variants, is the next unfinished topic.
+5. The owner requested the Module 3 through Module 7 chapters while earlier chapters awaited human review. M08-T01, Ingestion, chunking and ranked retrieval, is the next unfinished topic.
 6. In Chrome and Safari, open an authored lesson in both learning modes. Scroll to verify the wide Listen sidebar stays below the site header. Check for page overflow with a long code line and a long section name. At a narrower width, verify that keyboard users can open and close Listen and that audio continues when the disclosure closes. Test speed, highlighting, and lesson switches in both themes. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Sticky positioning, visual wrapping, and native audio behavior remain unverified.
 7. **M01-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run an activity in the editor, explain what changing temperature and top-p did, and use the saved comparison to distinguish a wrong answer from a change in the model or prompt.
 8. **M02-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run a rule check, explain why a correct claim can still need a groundedness review, and defend their first action on the assignment.
@@ -141,6 +143,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 22. **M06-T03 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to normalize the two B/C displays, reproduce the tie and cycle, and explain why the policy gate still blocks B. Manual browser verification in both learning modes remains pending.
 23. **M07-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to reproduce the variance calculation, reconcile the coverage ratios, and explain why the presentation rescore leaves the critical policy block in place. Manual browser verification in both learning modes remains pending.
 24. **M07-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to interpret Wilson coverage, trace the paired p-value to discordant cases, and reproduce the baseline HOLD report in the online editor. Verify both learning modes, the lab Copy Code control, and the evidence disclosures manually.
+25. **M07-T03 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to isolate the prompt and model changes, reconcile the B/V1 coverage, justify the C05 decision, and explain the distinction between user assignment and exposure. Verify both learning modes and the guided engineering lab manually.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).
 
