@@ -303,9 +303,21 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       assert.equal([...markup.matchAll(/<h5>Solution \d<\/h5>/g)].length, 4);
       assert.deepEqual([...markup.matchAll(/<h5>Step (\d) — /g)].map(match => Number(match[1])),
         [1, 2, 3, 4, 5, 6, 7]);
-      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 7);
-      assert.equal([...markup.matchAll(/<pre><code class="language-text">/g)].length, 14);
-      assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-output"><summary>Expected output<\/summary>/g)].length, 14);
+      const lessonSource = read("docs/lessons/" + id + ".md");
+      const labs = [...markup.matchAll(/<h4>Guided Engineering Lab<\/h4>([\s\S]*?)(?=<h4>)/g)];
+      assert.equal(labs.length, /^## Guided Engineering Lab$/m.test(lessonSource) ? 1 : 0);
+      const expectedCounts = (section, programs, outputs) => {
+        assert.equal([...section.matchAll(/<pre><code class="language-python">/g)].length, programs);
+        assert.equal([...section.matchAll(/<pre><code class="language-text">/g)].length, outputs);
+        assert.equal([...section.matchAll(/<details class="lesson-disclosure lesson-output"><summary>Expected output<\/summary>/g)].length, outputs);
+      };
+      if (labs.length) {
+        const [lab, body] = labs[0];
+        expectedCounts(body, 1, 2);
+        expectedCounts(markup.replace(lab, ""), 7, 14);
+      } else {
+        expectedCounts(markup, 7, 14);
+      }
       assert.equal([...markup.matchAll(/<details class="lesson-disclosure lesson-supplement"(?: data-reading-skip)?>/g)].length,
         topic.id === "M01-T01" ? 2 : 3);
       assert.equal([...markup.matchAll(/class="lesson-evidence"/g)].length, topic.id === "M02-T02" ? 12 : 15);

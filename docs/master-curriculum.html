@@ -10020,34 +10020,561 @@ data-subject="Statistics" data-status="New" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m07-t02">
-  <p class="lesson-intro" data-lesson-search>Small apparent differences can be sampling noise or too small to matter operationally.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Effect size, confidence interval intuition, paired case bootstrap, permutation test intuition, practical significance, power/sample planning and multiplicity.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Translate pass rates into counts and distinguish a percentage-point change from a relative change.</li><li>Use Wilson intervals to describe uncertainty around a binary pass rate and understand how sample size and confidence level affect precision.</li><li>Compare two configurations on matched cases with an exact paired test and a whole-pair bootstrap.</li><li>Plan a comparison around a meaningful effect, then combine statistical evidence, coverage, and critical policy checks in a release recommendation.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>At Harbor Leaf Market, someone brings two numbers to the release meeting: 80% for the current refund assistant, A, and 85% for the proposed upgrade, B. Before voting, ask for the case list. If both assistants faced twenty questions, one extra pass could explain the whole gain. Find that extra pass, look for cases B got worse, and check whether either reply would send a customer past the real refund deadline.</p>
+<p>The company, replies, verdicts, and thresholds in this lesson are fictional. We keep the earlier policy <code>refund-1</code>: “Refund requests are allowed through calendar day 30 after delivery with a valid receipt.” The item is an eligible unused online purchase, and day 30 is included. The statistic we measure is the fraction of judged cases that pass the case rubric.</p>
+<p>Allow about 6.5 hours. Start with <a href="#m07-t01">Variance, repetition and score aggregation</a>. <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> helps you plan a fair set of cases.</p>
+<h4>Beginner Explanation</h4>
+<h5>Ask what each percentage counted</h5>
+<p>Suppose A passed 16 of 20 and B passed 17 of the same 20. One more pass is enough to move from 80% to 85%. Subtract 80 from 85 to get <strong>five percentage points</strong>. Divide that gain by A’s 80% to get a <strong>6.25% relative improvement</strong> in the pass rate. These are two ways to describe the observed <strong>effect size</strong>, the size of the measured difference.</p>
+<p>If you sampled a new group of customers, the questions and outcomes could differ. This is <strong>sampling variability</strong>. An observed 85% describes the cases counted in one evaluation. It estimates performance for a target population only to the extent that those cases and their labels represent it. Rerating a frozen reply tells you how the judge behaves on that reply. It does not add another sampled customer or question.</p>
+<p>If A and B use different case sets, differences in question difficulty can move the rates. Ask for the case IDs, planned and valid counts, response records, and rubric version before comparing the headline results. Repeated variants from one customer or conversation can be correlated. In that setting, count and resample the independent groups, keeping their replies together.</p>
+<h5>Give the single pass rate an interval</h5>
+<p>Three teams each report 80%. One counted 8 of 10, another 80 of 100, and the third 800 of 1,000. Each has a different number of independent binary observations. That number is its <strong>sample size</strong>. Eight passes give a rougher picture than eight hundred if both sets are sampled well. A large set drawn from easy cases can still miss the kinds of question you need to judge.</p>
+<p>Imagine a new Harbor Leaf team taking a fresh sample each week. Each team draws the same number of suitable cases and marks two limits around its observed rate. Those limits form a <strong>confidence interval</strong>. If you could draw one line at the fixed underlying rate, some of the weekly intervals would cross that line and others would miss it. The 95% label describes how often the procedure aims to cross that line over many such samples, under its assumptions. Wilson coverage is approximate. The two limits in this week’s report are already fixed.</p>
+<p>Here is how we get the two endpoints. Let <code>k</code> be the number of passes, <code>n</code> the number of scored cases, and <code>p = k/n</code> the observed fraction. Let <code>z</code> be the normal cutoff chosen for the confidence level, for example 1.96 for 95%. A normal cutoff is measured in standard deviations from zero under a standard bell-shaped reference curve. For 90% it is about 1.645, and for 99% about 2.576. The larger cutoff reaches farther into the tails of that curve.</p>
+<p>For 8 of 10, <code>p</code> is 0.8 and <code>z²/n</code> is about 0.384. The Wilson center shifts inward to about 0.717. Its half-width is about 0.227. Subtract and add that half-width to get about 0.490 and 0.943. Keep full precision until the end. The calculation adjusts both the center and width and gives useful limits even when a small sample has zero or all passes. NIST, Wilson confidence limits</p>
+<p>In symbols, the common divisor is <code>d = 1 + z²/n</code>. The center is <code>(p + z²/(2n)) / d</code>. The half-width is <code>z × sqrt(p(1−p)/n + z²/(4n²)) / d</code>. The term <code>p(1−p)</code> reflects how much 0/1 outcomes can vary and <code>sqrt</code> turns squared uncertainty back into pass-rate units. The extra terms come from solving the Wilson score rule. They keep the two limits meaningful when <code>p</code> is near zero or one. Predict what happens to the width when <code>n</code> grows at the same observed rate. Then check it in Step 2.</p>
+<p>At the same sample size, a higher confidence level usually makes the interval wider. A 99% procedure aims to miss the underlying rate less often, so it leaves itself more room. Compare the actual widths in Step 3. Confidence levels describe the interval method. They do not account for bias in deciding which questions go into the evaluation.</p>
+<h5>Pair the answers before counting changes</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Case</th><th scope="col">A</th><th scope="col">B</th><th scope="col">What changed</th></tr></thead><tbody><tr><td>C01</td><td>PASS</td><td>PASS</td><td>Neither wins this case.</td></tr><tr><td>C02</td><td>FAIL</td><td>PASS</td><td>B gains one pass.</td></tr><tr><td>C03</td><td>PASS</td><td>FAIL</td><td>B loses one pass.</td></tr><tr><td>C04</td><td>FAIL</td><td>FAIL</td><td>Neither wins this case.</td></tr></tbody></table></div>
+<p>The matched case is the unit. Rows where the outcomes agree are <strong>concordant</strong>. Rows that differ are <strong>discordant</strong>. The B-only and A-only rows give the direction of the changes. B gained one and lost one. Its observed effect on these four cases is (1 − 1) ÷ 4 = 0. A paired comparison keeps this match. An independent-samples test would discard it by treating the observations as if A and B got separate, unrelated cases. Use that analysis only when the sampling design actually supports it.</p>
+<p>Keep the same small example in mind when estimating uncertainty in the difference. Write the case IDs on four cards. A draw might be C01, C02, C02, C04. Take both outcomes each time you draw a card. That draw has two B-only passes and no A-only passes, for an effect of +50 points. Another draw, C01, C03, C03, C04, gives −50 points. Returning the card after every draw is called sampling <strong>with replacement</strong>.</p>
+<p>Repeat this draw many times, always drawing the same number of whole pairs as in the original sample. Sort the new differences and use the 2.5% and 97.5% positions for an approximate 95% <strong>paired bootstrap interval</strong>. This estimates uncertainty by resampling the observed cases. It needs representative independent case units and can be unreliable with very small or nearly degenerate data. In the lab, independently drawing A and B would break the link between outcomes on the same case. You will calculate that independent-design approximation as a contrast, with its different assumptions printed beside it.</p>
+<h5>Ask how unusual the discordant counts are</h5>
+<p>Suppose three discordant cases favor B and two favor A. If neither configuration has an advantage, each discordant direction should be equally likely. This is the <strong>null hypothesis</strong> of equal marginal pass probabilities. The two-sided <strong>alternative</strong> allows either configuration to win more often on discordant cases. Conditional on five discordant cases under the null, imagine five independent fair flips giving the direction. This is the case-level swap intuition of a paired test. A tied case adds no evidence about direction.</p>
+<p>Use the smaller discordant count, two, as the <strong>test statistic</strong>. Of the 32 equally likely flip sequences, 1 has zero B wins, 5 have one, and 10 have two. The opposite tail has the same size. The two-sided <strong>exact McNemar test</strong> adds both tails to get 2 × (1 + 5 + 10)/32 = 1. A <strong>p-value</strong> is the probability, under the null and test assumptions, of results at least as extreme as the one observed. It gives no probability that the null is true. Statsmodels, exact binomial McNemar test</p>
+<p>Choose the <strong>significance level</strong>, often written <code>alpha</code>, before seeing results. This fictional plan uses 0.05. Reject the equal-probability null when the exact p-value is at most 0.05. If you do not reject, the test may have little information. It gives no guarantee of equality. With no discordant pairs the code reports p = 1 and flags that there was no directional evidence. The test assumes independent pairs, consistent binary scoring, and an analysis fixed before looking at outcomes.</p>
+<p>The Wilson intervals describe each configuration’s rate. The whole-pair interval describes the gain. The exact paired test asks how unusual the direction count is under equality. Comparing two marginal interval pictures for overlap does not perform this test. A percentile bootstrap and an exact probability test may also differ near a threshold because they use different procedures.</p>
+<h5>Plan for a useful result</h5>
+<p>Suppose a one-point gain would only prevent one error per 100 questions, while changing the system would add manual review on ten. Decide whether that is worthwhile and which error types matter. For Harbor Leaf, getting a deadline wrong can outweigh gains on routine replies. Set a <strong>practical threshold</strong> for an observed gain before testing and require a separate critical policy review. A small p-value alone says little about business value or safety.</p>
+<p>For planning, write down the baseline pass rate, a plausible improvement, the desired false-positive level, and the chance you want of detecting a specified real improvement. That chance is <strong>power</strong>. The <strong>minimum detectable effect</strong> is the smallest effect the proposed design is intended to detect with that power. It depends on sample size and expected variability. For paired tests, estimate how often changes go in both directions. A five-point gain could come from 7% B-only and 2% A-only cases, or 22% B-only and 17% A-only. The same net gain then comes with different disagreement rates. Use estimates from separate pilot cases and plan using the paired design.</p>
+<p>If a pilot suggests 10% discordance and a net gain of 5 points, that implies 7.5% B-only and 2.5% A-only. Simulate many paired samples at a candidate size using those probabilities, run the exact test on each sample, and count how often it rejects at the planned alpha. Increase the size until that fraction meets your power goal, checking other plausible disagreement rates as well. This is planning under explicit assumptions, not a guarantee.</p>
+<p>Step 6 does a narrower job. It finds the first sample size on a declared grid that gives a single-rate Wilson interval with a target width, assuming the observed rate stays at 80%. It is a <strong>precision calculation</strong>, with no promise of a particular power for the paired test. More distinct cases can improve precision under good sampling. More copies of old cases cannot replace a representative evaluation set.</p>
+<p>If ten unrelated null comparisons each have a 5% false-positive chance, the chance at least one triggers is <code>1 − 0.95¹⁰</code>, about 40%. That illustration assumes independent comparisons which real model trials may not satisfy. Choose the primary comparison and decision rules in advance, record the configurations tried, and validate any selected model on a fresh holdout. If several claims are primary, plan how to handle the family of tests before drawing conclusions.</p>
+<p>Even a good calculation cannot correct changing rubrics, judge mistakes, correlated cases, or an unrepresentative sample. Repeated use of a holdout can tune you to it. Model settings or live generation can also change between runs. Report invalid outcomes, missing slices, version differences, and deployment risks the evaluation did not cover.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Same rate, different precision</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Which 80% report gives the tighter estimate for refund-case performance?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Each report uses the same binary refund rubric and a sample of distinct cases drawn from the same target population in this teaching example.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The saved pass/fail counts are 8/10, 80/100, and 800/1,000.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Each numerator divided by its denominator is 0.80. For 8/10 the Wilson center is about 0.717 and the half-width about 0.227. For 80/100 they are about 0.789 and 0.078. For 800/1,000 they are about 0.799 and 0.025. Using the unrounded values, the 95% intervals are 49.02–94.33%, 71.12–86.66%, and 77.41–82.36%.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The widths shrink from 45.32 to 15.55 to 4.95 percentage points. Repeating a cached reply 1,000 times would not supply the distinct cases needed for the third claim. Check the case mix as well as the count.</span></p>
+<h5>Example 2. Count gains and losses on the same questions</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Do the first 20 paired cases support a difference between A and B?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Each configuration faces the same cases and the same binary refund rubric. The exact paired test uses a two-sided 0.05 threshold fixed in advance.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Both pass on C01–C14, A alone passes on C15–C16, B alone passes on C17–C19, and both fail on C20. All labels are illustrative.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>A passes 14 + 2 = 16/20. B passes 14 + 3 = 17/20. The observed gain is (3 − 2)/20 = 5 percentage points. Use only the five discordant directions for the exact test. The smaller tail through two has 16 of the 32 null sequences, and doubling it yields p = 1.00000.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The evidence is inconclusive about an underlying difference. It also cannot establish equivalence. Collect more matched cases and check whether the expected benefit and policy risk warrant a larger study.</span></p>
+<h5>Example 3. A supported gain still hits a critical gate</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Can Harbor Leaf release B after the larger paired evaluation?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The lab’s fictional release plan requires at least 99% matched coverage, a positive gain of at least 3 percentage points, exact p ≤ 0.05, and completed critical review with zero verified critical failures for B.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Of 202 planned cases, two have one invalid verdict, leaving 200 complete pairs. Both pass on 156, A alone on 4, B alone on 14, and neither on 26. B’s captured C157 reply wrongly promises 90 days.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>A passes (156 + 4)/200 = 80%. B passes (156 + 14)/200 = 85%. Their marginal Wilson intervals are 73.91–84.95% and 79.39–89.29%. The paired effect is (14 − 4)/200 = +5 points. The null gives 2¹⁸ equally likely discordant direction sequences. The tail through four has 1 + 18 + 153 + 816 + 3060 = 4048. Doubling and dividing by 262,144 gives p ≈ 0.03088. Coverage is 200/202 = 99.01%.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Write HOLD on the release sheet and attach reply C157. At day 45, the 90-day reply says to go ahead, even though the store’s window closed on day 30. The paired test and the observed gain clear their respective rules, so keep those results too. The team needs both records to understand why a promising gain still leaves a customer-facing error to fix.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Copy Code, open the editor next to a block, paste the whole program, and select Run. Compare the output with the first disclosure. Predict the experimental result before making the single described change. Start every exercise in a fresh editor. All inputs are fictional and inline. Each program uses standard Python with no live service.</p>
+</div></details>
+<h5>Step 1 — Count passes and failures by case ID</h5>
+<p>Start from the existing assistant’s 20 clean binary verdicts. A dictionary gives each verdict a stable case ID. <code>range(1, 21)</code> yields the numbers 1 through 20. The formatting code <code>02d</code> prints each number with at least two digits. Adding Boolean comparisons counts the number of true ones.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">outcomes = {f&quot;C{i:02d}&quot;: &quot;PASS&quot; if i &lt;= 16 else &quot;FAIL&quot; for i in range(1, 21)}
+passes = sum(result == &quot;PASS&quot; for result in outcomes.values())
+failures = sum(result == &quot;FAIL&quot; for result in outcomes.values())
+total = passes + failures
+print(f&quot;Sample size: {total} | passes: {passes} | failures: {failures}&quot;)
+print(f&quot;Accuracy: {passes / total:.1%}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Sample size: 20 | passes: 16 | failures: 4
+Accuracy: 80.0%
+</code></pre></details>
+<p><strong>Experiment.</strong> Insert <code>outcomes[&quot;C17&quot;] = &quot;PASS&quot;</code> below the first line. Predict how many percentage points one change buys.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Sample size: 20 | passes: 17 | failures: 3
+Accuracy: 85.0%
+</code></pre></details>
+<p>One case changes out of twenty. <strong>Checkpoint.</strong> Does this prove new customers will have exactly five points fewer errors? It only describes these twenty outcomes. Compare a fresh or larger representative paired sample to learn about future cases.</p>
+<h5>Step 2 — Calculate the Wilson interval</h5>
+<p>Use 8 of 10 and compute the divisor, center, and half-width from the worked numbers. <code>** 2</code> squares a value, <code>sqrt()</code> takes the square root, and <code>return</code> sends the two limits back together. The two names before <code>=</code> receive the lower and upper limits in that order.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import sqrt
+
+def wilson(passes, n, z):
+    p = passes / n
+    z2 = z ** 2
+    divisor = 1 + z2 / n
+    center = (p + z2 / (2 * n)) / divisor
+    half = z * sqrt(p * (1 - p) / n + z2 / (4 * n ** 2)) / divisor
+    return center - half, center + half
+
+passes, n = 8, 10
+low, high = wilson(passes, n, 1.959963984540054)
+print(f&quot;Observed: {passes}/{n} ({passes / n:.2%})&quot;)
+print(f&quot;Wilson 95%: {low:.2%} to {high:.2%}&quot;)
+print(f&quot;Width: {100 * (high - low):.2f} pp&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Observed: 8/10 (80.00%)
+Wilson 95%: 49.02% to 94.33%
+Width: 45.32 pp
+</code></pre></details>
+<p><strong>Experiment.</strong> Change the whole count pair to <code>passes, n = 80, 100</code>. Keep 80% fixed and predict the width.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Observed: 80/100 (80.00%)
+Wilson 95%: 71.12% to 86.66%
+Width: 15.55 pp
+</code></pre></details>
+<p>The rate stays 80% while the extra independent cases narrow the interval. Width is computed before rounding the endpoints. <strong>Checkpoint.</strong> Would duplicating the ten rows ten times justify this output? The formula would print it, but the claimed sample size would be wrong.</p>
+<h5>Step 3 — Change confidence on the same dataset</h5>
+<p>Keep 80/100 fixed. The table supplies precomputed two-sided normal cutoffs. A dictionary connects the requested confidence level to its cutoff. The loop prints all three widths for inspection before reporting one selected interval.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import sqrt
+
+def wilson(passes, n, z):
+    p = passes / n
+    z2 = z * z
+    divisor = 1 + z2 / n
+    center = (p + z2 / (2 * n)) / divisor
+    half = z * sqrt(p * (1 - p) / n + z2 / (4 * n * n)) / divisor
+    return center - half, center + half
+
+critical_values = {90: 1.6448536269514722, 95: 1.959963984540054, 99: 2.5758293035489004}
+level = 90
+for confidence, z in critical_values.items():
+    lower, upper = wilson(80, 100, z)
+    print(f&quot;{confidence}% width: {100 * (upper - lower):.2f} pp&quot;)
+low, high = wilson(80, 100, critical_values[level])
+print(f&quot;Selected {level}%: {low:.2%} to {high:.2%}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">90% width: 13.08 pp
+95% width: 15.55 pp
+99% width: 20.30 pp
+Selected 90%: 72.67% to 85.75%
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>level = 90</code> to <code>level = 99</code>. Predict which limits move.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">90% width: 13.08 pp
+95% width: 15.55 pp
+99% width: 20.30 pp
+Selected 99%: 67.98% to 88.28%
+</code></pre></details>
+<p>The wider selected interval goes with a higher confidence procedure. <strong>Checkpoint.</strong> Did the release evidence get stronger by changing the line? The data stayed fixed. Choose the level in the plan and report it with the result.</p>
+<h5>Step 4 — Count each matched outcome</h5>
+<p>Read the four rows from the pairing table. The dictionary key is a tuple holding both labels. <code>counts[a, b] += 1</code> adds one to its category. The agree categories describe overall performance, while A-only and B-only determine the net improvement.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">rows = [
+    (&quot;C01&quot;, &quot;PASS&quot;, &quot;PASS&quot;), (&quot;C02&quot;, &quot;FAIL&quot;, &quot;PASS&quot;),
+    (&quot;C03&quot;, &quot;PASS&quot;, &quot;FAIL&quot;), (&quot;C04&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;),
+]
+counts = {(&quot;PASS&quot;, &quot;PASS&quot;): 0, (&quot;PASS&quot;, &quot;FAIL&quot;): 0,
+          (&quot;FAIL&quot;, &quot;PASS&quot;): 0, (&quot;FAIL&quot;, &quot;FAIL&quot;): 0}
+for case_id, a, b in rows:
+    counts[a, b] += 1
+both, a_only, b_only, neither = counts.values()
+print(f&quot;Both pass {both} | A only {a_only} | B only {b_only} | both fail {neither}&quot;)
+print(f&quot;A passes {both + a_only}/{len(rows)} | B passes {both + b_only}/{len(rows)}&quot;)
+print(f&quot;Paired B-A: {100 * (b_only - a_only) / len(rows):+.1f} pp&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Both pass 1 | A only 1 | B only 1 | both fail 1
+A passes 2/4 | B passes 2/4
+Paired B-A: +0.0 pp
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only B’s C03 label from <code>&quot;FAIL&quot;</code> to <code>&quot;PASS&quot;</code>. Predict which two categories change.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Both pass 2 | A only 0 | B only 1 | both fail 1
+A passes 2/4 | B passes 3/4
+Paired B-A: +25.0 pp
+</code></pre></details>
+<p>C03 moves from A-only into both pass, reducing B’s losses by one. <strong>Checkpoint.</strong> Did the number of questions change? It stayed four. A large-looking effect can come from a single case in a tiny sample.</p>
+<h5>Step 5 — Test the discordant directions</h5>
+<p>Use the twenty-case demonstration. Keep the number of pairs, A-only passes, and both-fail cases fixed. Changing B-only replaces some both-pass rows, leaving B’s number of passes fixed. <code>comb(m, k)</code> counts the ways to choose <code>k</code> of <code>m</code> positions for one direction. The loop adds the counts through the smaller observed direction. There are <code>2 ** m</code> possible sequences.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import comb
+
+def exact_p(a_only, b_only):
+    m = a_only + b_only
+    if m == 0:
+        return 1.0
+    tail = sum(comb(m, k) for k in range(min(a_only, b_only) + 1))
+    return min(1.0, 2 * tail / (2 ** m))
+
+n = 20
+a_only, b_only, neither = 2, 3, 1
+both = n - a_only - b_only - neither
+assert both &gt;= 0
+p_value = exact_p(a_only, b_only)
+print(f&quot;Both pass {both} | A only {a_only} | B only {b_only} | both fail {neither}&quot;)
+print(f&quot;Discordant: {a_only + b_only} | effect {100 * (b_only - a_only) / n:+.1f} pp&quot;)
+print(f&quot;Exact two-sided p: {p_value:.5f}&quot;)
+print(&quot;Reject equality at 0.05&quot; if p_value &lt;= 0.05 else &quot;Do not reject equality at 0.05&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Both pass 14 | A only 2 | B only 3 | both fail 1
+Discordant: 5 | effect +5.0 pp
+Exact two-sided p: 1.00000
+Do not reject equality at 0.05
+</code></pre></details>
+<p><strong>Experiment.</strong> Replace the three counts with <code>a_only, b_only, neither = 2, 10, 1</code>. Seven former both-pass cases now have a hypothetical A failure. Predict the direction of the p-value change.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Both pass 7 | A only 2 | B only 10 | both fail 1
+Discordant: 12 | effect +40.0 pp
+Exact two-sided p: 0.03857
+Reject equality at 0.05
+</code></pre></details>
+<p>Compare the discordant rows before and after the edit. B goes from winning three of five to winning ten of twelve. Under the fair-flip assumption, only 79 of the 4,096 sequences put two or fewer wins in one specified direction. Count the other tail too, giving 158 of 4,096. <strong>Checkpoint.</strong> What would you inspect before acting on the smaller p-value? Read the failed replies and the release rules. The edited counts illustrate the test, while the source and actual replies supply evidence about the service.</p>
+<h5>Step 6 — Plan for a target interval width</h5>
+<p>Assume a fixed observed rate of 80%. Try planning sizes in steps of ten so that four fifths gives a whole pass count. The <code>// 5</code> operation gives the integer quotient. <code>next()</code> returns the first matching row in the search, or <code>None</code> if the grid never reaches the target. Keep 95% confidence for both runs.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import sqrt
+
+def width(n):
+    p = (4 * n // 5) / n
+    z = 1.959963984540054
+    z2 = z * z
+    half = z * sqrt(p * (1 - p) / n + z2 / (4 * n * n)) / (1 + z2 / n)
+    return 2 * half
+
+for n in (10, 100, 1000):
+    print(f&quot;n={n}: width {100 * width(n):.2f} pp&quot;)
+
+target = 0.10
+chosen = next((n for n in range(10, 2001, 10) if width(n) &lt;= target), None)
+print(f&quot;Target width: {100 * target:.1f} pp&quot;)
+print(f&quot;First grid size: {chosen} | width {100 * width(chosen):.2f} pp&quot; if chosen else &quot;Target not reached&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">n=10: width 45.32 pp
+n=100: width 15.55 pp
+n=1000: width 4.95 pp
+Target width: 10.0 pp
+First grid size: 250 | width 9.88 pp
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>target = 0.10</code> to <code>target = 0.06</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">n=10: width 45.32 pp
+n=100: width 15.55 pp
+n=1000: width 4.95 pp
+Target width: 6.0 pp
+First grid size: 690 | width 5.96 pp
+</code></pre></details>
+<p>The narrower target needs more independent cases under the 80% planning assumption. <strong>Checkpoint.</strong> Does this plan show you can detect a five-point gain between A and B? This search tells you about the width of one rate’s interval on the chosen grid. A power calculation needs the paired design and anticipated counts of changes in both directions.</p>
+<h5>Step 7 — Reproduce a release report</h5>
+<p>Use the twenty scored pairs from the small demonstration and one planned case with an invalid B verdict. The rows contain saved values, not live model calls. <code>dict.get()</code> can look up an adjudication for one case and retain its original status otherwise. <code>all()</code> tests whether both labels belong to the binary scale. Both A-only pairs enter the statistical table because both binary labels are valid. Their separate critical review can still be pending.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import comb, sqrt
+
+dataset, rubric = &quot;refund-small-1&quot;, &quot;refund-binary-v1&quot;
+config_a, config_b = &quot;A/current&quot;, &quot;B/proposed&quot;
+revision = &quot;baseline&quot;
+z = 1.959963984540054
+raw = {}
+for i in range(1, 22):
+    a = &quot;PASS&quot; if i &lt;= 16 or i == 21 else &quot;FAIL&quot;
+    b = &quot;PASS&quot; if i &lt;= 14 or 17 &lt;= i &lt;= 19 else &quot;FAIL&quot;
+    raw[f&quot;C{i:02d}&quot;] = (a, &quot;INVALID&quot; if i == 21 else b, &quot;PENDING&quot; if i == 15 else &quot;CLEAR&quot;)
+adjudications = {&quot;baseline&quot;: {}, &quot;confirmed&quot;: {&quot;C15&quot;: &quot;FAIL&quot;}}
+
+def wilson(k, n):
+    p = k / n
+    z2 = z * z
+    d = 1 + z2 / n
+    center = (p + z2 / (2 * n)) / d
+    half = z * sqrt(p * (1 - p) / n + z2 / (4 * n * n)) / d
+    return center - half, center + half
+
+audit = {case: (a, b, original, adjudications[revision].get(case, original))
+         for case, (a, b, original) in raw.items()}
+paired = [row for row in audit.values() if all(label in (&quot;PASS&quot;, &quot;FAIL&quot;) for label in row[:2])]
+n = len(paired)
+a_pass = sum(row[0] == &quot;PASS&quot; for row in paired)
+b_pass = sum(row[1] == &quot;PASS&quot; for row in paired)
+a_only = sum(row[:2] == (&quot;PASS&quot;, &quot;FAIL&quot;) for row in paired)
+b_only = sum(row[:2] == (&quot;FAIL&quot;, &quot;PASS&quot;) for row in paired)
+m = a_only + b_only
+p = min(1.0, 2 * sum(comb(m, k) for k in range(min(a_only, b_only) + 1)) / (2 ** m))
+effect = (b_pass - a_pass) / n
+critical = [case for case, row in audit.items() if row[3] == &quot;FAIL&quot;]
+pending = [case for case, row in audit.items() if row[3] == &quot;PENDING&quot;]
+excluded = [case for case, row in audit.items() if not all(label in (&quot;PASS&quot;, &quot;FAIL&quot;) for label in row[:2])]
+if critical:
+    decision = &quot;HOLD&quot;
+elif pending or n / len(raw) &lt; 0.99 or p &gt; 0.05 or effect &lt; 0.03:
+    decision = &quot;REVIEW&quot;
+else:
+    decision = &quot;RELEASE&quot;
+
+print(f&quot;{dataset} | {rubric} | {config_a} vs {config_b} | {revision}&quot;)
+print(f&quot;Paired coverage: {n}/{len(raw)} | excluded: {&#x27;, &#x27;.join(excluded)}&quot;)
+for name, count in [(&quot;A&quot;, a_pass), (&quot;B&quot;, b_pass)]:
+    low, high = wilson(count, n)
+    print(f&quot;{name}: {count} pass, {n-count} fail | {count/n:.1%} | Wilson 95% {low:.2%} to {high:.2%}&quot;)
+print(f&quot;Effect B-A: {effect*100:+.1f} pp | A only {a_only} | B only {b_only} | exact p {p:.5f}&quot;)
+print(&quot;Statistical threshold: &quot; + (&quot;met&quot; if p &lt;= 0.05 else &quot;not met&quot;))
+print(&quot;Observed practical floor (+3 pp): &quot; + (&quot;met&quot; if effect &gt;= 0.03 else &quot;not met&quot;))
+print(f&quot;B critical: {&#x27;, &#x27;.join(critical) or &#x27;none&#x27;} | B pending: {&#x27;, &#x27;.join(pending) or &#x27;none&#x27;}&quot;)
+print(f&quot;Audit C15: original gate {raw[&#x27;C15&#x27;][2]} | replay gate {audit[&#x27;C15&#x27;][3]}&quot;)
+print(f&quot;Recommendation: {decision}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-small-1 | refund-binary-v1 | A/current vs B/proposed | baseline
+Paired coverage: 20/21 | excluded: C21
+A: 16 pass, 4 fail | 80.0% | Wilson 95% 58.40% to 91.93%
+B: 17 pass, 3 fail | 85.0% | Wilson 95% 63.96% to 94.76%
+Effect B-A: +5.0 pp | A only 2 | B only 3 | exact p 1.00000
+Statistical threshold: not met
+Observed practical floor (+3 pp): met
+B critical: none | B pending: C15
+Audit C15: original gate PENDING | replay gate PENDING
+Recommendation: REVIEW
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>revision = &quot;confirmed&quot;</code>. The independent reviewer checked the frozen C15 reply “You have 90 days after delivery if you have a valid receipt” against <code>refund-1</code>, and recorded a critical failure. Leave both original verdicts and the reply fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-small-1 | refund-binary-v1 | A/current vs B/proposed | confirmed
+Paired coverage: 20/21 | excluded: C21
+A: 16 pass, 4 fail | 80.0% | Wilson 95% 58.40% to 91.93%
+B: 17 pass, 3 fail | 85.0% | Wilson 95% 63.96% to 94.76%
+Effect B-A: +5.0 pp | A only 2 | B only 3 | exact p 1.00000
+Statistical threshold: not met
+Observed practical floor (+3 pp): met
+B critical: C15 | B pending: none
+Audit C15: original gate PENDING | replay gate FAIL
+Recommendation: HOLD
+</code></pre></details>
+<p>The raw audit still shows PENDING. The new evidence strengthens the reason to block deployment without changing a rate or the p-value. <strong>Checkpoint.</strong> Would lowering the significance threshold fix the reply? The critical error is on the source check. Investigate that violation and the invalid C21 verdict first.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Start with counts</h5>
+<p>A passes 16/20 and B passes 17/20 on the same cases. Compute both rates, the percentage-point gain, and the relative gain. Identify the analysis unit.</p>
+<h5>Practice 2. Interpret an interval</h5>
+<p>At 95% confidence, 80 of 100 has Wilson limits of 71.12% and 86.66%. Explain what 95% refers to and why 800 of 1,000 can give a narrower interval without a different observed rate.</p>
+<h5>Practice 3. Read a paired table</h5>
+<p>On twenty cases, 14 both pass, three are B-only, two are A-only, and one both fails. Calculate the observed gain and the two-sided exact p-value. Say what the result can establish.</p>
+<h5>Practice 4. Separate statistical and release evidence</h5>
+<p>In the larger fixture, paired coverage is 200/202 and the paired gain is +5 points at p = 0.03088. A new team member recommends release. Check the documented criteria and explain which action belongs in the report while B’s 90-day reply remains.</p>
+<h4>Independent Assignment</h4>
+<p>Use the complete Guided Engineering Lab program as the standalone answer key. Start with its exact saved case IDs, policy, binary rubric, and decision rules. First verify C157 and C201 by hand. Record paired and per-configuration coverage, pass rates, marginal Wilson intervals, the paired difference interval, discordant counts, and the exact p-value. Explain which sample size each statistic uses. Include the critical check and a release recommendation in a short audit note.</p>
+<p>For variant A, start from the baseline lab and change only <code>revision = &quot;verdict-retry&quot;</code>. The judge replay repairs B’s unreadable verdict on C201. For variant B, start from the lab experiment with <code>revision = &quot;deadline-repair&quot;</code> and change only <code>minimum_gain = 0.03</code> to <code>minimum_gain = 0.06</code> as a separate, predeclared-policy what-if. Explain why evaluation teams should not pick a more convenient threshold after seeing the result.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>16/20 is 80% and 17/20 is 85%. Subtract to get +5 percentage points. Relative to A, 0.05/0.80 is 6.25%. The matched case is the unit. Forty individual labels represent twenty paired questions.</p>
+<h5>Solution 2</h5>
+<p>The label 95% describes how often the method aims to cover the fixed underlying rate over repeated samples under the stated conditions. The interval you computed has fixed limits. With ten times as many distinct suitable cases, an observed proportion can vary less across samples, so Wilson gives a narrower range despite the same observed 80% pass rate.</p>
+<h5>Solution 3</h5>
+<p>B gains three and loses two for a net gain of one of twenty, or five points. The smaller tail at two counts 1 + 5 + 10 of the 32 sequences. The two-sided probability is 2 × 16/32 = 1. The sample is compatible with equality under the test and lacks evidence to settle the improvement. A nonsignificant result is also compatible with real effects this demonstration is too small to detect.</p>
+<h5>Solution 4</h5>
+<p>200/202 = 99.01%, +5 clears +3, and 0.03088 is below 0.05. The critical gate remains. The verified 90-day claim conflicts with the approved 30 days. Record HOLD and preserve the source, failed case ID and response, and the otherwise favorable statistics.</p>
+<h5>Lab and assignment answer key</h5>
+<p>For the baseline lab, the exact paired test and observed effect clear the numerical criteria. C157 blocks release. C201 and C202 each explain one missing complete pair. Inspect the excluded cases by ID, check that their available responses were still reviewed for critical facts, and keep the missing labels out of the paired analysis.</p>
+<p>For variant A, compare with the baseline lab. The retry makes C201 a both-pass pair. A has 161/201 and B has 171/201, with the same four and fourteen discordances. The pass-rate difference is +4.98 points, the exact p-value remains 0.03088, and 201/202 = 99.50% is paired coverage. Baseline C157 still blocks release.</p>
+<p>For variant B, the repaired reply leaves no verified critical failures in the fixture. Its observed gain is 5.50 points, below the proposed six-point floor. The report changes from RELEASE to REVIEW even though the p-value, intervals, and case set stay the same. The floor here is an operating decision. The interval does not establish that the underlying effect is at least six points.</p>
+<p>Exact changes for variant A, relative to baseline, are <code>refund-holdout-72 | refund-binary-v1 | refund-1 | A/current vs B/proposed | verdict-retry</code>, <code>Valid A 201/202 | valid B 202/202 | pairs 201/202 (99.50%)</code>, <code>Excluded: C202</code>, <code>Both 157 | A only 4 | B only 14 | neither 26</code>, <code>A: 161/201 (80.10%) | Wilson 95% 74.04% to 85.03%</code>, <code>B: 171/201 (85.07%) | Wilson 95% 79.49% to 89.34%</code>, <code>B-A +4.98 pp | discordant 18 | exact p 0.03088</code>, <code>Paired bootstrap 95% (seed 72, 4000 draws): +1.00 to +8.96 pp</code>, and <code>Independent-design contrast only: -2.42 to +12.37 pp</code>. All other lines stay the same.</p>
+<p>Exact changes for variant B, relative to the lab experiment, are <code>Rules: observed floor 6 pp | coverage 99% | alpha 0.05</code> and <code>Recommendation: REVIEW</code>. All other lines stay the same.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>A report has 800 passes out of 1,000 rows, but only ten distinct customers were repeatedly rated. What should you ask about sample size?</li><li>What could happen if a new representative sample is evaluated with the same fixed configurations?</li><li>Does a computed 95% interval assign a 95% probability to the fixed underlying rate being inside those endpoints?</li><li>When the data stay fixed, why is a 99% Wilson interval wider than a 90% one?</li><li>A paired test reports p = 0.40. What can you infer about equality?</li><li>In the paired bootstrap, what must stay together and why?</li><li>A gain of one point is statistically detectable but adds substantial review work. What additional judgment should the team make?</li><li>Five candidates were tried on the same holdout. The chosen one looks safest and has the smallest p-value. What would you do before relying on that result?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Ask which independent units were sampled. Repeated ratings of the same customer or cases do not create 1,000 independent units. Keep related cases together in the analysis.</li><li>The case mix and outcomes could differ, producing another observed rate and interval. Check that the collection and rubric stay comparable.</li><li>No. The confidence level describes a repeated-sampling procedure under assumptions. The fixed rate is either inside or outside this realized interval.</li><li>The larger cutoff reaches farther into the reference curve. The procedure uses a wider span to aim for greater coverage with the same data.</li><li>The test did not reject equality at 0.05. It may have little information, so report the observed effect, sample size and uncertainty. Equality or practical equivalence needs its own evidence.</li><li>Keep both answers or labels for a case in one draw. The pairing preserves how the two outcomes relate on easy and difficult cases.</li><li>Compare the size and type of errors prevented with cost, review time, and the separate critical requirements. Statistical detectability does not settle the trade-off.</li><li>Record all attempts, select a primary configuration and criterion in advance for a new holdout, and keep the independent policy checks. Selecting the best on the old holdout can inflate apparent evidence.</li></ol>
+</div></details>
+<h4>Guided Engineering Lab</h4>
+<h5>Brief and acceptance rules</h5>
+<p>Harbor Leaf’s QA reviewer must decide whether to replace A with B on refund replies. The plan measures binary refund-guidance accuracy on the same saved questions, then independently checks B for critical policy errors. Reproduce the saved report before proposing a change. Keep simulated evidence labeled.</p>
+<p>Use <code>refund-1</code> for eligible unused orders. A PASS gives the needed day limit, delivery as the starting event, and the valid-receipt condition on the standard question. For C157’s day-45 question, PASS correctly says the window has ended. Omission of a required detail is FAIL. A verified wrong deadline or receipt waiver is also critical. An unreadable verdict is INVALID and leaves the binary outcome unknown. Critical check and verdict validity are separate fields. Review available replies even when their verdicts are invalid.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Case IDs</th><th scope="col">Captured A reply</th><th scope="col">Captured B reply</th><th scope="col">Recorded labels</th></tr></thead><tbody><tr><td>C001–C156</td><td>Standard correct</td><td>Standard correct</td><td>PASS / PASS</td></tr><tr><td>C157</td><td>Day 45 is too late</td><td>Day 45 still allowed with a 90-day deadline</td><td>PASS / FAIL, B critical</td></tr><tr><td>C158–C160</td><td>Standard correct</td><td>Omits receipt</td><td>PASS / FAIL</td></tr><tr><td>C161–C174</td><td>Omits receipt</td><td>Standard correct</td><td>FAIL / PASS</td></tr><tr><td>C175–C200</td><td>Omits receipt</td><td>Omits receipt</td><td>FAIL / FAIL</td></tr><tr><td>C201</td><td>Standard correct</td><td>Standard correct</td><td>PASS / INVALID</td></tr><tr><td>C202</td><td>Standard correct</td><td>Standard correct</td><td>INVALID / PASS</td></tr></tbody></table></div>
+<p>The code below supplies the exact texts and stable IDs. Rows in each range reuse teaching templates to make the input readable. Treat the IDs as distinct hypothetical cases for the arithmetic. These artificial templates cannot establish independence or representativeness for a live evaluation.</p>
+<h5>Follow the evidence in order</h5>
+<ol><li>Read the approved policy and the two question types in the code. Open C157. If the customer is on day 45, compare 45 with 30 and then with the reply’s claimed 90. Assign A PASS, B FAIL and B critical. Put the pair in A-only. This is the deliberate failure.</li><li>Read C201 and C202. Both have captured replies but one invalid verdict. Leave each out of the paired denominator and preserve its ID in the audit. Count per-configuration validity and matched coverage separately.</li><li>Add the four categories together before calculating accuracy. In the baseline, there are 200 complete pairs and 18 discordances. Check the counts against the worked demonstration.</li><li>Interpret the Wilson limits for each rate and the whole-pair bootstrap interval for the difference. An interval provides context about plausible effect sizes. The exact paired test and the predeclared threshold drive the statistical decision in this exercise.</li><li>Check 0.05, at least 99% paired coverage, and an observed gain of at least 3 points. Then check the independent critical evidence. Use HOLD for a verified B critical error, RELEASE when no such error is found and all fixture rules clear, or REVIEW when the evidence falls short. RELEASE here is the result of an offline rule for this exercise.</li><li>Save a report with dataset, rubric, policy, replay version, seed and draw count, case IDs, the excluded outcomes, and your recommendation. Explain what the evidence does not cover.</li></ol>
+<h5>Run the saved report</h5>
+<p>The replay program builds one record per case. A dictionary comprehension uses the case ID as the key, and <code>assert</code> checks for duplicate IDs and incomplete coverage of the planned ID set. The whole-pair bootstrap draws a case index and uses that case’s B-minus-A change. A seeded <code>Random</code> gives a reproducible stream. Multiplying a value in [0, 1) by <code>n</code> and taking <code>int()</code> selects an index from 0 to <code>n − 1</code>. Repeat <code>n</code> selections per draw. Sort 4,000 differences and take the nearest ranks at 2.5% and 97.5%. <code>ceil(fraction * draws) − 1</code> converts an upward-rounded rank to a zero-based index.</p>
+<p>For contrast only, the report also computes an approximate interval <strong>as if</strong> the samples were independent. The estimated variance of a single binary sample proportion is <code>p(1−p)/n</code> under this approximation. Independent variances add. For 80% and 85% with 200 each, the square root of <code>(0.80 × 0.20 + 0.85 × 0.15)/200</code> is about 0.0379. Multiply by 1.96 to get a half-width of about 7.43 points. This independent-design interval is not valid as the paired result. Both answers on each actual case share its difficulty.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import ceil, comb, sqrt
+from random import Random
+
+dataset, rubric, policy_id = &quot;refund-holdout-72&quot;, &quot;refund-binary-v1&quot;, &quot;refund-1&quot;
+configs = (&quot;A/current&quot;, &quot;B/proposed&quot;)
+policy = &quot;Refund requests are allowed through calendar day 30 after delivery with a valid receipt.&quot;
+revision = &quot;baseline&quot;
+minimum_gain = 0.03
+alpha, coverage_floor = 0.05, 0.99
+seed, draws = 72, 4000
+z = 1.959963984540054
+labels = (&quot;PASS&quot;, &quot;FAIL&quot;)
+# Captured reply, checked binary verdict, independent critical-evidence verdict.
+replies = {
+    &quot;correct&quot;: (&quot;Request a refund through calendar day 30 after delivery with a valid receipt.&quot;, &quot;PASS&quot;, &quot;CLEAR&quot;),
+    &quot;omit&quot;: (&quot;Request a refund through calendar day 30 after delivery.&quot;, &quot;FAIL&quot;, &quot;CLEAR&quot;),
+    &quot;expired&quot;: (&quot;Day 45 is past the 30-calendar-day refund deadline after delivery.&quot;, &quot;PASS&quot;, &quot;CLEAR&quot;),
+    &quot;wrong&quot;: (&quot;You may still ask at day 45. You have 90 days after delivery with a valid receipt.&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;),
+}
+rows = []
+for i in range(1, 203):
+    case_id = f&quot;C{i:03d}&quot;
+    question = &quot;Can I request a refund 45 days after delivery?&quot; if i == 157 else &quot;What is the refund deadline and what do I need?&quot;
+    a = &quot;expired&quot; if i == 157 else (&quot;omit&quot; if 161 &lt;= i &lt;= 200 else &quot;correct&quot;)
+    b = &quot;wrong&quot; if i == 157 else (&quot;omit&quot; if 158 &lt;= i &lt;= 160 or 175 &lt;= i &lt;= 200 else &quot;correct&quot;)
+    raw_a = &quot;INVALID&quot; if i == 202 else replies[a][1]
+    raw_b = &quot;INVALID&quot; if i == 201 else replies[b][1]
+    rows.append((case_id, question, a, b, raw_a, raw_b))
+
+history = {row[0]: row for row in rows}
+assert len(history) == len(rows) and set(history) == {f&quot;C{i:03d}&quot; for i in range(1, 203)}
+audit = {}
+for case_id, question, a, b, raw_a, raw_b in rows:
+    original = (a, b, raw_a, raw_b)
+    if revision == &quot;deadline-repair&quot; and case_id == &quot;C157&quot;:
+        b = &quot;expired&quot;
+        raw_b = replies[b][1]
+    if revision == &quot;verdict-retry&quot; and case_id == &quot;C201&quot;:
+        raw_b = replies[b][1]
+    assert raw_a in (*labels, &quot;INVALID&quot;) and raw_b in (*labels, &quot;INVALID&quot;)
+    audit[case_id] = {
+        &quot;question&quot;: question, &quot;dataset&quot;: dataset, &quot;rubric&quot;: rubric, &quot;source&quot;: policy,
+        &quot;configs&quot;: configs, &quot;revision&quot;: revision, &quot;original&quot;: original,
+        &quot;reply_ids&quot;: (a, b), &quot;texts&quot;: (replies[a][0], replies[b][0]),
+        &quot;labels&quot;: (raw_a, raw_b), &quot;critical&quot;: replies[b][2],
+    }
+
+def wilson(k, n):
+    p = k / n
+    z2 = z * z
+    divisor = 1 + z2 / n
+    center = (p + z2 / (2 * n)) / divisor
+    half = z * sqrt(p * (1 - p) / n + z2 / (4 * n * n)) / divisor
+    return center - half, center + half
+
+def exact_p(a_only, b_only):
+    m = a_only + b_only
+    return min(1.0, 2 * sum(comb(m, k) for k in range(min(a_only, b_only) + 1)) / (2 ** m))
+
+def paired_interval(changes):
+    rng = Random(seed)
+    n = len(changes)
+    effects = sorted(sum(changes[int(rng.random() * n)] for _ in range(n)) / n
+                     for _ in range(draws))
+    return effects[ceil(0.025 * draws) - 1], effects[ceil(0.975 * draws) - 1]
+
+planned = len(audit)
+pairs = [r[&quot;labels&quot;] for r in audit.values() if all(label in labels for label in r[&quot;labels&quot;])]
+excluded = [case for case, r in audit.items() if &quot;INVALID&quot; in r[&quot;labels&quot;]]
+valid_a = sum(r[&quot;labels&quot;][0] in labels for r in audit.values())
+valid_b = sum(r[&quot;labels&quot;][1] in labels for r in audit.values())
+n = len(pairs)
+both = pairs.count((&quot;PASS&quot;, &quot;PASS&quot;))
+a_only = pairs.count((&quot;PASS&quot;, &quot;FAIL&quot;))
+b_only = pairs.count((&quot;FAIL&quot;, &quot;PASS&quot;))
+neither = pairs.count((&quot;FAIL&quot;, &quot;FAIL&quot;))
+assert n + len(excluded) == planned and both + a_only + b_only + neither == n
+assert n &gt; 0  # The fixture has complete pairs. No rates are computed for an empty set.
+p_a, p_b = (both + a_only) / n, (both + b_only) / n
+effect = (b_only - a_only) / n
+p = exact_p(a_only, b_only)
+changes = [int(b == &quot;PASS&quot;) - int(a == &quot;PASS&quot;) for a, b in pairs]
+low, high = paired_interval(changes)
+independent_se = sqrt((p_a * (1 - p_a) + p_b * (1 - p_b)) / n)
+critical = [case for case, r in audit.items() if r[&quot;critical&quot;] == &quot;FAIL&quot;]
+pending = [case for case, r in audit.items() if r[&quot;critical&quot;] == &quot;PENDING&quot;]
+decision = &quot;HOLD&quot; if critical else (&quot;REVIEW&quot; if pending or n / planned &lt; coverage_floor or
+                                    p &gt; alpha or effect &lt; minimum_gain else &quot;RELEASE&quot;)
+
+print(f&quot;{dataset} | {rubric} | {policy_id} | {configs[0]} vs {configs[1]} | {revision}&quot;)
+print(f&quot;Valid A {valid_a}/{planned} | valid B {valid_b}/{planned} | pairs {n}/{planned} ({n/planned:.2%})&quot;)
+print(&quot;Excluded: &quot; + (&quot;, &quot;.join(excluded) or &quot;none&quot;))
+print(f&quot;Both {both} | A only {a_only} | B only {b_only} | neither {neither}&quot;)
+for name, k in [(&quot;A&quot;, both + a_only), (&quot;B&quot;, both + b_only)]:
+    left, right = wilson(k, n)
+    print(f&quot;{name}: {k}/{n} ({k/n:.2%}) | Wilson 95% {left:.2%} to {right:.2%}&quot;)
+print(f&quot;B-A {100*effect:+.2f} pp | discordant {a_only+b_only} | exact p {p:.5f}&quot;)
+print(f&quot;Paired bootstrap 95% (seed {seed}, {draws} draws): {100*low:+.2f} to {100*high:+.2f} pp&quot;)
+print(f&quot;Independent-design contrast only: {100*(effect-z*independent_se):+.2f} to {100*(effect+z*independent_se):+.2f} pp&quot;)
+print(f&quot;Rules: observed floor {100*minimum_gain:.0f} pp | coverage {coverage_floor:.0%} | alpha {alpha:.2f}&quot;)
+print(&quot;Critical B: &quot; + (&quot;, &quot;.join(critical) or &quot;none verified&quot;))
+sample = audit[&quot;C157&quot;]
+print(f&quot;C157 B: old {sample[&#x27;original&#x27;][1]}/{sample[&#x27;original&#x27;][3]} | replay {sample[&#x27;reply_ids&#x27;][1]}/{sample[&#x27;labels&#x27;][1]}&quot;)
+print(f&quot;Recommendation: {decision}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-holdout-72 | refund-binary-v1 | refund-1 | A/current vs B/proposed | baseline
+Valid A 201/202 | valid B 201/202 | pairs 200/202 (99.01%)
+Excluded: C201, C202
+Both 156 | A only 4 | B only 14 | neither 26
+A: 160/200 (80.00%) | Wilson 95% 73.91% to 84.95%
+B: 170/200 (85.00%) | Wilson 95% 79.39% to 89.29%
+B-A +5.00 pp | discordant 18 | exact p 0.03088
+Paired bootstrap 95% (seed 72, 4000 draws): +1.00 to +9.50 pp
+Independent-design contrast only: -2.43 to +12.43 pp
+Rules: observed floor 3 pp | coverage 99% | alpha 0.05
+Critical B: C157
+C157 B: old wrong/FAIL | replay wrong/FAIL
+Recommendation: HOLD
+</code></pre></details>
+<p><strong>Controlled experiment.</strong> Set <code>revision = &quot;deadline-repair&quot;</code>. This replaces only the captured B response on C157 in the replay, with the saved “Day 45 is past the 30-calendar-day refund deadline after delivery.” Its label and critical check now follow that new text. The historical 90-day response remains in <code>history</code> and <code>original</code>. This deliberately edited fixture tests decision logic. In a real release assessment, freeze the repaired configuration and rerun the planned evaluation on fresh cases. A targeted fix to one known holdout reply cannot validate the whole configuration.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-holdout-72 | refund-binary-v1 | refund-1 | A/current vs B/proposed | deadline-repair
+Valid A 201/202 | valid B 201/202 | pairs 200/202 (99.01%)
+Excluded: C201, C202
+Both 157 | A only 3 | B only 14 | neither 26
+A: 160/200 (80.00%) | Wilson 95% 73.91% to 84.95%
+B: 171/200 (85.50%) | Wilson 95% 79.95% to 89.71%
+B-A +5.50 pp | discordant 17 | exact p 0.01273
+Paired bootstrap 95% (seed 72, 4000 draws): +1.50 to +9.50 pp
+Independent-design contrast only: -1.89 to +12.89 pp
+Rules: observed floor 3 pp | coverage 99% | alpha 0.05
+Critical B: none verified
+C157 B: old wrong/FAIL | replay expired/PASS
+Recommendation: RELEASE
+</code></pre></details>
+<h5>Troubleshoot and hand off</h5>
+<p>If the counts differ, check that C157 is A-only in the baseline and both-pass in the repair. Look at C201 and C202 before changing a denominator. Verify the original and replayed labels independently of the critical check. If only the bootstrap changes, restore the case order, seed, draw count, and endpoint rule before comparing reports. With real data, investigate malformed outcomes and correlated cases before fitting any interval. Record whether a replacement came from an independent new capture or an adjudication.</p>
+<p>A report you could hand to a teammate reads “HOLD B. We compared 200 of 202 planned pairs on <code>refund-holdout-72</code> using <code>refund-binary-v1</code>. The two excluded pairs are C201 and C202. The gain on scored pairs is 5.00 pp, with paired bootstrap limits +1.00 to +9.50 pp and exact p = 0.03088. C157 is critical because the reply offers 90 days and <code>refund-1</code> gives 30. Recover the unreadable verdicts, fix deadline guidance, and rerun the comparison on independent cases.” Point out that gains below three points are still inside the interval. The fictional rule checks the observed gain and cannot settle whether the underlying gain clears that floor.</p>
+<p>Finish by reproducing both outputs, identifying why the two marginal intervals cannot substitute for the paired test, attaching the critical evidence, and explaining the different release outcomes. An instructor may substitute anonymized, frozen model replies and evidence-backed labels later. Keep paired IDs and group related cases before resampling. Preserve the source dataset, rubric, effective settings, and versions. The offline lab never needs a live model.</p>
+<h4>Common Mistakes</h4>
+<p>Read the denominators before comparing rates. A different or invalid row can change the result even when the remaining answers stay fixed.</p>
+<p>Use whole paired case records for uncertainty in a matched design. Judge replays on the same examples can diagnose scoring variation and still leave the number of independent cases unchanged.</p>
+<p>Report the effect, method, coverage, and policy evidence together. A missed threshold leaves an open decision. A verified critical violation can settle it.</p>
+<h4>Lesson Summary and Next Step</h4>
+<p>Start with counts and policy evidence. Give each observed rate an interval, compare gains and losses on the same cases, and check which practical threshold was planned. Preserve exclusions and the critical decision in the audit so another reviewer can reproduce the report.</p>
+<p>Next, <a href="#m07-t03">Comparing models, prompts and A/B variants</a> uses paired evidence to design and interpret a controlled comparison.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Resample whole case pairs in Python and compare the interval with an independent-sample calculation.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 to resample paired records. The lesson introduces interval and significance concepts.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Vary sample size or minimum effect and explain why a result is inconclusive without overclaiming equivalence.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h 30m</dd></div></dl></div>
