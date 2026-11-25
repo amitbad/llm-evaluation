@@ -8562,34 +8562,445 @@ data-subject="Judges" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m06-t02">
-  <p class="lesson-intro" data-lesson-search>Human and model disagreements identify ambiguous rubrics, default preferences and systematic miss rates.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Percent agreement, confusion matrices, Cohen&#x27;s kappa intuition, prevalence effects, repeat judge consistency, verbosity/style and model self-preference, held-out calibration.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Match independent reviewer and judge labels to frozen response IDs and calculate exact agreement.</li><li>Use the approved policy to check whether agreement reflects a justified outcome.</li><li>Read a confusion matrix and calculate Cohen’s kappa from observed agreement and each reviewer’s label frequencies.</li><li>Clarify rubric anchors, investigate style preferences, and report held-out errors, sample sizes, and unresolved cases.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Your parcel arrived 45 days ago. Harbor Leaf Market’s assistant tells you the store gives you 90 days to request a refund. Two reviewers and an automated judge approve the reply. Then someone opens the policy and finds a 30-day deadline. The customer is already too late. Before trusting the next round of ratings, the team needs to understand how three matching judgments missed the same fact.</p>
+<p>The store, messages, labels, and replay outputs in this chapter are fictional. Policy <code>refund-1</code> says “Refund requests are allowed through calendar day 30 after delivery with a valid receipt.” Day 30 is included. Each customer in the fixture has an eligible unused online order and asks for the deadline and what they need to request a refund. The approved clause is the reference for those answers.</p>
+<p>Allow about six hours. Start with <a href="#m06-t01">Pointwise LLM-as-a-Judge</a>. <a href="#m04-t02">Annotation, adjudication and synthetic data</a> and <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> are recommended background. Use the latter before building your own calibration and holdout sets. This chapter supplies separate case IDs and replays so you can inspect both sets entirely offline.</p>
+<h4>Beginner Explanation</h4>
+<h5>Start with two independent reads</h5>
+<p>Nia and Omar each receive the same policy, question, and saved replies. They record their labels without seeing each other’s work or the judge’s output. This is <strong>independent review</strong>. A <strong>rubric</strong> is their shared scoring guide. Version <code>v1</code> says PASS for “sufficient refund guidance,” FAIL for wrong or insufficient guidance, and REVIEW for a material doubt. It does not say clearly whether omitting the receipt makes a reply insufficient. A rubric anchor is a concrete example showing which label to assign and why.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Preparation skills"><table><caption>Preparation skills</caption><thead><tr><th scope="col">ID</th><th scope="col">Frozen reply</th><th scope="col">Nia</th><th scope="col">Omar</th><th scope="col">Judge replay v1</th></tr></thead><tbody><tr><td>A</td><td>You may request a refund within 30 calendar days after delivery with a valid receipt.</td><td>PASS</td><td>PASS</td><td>PASS</td></tr><tr><td>B</td><td>You can request a refund within 90 calendar days after delivery with a valid receipt.</td><td>PASS</td><td>PASS</td><td>PASS</td></tr><tr><td>C</td><td>Ask for a refund during the first month after delivery if you have proof of purchase.</td><td>REVIEW</td><td>PASS</td><td>PASS</td></tr><tr><td>D</td><td>You can request a refund within 30 calendar days after delivery.</td><td>FAIL</td><td>PASS</td><td>PASS</td></tr><tr><td>E</td><td>Contact our support team for assistance.</td><td>FAIL</td><td>FAIL</td><td>FAIL</td></tr></tbody></table></div>
+<p>Put a check mark next to each row where Nia and Omar gave the same label. You’ll mark A and B for matching PASS labels, and E for matching FAIL labels. C and D get no mark. You have three marks across five rows that both people rated. Divide 3 by 5 to get 60%. That is <strong>exact agreement</strong>. It counts matches, so on a five-point scale a 4 versus a 5 is a mismatch just as a 1 versus a 5 is.</p>
+<p>The judge matches Nia on three cases and Omar on all five. Nia and Omar use different interpretations of the receipt rule. Matching one person more often does not tell you whose interpretation is supported. Check each disagreement using the frozen reply and the source. Then inspect some agreements too. B is where all three labels miss the same fact.</p>
+<h5>Confirm what the policy supports</h5>
+<p>Put B’s “90 calendar days” beside the approved “through calendar day 30.” At day 45, the two statements give different instructions. The written policy provides stronger evidence than the three matching labels. An independent reviewer can now record FAIL for this specific claim.</p>
+<p>A person who resolves a disputed judgment by reading the evidence and applying an agreed rule is doing <strong>adjudication</strong>. Keep their reason alongside their decision. For D, the updated rubric can make the omission rule explicit and support FAIL. For C, there is no exact day count and no clear confirmation of a valid receipt. Leave its adjudicated label open and route it for clarification. REVIEW describes the next action. A pending reference means the team has yet to establish a binary outcome for this report.</p>
+<p>Report judge agreement with each reviewer separately. Then compare valid judge labels against adjudicated labels when available. The second comparison estimates correctness against a documented reference on those cases. A reference label is as trustworthy as the evidence and rule used to establish it. A judge output that cannot be read under the required format is invalid. In Step 7 that format is one label, so the illustrative raw value “{broken” cannot be scored. Keep it out of agreement and report it separately.</p>
+<h5>Read the types of mistakes</h5>
+<p>Imagine testing a held-out group with two adjudicated PASS cases and two adjudicated FAIL cases. The saved judge gets one of each right. Write the reference labels down the side and judge labels across the top. This count table is a <strong>confusion matrix</strong>.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Adjudicated label</th><th scope="col">Judge PASS</th><th scope="col">Judge FAIL</th></tr></thead><tbody><tr><td>PASS</td><td>1</td><td>1</td></tr><tr><td>FAIL</td><td>1</td><td>1</td></tr></tbody></table></div>
+<p>The PASS/PASS and FAIL/FAIL cells give 2 matches out of 4. The FAIL row has one false pass out of two known FAIL replies. The PASS row has one false fail out of two known PASS replies. A judge that passes every reply can look strong on a set dominated by correct replies. Read each row before trusting the total. Report the number of cases, the number with both valid binary labels, and the cases excluded because of missing or invalid evidence.</p>
+<h5>Notice how the choice of labels affects agreement</h5>
+<p>Picture eight new refund replies. Nia and Omar both use PASS six times and FAIL twice. They match on six replies, giving <strong>observed agreement</strong> of 6 ÷ 8 = 0.75. If you shuffled each reviewer’s labels independently while keeping their label counts, you would still expect many PASS labels to land together. The expected agreement under this independence calculation is the product of the two PASS frequencies plus the product of the two FAIL frequencies. Here it is (6/8 × 6/8) + (2/8 × 2/8) = 0.625.</p>
+<p><strong>Cohen’s kappa</strong> compares the observed agreement to that baseline. The observed result is 0.75 − 0.625 = 0.125 above it. The best possible agreement is 1, so the available room was 1 − 0.625 = 0.375. Divide 0.125 by 0.375 to get 0.333. In symbols, κ = (observed − expected) ÷ (1 − expected). A kappa of 0 means the match rate equals this baseline. A negative value means fewer matches than the baseline expects. If expected agreement is 1, kappa is undefined. Cohen, A Coefficient of Agreement for Nominal Scales</p>
+<p>If both reviewers used PASS and FAIL equally often with the same 75% observed agreement, expected agreement would be 0.50, and kappa would be 0.50. The frequency of a category in the set is its <strong>prevalence</strong>. Show the label counts, sample size, raw agreement, and kappa together. Kappa describes agreement under a particular baseline. It cannot tell you whether either person applied the refund policy correctly.</p>
+<h5>Calibrate the rule, then test it on fresh cases</h5>
+<p>Choose practice cases that cover clear answers, wrong deadlines, missing receipts, and ambiguous replies. Have the reviewers label them independently. Compare their ratings and read the disputed text against the policy. Write down which part of the guide caused the disagreement. For instance, replace “sufficient refund guidance” with examples of a complete answer, a missing receipt, and an uncertain date. Save the resolved labels and any pending cases alongside a new rubric version. This is <strong>calibration</strong> in this lesson.</p>
+<p>Keep a separate set for evaluation. A <strong>holdout</strong> is a set you keep away from the examples used to revise the rubric or judge prompt. Keep near-duplicate replies from the same question family in the same partition. Reviewers can prepare reference labels independently, while the people revising the rubric avoid reading the holdout cases or scores until the rules are frozen. Opening the same outcomes after each edit lets you tailor the rule to those particular replies. Using held-out examples to pick a rule moves information into the design process. That is <strong>data leakage</strong>. If you revise the rules after reading the results, treat those cases as development evidence and use a fresh holdout.</p>
+<h5>Test a suspected preference without changing the facts</h5>
+<p>Take a correct short reply and a longer version with the same facts. Give both the same question, policy, rubric, and judge settings. If the longer wording repeatedly gets a better verdict, investigate a possible preference for verbosity. Try adding “Definitely” to a wrong reply to test confidence. Show the same two policy facts once in a paragraph and once as a numbered list to test formatting. Compare a plain reply with a polished paraphrase that keeps the deadline and receipt unchanged. Change one property at a time. Keep the review focused on the refund requirements unless the rubric explicitly includes style. A <strong>slice</strong> is a subgroup, such as short or long replies, whose errors you report separately.</p>
+<p>An evaluator may also favor replies generated by its own model family. This is <strong>model self-preference</strong>. For example, the judge may pass its own model family’s replies more often than equally accurate replies written by another family. Keep model identities hidden when possible and compare independently labeled examples from several sources. Check whether the pattern persists after matching on facts and controlling presentation. If you present multiple answers together, their order may affect judgments. Here each replay rates one reply independently. For pointwise <strong>repeat consistency</strong>, rerun that same reply with the same inputs and count how often the verdict changes. Repeat agreement can coexist with a repeated mistake. Zheng et al., Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena</p>
+<p>A report should keep each case ID, frozen reply, policy, dataset version, split, reviewer IDs and labels, raw judge output, rubric version, disagreement reason, adjudicated outcome, and calibration action. Include the counts and denominators behind each summary. Save each new run alongside the earlier one. This report computes agreement from the saved per-case labels so a colleague can reproduce the calculation.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Count the matches before asking why</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>How long after delivery can I ask for a refund, and what do I need?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Under <code>refund-1</code> the window ends on calendar day 30 and a valid receipt is required.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>D says “You can request a refund within 30 calendar days after delivery.” Read D with A, B, C, and E in the calibration table.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Nia and Omar each labeled all five replies separately. A, B, and E match, giving 3/5 or 60% agreement. C and D differ. On D, Omar treated the deadline as sufficient guidance, while Nia considered the receipt a required part of the answer.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Keep both original labels. Record an omission under the clarified rubric and add an anchor that names the missing receipt as a failure for this question. The 60% describes this table and cannot explain the disagreement by itself.</span></p>
+<h5>Example 2. Find an error inside unanimous agreement</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>How long after delivery can I request a refund, and what do I need?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The approved source allows a request through calendar day 30 after delivery with a valid receipt.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>B says “You can request a refund within 90 calendar days after delivery with a valid receipt.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Nia, Omar, and the judge replay all use PASS. Read the cutoff directly from the reply and the source. At day 45, B says the request is within the window, but the approved clause says the window has ended. Record an adjudicated FAIL under the same ID.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Write two lines for B. On the agreement line, all three pairs of raters matched: Nia and Omar, Nia and the judge, Omar and the judge. On the policy line, all three PASS labels conflict with the 30-day rule. Keep the original labels, block the reply, and record the evidence for FAIL. Use B in calibration to show why a similar format and a correct receipt condition cannot rescue a wrong deadline.</span></p>
+<h5>Example 3. Investigate which answers earned undeserved credit</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>For the same eligible order, how long do I have and what do I need to request a refund?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Use <code>refund-1</code>. A PASS answers both required facts. A wrong deadline is FAIL even when the answer is polished.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The frozen holdout has F and G, short and long versions of a correct answer for a blender order, and H and I, short and long versions of the same wrong 90-day answer for a jacket order. J is ambiguous. K has an invalid replay output. The exact texts and outputs are in Step 7.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The first replay labels F and H FAIL and G and I PASS. Among comparable cases it scores 1/2 on short replies and 1/2 on long replies. The short error is a false fail and the long error is a false pass. Revise the prompt on the separate calibration set, then check saved holdout outputs for the revised guide. The fictional replay changes F to PASS and I to FAIL and leaves G and H correct. Comparable cases rise from two correct out of four to four out of four. J and K stay outside that comparison.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The first replay is consistent with a possible length preference on these pairs. The second reduces the observed errors in this teaching set. Keep the two runs, fixtures, and evidence notes linked to their versions. Test the pattern on more matched examples before claiming a general preference or better performance from a live judge.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Select Copy Code, open the editor next to the program, paste the full block, and select Run. Check the first output before making the one specified change. Each activity starts in a fresh editor, uses inline data, and runs on standard Python. The human and judge labels are fictional saved records. The programs calculate comparisons and never call a model.</p>
+</div></details>
+<h5>Step 1 — Compare two human reviewers by response ID</h5>
+<p>Match the labels for the same frozen reply before counting agreements. The list holds tuples, ordered groups of three values. The <code>for</code> line gives those values names in the order they appear. <code>==</code> tests whether two labels are equal. The conditional expression picks “match” if the labels agree and “disagree” otherwise.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">rows = [
+    (&quot;A&quot;, &quot;PASS&quot;, &quot;PASS&quot;),
+    (&quot;B&quot;, &quot;PASS&quot;, &quot;PASS&quot;),
+    (&quot;C&quot;, &quot;REVIEW&quot;, &quot;PASS&quot;),
+    (&quot;D&quot;, &quot;FAIL&quot;, &quot;PASS&quot;),
+    (&quot;E&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;),
+]
+
+for case_id, nia, omar in rows:
+    result = &quot;match&quot; if nia == omar else &quot;disagree&quot;
+    print(f&quot;{case_id}: Nia {nia} | Omar {omar} | {result}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: Nia PASS | Omar PASS | match
+B: Nia PASS | Omar PASS | match
+C: Nia REVIEW | Omar PASS | disagree
+D: Nia FAIL | Omar PASS | disagree
+E: Nia FAIL | Omar FAIL | match
+</code></pre></details>
+<p><strong>Experiment.</strong> In D’s row only, change Omar’s label, the last value, from <code>PASS</code> to <code>FAIL</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: Nia PASS | Omar PASS | match
+B: Nia PASS | Omar PASS | match
+C: Nia REVIEW | Omar PASS | disagree
+D: Nia FAIL | Omar FAIL | match
+E: Nia FAIL | Omar FAIL | match
+</code></pre></details>
+<p>The D comparison changes because both labels are now FAIL. <strong>Checkpoint.</strong> Which input would justify that change in an actual review? Record the missing receipt alongside the rubric rule, and keep Omar’s earlier label. This experiment changes a copy of a rating.</p>
+<h5>Step 2 — Calculate exact agreement</h5>
+<p>Count matches out of all comparable pairs in the first table. In this activity REVIEW counts as a recorded label, and every case has both ratings. When Python adds comparisons with <code>sum()</code>, each <code>True</code> counts as one. <code>len()</code> counts pairs. In an <code>f&quot;...&quot;</code> string, <code>:.1f</code> displays one decimal place.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">pairs = [(&quot;PASS&quot;, &quot;PASS&quot;), (&quot;PASS&quot;, &quot;PASS&quot;), (&quot;REVIEW&quot;, &quot;PASS&quot;),
+         (&quot;FAIL&quot;, &quot;PASS&quot;), (&quot;FAIL&quot;, &quot;FAIL&quot;)]
+matches = sum(nia == omar for nia, omar in pairs)
+total = len(pairs)
+
+print(f&quot;Matches: {matches}/{total}&quot;)
+print(f&quot;Exact agreement: {100 * matches / total:.1f}%&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Matches: 3/5
+Exact agreement: 60.0%
+</code></pre></details>
+<p><strong>Experiment.</strong> Change Omar’s <code>PASS</code> to <code>FAIL</code> only in the pair <code>(&quot;FAIL&quot;, &quot;PASS&quot;)</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Matches: 4/5
+Exact agreement: 80.0%
+</code></pre></details>
+<p>One additional pair matches and the denominator stays five. <strong>Checkpoint.</strong> Does removing a disputed row give the same result? Removing D instead would give 3/4, or 75%, on a different set. Document exclusions rather than using them to raise the headline percentage.</p>
+<h5>Step 3 — Compare the judge with each human</h5>
+<p>Use the fictional <code>v1</code> judge labels. Each dictionary stores labels keyed by case ID, so <code>judge[case_id]</code> retrieves the matching row regardless of insertion order. Loop over the reviewer IDs and compare all five cases.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">nia = {&quot;A&quot;: &quot;PASS&quot;, &quot;B&quot;: &quot;PASS&quot;, &quot;C&quot;: &quot;REVIEW&quot;, &quot;D&quot;: &quot;FAIL&quot;, &quot;E&quot;: &quot;FAIL&quot;}
+omar = {&quot;A&quot;: &quot;PASS&quot;, &quot;B&quot;: &quot;PASS&quot;, &quot;C&quot;: &quot;PASS&quot;, &quot;D&quot;: &quot;PASS&quot;, &quot;E&quot;: &quot;FAIL&quot;}
+judge = {&quot;A&quot;: &quot;PASS&quot;, &quot;B&quot;: &quot;PASS&quot;, &quot;C&quot;: &quot;PASS&quot;, &quot;D&quot;: &quot;PASS&quot;, &quot;E&quot;: &quot;FAIL&quot;}
+
+for reviewer, labels in [(&quot;Nia&quot;, nia), (&quot;Omar&quot;, omar)]:
+    matches = sum(judge[case_id] == labels[case_id] for case_id in labels)
+    print(f&quot;Judge vs {reviewer}: {matches}/{len(labels)} ({100 * matches / len(labels):.1f}%)&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Judge vs Nia: 3/5 (60.0%)
+Judge vs Omar: 5/5 (100.0%)
+</code></pre></details>
+<p><strong>Experiment.</strong> In <code>judge</code>, change C from <code>PASS</code> to <code>REVIEW</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Judge vs Nia: 4/5 (80.0%)
+Judge vs Omar: 4/5 (80.0%)
+</code></pre></details>
+<p>Look at C’s row after the edit. The judge gains one match with Nia and loses one with Omar. Both totals land at four, but nobody changed the customer’s reply or found new policy evidence. <strong>Checkpoint.</strong> Which result tells you what “first month” means for the customer? Neither match count answers that. Give an adjudicator the frozen reply and the applicable policy so they can check the date and receipt wording.</p>
+<h5>Step 4 — Check the claim behind a unanimous label</h5>
+<p>Compare a controlled teaching reply with the policy. Both versions use calendar days after delivery and include the receipt, so the direct rule can check the exact number. <code>all()</code> returns true when every comparison is true. The numbers in the program are supplied inline. It does not extract facts from chat text.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">policy_days = 30
+stated_days = 30
+labels = [&quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;]
+reference = &quot;PASS&quot; if stated_days == policy_days else &quot;FAIL&quot;
+
+print(f&quot;Reply: Refund requests are allowed through day {stated_days} after delivery with a valid receipt.&quot;)
+print(f&quot;Unanimous: {all(label == labels[0] for label in labels)}&quot;)
+print(f&quot;Checked deadline: {reference}&quot;)
+print(f&quot;Labels matching the deadline check: {labels.count(reference)}/{len(labels)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply: Refund requests are allowed through day 30 after delivery with a valid receipt.
+Unanimous: True
+Checked deadline: PASS
+Labels matching the deadline check: 3/3
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>stated_days = 30</code> to <code>stated_days = 90</code>. This controlled example holds old labels fixed to show how consensus can hide an error.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Reply: Refund requests are allowed through day 90 after delivery with a valid receipt.
+Unanimous: True
+Checked deadline: FAIL
+Labels matching the deadline check: 0/3
+</code></pre></details>
+<p>All three labels still match each other. The number contradicts the policy. <strong>Checkpoint.</strong> What would you do with the saved labels in a real audit? Keep them with the exact reply they were recorded against, and add a new evidence-backed decision for that reply. Never attach old ratings to an edited response as though they had reviewed it.</p>
+<h5>Step 5 — Adjust agreement for label frequency</h5>
+<p>Use the eight fresh examples from the kappa calculation. The four counts say how often each pair of labels occurred. The sum gives the number of pairs. Divide the row and column totals by that number to find each reviewer’s label frequencies. Multiply matching frequencies to get expected agreement, then subtract it from observed agreement before dividing by the remaining room.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">both_pass = 5
+nia_pass_omar_fail = 1
+nia_fail_omar_pass = 1
+both_fail = 1
+
+total = both_pass + nia_pass_omar_fail + nia_fail_omar_pass + both_fail
+observed = (both_pass + both_fail) / total
+nia_pass = (both_pass + nia_pass_omar_fail) / total
+omar_pass = (both_pass + nia_fail_omar_pass) / total
+expected = nia_pass * omar_pass + (1 - nia_pass) * (1 - omar_pass)
+
+print(f&quot;Observed agreement: {observed:.3f}&quot;)
+print(f&quot;Expected agreement: {expected:.4f}&quot;)
+if expected == 1:
+    print(&quot;Kappa: undefined&quot;)
+else:
+    print(f&quot;Kappa: {(observed - expected) / (1 - expected):.3f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Observed agreement: 0.750
+Expected agreement: 0.6250
+Kappa: 0.333
+</code></pre></details>
+<p><strong>Experiment.</strong> Reassign one pair from Nia FAIL/Omar PASS to both FAIL, leaving eight cases. Replace the four consecutive count assignments with <code>both_pass, nia_pass_omar_fail, nia_fail_omar_pass, both_fail = 5, 1, 0, 2</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Observed agreement: 0.875
+Expected agreement: 0.5625
+Kappa: 0.714
+</code></pre></details>
+<p>The reassignment keeps Nia at six PASS labels and moves Omar from six to five. The two expected contributions become 30/64 and 6/64. Observed agreement is 7/8, so kappa is (0.875 − 0.5625) ÷ 0.4375 ≈ 0.714. <strong>Checkpoint.</strong> If both reviewers use only PASS, what does the program print? Expected agreement becomes 1, so kappa is undefined even with unanimous PASS. Record the raw counts and inspect the sample mix.</p>
+<h5>Step 6 — Look for a preference on matched replies</h5>
+<p>Replay the fictional judge on two matched pairs from Harbor Leaf. Within each pair, the short and long reply state the same facts. One pair is correct and the other gives the wrong deadline. Count the number of times the long version alone passes. The word counts help identify the style contrast. The final tally uses three saved runs for F. It uses the first as the comparison label and counts the first run as a match, so one of the two subsequent runs differs.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">pairs = [
+    (&quot;correct&quot;, &quot;With your valid receipt, ask by calendar day 30 from delivery.&quot;,
+     &quot;For an eligible order, please make your request within 30 calendar days after delivery. Please have a valid receipt when you make the request.&quot;,
+     &quot;FAIL&quot;, &quot;PASS&quot;),
+    (&quot;wrong deadline&quot;, &quot;With your valid receipt, ask by calendar day 90 from delivery.&quot;,
+     &quot;For an eligible order, please make your request within 90 calendar days after delivery. Please have a valid receipt when you make the request.&quot;,
+     &quot;FAIL&quot;, &quot;PASS&quot;),
+]
+long_only = 0
+for case, short, long, short_label, long_label in pairs:
+    long_only += short_label == &quot;FAIL&quot; and long_label == &quot;PASS&quot;
+    print(f&quot;{case}: short {len(short.split())} words {short_label} | long {len(long.split())} words {long_label}&quot;)
+
+repeats_f = [&quot;FAIL&quot;, &quot;PASS&quot;, &quot;FAIL&quot;]
+matches = repeats_f.count(repeats_f[0])
+print(f&quot;Long-only passes: {long_only}/{len(pairs)}&quot;)
+print(f&quot;F repeats matching the first verdict: {matches}/{len(repeats_f)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">correct: short 11 words FAIL | long 24 words PASS
+wrong deadline: short 11 words FAIL | long 24 words PASS
+Long-only passes: 2/2
+F repeats matching the first verdict: 2/3
+</code></pre></details>
+<p><strong>Experiment.</strong> In the pair named <code>&quot;wrong deadline&quot;</code>, change only the final judge label from <code>&quot;PASS&quot;</code> to <code>&quot;FAIL&quot;</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">correct: short 11 words FAIL | long 24 words PASS
+wrong deadline: short 11 words FAIL | long 24 words FAIL
+Long-only passes: 1/2
+F repeats matching the first verdict: 2/3
+</code></pre></details>
+<p>The judge now fails both versions of the wrong answer. The correct pair still shows a style-related difference, and the separate repeat tally stays fixed. <strong>Checkpoint.</strong> Can two pairs isolate length as the cause? The long drafts also change sentence structure. Try more matched paraphrases and vary formatting, confidence, and length separately before attributing a pattern.</p>
+<h5>Step 7 — Replay the calibration and audit report</h5>
+<p>Use frozen cases and two dictionaries of fictional replay labels. Each key is a case ID. A through E were available during calibration. F through K are the holdout. Both replay versions use identical candidate texts and independent human ratings. The fictional <code>v2</code> guide explicitly requires the deadline and receipt, fails contradictions and material omissions, sends ambiguity to REVIEW, and asks the judge to ignore tone and length. The <code>v2</code> labels are supplied for comparison. The Python code does not generate them.</p>
+<p>Each case row contains the reply, style, two original human labels, a reviewed day count when available, and any adjudicated binary label. F/G and H/I share a ticket within each pair. The ticket check keeps both versions of each answer in the same split. A reason is stored even when adjudication remains pending. <code>set(calibration_ids).isdisjoint(holdout_ids)</code> checks that no ID belongs to both groups. A set comparison checks that all cases are assigned. In the report, the tuple key <code>(reference, judge)</code> keeps the two axes of the confusion matrix in that order.</p>
+<p>For judge-human agreement, a valid REVIEW counts as a label when comparing raw ratings. For the binary confusion matrix, a case needs both an adjudicated PASS or FAIL and a valid judge PASS or FAIL. Missing sources, unresolved references, valid judge abstentions, and malformed verdicts need their own counts or reasons. The policy check uses day counts already checked for unit and starting event. The omitted receipt on D is recorded in the adjudicator’s note.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">policy = &quot;Refund requests are allowed through calendar day 30 after delivery with a valid receipt.&quot;
+question = &quot;How long after delivery can I request a refund, and what do I need?&quot;
+ticket = {&quot;F&quot;: &quot;blender-01&quot;, &quot;G&quot;: &quot;blender-01&quot;, &quot;H&quot;: &quot;jacket-01&quot;, &quot;I&quot;: &quot;jacket-01&quot;}
+holdout_questions = {
+    &quot;blender-01&quot;: &quot;My unused blender arrived last week. When is the last day to ask for a refund, and what do I need?&quot;,
+    &quot;jacket-01&quot;: &quot;When does the refund window close for my unworn jacket, and what do I need to ask?&quot;,
+    &quot;J&quot;: &quot;Does the refund window start when I place my order or when the item arrives, and what do I need?&quot;,
+    &quot;K&quot;: &quot;Can I ask for a refund on day 30 after delivery of my unused headphones, and what should I bring?&quot;,
+}
+dataset = &quot;refund-eval-1&quot;
+rubric = &quot;v1&quot;
+calibration_ids = (&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;)
+holdout_ids = (&quot;F&quot;, &quot;G&quot;, &quot;H&quot;, &quot;I&quot;, &quot;J&quot;, &quot;K&quot;)
+labels = (&quot;PASS&quot;, &quot;FAIL&quot;, &quot;REVIEW&quot;)
+binary = (&quot;PASS&quot;, &quot;FAIL&quot;)
+
+# Text, style, Nia, Omar, verified day count, adjudicated label, evidence note.
+cases = {
+    &quot;A&quot;: (&quot;You may request a refund within 30 calendar days after delivery with a valid receipt.&quot;,
+          &quot;short&quot;, &quot;PASS&quot;, &quot;PASS&quot;, 30, &quot;PASS&quot;, &quot;both facts present&quot;),
+    &quot;B&quot;: (&quot;You can request a refund within 90 calendar days after delivery with a valid receipt.&quot;,
+          &quot;short&quot;, &quot;PASS&quot;, &quot;PASS&quot;, 90, &quot;FAIL&quot;, &quot;deadline contradicts policy&quot;),
+    &quot;C&quot;: (&quot;Ask for a refund during the first month after delivery if you have proof of purchase.&quot;,
+          &quot;short&quot;, &quot;REVIEW&quot;, &quot;PASS&quot;, None, None, &quot;date and receipt wording need clarification&quot;),
+    &quot;D&quot;: (&quot;You can request a refund within 30 calendar days after delivery.&quot;,
+          &quot;short&quot;, &quot;FAIL&quot;, &quot;PASS&quot;, 30, &quot;FAIL&quot;, &quot;receipt omitted&quot;),
+    &quot;E&quot;: (&quot;Contact our support team for assistance.&quot;,
+          &quot;short&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;, None, &quot;FAIL&quot;, &quot;neither requested fact stated&quot;),
+    &quot;F&quot;: (&quot;With your valid receipt, ask by calendar day 30 from delivery.&quot;,
+          &quot;short&quot;, &quot;PASS&quot;, &quot;PASS&quot;, 30, &quot;PASS&quot;, &quot;both facts present&quot;),
+    &quot;G&quot;: (&quot;For an eligible order, please make your request within 30 calendar days after delivery. Please have a valid receipt when you make the request.&quot;,
+          &quot;long&quot;, &quot;PASS&quot;, &quot;PASS&quot;, 30, &quot;PASS&quot;, &quot;both facts present&quot;),
+    &quot;H&quot;: (&quot;With your valid receipt, ask by calendar day 90 from delivery.&quot;,
+          &quot;short&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;, 90, &quot;FAIL&quot;, &quot;deadline contradicts policy&quot;),
+    &quot;I&quot;: (&quot;For an eligible order, please make your request within 90 calendar days after delivery. Please have a valid receipt when you make the request.&quot;,
+          &quot;long&quot;, &quot;FAIL&quot;, &quot;PASS&quot;, 90, &quot;FAIL&quot;, &quot;deadline contradicts policy&quot;),
+    &quot;J&quot;: (&quot;Bring a valid receipt and apply within thirty days of placing or receiving the order, whichever date applies.&quot;,
+          &quot;short&quot;, &quot;REVIEW&quot;, &quot;REVIEW&quot;, None, None, &quot;starting event for the 30 days is unclear&quot;),
+    &quot;K&quot;: (&quot;With a valid receipt, you can ask for a refund up to and including day 30 after delivery.&quot;,
+          &quot;short&quot;, &quot;PASS&quot;, &quot;PASS&quot;, 30, &quot;PASS&quot;, &quot;both facts present&quot;),
+}
+replays = {
+    &quot;v1&quot;: dict(zip(&quot;ABCDEFGHIJK&quot;, (&quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;FAIL&quot;,
+                                    &quot;FAIL&quot;, &quot;PASS&quot;, &quot;FAIL&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;{broken&quot;))),
+    &quot;v2&quot;: dict(zip(&quot;ABCDEFGHIJK&quot;, (&quot;PASS&quot;, &quot;FAIL&quot;, &quot;REVIEW&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;,
+                                    &quot;PASS&quot;, &quot;PASS&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;, &quot;REVIEW&quot;, &quot;{broken&quot;))),
+}
+
+assert set(calibration_ids).isdisjoint(holdout_ids)
+calibration_tickets = {ticket.get(case_id, case_id) for case_id in calibration_ids}
+holdout_tickets = {ticket.get(case_id, case_id) for case_id in holdout_ids}
+assert calibration_tickets.isdisjoint(holdout_tickets)
+assert set(calibration_ids) | set(holdout_ids) == set(cases) == set(replays[rubric])
+audit = {}
+for case_id, (reply, style, nia, omar, days, reference, note) in cases.items():
+    raw_judge = replays[rubric][case_id]
+    judge = raw_judge if raw_judge in labels else None
+    gate = &quot;UNKNOWN&quot; if days is None else (&quot;PASS&quot; if days == 30 else &quot;FAIL&quot;)
+    assert gate != &quot;FAIL&quot; or reference == &quot;FAIL&quot;
+    audit[case_id] = {
+        &quot;id&quot;: case_id, &quot;dataset&quot;: dataset, &quot;policy_version&quot;: &quot;refund-1&quot;, &quot;source&quot;: policy,
+        &quot;rubric&quot;: rubric, &quot;split&quot;: &quot;calibration&quot; if case_id in calibration_ids else &quot;holdout&quot;,
+        &quot;ticket&quot;: ticket.get(case_id, case_id),
+        &quot;question&quot;: holdout_questions.get(ticket.get(case_id, case_id), question),
+        &quot;candidate&quot;: reply, &quot;style&quot;: style, &quot;Nia&quot;: nia, &quot;Omar&quot;: omar,
+        &quot;raw_judge&quot;: raw_judge, &quot;judge&quot;: judge, &quot;deadline_check&quot;: gate,
+        &quot;adjudicated&quot;: reference, &quot;reference_note&quot;: note,
+        &quot;human_dispute&quot;: nia != omar,
+        &quot;calibration_action&quot;: &quot;add anchors for deadline, receipt, and ambiguity&quot;,
+    }
+
+print(f&quot;{dataset} | rubric {rubric}&quot;)
+for group, ids in [(&quot;Calibration&quot;, calibration_ids), (&quot;Holdout&quot;, holdout_ids)]:
+    rows = [audit[case_id] for case_id in ids]
+    valid = [r for r in rows if r[&quot;judge&quot;] is not None]
+    comparable = [r for r in valid if r[&quot;adjudicated&quot;] in binary and r[&quot;judge&quot;] in binary]
+    human_matches = sum(r[&quot;Nia&quot;] == r[&quot;Omar&quot;] for r in rows)
+    judge_nia = sum(r[&quot;judge&quot;] == r[&quot;Nia&quot;] for r in valid)
+    judge_omar = sum(r[&quot;judge&quot;] == r[&quot;Omar&quot;] for r in valid)
+    matches = sum(r[&quot;judge&quot;] == r[&quot;adjudicated&quot;] for r in comparable)
+    unresolved = [r[&quot;id&quot;] for r in rows if r[&quot;adjudicated&quot;] is None]
+    invalid = [r[&quot;id&quot;] for r in rows if r[&quot;judge&quot;] is None]
+    disputes = [r[&quot;id&quot;] for r in rows if r[&quot;human_dispute&quot;]]
+    print(f&quot;{group} n={len(rows)}: human {human_matches}/{len(rows)} | judge vs Nia {judge_nia}/{len(valid)} | judge vs Omar {judge_omar}/{len(valid)}&quot;)
+    print(f&quot;  valid {len(valid)}/{len(rows)} | adjudicated matches {matches}/{len(comparable)}&quot;)
+    print(f&quot;  disputed {&#x27;,&#x27;.join(disputes)} | unresolved {&#x27;,&#x27;.join(unresolved)} | invalid {&#x27;,&#x27;.join(invalid) or &#x27;none&#x27;}&quot;)
+    if group == &quot;Holdout&quot;:
+        matrix = {(ref, pred): 0 for ref in binary for pred in binary}
+        for r in comparable:
+            matrix[r[&quot;adjudicated&quot;], r[&quot;judge&quot;]] += 1
+        for ref in binary:
+            print(f&quot;  ref {ref}: judge PASS {matrix[ref, &#x27;PASS&#x27;]} | judge FAIL {matrix[ref, &#x27;FAIL&#x27;]}&quot;)
+        for ref, pred, error in [(&quot;FAIL&quot;, &quot;PASS&quot;, &quot;False passes&quot;), (&quot;PASS&quot;, &quot;FAIL&quot;, &quot;False fails&quot;)]:
+            total = sum(matrix[ref, label] for label in binary)
+            count = matrix[ref, pred]
+            rate = f&quot;{count}/{total} ({100 * count / total:.1f}%)&quot; if total else &quot;unavailable (0 comparable)&quot;
+            print(f&quot;  {error}: {rate}&quot;)
+        for style in (&quot;short&quot;, &quot;long&quot;):
+            members = [r for r in comparable if r[&quot;style&quot;] == style]
+            correct = sum(r[&quot;judge&quot;] == r[&quot;adjudicated&quot;] for r in members)
+            print(f&quot;  {style}: {correct}/{len(members)} adjudicated matches&quot;)
+
+for case_id in (&quot;B&quot;, &quot;I&quot;):
+    r = audit[case_id]
+    print(f&quot;Audit {case_id}: refund-1 | deadline {r[&#x27;deadline_check&#x27;]} | judge {r[&#x27;judge&#x27;]} | adjudicated {r[&#x27;adjudicated&#x27;]} | {r[&#x27;reference_note&#x27;]}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-eval-1 | rubric v1
+Calibration n=5: human 3/5 | judge vs Nia 3/5 | judge vs Omar 5/5
+  valid 5/5 | adjudicated matches 2/4
+  disputed C,D | unresolved C | invalid none
+Holdout n=6: human 5/6 | judge vs Nia 2/5 | judge vs Omar 3/5
+  valid 5/6 | adjudicated matches 2/4
+  disputed I | unresolved J | invalid K
+  ref PASS: judge PASS 1 | judge FAIL 1
+  ref FAIL: judge PASS 1 | judge FAIL 1
+  False passes: 1/2 (50.0%)
+  False fails: 1/2 (50.0%)
+  short: 1/2 adjudicated matches
+  long: 1/2 adjudicated matches
+Audit B: refund-1 | deadline FAIL | judge PASS | adjudicated FAIL | deadline contradicts policy
+Audit I: refund-1 | deadline FAIL | judge PASS | adjudicated FAIL | deadline contradicts policy
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>rubric = &quot;v1&quot;</code> to <code>rubric = &quot;v2&quot;</code>. The replay selection changes. All frozen replies, human labels, and split IDs stay fixed.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-eval-1 | rubric v2
+Calibration n=5: human 3/5 | judge vs Nia 4/5 | judge vs Omar 2/5
+  valid 5/5 | adjudicated matches 4/4
+  disputed C,D | unresolved C | invalid none
+Holdout n=6: human 5/6 | judge vs Nia 5/5 | judge vs Omar 4/5
+  valid 5/6 | adjudicated matches 4/4
+  disputed I | unresolved J | invalid K
+  ref PASS: judge PASS 2 | judge FAIL 0
+  ref FAIL: judge PASS 0 | judge FAIL 2
+  False passes: 0/2 (0.0%)
+  False fails: 0/2 (0.0%)
+  short: 2/2 adjudicated matches
+  long: 2/2 adjudicated matches
+Audit B: refund-1 | deadline FAIL | judge FAIL | adjudicated FAIL | deadline contradicts policy
+Audit I: refund-1 | deadline FAIL | judge FAIL | adjudicated FAIL | deadline contradicts policy
+</code></pre></details>
+<p>F and I now match their adjudicated labels, while the number of comparable replies stays four. K still needs a valid replay. J still needs clarification. Notice that the calibration agreement with Omar fell. The reference-based check improved because it tests the confirmed facts with an explicit rule. <strong>Checkpoint.</strong> Could you report perfect held-out reliability? You can report four matches among four comparable teaching cases, with two cases outside that comparison and five valid judge outputs in six attempts. This replay does not measure live behavior.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Read the ratings before calculating</h5>
+<p>From A through E, list the cases where Nia and Omar agree. For the remaining cases, write what would need to be checked to resolve the difference. Explain why B deserves a policy check even if no one flagged it.</p>
+<h5>Practice 2. Compare two denominators</h5>
+<p>On five replies, both reviewers label three identically. One reviewer then withdraws the label on one of the two disputed replies pending evidence. Compute agreement first on all five recorded pairs and then on the four remaining comparable pairs. How should the report describe the change?</p>
+<h5>Practice 3. Find the false pass</h5>
+<p>A saved judge and both reviewers pass a 90-day reply. The approved policy states 30 calendar days after delivery. The holdout also includes another known FAIL that the judge fails, and two known PASS replies, one of which the judge fails. Fill the four confusion-matrix cells and calculate the false-pass and false-fail rates.</p>
+<h5>Practice 4. Design a calibration comparison</h5>
+<p>A judge passes a short correct reply and a long correct reply. For a wrong deadline, it fails the short version and passes the long version. A colleague concludes it is biased toward length. Explain what the four results support. Propose a revised anchor and a held-out comparison that could test the hypothesis while controlling for the facts.</p>
+<h4>Independent Assignment</h4>
+<p>Harbor Leaf wants an audit of the holdout report. Include human agreement, judge agreement with each reviewer, adjudicated agreement, class-specific errors, short and long style slices, unresolved cases, and invalid outputs. Use the policy, frozen candidates, human ratings, and two replay versions in Step 7. First reconcile A through E by hand. Then explain why both B and I are wrong when the replay says PASS. For C and J, write what would need clarification. For K, explain why the raw verdict cannot be counted as a substantive disagreement.</p>
+<p>Use the full Step 7 program as the runnable answer key. Copy it afresh for each variant. In both variants choose <code>rubric = &quot;v2&quot;</code>. In variant A, simulate a successful new replay for K by changing just the last value of the <code>v2</code> tuple from <code>&quot;{broken&quot;</code> to <code>&quot;PASS&quot;</code>. In variant B, use the original <code>v2</code> tuple and change I, the ninth verdict, from <code>&quot;FAIL&quot;</code> to <code>&quot;PASS&quot;</code>. In a real audit, save the retry or changed judge run separately. Tabulate what changed and recommend a calibration action backed by the policy and the disagreement pattern.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>A, B, and E match. Check whether C’s wording fixes the exact day, starting event, and valid receipt requirement before choosing a binary label. For D, confirm that the question asks for both requirements. The receipt is missing, so the clarified rubric records FAIL for the omission. B did not trigger a human dispute. Comparing 90 with the approved 30 reveals why a policy check is still needed on agreements.</p>
+<h5>Solution 2</h5>
+<p>Before the withdrawal, there are 3 matches out of 5 pairs, or 60%. With one disagreement missing a rating, three of four comparable pairs match, or 75%. Record both the change in agreement and the decrease in coverage from 5/5 to 4/5. No rating was improved by removing a row. The case still needs evidence.</p>
+<h5>Solution 3</h5>
+<p>Put one in each matrix cell. Of the two adjudicated FAIL replies, one was passed and one was failed. The false-pass rate is 1/2, or 50%. Of the two adjudicated PASS replies, one was passed and one was failed. The false-fail rate is also 1/2, or 50%. The policy, rather than the three matching judgments, establishes which row contains the 90-day reply.</p>
+<h5>Solution 4</h5>
+<p>Start with the two 90-day replies. Both give the same wrong deadline, and only the longer one passed. That is a reason to investigate. To make the next check fair, write a rule that says an explicitly wrong deadline earns FAIL. Set aside new pairs with the same day count, starting event, and receipt requirement in both versions. Change length first. Record how often wrong answers pass, then try separate changes to tone or formatting. If the long answers add a missing policy fact, the comparison can no longer tell you what length contributed.</p>
+<h5>Assignment answer key</h5>
+<p>The calibration human agreement is 3/5. In <code>v1</code> the judge agrees with Nia on 3/5 and Omar on 5/5. B’s 90-day claim contradicts the source on the calibration set. I independently makes the same mistake in the holdout. C needs a definite date and proof that the receipt condition is covered. J needs the answer to name delivery as the start of the window. K’s malformed verdict needs a retry and remains outside the binary matrix until a valid rating is available.</p>
+<p>For variant A, the changed lines from <code>v2</code> are <code>Holdout n=6: human 5/6 | judge vs Nia 6/6 | judge vs Omar 5/6</code>, <code>valid 6/6 | adjudicated matches 5/5</code>, <code>disputed I | unresolved J | invalid none</code>, <code>ref PASS: judge PASS 3 | judge FAIL 0</code>, <code>False fails: 0/3 (0.0%)</code>, and <code>short: 3/3 adjudicated matches</code>. Indent the lines after the heading with two spaces, as in the report. The retry increases valid coverage without resolving J.</p>
+<p>For variant B, the changed lines from <code>v2</code> are <code>Holdout n=6: human 5/6 | judge vs Nia 4/5 | judge vs Omar 5/5</code>, <code>valid 5/6 | adjudicated matches 3/4</code>, <code>ref FAIL: judge PASS 1 | judge FAIL 1</code>, <code>False passes: 1/2 (50.0%)</code>, <code>long: 1/2 adjudicated matches</code>, and <code>Audit I: refund-1 | deadline FAIL | judge PASS | adjudicated FAIL | deadline contradicts policy</code>. Indent the summary rows under Holdout as before. The judge now agrees perfectly with Omar on valid holdout outputs while making a confirmed policy error. Keep the contradiction anchor and investigate the long incorrect replies on separate paired examples. Keep unresolved and invalid cases visible in both variants.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Omar sees Nia’s labels before recording his own. What does a high match rate fail to tell you about their independent judgment?</li><li>Six of eight comparable ratings match. What is exact agreement, and does it describe how far mismatched scores were apart?</li><li>All reviewers pass a 90-day reply and the policy gives 30. What action follows from each piece of evidence?</li><li>Why can agreement with one reviewer go down after a rubric change while agreement with the adjudicated labels goes up?</li><li>Both reviewers always say PASS. What happens to raw agreement and kappa, and what would you check next?</li><li>A longer version gets PASS, but it added the valid-receipt requirement. Is this enough evidence of verbosity bias?</li><li>You see a holdout result and revise the prompt specifically to fix it. What should you call that set now?</li><li>The judge’s verdict is corrupt for K. A human reference is known. How does that affect coverage, agreement, and the audit record?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Omar may have been influenced by the visible marks. Preserve independent rating conditions so their match rate reflects separately reached decisions.</li><li>It is 6/8, or 75%. Exact agreement counts every unequal pair once and does not encode the size of an ordinal difference.</li><li>The unanimous rating tells you the reviewers and judge gave the same label. The documented rule supports a FAIL for the reply. Record the adjudication and investigate the shared miss.</li><li>One reviewer may have treated the old ambiguous language as permission to overlook a missing receipt. A clearer rule can move the judge away from that reviewer and closer to evidence-backed decisions.</li><li>Raw agreement is 100%. Expected agreement is 1, so kappa is undefined. Check whether the case mix includes instructive FAIL examples and independently verify the approved criteria.</li><li>The extra receipt changes the factual content. To investigate length, keep policy facts fixed within each pair before rewriting style.</li><li>Call the exposed cases development evidence and keep a new set sealed for evaluation. Retain the earlier result and connect each later run to its own prompt and data version.</li><li>Count a failed attempt in coverage, but omit the invalid output from substantive agreement and the matrix. Store the raw output, case ID, verdict failure reason, and retry or review action.</li></ol>
+</div></details>
+<h4>Common Mistakes</h4>
+<p>Read some cases where everyone agreed. Shared assumptions or an overlooked fact can make all three labels wrong together.</p>
+<p>Keep REVIEW, an unresolved reference, and an invalid judge output visible. Each has a different implication for the next action and the denominator.</p>
+<p>Record which texts, reviewers, policy, and rubric produced each result. Keep calibration and holdout groups separate, and preserve earlier judgments when a new rubric changes the decision.</p>
+<h4>Lesson Summary and Next Step</h4>
+<p>Match saved labels by response ID, read the policy to adjudicate, and report agreement beside validity coverage and error counts. Use kappa to understand how label frequencies affect the agreement baseline. Test suspected style preferences on controlled pairs and check rubric revisions on fresh cases before changing how the judge is used.</p>
+<p>Next, <a href="#m06-t03">Pairwise comparisons and ranking</a> compares two answers at a time and checks what changes when their order is reversed.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a>, <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> — required when constructing your own calibration and holdout sets</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Compare independent human and judge labels on a frozen table using Python and inspect disagreement by slice.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 to produce a confusion matrix from fixed labels.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Recalibrate on anchors and report held-out error rates, sample sizes and unresolved disagreements.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
