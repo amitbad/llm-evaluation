@@ -9026,34 +9026,487 @@ data-subject="Judges" data-status="New" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m06-t03">
-  <p class="lesson-intro" data-lesson-search>Comparative judgments can simplify preference assessment and are sensitive to order and tie policy.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Blind randomization, position swaps, tie and abstain policies, win rates, Bradley–Terry intuition, nontransitivity and multi-model uncertainty.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Apply a policy-first rubric when comparing two saved answers.</li><li>Record a winner, a tie, or a request for review and map display choices back to stable response IDs.</li><li>Replay each pair in reverse order, preserve disagreements, and count a supported pair once.</li><li>Build a win/loss/tie table and explain how coverage, cycles, and judge disagreement limit a ranking.</li><li>Explain the intuition behind Bradley–Terry and when a ranking still needs a separate factual check.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Your Harbor Leaf Market parcel arrived 45 days ago. One draft says you still have time to request a refund because it allows 90 days. The other gives the store’s real 30-day deadline and asks for a receipt. If you’re reviewing the drafts side by side, the policy gives you a clear reason to choose. The harder question comes when two drafts get the facts right and the reviewer still has to decide whether either one is better.</p>
+<p>All responses, sources, judges, and outcomes in this chapter are fictional. We keep the earlier Harbor Leaf policy <code>refund-1</code>: “Refund requests are allowed through calendar day 30 after delivery with a valid receipt.” Day 30 is included. Assume an eligible unused online purchase throughout. The saved question is “Can I get a refund for something I bought?” Four fictional systems produced one frozen reply each. The judge sees display slots, and the report uses stable IDs A through D to track the replies.</p>
+<p>Allow about 5.5 hours. The required background is <a href="#m03-t03">Rubrics and a first human evaluation</a>. <a href="#m06-t01">Pointwise LLM-as-a-Judge</a> and <a href="#m06-t02">Human agreement, calibration and bias</a> help with evidence and judge disagreement. Complete the pointwise lesson first if you add a live judge later. This lesson uses offline replays only.</p>
+<h4>Beginner Explanation</h4>
+<h5>Compare the same answers in two ways</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Stable ID</th><th scope="col">Frozen response</th></tr></thead><tbody><tr><td>A</td><td>Yes, you may request a refund through calendar day 30 after delivery with a valid receipt.</td></tr><tr><td>B</td><td>Absolutely. You have 90 calendar days after delivery to request a refund, and a receipt is optional.</td></tr><tr><td>C</td><td>Bring your valid receipt and ask for your money back up to and including calendar day 30 after your order arrives.</td></tr><tr><td>D</td><td>Please contact customer support about refunds.</td></tr></tbody></table></div>
+<p>Give A to a reviewer on its own. Ask whether it states the deadline, the starting event, and the receipt rule correctly. This is <strong>pointwise evaluation</strong>. It answers an absolute question such as whether a reply passes a policy check.</p>
+<p>Now put A beside B and ask which reply gives the customer better refund guidance. This is <strong>pairwise evaluation</strong>. It can be easier to see why one draft is better than to decide whether a draft deserves 3 or 4 on a scale. The two approaches answer different questions. A reply can win a recorded preference and still fail the independent policy check.</p>
+<h5>Write the rule before showing the pair</h5>
+<p>Give both candidates the same saved question, approved policy, and rubric. Give the judge the same instructions in every position under rubric <code>pairwise-v1</code> and ask it to return <code>A</code>, <code>B</code>, <code>TIE</code>, or <code>REVIEW</code>, plus a brief reason quoting the relevant reply and policy words. In this output format <code>A</code> and <code>B</code> are display slots. Keep the stable candidate IDs in the audit record, where they remain the same between displays.</p>
+<ul><li><strong>Correctness first.</strong> A reply that follows the policy wins over one with a confirmed critical contradiction. Check the exact number, calendar-day unit, delivery event, and receipt requirement.</li><li><strong>Completeness next.</strong> When the two replies preserve the facts, prefer the one that answers more of the question. A generic referral can avoid giving wrong advice while leaving the requested guidance missing.</li><li><strong>Clarity and conciseness last.</strong> Compare how easy the replies are to follow and whether extra words help the customer. A confident tone or polished formatting cannot rescue a wrong rule.</li><li><strong>TIE</strong> means you compared both answers with sufficient evidence and found no meaningful difference under the rubric. For A and C, both give day 30 and require a valid receipt. A reviewer can tie them if both are equally usable.</li><li><strong>REVIEW</strong> means a winner or tie cannot be justified yet. If a reply says “first month” and no approved source gives that phrase a clear meaning, leave the comparison unresolved. A tie would imply the evidence had already supported equivalence.</li></ul>
+<h5>Swap the displays and follow the stable IDs</h5>
+<p>Hide system names and use a recorded random assignment to choose the first display order across cases. This is <strong>blind randomization</strong>. Then show each selected pair in the opposite order in a separate judging pass. With two displays per pair, each candidate appears once in each slot. Preserve both records. Keep the question, policy, rubric, judge, and answer text fixed so you can inspect what changed.</p>
+<p>Write the stable ID under each slot before you read a saved verdict. In the first display, slot A contains candidate A. After the swap, slot B contains that same answer. A judge that picks slot A first and slot B after the swap has followed the answer. A judge that picks slot A both times has followed the position in this replay, and its stable winner changes. Flag a tie that becomes a win as well. Keep REVIEW and malformed results visible. Under this lesson’s rule, two matching displays support one pair on one question. Zheng et al., Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena</p>
+<p>For other presentation checks, hold the policy facts fixed. Put the same terms in a list or a paragraph to test formatting. Add “Certainly” without changing the facts to test confidence. Vary length separately from extra useful information. A result on one imagined pair tells you which comparison to inspect next. Repeat across several matched cases and saves before describing a preference as systematic.</p>
+<p>Two judges can each be consistent under the swap and still prefer different answers. Keep their normalized outcomes separately. That is <strong>multi-model uncertainty</strong> when the judges are different models. Compare their cited evidence and ask a human reviewer to resolve important disagreements. Several judges can miss the same policy fact, so a majority still needs a factual check.</p>
+<h5>Count supported pairs and show the coverage</h5>
+<p>Start with one point for a win, half a point per candidate for a tie, and zero for a loss. This chapter uses these points as a simple summary. Take two wins and a tie. The points are 1 + 1 + 0.5 = 2.5, the win rate is 2/3, and the points per scored pair are 2.5/3. The two fractions answer different questions because the second gives partial credit for ties.</p>
+<p>With four candidates, there are six possible unordered pairs. If you can score four of them, coverage is 4/6. Say which pairs were absent and which were attempted but unresolved. A candidate with two wins from three pairs can have more raw points than one with one win from one pair. Report both the pair counts and the points per pair. Normalizing helps expose unequal exposure. It cannot correct for different opponents, missing hard cases, or a player with no scored pairs. Report an unavailable rate for a zero denominator. Avoid treating a tied points total as a head-to-head tie.</p>
+<h5>Separate a summary from a defensible ranking</h5>
+<p>Draw an arrow from each winner to the loser. If A beats B, B beats C, and C beats A, the arrows form a <strong>cycle</strong>. A wins against B and loses to C, so no ordering puts every observed winner ahead of every loser. This pattern is called <strong>non-transitivity</strong>. Keep the cycle visible even if a points table has a top row. With incomplete comparisons, explain which extra pair would help before releasing a ranking.</p>
+<p>A model such as <strong>Bradley–Terry</strong> tries to explain repeated decisive comparisons using one positive strength per candidate. If two fitted strengths were 2 and 1, the model would give the first candidate a win probability of 2 ÷ (2 + 1), about 0.67, for that matchup. The strengths come from a fit to many comparisons and need not equal raw points. The basic model handles wins and losses. Ties and abstentions need an explicitly chosen policy or extension. A single strength cannot reproduce all directions in a cycle, and disconnected groups lack evidence for a common ranking. Paired replays also share a question and need appropriate treatment as dependent observations. This chapter teaches the intuition and uses transparent points for its own report. Bradley and Terry, Rank Analysis of Incomplete Block Designs</p>
+<p>Keep the raw comparison ID, order, judge identity, question, frozen candidates, policy, rubric version, outcome, evidence, and reverse result. Record which results entered the aggregation, the ranking method, and all open review flags. A relative preference can put B above D even though B fails the critical refund gate. Keep that gate alongside the preference report before deciding which answers a customer can see.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. A plausible draft loses on the policy</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Can I get a refund for something I bought?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Harbor Leaf allows eligible requests through calendar day 30 after delivery. A valid receipt is required.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>A says “Yes, you may request a refund through calendar day 30 after delivery with a valid receipt.” B says “Absolutely. You have 90 calendar days after delivery to request a refund, and a receipt is optional.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Check the starting event, date, and receipt first. A preserves all three. In B, “90 calendar days” contradicts the 30-day limit and “a receipt is optional” contradicts the requirement. A wins. The word “Absolutely” cannot change either fact. If you reviewed B pointwise, it would independently fail the refund-policy check.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Save A as the winner and record B’s two contradictions. The comparison supports a preference for this question. It gives no ranking of the systems on other refund questions.</span></p>
+<h5>Example 2. Follow the answer through the swap</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Can I get a refund for something I bought?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Use the same <code>refund-1</code> policy and the <code>pairwise-v1</code> rubric above in each display.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Compare the frozen A/B and B/C pairs. The fixture gives saved choices for two displays per pair.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>For A/B, order A,B selects slot A and order B,A selects slot B. Both normalize to candidate A. For B/C, order B,C selects slot B and order C,B also selects slot B. Those choices normalize to C and B respectively. The second pair changes winner when the slot changes, although no candidate text or policy changed.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Enter one win for A on A/B. Keep B/C out of the points table until a reviewer reads both displays and their reasons. In one display the judge rewards C for preserving the deadline. In the reverse it rewards B for sounding decisive. Ask the reviewer to put the two quoted deadlines next to the policy. The two fictional displays show where to investigate. A larger controlled replay would be needed to establish a persistent bias.</span></p>
+<h5>Example 3. Rank a complete table, then test a missing pair</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Which answer should be sent for this eligible refund question?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Use <code>refund-1</code>, and prefer the correct deadline and receipt condition before style.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Use the four frozen candidates. For this worked example, use independently resolved teaching outcomes for all six pairs. The raw audit in Step 7 is a different snapshot that retains open disagreements.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Read the six results below. Give A 1 for each of two wins plus 0.5 for its tie. C also earns 2.5. D has one win and earns 1. B earns 0. Now remove B/C because its two displays disagree. C drops to 1.5 points across two scored pairs, and B has only two scored pairs. Coverage drops from 6/6 to 5/6. A’s 2.5 from three pairs and C’s 1.5 from two pairs come from different opponents.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Report A and C as tied by points in the complete snapshot. In the incomplete snapshot, report the difference as provisional and ask for B/C to be adjudicated. Confirm B independently fails policy, even if another replay ranks it above a generic referral.</span></p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Pair</th><th scope="col">Resolved preference</th><th scope="col">Evidence</th></tr></thead><tbody><tr><td>A/B</td><td>A</td><td>Correct deadline and receipt.</td></tr><tr><td>A/C</td><td>TIE</td><td>Both supply usable, policy-consistent guidance.</td></tr><tr><td>A/D</td><td>A</td><td>A answers the question.</td></tr><tr><td>B/C</td><td>C</td><td>C preserves both policy facts.</td></tr><tr><td>B/D</td><td>D</td><td>D leaves guidance missing while B gives two explicit contradictions.</td></tr><tr><td>C/D</td><td>C</td><td>C answers the question.</td></tr></tbody></table></div>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Select Copy Code, use the editor link next to the example, paste the whole program, and select Run. Compare the output, make the one specified edit, and run again in the same editor. Start each activity with a fresh copy. All data are inline and the comparisons use standard Python. The saved judgments are invented examples. None of the programs calls a model.</p>
+</div></details>
+<h5>Step 1 — Record a comparison and the reason</h5>
+<p>Store what was shown before interpreting the result. A dictionary maps names to values. The tuple <code>&quot;order&quot;</code> shows slot A first and slot B second. The nested candidate dictionary stores the texts by stable ID.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">record = {
+    &quot;id&quot;: &quot;P-AC-1&quot;, &quot;rubric&quot;: &quot;pairwise-v1&quot;, &quot;order&quot;: (&quot;A&quot;, &quot;C&quot;),
+    &quot;candidates&quot;: {
+        &quot;A&quot;: &quot;Yes, you may request a refund through calendar day 30 after delivery with a valid receipt.&quot;,
+        &quot;C&quot;: &quot;Bring your valid receipt and ask for your money back up to and including calendar day 30 after your order arrives.&quot;,
+    },
+    &quot;judge&quot;: &quot;J1&quot;, &quot;choice&quot;: &quot;A&quot;,
+}
+print(f&quot;{record[&#x27;id&#x27;]} | {record[&#x27;rubric&#x27;]} | judge {record[&#x27;judge&#x27;]}&quot;)
+for slot, candidate in zip((&quot;A&quot;, &quot;B&quot;), record[&quot;order&quot;]):
+    print(f&quot;Slot {slot} / ID {candidate}: {record[&#x27;candidates&#x27;][candidate]}&quot;)
+print(f&quot;Recorded choice: {record[&#x27;choice&#x27;]}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">P-AC-1 | pairwise-v1 | judge J1
+Slot A / ID A: Yes, you may request a refund through calendar day 30 after delivery with a valid receipt.
+Slot B / ID C: Bring your valid receipt and ask for your money back up to and including calendar day 30 after your order arrives.
+Recorded choice: A
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>&quot;choice&quot;: &quot;A&quot;</code> to <code>&quot;choice&quot;: &quot;TIE&quot;</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">P-AC-1 | pairwise-v1 | judge J1
+Slot A / ID A: Yes, you may request a refund through calendar day 30 after delivery with a valid receipt.
+Slot B / ID C: Bring your valid receipt and ask for your money back up to and including calendar day 30 after your order arrives.
+Recorded choice: TIE
+</code></pre></details>
+<p>Only the saved choice changes. In a real audit, keep the previous record and attach the evidence for a new verdict. <strong>Checkpoint.</strong> What would justify this tie? Both answers must be compared against the rubric with enough evidence to conclude that neither is meaningfully better.</p>
+<h5>Step 2 — Let a critical check take priority</h5>
+<p>Use a controlled variant of B that requires a valid receipt in both versions, so the deadline is the only policy fact whose value changes. The numbers and clarity ratings are reviewed inputs for the exercise. The Boolean result from <code>==</code> is true if the reviewed count matches 30. The <code>if</code> branches use the clarity preference only when both policy checks pass.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">approved_days = 30
+a_days = 30
+b_days = 90
+clarity_a, clarity_b = 3, 4
+a_ok = a_days == approved_days
+b_ok = b_days == approved_days
+print(f&quot;B says: Ask within {b_days} calendar days after delivery with a valid receipt.&quot;)
+print(f&quot;Deadline check: A {a_ok} | B {b_ok}&quot;)
+if a_ok != b_ok:
+    winner = &quot;A&quot; if a_ok else &quot;B&quot;
+elif not a_ok:
+    winner = &quot;REVIEW&quot;
+elif clarity_a == clarity_b:
+    winner = &quot;TIE&quot;
+else:
+    winner = &quot;A&quot; if clarity_a &gt; clarity_b else &quot;B&quot;
+print(f&quot;Fixture choice: {winner}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">B says: Ask within 90 calendar days after delivery with a valid receipt.
+Deadline check: A True | B False
+Fixture choice: A
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>b_days = 90</code> to <code>b_days = 30</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">B says: Ask within 30 calendar days after delivery with a valid receipt.
+Deadline check: A True | B True
+Fixture choice: B
+</code></pre></details>
+<p>With both deadline checks passing and the receipt held fixed, the clarity rating can decide the comparison. <strong>Checkpoint.</strong> Would this program catch a waiver of the receipt rule? The fixture assumed a valid receipt for both replies. Free-text answers still need evidence for the amount, unit, event, and receipt.</p>
+<h5>Step 3 — Normalize the two display choices</h5>
+<p>Map the first display slot to index 0 and the second to index 1. If the raw label is TIE or REVIEW, preserve it. Compare the two resulting values only after translating display labels to stable IDs.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def normalize(order, choice):
+    if choice == &quot;A&quot;:
+        return order[0]
+    if choice == &quot;B&quot;:
+        return order[1]
+    return choice
+
+first_order = (&quot;B&quot;, &quot;C&quot;)
+reverse_order = (&quot;C&quot;, &quot;B&quot;)
+first_choice = &quot;B&quot;
+reverse_choice = &quot;B&quot;
+first = normalize(first_order, first_choice)
+reverse = normalize(reverse_order, reverse_choice)
+print(f&quot;Forward: slot {first_choice} -&gt; ID {first}&quot;)
+print(f&quot;Reverse: slot {reverse_choice} -&gt; ID {reverse}&quot;)
+print(&quot;Supported pair&quot; if first == reverse and first != &quot;REVIEW&quot; else &quot;Send to review&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Forward: slot B -&gt; ID C
+Reverse: slot B -&gt; ID B
+Send to review
+</code></pre></details>
+<p><strong>Experiment.</strong> Change only <code>reverse_choice</code> from <code>&quot;B&quot;</code> to <code>&quot;A&quot;</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Forward: slot B -&gt; ID C
+Reverse: slot A -&gt; ID C
+Supported pair
+</code></pre></details>
+<p>The reversed display now points to C as well. <strong>Checkpoint.</strong> How many supported pairs did the change produce? One. You used two displays of the same evidence to check sensitivity to order.</p>
+<h5>Step 4 — Count wins, losses, and ties</h5>
+<p>Use the complete resolved table from the worked demonstration. Count only rows involving A. The tuple stores both IDs and the winner, or TIE. <code>continue</code> skips a row involving neither slot. The win rate uses every scored appearance, including ties, in its denominator.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">pairs = [(&quot;A&quot;, &quot;B&quot;, &quot;A&quot;), (&quot;A&quot;, &quot;C&quot;, &quot;TIE&quot;), (&quot;A&quot;, &quot;D&quot;, &quot;A&quot;),
+         (&quot;B&quot;, &quot;C&quot;, &quot;C&quot;), (&quot;B&quot;, &quot;D&quot;, &quot;D&quot;), (&quot;C&quot;, &quot;D&quot;, &quot;C&quot;)]
+wins = losses = ties = 0
+for left, right, result in pairs:
+    if &quot;A&quot; not in (left, right):
+        continue
+    if result == &quot;TIE&quot;:
+        ties += 1
+    elif result == &quot;A&quot;:
+        wins += 1
+    else:
+        losses += 1
+
+total = wins + losses + ties
+points = wins + 0.5 * ties
+print(f&quot;A: {wins} wins | {losses} losses | {ties} ties | {total} scored&quot;)
+print(f&quot;Win rate: {100 * wins / total:.1f}%&quot;)
+print(f&quot;Points: {points:.1f} | points per pair: {points / total:.3f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: 2 wins | 0 losses | 1 ties | 3 scored
+Win rate: 66.7%
+Points: 2.5 | points per pair: 0.833
+</code></pre></details>
+<p><strong>Experiment.</strong> Change the A/B result from <code>&quot;A&quot;</code> to <code>&quot;TIE&quot;</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: 1 wins | 0 losses | 2 ties | 3 scored
+Win rate: 33.3%
+Points: 2.0 | points per pair: 0.667
+</code></pre></details>
+<p>A loses one full win and gains a half-point tie. Three pairs still count. <strong>Checkpoint.</strong> If A/B instead needed REVIEW, should it count in the denominator? No. Keep the attempt in the audit and leave it out of the scored win rate.</p>
+<h5>Step 5 — Rank by points without breaking ties</h5>
+<p>Add one point for each winner and half a point per side for each tie. <code>set(points.values())</code> keeps each distinct points total. <code>sorted(..., reverse=True)</code> visits those totals from highest to lowest. <code>&#x27; = &#x27;.join(...)</code> displays every candidate in a tied group.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">pairs = [(&quot;A&quot;, &quot;B&quot;, &quot;A&quot;), (&quot;A&quot;, &quot;C&quot;, &quot;TIE&quot;), (&quot;A&quot;, &quot;D&quot;, &quot;A&quot;),
+         (&quot;B&quot;, &quot;C&quot;, &quot;C&quot;), (&quot;B&quot;, &quot;D&quot;, &quot;D&quot;), (&quot;C&quot;, &quot;D&quot;, &quot;C&quot;)]
+points = {&quot;A&quot;: 0.0, &quot;B&quot;: 0.0, &quot;C&quot;: 0.0, &quot;D&quot;: 0.0}
+for left, right, result in pairs:
+    if result == &quot;TIE&quot;:
+        points[left] += 0.5
+        points[right] += 0.5
+    else:
+        points[result] += 1
+
+for score in sorted(set(points.values()), reverse=True):
+    group = [name for name in points if points[name] == score]
+    print(f&quot;{&#x27; = &#x27;.join(group)}: {score:.1f} points&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A = C: 2.5 points
+D: 1.0 points
+B: 0.0 points
+</code></pre></details>
+<p><strong>Experiment.</strong> Change C/D’s result from <code>&quot;C&quot;</code> to <code>&quot;D&quot;</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: 2.5 points
+D: 2.0 points
+C: 1.5 points
+B: 0.0 points
+</code></pre></details>
+<p>A keeps 2.5. One point moves from C to D. <strong>Checkpoint.</strong> Did the edited verdict prove D gives better policy advice? It changed the recorded points only. Inspect D’s generic referral and check the evidence before releasing it.</p>
+<h5>Step 6 — Find a cycle and show missing pairs</h5>
+<p>Represent a win as a tuple <code>(winner, loser)</code>. <code>combinations(ids, 2)</code> gives each unordered pair once. <code>tuple(sorted(edge))</code> puts both directions of a pair under the same key for coverage. For a three-way cycle, test the two directions starting at the earliest ID in each group of three. This small check detects three-candidate cycles.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from itertools import combinations
+
+ids = (&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;)
+edges = {(&quot;A&quot;, &quot;B&quot;), (&quot;B&quot;, &quot;C&quot;), (&quot;C&quot;, &quot;A&quot;)}
+all_pairs = set(combinations(ids, 2))
+scored = {tuple(sorted(edge)) for edge in edges}
+cycles = []
+for a, b, c in combinations(ids, 3):
+    for x, y in ((b, c), (c, b)):
+        if {(a, x), (x, y), (y, a)} &lt;= edges:
+            cycles.append(f&quot;{a}&gt;{x}&gt;{y}&gt;{a}&quot;)
+
+missing = [a + b for a, b in sorted(all_pairs - scored)]
+print(f&quot;Scored pairs: {len(scored)}/{len(all_pairs)}&quot;)
+print(f&quot;Missing: {&#x27;, &#x27;.join(missing)}&quot;)
+print(f&quot;Three-way cycles: {&#x27;, &#x27;.join(cycles) or &#x27;none&#x27;}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Scored pairs: 3/6
+Missing: AD, BD, CD
+Three-way cycles: A&gt;B&gt;C&gt;A
+</code></pre></details>
+<p><strong>Experiment.</strong> Remove only <code>(&quot;C&quot;, &quot;A&quot;)</code> from <code>edges</code>.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Scored pairs: 2/6
+Missing: AC, AD, BD, CD
+Three-way cycles: none
+</code></pre></details>
+<p>Cross out the arrow from C to A. The two remaining arrows still say A beat B and B beat C, but you lost the direct comparison between A and C. <strong>Checkpoint.</strong> Which new result would bring the cycle back? A supported C win against A. Report the missing pair beside the cycle check so a reader can see what the program had enough evidence to find.</p>
+<h5>Step 7 — Build an auditable pairwise report</h5>
+<p>Replay all six unordered pairs. The first and reversed rows keep their display order, raw choice, and saved reason. These are stored examples of a balanced schedule, with one display in each order per pair. J1 is the primary fictional model judge. J2 is a different fictional model that supplies only a comparison on B/D. A reversal that changes the stable winner, or an abstention in either display, sends the pair to review. The baseline points summarize supported J1 results. It flags a stable J2 disagreement separately. A sensitivity check can withhold that pair from the table.</p>
+<p>The program checks the reviewed policy facts separately. A confirmed wrong claim is FAIL, and missing facts need REVIEW. These values are supplied by a policy reader. The program neither interprets free text nor runs a judge. Its cycle check uses only decisive results included in the points table. It tries each possible path through a group of candidates once per starting ID. <code>permutations()</code> provides the possible orders after the first ID. <code>path[1:] + path[:1]</code> shifts the path by one step and wraps back to its start, so <code>zip()</code> pairs every stop with the next.</p>
+<p>The dictionary <code>audit</code> preserves each pair and its two displays. The list <code>rankable</code> contains only candidates with a scored appearance. A missing reverse stays open. <code>[::-1]</code> reverses a tuple so the two orders can be checked before counting anything. A sorted set of their scores makes the report deterministic. Group equal points together and keep a total ranking provisional if coverage, cycles, or judge disagreements leave open questions.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from itertools import combinations, permutations
+
+question = &quot;Can I get a refund for something I bought?&quot;
+policy = &quot;Refund requests are allowed through calendar day 30 after delivery with a valid receipt.&quot;
+policy_version = &quot;refund-1&quot;
+rubric = &quot;pairwise-v1&quot;
+aggregation = &quot;primary&quot;
+# Frozen text, verified day count, and whether a valid receipt is required.
+candidates = {
+    &quot;A&quot;: (&quot;Yes, you may request a refund through calendar day 30 after delivery with a valid receipt.&quot;, 30, True),
+    &quot;B&quot;: (&quot;Absolutely. You have 90 calendar days after delivery to request a refund, and a receipt is optional.&quot;, 90, False),
+    &quot;C&quot;: (&quot;Bring your valid receipt and ask for your money back up to and including calendar day 30 after your order arrives.&quot;, 30, True),
+    &quot;D&quot;: (&quot;Please contact customer support about refunds.&quot;, None, None),
+}
+# Each row keeps order, raw slot choice, and the saved judge&#x27;s reason.
+primary = {
+    &quot;AB&quot;: [((&quot;A&quot;, &quot;B&quot;), &quot;A&quot;, &quot;chosen answer preserves the 30-day limit and receipt&quot;),
+           ((&quot;B&quot;, &quot;A&quot;), &quot;B&quot;, &quot;chosen answer preserves the 30-day limit and receipt&quot;)],
+    &quot;AC&quot;: [((&quot;A&quot;, &quot;C&quot;), &quot;TIE&quot;, &quot;both preserve the required facts&quot;),
+           ((&quot;C&quot;, &quot;A&quot;), &quot;TIE&quot;, &quot;both preserve the required facts&quot;)],
+    &quot;AD&quot;: [((&quot;A&quot;, &quot;D&quot;), &quot;A&quot;, &quot;chosen answer provides the deadline and receipt&quot;),
+           ((&quot;D&quot;, &quot;A&quot;), &quot;B&quot;, &quot;chosen answer provides the deadline and receipt&quot;)],
+    &quot;BC&quot;: [((&quot;B&quot;, &quot;C&quot;), &quot;B&quot;, &quot;C preserves the 30-day limit&quot;),
+           ((&quot;C&quot;, &quot;B&quot;), &quot;B&quot;, &quot;B sounds decisive&quot;)],
+    &quot;BD&quot;: [((&quot;B&quot;, &quot;D&quot;), &quot;A&quot;, &quot;B gives more detail&quot;),
+           ((&quot;D&quot;, &quot;B&quot;), &quot;B&quot;, &quot;B gives more detail&quot;)],
+    &quot;CD&quot;: [((&quot;C&quot;, &quot;D&quot;), &quot;REVIEW&quot;, &quot;no supported comparison supplied&quot;),
+           ((&quot;D&quot;, &quot;C&quot;), &quot;REVIEW&quot;, &quot;no supported comparison supplied&quot;)],
+}
+secondary = {
+    &quot;BD&quot;: [((&quot;B&quot;, &quot;D&quot;), &quot;B&quot;, &quot;D avoids giving the wrong deadline&quot;),
+           ((&quot;D&quot;, &quot;B&quot;), &quot;A&quot;, &quot;D avoids giving the wrong deadline&quot;)],
+}
+
+def normalize(order, choice):
+    if choice in (&quot;A&quot;, &quot;B&quot;):
+        return order[0 if choice == &quot;A&quot; else 1]
+    return choice if choice in (&quot;TIE&quot;, &quot;REVIEW&quot;) else &quot;INVALID&quot;
+
+def supported(pair, views):
+    if len(views) != 2:
+        return &quot;REVIEW&quot;, &quot;missing reverse&quot;
+    first, reverse = views
+    if set(first[0]) != set(pair) or reverse[0] != first[0][::-1]:
+        return &quot;REVIEW&quot;, &quot;invalid display orders&quot;
+    outcomes = [normalize(order, choice) for order, choice, reason in views]
+    if any(result in (&quot;REVIEW&quot;, &quot;INVALID&quot;) for result in outcomes):
+        return &quot;REVIEW&quot;, &quot;abstention or invalid&quot;
+    if outcomes[0] != outcomes[1]:
+        return &quot;REVIEW&quot;, &quot;order conflict&quot;
+    return outcomes[0], &quot;supported&quot;
+
+def gate(days, receipt):
+    if (days is not None and days != 30) or receipt is False:
+        return &quot;FAIL&quot;
+    if days is None or receipt is None:
+        return &quot;REVIEW&quot;
+    return &quot;PASS&quot;
+
+ids = sorted(candidates)
+counts = {name: dict(wins=0, losses=0, ties=0) for name in ids}
+audit, edges, open_pairs, judge_disputes = {}, set(), [], []
+scored = 0
+print(f&quot;{policy_version} | {rubric} | aggregation {aggregation}&quot;)
+for a, b in combinations(ids, 2):
+    pair = a + b
+    views = primary.get(pair, [])
+    result, reason = supported(pair, views)
+    other_views = secondary.get(pair, [])
+    other, _ = supported(pair, other_views)
+    dispute = result != &quot;REVIEW&quot; and other != &quot;REVIEW&quot; and result != other
+    if dispute:
+        judge_disputes.append(pair)
+    if dispute and aggregation == &quot;exclude-disputes&quot;:
+        result, reason = &quot;REVIEW&quot;, &quot;judge disagreement&quot;
+    audit[pair] = {
+        &quot;id&quot;: &quot;P-&quot; + pair, &quot;question&quot;: question, &quot;source&quot;: policy, &quot;policy_version&quot;: policy_version,
+        &quot;rubric&quot;: rubric, &quot;aggregation&quot;: aggregation, &quot;stable_ids&quot;: (a, b),
+        &quot;candidate_texts&quot;: {name: candidates[name][0] for name in (a, b)},
+        &quot;J1_displays&quot;: views, &quot;J2_displays&quot;: other_views, &quot;judge_dispute&quot;: dispute,
+        &quot;table_result&quot;: result, &quot;reason&quot;: reason,
+    }
+    choices = &quot;/&quot;.join(normalize(order, choice) for order, choice, _ in views) or &quot;none&quot;
+    print(f&quot;P-{pair}: J1 {choices} | table {result} ({reason})&quot;)
+    if result == &quot;REVIEW&quot;:
+        open_pairs.append(pair)
+        continue
+    scored += 1
+    if result == &quot;TIE&quot;:
+        counts[a][&quot;ties&quot;] += 1
+        counts[b][&quot;ties&quot;] += 1
+    else:
+        loser = b if result == a else a
+        counts[result][&quot;wins&quot;] += 1
+        counts[loser][&quot;losses&quot;] += 1
+        edges.add((result, loser))
+
+points, rankable, cycles = {}, [], []
+for name, row in counts.items():
+    wins, losses, ties = row[&quot;wins&quot;], row[&quot;losses&quot;], row[&quot;ties&quot;]
+    total = wins + losses + ties
+    points[name] = wins + 0.5 * ties
+    rate = f&quot;{points[name] / total:.3f}&quot; if total else &quot;unavailable&quot;
+    if total:
+        rankable.append(name)
+    print(f&quot;{name}: {wins}W {losses}L {ties}T | {points[name]:.1f} pts | {rate} per pair | policy {gate(*candidates[name][1:])}&quot;)
+
+for length in range(3, len(ids) + 1):
+    for group in combinations(ids, length):
+        start = group[0]
+        for tail in permutations(group[1:]):
+            path = (start,) + tail
+            next_nodes = path[1:] + path[:1]
+            if set(zip(path, next_nodes)) &lt;= edges:
+                cycles.append(&quot;&gt;&quot;.join(path + (start,)))
+groups = [&quot;=&quot;.join(name for name in rankable if points[name] == score)
+          for score in sorted({points[name] for name in rankable}, reverse=True)]
+attempted = sum(bool(entry[&quot;J1_displays&quot;]) for entry in audit.values())
+print(f&quot;Attempted coverage: {attempted}/{len(audit)}&quot;)
+print(f&quot;Scored coverage: {scored}/{len(audit)} | open: {&#x27;,&#x27;.join(open_pairs) or &#x27;none&#x27;}&quot;)
+print(f&quot;Cross-judge disputes: {&#x27;,&#x27;.join(judge_disputes) or &#x27;none&#x27;}&quot;)
+print(f&quot;Cycles: {&#x27;,&#x27;.join(cycles) or &#x27;none&#x27;}&quot;)
+print(&quot;Points groups: &quot; + (&quot; &gt; &quot;.join(groups) or &quot;unavailable&quot;))
+print(&quot;Total ranking: withheld&quot; if open_pairs or judge_disputes or cycles else &quot;Total ranking: points groups&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-1 | pairwise-v1 | aggregation primary
+P-AB: J1 A/A | table A (supported)
+P-AC: J1 TIE/TIE | table TIE (supported)
+P-AD: J1 A/A | table A (supported)
+P-BC: J1 C/B | table REVIEW (order conflict)
+P-BD: J1 B/B | table B (supported)
+P-CD: J1 REVIEW/REVIEW | table REVIEW (abstention or invalid)
+A: 2W 0L 1T | 2.5 pts | 0.833 per pair | policy PASS
+B: 1W 1L 0T | 1.0 pts | 0.500 per pair | policy FAIL
+C: 0W 0L 1T | 0.5 pts | 0.500 per pair | policy PASS
+D: 0W 2L 0T | 0.0 pts | 0.000 per pair | policy REVIEW
+Attempted coverage: 6/6
+Scored coverage: 4/6 | open: BC,CD
+Cross-judge disputes: BD
+Cycles: none
+Points groups: A &gt; B &gt; C &gt; D
+Total ranking: withheld
+</code></pre></details>
+<p><strong>Experiment.</strong> In the B/C reverse row, replace <code>((&quot;C&quot;, &quot;B&quot;), &quot;B&quot;, &quot;B sounds decisive&quot;)</code> with <code>((&quot;C&quot;, &quot;B&quot;), &quot;A&quot;, &quot;C preserves the 30-day limit&quot;)</code>. This is a replacement replay of one display. Save the earlier replay separately in a real audit.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund-1 | pairwise-v1 | aggregation primary
+P-AB: J1 A/A | table A (supported)
+P-AC: J1 TIE/TIE | table TIE (supported)
+P-AD: J1 A/A | table A (supported)
+P-BC: J1 C/C | table C (supported)
+P-BD: J1 B/B | table B (supported)
+P-CD: J1 REVIEW/REVIEW | table REVIEW (abstention or invalid)
+A: 2W 0L 1T | 2.5 pts | 0.833 per pair | policy PASS
+B: 1W 2L 0T | 1.0 pts | 0.333 per pair | policy FAIL
+C: 1W 0L 1T | 1.5 pts | 0.750 per pair | policy PASS
+D: 0W 2L 0T | 0.0 pts | 0.000 per pair | policy REVIEW
+Attempted coverage: 6/6
+Scored coverage: 5/6 | open: CD
+Cross-judge disputes: BD
+Cycles: none
+Points groups: A &gt; C &gt; B &gt; D
+Total ranking: withheld
+</code></pre></details>
+<p>The two displays now support C on B/C, adding one scored pair and a loss for B. A still has one more scored opponent than C. J1’s two stable B/D results are sufficient for this table under the primary rule. J2 picks D in both orders, so the report keeps their disagreement visible. <strong>Checkpoint.</strong> Would you release B because it won a supported pair? B independently fails on the deadline and receipt. Inspect the saved reasons for B/D, get another review of C/D, and keep the points groups provisional.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Apply the policy-first rubric</h5>
+<p>Compare A with B using <code>refund-1</code>. Then compare A with C. Decide when you have a supported winner and when a tie is justified. Name the evidence for each result.</p>
+<h5>Practice 2. Read the reversed display</h5>
+<p>The first display puts C in slot A and D in slot B. The judge chooses A. The second display puts D in slot A and C in slot B. The judge chooses A again. Translate both choices and decide what goes in the scored table.</p>
+<h5>Practice 3. Calculate points when two candidates tie</h5>
+<p>In the complete resolved snapshot, A halves its A/C pair with C and beats B and D. C beats B and D. D beats B. Calculate each points total and the points-per-pair of the two leaders. Do the totals establish a unique winner?</p>
+<h5>Practice 4. Read a cycle with missing evidence</h5>
+<p>In a small replay, A beats B, B beats C, and C beats A. D has no comparisons. Compute coverage over all four candidates and identify which claims would be defensible in an audit. What should the team compare next?</p>
+<h4>Independent Assignment</h4>
+<p>Use the full Step 7 program as the standalone answer key. First read the four frozen answers and record each policy status using <code>refund-1</code>. Normalize every display. List which pairs came from repeated displays of the same evidence, which are open, and where the two judges disagree. Verify the table counts, coverage, and points groups by hand. Write a release recommendation supported by the critical facts as well as the preferences.</p>
+<p>For variant A, start from the Step 7 experiment, where B/C consistently supports C. Replace the two C/D rows with <code>((&quot;C&quot;, &quot;D&quot;), &quot;B&quot;, &quot;D gives an escalation path&quot;)</code> and <code>((&quot;D&quot;, &quot;C&quot;), &quot;A&quot;, &quot;D gives an escalation path&quot;)</code>. The revised replay prefers D in both orders. For variant B, start from the baseline and change only <code>aggregation = &quot;primary&quot;</code> to <code>aggregation = &quot;exclude-disputes&quot;</code>. Keep all text, evidence, and display choices fixed. In both variants save a review recommendation and explain when the ranked points fail to settle it.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>A wins A/B. Both replies count from delivery, but B says 90 instead of 30 and makes the receipt optional. These two contradictions outweigh B’s confident wording. A and C both give the 30-day rule and require a valid receipt. If both are similarly clear for the customer, record TIE. An ambiguous “first month” version of C would need clarification before deciding whether it satisfies the same cutoff.</p>
+<h5>Solution 2</h5>
+<p>The first displayed A means candidate C. The reversed displayed A means candidate D. The stable winner changes from C to D. Log both raw outcomes and leave the pair unresolved. Inspect whether the judge anchored on the first slot or had another reason before asking for adjudication.</p>
+<h5>Solution 3</h5>
+<p>A and C each earn 1 + 1 + 0.5 = 2.5 over three pairs, or 0.833 points per pair. D has one win and two losses, so it earns 1. B loses every pair and earns 0. The two leaders are tied by points. This fixture also records a supported head-to-head tie between them. Another dataset can give equal totals even without a head-to-head tie.</p>
+<h5>Solution 4</h5>
+<p>List all six pairs first: AB, AC, AD, BC, BD, CD. Three contain a scored result, giving 50% coverage. Try putting A first. The C-over-A result immediately conflicts with that choice. Starting with B or C has the same problem. D has no scored comparison, so its rate is unavailable. Ask for both display orders on A/D, B/D, and C/D. Review the three existing reasons before proposing an order for all four.</p>
+<h5>Assignment answer key</h5>
+<p>The baseline has 4/6 coverage, with B/C and C/D in review. A and C pass the policy, B fails it, and D lacks the facts. B/D is supported by J1 in both orders. J2 points to D both times. Keep both records. The policy failure means the team should hold B even if a scoring method raises it above D.</p>
+<p>For variant A, the changed lines from the Step 7 experiment are <code>P-CD: J1 D/D | table D (supported)</code>, <code>C: 1W 1L 1T | 1.5 pts | 0.500 per pair | policy PASS</code>, <code>D: 1W 2L 0T | 1.0 pts | 0.333 per pair | policy REVIEW</code>, <code>Scored coverage: 6/6 | open: none</code>, <code>Cycles: B&gt;D&gt;C&gt;B</code>, and <code>Points groups: A &gt; C &gt; B=D</code>. Keep every other line. Ask a reviewer to inspect the three edges in the cycle and the raw B/D disagreement. Complete coverage does not make these preferences transitive.</p>
+<p>For variant B, the changed lines from the baseline are <code>refund-1 | pairwise-v1 | aggregation exclude-disputes</code>, <code>P-BD: J1 B/B | table REVIEW (judge disagreement)</code>, <code>B: 0W 1L 0T | 0.0 pts | 0.000 per pair | policy FAIL</code>, <code>D: 0W 1L 0T | 0.0 pts | 0.000 per pair | policy REVIEW</code>, <code>Scored coverage: 3/6 | open: BC,BD,CD</code>, and <code>Points groups: A &gt; C &gt; B=D</code>. The disagreement is still listed, and the total ranking is withheld. Reducing coverage exposes how much the baseline placement depended on one disputed win.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>A reply beats a vague referral but tells the customer the receipt is optional. Which separate evaluation answers whether it can be sent?</li><li>Both replies satisfy the rules and one is shorter. When should conciseness influence the result?</li><li>The policy page is missing and the judge cannot check either deadline. Which output should it return and why?</li><li>Why start from a blind randomized display order and collect the reverse as well?</li><li>Stable A is in slot B and wins. In the swapped display it is in slot A and wins. How many supported pair outcomes go into the table?</li><li>A candidate wins twice, ties once, and loses once. Give its wins-per-scored-pair and points-per-scored-pair.</li><li>A points summary puts a candidate first even though its preference arrows form a cycle. What should the audit say?</li><li>Two model judges each agree with their own reversed replay but disagree with one another. What evidence is needed before deciding which answer to send?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Apply a pointwise policy check to that reply. It fails because <code>refund-1</code> requires a valid receipt, regardless of its relative preference.</li><li>Check completeness and clarity first. If both are adequate and the shorter wording is easier to use without losing a needed detail, use the conciseness criterion. A small difference can still justify a tie.</li><li>Return REVIEW. A tie needs evidence that the compared answers are equivalent under the rubric.</li><li>Blinding reduces influence from knowing the source system. Randomization spreads initial slot placement, and the reverse exposes choices that change when the stable texts swap slots.</li><li>One. Both display choices normalize to the same stable answer on a single pair.</li><li>The win rate is 2/4, or 50%. The points are 2 + 0.5 = 2.5, so the points rate is 2.5/4 = 0.625.</li><li>Show the cycle alongside the points and report that the ordering cannot satisfy every observed preference. Include coverage and review the conflicting comparisons.</li><li>Inspect both reasons, the original question, the exact responses, and the source. Apply the independent critical checks and ask a human reviewer to adjudicate the disputed comparison.</li></ol>
+</div></details>
+<h4>Common Mistakes</h4>
+<p>Map each display label back to the stable answer before comparing the outcomes. A raw slot label can point to a different answer after a swap.</p>
+<p>Track ties, unresolved attempts, absent pairs, and cross-judge disputes separately. These outcomes change the evidence available to a ranking.</p>
+<p>Always check each answer against the approved policy before release. Ranking points summarize relative choices on the collected pairs.</p>
+<h4>Lesson Summary and Next Step</h4>
+<p>A pairwise comparison answers which of two frozen responses serves the customer better under a stated rule. Keep stable IDs and normalize reversed display choices. Report counts, coverage, cycles, and open disputes alongside any points groups. An independent check is needed for the facts a customer will act on.</p>
+<p>Next, <a href="#m07-t01">Variance, repetition and score aggregation</a> examines what repeated evaluations tell you about variation and how to combine results across cases.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t03">Rubrics and a first human evaluation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a>, <a href="#m06-t02">Human agreement, calibration and bias</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a> — required when adding a live model judge to the comparative lab</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Score the same answer pairs in reversed order and construct a win/tie table from saved judgments.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 to count wins, ties and order reversals.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Detect an order-sensitive pair and justify whether the evidence supports a ranking.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
