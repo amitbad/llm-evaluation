@@ -463,6 +463,11 @@
           "id": "M12-T01",
           "relevance": "Supporting",
           "connection": "Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card."
+        },
+        {
+          "id": "M12-T02",
+          "relevance": "Supporting",
+          "connection": "Compare the incorrect TC21 eligibility decision with the governing policy and the saved grader evidence."
         }
       ]
     },
@@ -606,6 +611,11 @@
           "connection": "Compare the early stop in TC10 with the expected two-step trajectory."
         },
         {
+          "id": "M12-T02",
+          "relevance": "Supporting",
+          "connection": "Inspect observed tool steps separately from the final reply before evaluating a claimed outcome."
+        },
+        {
           "id": "M10-T03",
           "relevance": "Primary",
           "connection": "Distinguish retry recovery from the unresolved early-stop failure."
@@ -703,6 +713,11 @@
           "id": "M11-T02",
           "relevance": "Supporting",
           "connection": "Identify where the documented trace captures request and response text before designing log minimization checks."
+        },
+        {
+          "id": "M12-T02",
+          "relevance": "Supporting",
+          "connection": "Identify the documented capture surfaces for testing allowed-field logging; no privacy outcome was recorded."
         },
         {
           "id": "M14-T01",
