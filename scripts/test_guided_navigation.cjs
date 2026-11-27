@@ -283,7 +283,14 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
   for (const [, id, markup] of sources) {
     const topic = data.topics[id.toUpperCase()];
     const focusedTraceLesson = topic.id === "M14-T01";
-    const sections = focusedTraceLesson ? [
+    const focusedMonitoringLesson = topic.id === "M14-T02";
+    const sections = focusedMonitoringLesson ? [
+      "What You Will Learn", "Start With the Saved Evidence",
+      "Production Quality Monitoring: Sampling, Feedback, Drift and Alert Investigation",
+      "Inspect the Alert in Langfuse", "Investigation Worksheet",
+      "Worked Solutions to Practice", "Common Mistakes", "Lesson Summary and Next Step",
+      "<summary>Detailed time estimates</summary>",
+    ] : focusedTraceLesson ? [
       "What You Will Learn", "Why This Lesson Matters", "Observe the Saved Failure",
       "Read a Trace Before Changing the Application", "Investigate an LLM Failure Using Langfuse",
       "Monitor the Failure You Just Investigated", "Investigation Worksheet",
@@ -303,7 +310,16 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
     assert.equal(markup.includes("<summary>Prerequisites</summary>"), prerequisites.length > 0);
     assert.doesNotMatch(markup, />M\d+-T\d+<\/a>/);
     assert.doesNotMatch(markup, /<details\b[^>]*\bopen\b/);
-    if (focusedTraceLesson) {
+    if (focusedMonitoringLesson) {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives|www\.online-python\.com/);
+      assert.match(markup, /href="test5\.html"/);
+      assert.match(markup, /class="language-python">[\s\S]*def alert_step/);
+      assert.match(markup, /monitor_lab\.py[^\n]*--audit/);
+      assert.match(markup, /monitor_lab\.py[^\n]*--export-langfuse/);
+      assert.match(markup, /langfuse-lite tree/);
+      assert.match(markup, /Saved agreement: 31\/49/);
+      assert.match(markup, /class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice/);
+    } else if (focusedTraceLesson) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives|www\.online-python\.com/);
       assert.match(markup, /href="test12\.html"/);
       assert.match(markup, /class="language-python">[\s\S]*start_as_current_observation/);

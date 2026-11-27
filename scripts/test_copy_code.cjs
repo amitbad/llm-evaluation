@@ -121,8 +121,8 @@ test("generated curriculum adds buttons to executable blocks and leaves transcri
       // Intermediate chapters can place the editor link directly before the block.
       assert.equal(html.slice(0, wrapper.index).endsWith(adjacentEditor), true);
     } else {
-      const terminalLab = source.lessonId === "M14-T01";
-      // The tracing lab reads repository fixtures and needs a local SDK and collector.
+      const terminalLab = ["M14-T01", "M14-T02"].includes(source.lessonId);
+      // These monitoring labs read repository evidence and can use a local SDK and collector.
       assert.equal(markup.includes(editor), source[1] === "python" && !terminalLab);
     }
   }

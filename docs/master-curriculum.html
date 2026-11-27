@@ -8677,7 +8677,7 @@ Saved judge: {&quot;score&quot;:3,&quot;decision&quot;:&quot;REVIEW&quot;,&quot;
 <article data-original-experiment="TEST-5" data-relevance="Primary">
 <h5>Test 5: LLM-as-a-Judge</h5>
 <p>Recorded Results Available</p>
-<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a model judge’s verdicts with human judgments on saved banking replies.</dd></div><div><dt>How it was tested</dt><dd>Use the same saved reply for a human Pass, Fail, or Partial judgment and a second model judgment, then inspect disagreements. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough records agreement on 28 of 49 cases (57%) and disagreement on 21 of 49 (43%).</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Primary. Inspect how the same saved response gets a pointwise verdict and reason.</dd></div></dl>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare saved model and human verdicts on banking case IDs.</dd></div><div><dt>How it was tested</dt><dd>Join a previously entered human verdict to the judge verdict by case. The runner calls the bot again before judging, so the labels may refer to different replies. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough reports 28 agreements out of 49 (57%). In the committed JudgeResults workbook, 31 of 49 saved label pairs agree (63.3%) and 18 disagree. The artifacts are retained separately.</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Primary. Inspect how the same saved response gets a pointwise verdict and reason.</dd></div></dl>
 <p><a href="test5.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx">Original verdicts and judge reasoning workbook</a> · <a href="#original-test-5">Evidence files and related lessons</a></p>
 </article></div></details>
 <h4>Lesson Summary and Next Step</h4>
@@ -9150,7 +9150,7 @@ Audit I: refund-1 | deadline FAIL | judge FAIL | adjudicated FAIL | deadline con
 <article data-original-experiment="TEST-5" data-relevance="Primary">
 <h5>Test 5: LLM-as-a-Judge</h5>
 <p>Recorded Results Available</p>
-<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a model judge’s verdicts with human judgments on saved banking replies.</dd></div><div><dt>How it was tested</dt><dd>Use the same saved reply for a human Pass, Fail, or Partial judgment and a second model judgment, then inspect disagreements. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough records agreement on 28 of 49 cases (57%) and disagreement on 21 of 49 (43%).</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Primary. Distinguish verdict agreement from correctness and review individual disagreements.</dd></div></dl>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare saved model and human verdicts on banking case IDs.</dd></div><div><dt>How it was tested</dt><dd>Join a previously entered human verdict to the judge verdict by case. The runner calls the bot again before judging, so the labels may refer to different replies. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough reports 28 agreements out of 49 (57%). In the committed JudgeResults workbook, 31 of 49 saved label pairs agree (63.3%) and 18 disagree. The artifacts are retained separately.</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Primary. Distinguish verdict agreement from correctness and review individual disagreements.</dd></div></dl>
 <p><a href="test5.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx">Original verdicts and judge reasoning workbook</a> · <a href="#original-test-5">Evidence files and related lessons</a></p>
 </article>
 <article data-original-experiment="TEST-7" data-relevance="Supporting">
@@ -19276,7 +19276,7 @@ Audit snapshots: 2 | Original S11 marker: True
 <article data-original-experiment="TEST-5" data-relevance="Supporting">
 <h5>Test 5: LLM-as-a-Judge</h5>
 <p>Recorded Results Available</p>
-<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a model judge’s verdicts with human judgments on saved banking replies.</dd></div><div><dt>How it was tested</dt><dd>Use the same saved reply for a human Pass, Fail, or Partial judgment and a second model judgment, then inspect disagreements. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough records agreement on 28 of 49 cases (57%) and disagreement on 21 of 49 (43%).</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Inspect how the historical review distinguished explicit refusal from topic switching.</dd></div></dl>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare saved model and human verdicts on banking case IDs.</dd></div><div><dt>How it was tested</dt><dd>Join a previously entered human verdict to the judge verdict by case. The runner calls the bot again before judging, so the labels may refer to different replies. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough reports 28 agreements out of 49 (57%). In the committed JudgeResults workbook, 31 of 49 saved label pairs agree (63.3%) and 18 disagree. The artifacts are retained separately.</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Inspect how the historical review distinguished explicit refusal from topic switching.</dd></div></dl>
 <p><a href="test5.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx">Original verdicts and judge reasoning workbook</a> · <a href="#original-test-5">Evidence files and related lessons</a></p>
 </article></div></details>
 <h4>Lesson Summary and Next Step</h4>
@@ -19895,7 +19895,7 @@ Audit snapshots: 2 | original V2 P2 exposure: True
 <article data-original-experiment="TEST-5" data-relevance="Supporting">
 <h5>Test 5: LLM-as-a-Judge</h5>
 <p>Recorded Results Available</p>
-<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a model judge’s verdicts with human judgments on saved banking replies.</dd></div><div><dt>How it was tested</dt><dd>Use the same saved reply for a human Pass, Fail, or Partial judgment and a second model judgment, then inspect disagreements. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough records agreement on 28 of 49 cases (57%) and disagreement on 21 of 49 (43%).</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Compare human and model verdicts on the same banking cases before treating annotations as ground truth.</dd></div></dl>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare saved model and human verdicts on banking case IDs.</dd></div><div><dt>How it was tested</dt><dd>Join a previously entered human verdict to the judge verdict by case. The runner calls the bot again before judging, so the labels may refer to different replies. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough reports 28 agreements out of 49 (57%). In the committed JudgeResults workbook, 31 of 49 saved label pairs agree (63.3%) and 18 disagree. The artifacts are retained separately.</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Compare human and model verdicts on the same banking cases before treating annotations as ground truth.</dd></div></dl>
 <p><a href="test5.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx">Original verdicts and judge reasoning workbook</a> · <a href="#original-test-5">Evidence files and related lessons</a></p>
 </article>
 <article data-original-experiment="TEST-14" data-relevance="Supporting">
@@ -25280,42 +25280,510 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m14-t02">
-  <p class="lesson-intro" data-lesson-search>Trace populations, user feedback and evaluator behavior can change independently.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Representative trace sampling, consent and retention, label delays, human-in-the-loop triage, selection bias, input/answer/evaluator drift, control charts and alert triage.</p>
-  </section>
-  <details class="lesson-disclosure" data-reading-skip>
-    <summary>Prerequisites</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a>, <a href="#m14-t01">Traces, monitoring and Langfuse</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m11-t02">Bias, fairness and privacy controls</a>, <a href="#m13-t03">Release decisions, rollback and governance</a></dd></div></dl></div>
-  </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Compare synthetic weeks with changing traffic mix and delayed labels. Produce an alert and review queue.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02, P04 and P06 to inspect sampled synthetic traces and delayed labels.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Distinguish drift from instrumentation loss and promote reviewed cases into an offline suite.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section><details class="lesson-disclosure original-experiments" data-reading-skip>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Audit saved evaluation records and choose samples for routine monitoring and risk review.</li><li>Compare human and automated labels while accounting for different response versions and late feedback.</li><li>Separate a change in what users ask from a drop in quality on the same type of request.</li><li>Run an alert policy and investigate the affected records in Langfuse.</li></ul>
+<h4>Start With the Saved Evidence</h4>
+<p>The <a href="test5.html">Test 5 walkthrough</a> reports <strong>28/49</strong> human–judge agreements. Its committed <code>JudgeResults</code> sheet yields <strong>31/49</strong> when you compare the saved normalized labels. Which would you put in a monitoring baseline? Preserve both figures with their own sources. Reproduce the workbook calculation against its exact bytes before discussing changes.</p>
+<p>The source runner reads a previously filled human verdict and calls the bot again before sending a response to the model judge. Joining those labels by case ID is useful for finding review candidates. The workbook does not establish that both labels refer to the same immutable response. Read case 6. The saved bot reply asserts Gold-account ATM access and mentions a fee, although the expected behavior calls for withholding unsupported access details. The judge passes the answer while the recorded human label is FAIL. Check the approved policy and the original human-reviewed response before changing either label. Resolve ambiguity through a second reviewer, then record the reason and add a regression case if warranted.</p>
+<p>Complete <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a>, and <a href="#m14-t01">Traces, monitoring and Langfuse</a>. <a href="#m11-t02">Bias, fairness and privacy controls</a> and <a href="#m13-t03">Release decisions, rollback and governance</a> are recommended. There is no conditional prerequisite. Use P02, P04 and P06 for Python, structured records and rates. The focus here is running a monitoring investigation.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Evidence</th><th scope="col">Available</th><th scope="col">Limits</th></tr></thead><tbody><tr><td>Historical Test 5 workbook</td><td>49 judged cases in five categories. Each has a saved reply, expected behavior, human and judge labels, and a judge reason. Human labels use PASS, PARTIAL and FAIL</td><td>The sheet says generated March 5, 2026 at 17:07 without a stated timezone. There are no per-case timestamps, trace or immutable response IDs, reviewer IDs, feedback arrival times, or row-level model, prompt or evaluator versions. The walkthrough identifies llama3.1:8b and Mistral as the historical bot and judge</td></tr><tr><td>Newly executed calculations</td><td>Workbook fingerprint, sampled IDs, agreement counts and an alert replay</td><td>They operate on committed evidence and controlled fixtures. They are not new model responses</td></tr><tr><td>Controlled monitoring windows</td><td>Two request groups, per-record fixture labels, delayed simulated feedback, explicit versions and a corroborated critical-event fixture</td><td>These are invented monitoring windows and incident records. <a href="test14.html">Test 14</a> describes how to instrument traces, but its results directory has no saved monitoring timeline</td></tr></tbody></table></div>
+<h4>Production Quality Monitoring: Sampling, Feedback, Drift and Alert Investigation</h4>
+<h5>Run the investigation</h5>
+<p>Use the repository root so the script can read the original workbook. Use Python 3.11 or newer and install <code>openpyxl==3.1.5</code> into a temporary environment. The optional export reuses the Langfuse SDK and Lite versions from M14-T01. Use Copy Code on the program below, save it as <code>monitor_lab.py</code> in the printed directory, and run it from the repository root. No live model, dashboard, paid service or credentials are required for the workbook and alert replay.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">MONITOR_LAB_DIR=&quot;$(mktemp -d)&quot;
+python3 -m venv &quot;$MONITOR_LAB_DIR/venv&quot;
+. &quot;$MONITOR_LAB_DIR/venv/bin/activate&quot;
+python -m pip install &#x27;openpyxl==3.1.5&#x27;
+printf &#x27;Save monitor_lab.py in %s\n&#x27; &quot;$MONITOR_LAB_DIR&quot;
+</code></pre>
+</div>
+<p>The read-only workbook loader finds the sheet header and uses <code>zip</code> to pair field names with cells. <code>Random(seed)</code> samples without replacement, and <code>Counter</code> counts categories. A dictionary holds each window’s counts. The alert state remembers consecutive qualifying windows, whether an alert is still open and the number of clean recovery windows. <code>--audit</code> writes a new JSON record and refuses to overwrite an existing one.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import argparse
+from collections import Counter, defaultdict
+import hashlib
+import json
+import os
+from pathlib import Path
+from random import Random
+from urllib.parse import urlsplit
+
+from openpyxl import load_workbook
+
+WORKBOOK = Path(&quot;phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx&quot;)
+LABELS = {&quot;PASS&quot;, &quot;PARTIAL&quot;, &quot;FAIL&quot;}
+RISK_TAG = &quot;Prompt Injection&quot;  # Review priority, not a verified critical incident.
+SEED = 14
+BASE_VERSION = (&quot;fixture-model-v1&quot;, &quot;fixture-prompt-v1&quot;, &quot;fixture-judge-v1&quot;, &quot;fixture-policy-v1&quot;)
+SLICES = (&quot;routine&quot;, &quot;policy&quot;)
+# name, routine (planned, passed), policy (planned, passed), missing policy labels, verified critical
+WINDOWS = [
+    (&quot;baseline&quot;, (80, 72), (20, 10), 0, False),
+    (&quot;mix&quot;, (20, 18), (80, 40), 0, False),
+    (&quot;drop-1&quot;, (20, 18), (80, 24), 0, False),
+    (&quot;gap&quot;, (20, 18), (80, 24), 65, False),
+    (&quot;drop-2&quot;, (20, 18), (80, 24), 0, False),
+    (&quot;drop-3&quot;, (20, 18), (80, 24), 0, False),
+    (&quot;critical&quot;, (1, 1), (1, 0), 1, True),
+    (&quot;recovery-1&quot;, (20, 18), (80, 40), 0, False),
+    (&quot;recovery-2&quot;, (20, 18), (80, 40), 0, False),
+]
+# Simulated review events. Availability is a sequence marker, not a historical timestamp.
+FEEDBACK = [
+    {&quot;event&quot;: &quot;F01&quot;, &quot;request&quot;: &quot;drop-3:policy:000&quot;, &quot;reviewer&quot;: &quot;qa-01&quot;, &quot;available&quot;: 6,
+     &quot;status&quot;: &quot;final&quot;, &quot;label&quot;: &quot;FAIL&quot;, &quot;issue&quot;: &quot;missing_context&quot;},
+    {&quot;event&quot;: &quot;F02&quot;, &quot;request&quot;: &quot;drop-3:policy:001&quot;, &quot;reviewer&quot;: &quot;qa-02&quot;, &quot;available&quot;: 8,
+     &quot;status&quot;: &quot;final&quot;, &quot;label&quot;: &quot;FAIL&quot;, &quot;issue&quot;: &quot;missing_context&quot;},
+    {&quot;event&quot;: &quot;F03&quot;, &quot;request&quot;: &quot;mix:routine:000&quot;, &quot;reviewer&quot;: &quot;qa-01&quot;, &quot;available&quot;: 2,
+     &quot;status&quot;: &quot;final&quot;, &quot;label&quot;: &quot;PASS&quot;, &quot;issue&quot;: &quot;none&quot;},
+    {&quot;event&quot;: &quot;F04&quot;, &quot;request&quot;: &quot;drop-3:policy:002&quot;, &quot;reviewer&quot;: &quot;qa-03&quot;, &quot;available&quot;: 6,
+     &quot;status&quot;: &quot;pending&quot;, &quot;label&quot;: None, &quot;issue&quot;: &quot;needs_adjudication&quot;},
+]
+POLICY = {&quot;min_policy_scored&quot;: 20, &quot;min_coverage&quot;: 0.8, &quot;drop_pp&quot;: 15,
+          &quot;consecutive&quot;: 2, &quot;recovery_ratio&quot;: 0.95, &quot;recovery_windows&quot;: 2}
+
+
+def deduplicate(rows, key):
+    unique = {}
+    for row in rows:
+        identity = row[key]
+        if identity in unique and unique[identity] != row:
+            raise ValueError(f&quot;Conflicting duplicate {identity}&quot;)
+        unique[identity] = row
+    return list(unique.values())
+
+
+def historical(path):
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    required = {&quot;ID&quot;, &quot;Test Type&quot;, &quot;Hallucination Type&quot;, &quot;Bot Response&quot;,
+                &quot;Expected Behaviour&quot;, &quot;Your Verdict (normalised)&quot;, &quot;Judge Verdict&quot;}
+    try:
+        rows = iter(workbook[&quot;JudgeResults&quot;].values)
+        stamp = next(rows)[0]
+        for row in rows:
+            if row and row[0] == &quot;ID&quot;:
+                break
+        else:
+            raise ValueError(&quot;JudgeResults header missing&quot;)
+        if not required &lt;= set(row):
+            raise ValueError(&quot;JudgeResults columns changed&quot;)
+        records = []
+        for cells in rows:
+            if cells[0] is None:
+                continue
+            item = dict(zip(row, cells))
+            human, judge = item[&quot;Your Verdict (normalised)&quot;], item[&quot;Judge Verdict&quot;]
+            if human is not None and human not in LABELS or judge is not None and judge not in LABELS:
+                raise ValueError(&quot;Unrecognized verdict&quot;)
+            records.append({&quot;id&quot;: int(item[&quot;ID&quot;]), &quot;category&quot;: item[&quot;Test Type&quot;],
+                            &quot;issue&quot;: item[&quot;Hallucination Type&quot;], &quot;human&quot;: human, &quot;judge&quot;: judge,
+                            &quot;has_reply&quot;: bool(item[&quot;Bot Response&quot;])})
+    finally:
+        workbook.close()
+    return sorted(deduplicate(records, &quot;id&quot;), key=lambda row: row[&quot;id&quot;]), stamp
+
+
+def samples(rows, size, seed):
+    groups = defaultdict(list)
+    for row in rows:
+        groups[row[&quot;category&quot;]].append(row)
+    categories = sorted(groups)
+    if RISK_TAG not in groups or not len(groups[RISK_TAG]) &lt;= size &lt;= len(rows):
+        raise ValueError(&quot;Sample size cannot cover the declared risk stratum&quot;)
+    quota, extra = divmod(size, len(categories))
+    rng = Random(seed)
+    simple = rng.sample(rows, size)
+    rng = Random(seed)
+    strata = [row for i, name in enumerate(categories)
+              for row in rng.sample(groups[name], quota + int(i &lt; extra))]
+    risk = groups[RISK_TAG]
+    others = [row for row in rows if row[&quot;category&quot;] != RISK_TAG]
+    targeted = risk + Random(seed).sample(others, size - len(risk))
+    return {&quot;random&quot;: simple, &quot;stratified&quot;: strata, &quot;risk&quot;: targeted}
+
+
+def paired(rows):
+    return [row for row in rows if row[&quot;human&quot;] in LABELS and row[&quot;judge&quot;] in LABELS]
+
+
+def pct(numerator, denominator):
+    return &quot;n/a&quot; if denominator == 0 else f&quot;{numerator / denominator:.1%}&quot;
+
+
+def counts(counter):
+    return &quot;, &quot;.join(f&quot;{key}={counter[key]}&quot; for key in sorted(counter))
+
+
+def historical_report(rows, stamp, path):
+    if not rows:
+        raise ValueError(&quot;Empty workbook population&quot;)
+    population = Counter(row[&quot;category&quot;] for row in rows)
+    print(f&quot;Workbook SHA-256: {hashlib.sha256(path.read_bytes()).hexdigest()}&quot;)
+    print(f&quot;Workbook batch: {stamp}; request timestamps/trace IDs: absent&quot;)
+    print(f&quot;Population {len(rows)}: {counts(population)}; responses={sum(r[&#x27;has_reply&#x27;] for r in rows)}&quot;)
+    chosen = samples(rows, 20, SEED)
+    assert chosen == samples(rows, 20, SEED), &quot;Sampling changed for an identical seed&quot;
+    for name, selected in chosen.items():
+        distribution = Counter(row[&quot;category&quot;] for row in selected)
+        print(f&quot;{name}: {len(selected)}/{len(rows)}; categories {len(distribution)}/{len(population)}; &quot;
+              f&quot;risk tags {distribution[RISK_TAG]}/{population[RISK_TAG]}; {counts(distribution)}&quot;)
+    by_category = defaultdict(list)
+    for row in chosen[&quot;stratified&quot;]:
+        by_category[row[&quot;category&quot;]].append(row)
+    if all(rows and len(paired(rows)) == len(rows) for rows in by_category.values()):
+        weighted = sum(population[name] / len(rows) *
+                       sum(row[&quot;human&quot;] == &quot;PASS&quot; for row in sample) / len(sample)
+                       for name, sample in by_category.items())
+        print(f&quot;Stratified human PASS: raw {pct(sum(r[&#x27;human&#x27;] == &#x27;PASS&#x27; for r in chosen[&#x27;stratified&#x27;]), 20)}; &quot;
+              f&quot;population-weighted estimate {weighted:.1%}&quot;)
+    cases = paired(rows)
+    disagreements = [r for r in cases if r[&quot;human&quot;] != r[&quot;judge&quot;]]
+    agreements = len(cases) - len(disagreements)
+    print(f&quot;Saved agreement: {agreements}/{len(cases)} ({pct(agreements, len(cases))}); &quot;
+          f&quot;disagreement: {len(disagreements)}; unpaired: {len(rows)-len(cases)}&quot;)
+    print(&quot;Disagreements by category:&quot;, counts(Counter(r[&quot;category&quot;] for r in disagreements)))
+    print(&quot;Disagreements by recorded issue:&quot;, counts(Counter(r[&quot;issue&quot;] for r in disagreements)))
+    print(&quot;Judge PASS / human FAIL:&quot;, &quot;, &quot;.join(str(r[&quot;id&quot;]) for r in disagreements
+                                                   if r[&quot;judge&quot;] == &quot;PASS&quot; and r[&quot;human&quot;] == &quot;FAIL&quot;))
+
+
+def window_records(name, routine, policy, missing, critical):
+    rows = []
+    for category, (size, passes) in zip(SLICES, (routine, policy), strict=True):
+        for i in range(size):
+            # Rank low IDs as failures to reserve stable review examples.
+            passed = i &gt;= size - passes
+            available = category != &quot;policy&quot; or i &lt; size - missing
+            incident = critical and category == &quot;policy&quot; and i == 0
+            rows.append({&quot;id&quot;: f&quot;{name}:{category}:{i:03d}&quot;, &quot;window&quot;: name, &quot;category&quot;: category,
+                         &quot;version&quot;: BASE_VERSION, &quot;synthetic&quot;: True,
+                         &quot;quality&quot;: passed if available else None,
+                         &quot;signal&quot;: &quot;missing_context&quot; if not passed and category == &quot;policy&quot; else None,
+                         &quot;receipt&quot;: &quot;verified-unauthorized-write&quot; if incident else None})
+    return rows
+
+
+def summarize(window, records):
+    if any(row[&quot;window&quot;] != window or row[&quot;category&quot;] not in SLICES or
+           row[&quot;quality&quot;] is not None and type(row[&quot;quality&quot;]) is not bool for row in records):
+        raise ValueError(&quot;Invalid monitoring row&quot;)
+    rows = deduplicate(records, &quot;id&quot;)
+    groups = {}
+    for category in SLICES:
+        subset = [row for row in rows if row[&quot;category&quot;] == category]
+        scored = [row for row in subset if row[&quot;quality&quot;] is not None]
+        groups[category] = {&quot;total&quot;: len(subset), &quot;scored&quot;: len(scored),
+                            &quot;passed&quot;: sum(row[&quot;quality&quot;] for row in scored)}
+    totals = {key: sum(group[key] for group in groups.values()) for key in (&quot;total&quot;, &quot;scored&quot;, &quot;passed&quot;)}
+    return {**totals, &quot;groups&quot;: groups,
+            &quot;versions&quot;: {row[&quot;version&quot;] for row in rows},
+            &quot;critical&quot;: [row[&quot;id&quot;] for row in rows if row[&quot;receipt&quot;] == &quot;verified-unauthorized-write&quot;]}
+
+
+def standardized(baseline, current):
+    if baseline[&quot;versions&quot;] != current[&quot;versions&quot;] or len(current[&quot;versions&quot;]) != 1:
+        return None
+    if any(group[&quot;scored&quot;] != group[&quot;total&quot;] or not group[&quot;scored&quot;]
+           for summary in (baseline, current) for group in summary[&quot;groups&quot;].values()):
+        return None
+    return sum(baseline[&quot;groups&quot;][category][&quot;total&quot;] / baseline[&quot;total&quot;] *
+               group[&quot;passed&quot;] / group[&quot;scored&quot;] for category, group in current[&quot;groups&quot;].items())
+
+
+def available_feedback(cutoff, events):
+    selected = [row for row in deduplicate(events, &quot;event&quot;) if row[&quot;available&quot;] &lt;= cutoff]
+    return [row for row in selected if row[&quot;status&quot;] == &quot;final&quot; and row[&quot;label&quot;] in LABELS], len(selected)
+
+
+def alert_step(baseline, current, state, resolved=False):
+    # A corroborated side effect is assessed before ordinary coverage or thresholds.
+    if current[&quot;critical&quot;]:
+        state.update(open=&quot;critical&quot;, streak=0, recovered=0)
+        return &quot;CRITICAL / ESCALATE&quot;
+    group = current[&quot;groups&quot;][&quot;policy&quot;]
+    baseline_group = baseline[&quot;groups&quot;][&quot;policy&quot;]
+    comparable = current[&quot;versions&quot;] == baseline[&quot;versions&quot;] and len(current[&quot;versions&quot;]) == 1
+    if (not comparable or not current[&quot;total&quot;] or current[&quot;scored&quot;] / current[&quot;total&quot;] &lt; POLICY[&quot;min_coverage&quot;]
+            or group[&quot;scored&quot;] &lt; POLICY[&quot;min_policy_scored&quot;]
+            or group[&quot;scored&quot;] != group[&quot;total&quot;] or not baseline_group[&quot;scored&quot;]):
+        state.update(streak=0, recovered=0)
+        return &quot;INSUFFICIENT / COLLECT MORE EVIDENCE&quot;
+    rate = group[&quot;passed&quot;] / group[&quot;scored&quot;]
+    reference = baseline_group[&quot;passed&quot;] / baseline_group[&quot;scored&quot;]
+    if (reference - rate) * 100 &gt;= POLICY[&quot;drop_pp&quot;]:
+        state[&quot;streak&quot;] += 1
+        state[&quot;recovered&quot;] = 0
+        if state[&quot;open&quot;] == &quot;critical&quot;:
+            return &quot;CRITICAL OPEN / ESCALATE&quot;
+        if state[&quot;streak&quot;] &gt;= POLICY[&quot;consecutive&quot;]:
+            state[&quot;open&quot;] = &quot;warning&quot;
+            return &quot;WARNING / MITIGATE&quot;
+        return &quot;WATCH / INVESTIGATE&quot;
+    state[&quot;streak&quot;] = 0
+    if state[&quot;open&quot;]:
+        if rate &lt; reference * POLICY[&quot;recovery_ratio&quot;] or (state[&quot;open&quot;] == &quot;critical&quot; and not resolved):
+            state[&quot;recovered&quot;] = 0
+            return &quot;OPEN / INVESTIGATE&quot;
+        state[&quot;recovered&quot;] += 1
+        if state[&quot;recovered&quot;] &gt;= POLICY[&quot;recovery_windows&quot;]:
+            state.update(open=None, recovered=0)
+            return &quot;RECOVERED / CONTINUE MONITORING&quot;
+        return &quot;RECOVERY WATCH / CONTINUE MONITORING&quot;
+    if sum(abs(current[&quot;groups&quot;][name][&quot;total&quot;] / current[&quot;total&quot;] -
+               baseline[&quot;groups&quot;][name][&quot;total&quot;] / baseline[&quot;total&quot;]) for name in SLICES) &gt;= 0.4:
+        return &quot;MIX SHIFT / INVESTIGATE&quot;
+    return &quot;NORMAL / CONTINUE MONITORING&quot;
+
+
+def history():
+    windows = {item[0]: window_records(*item) for item in WINDOWS}
+    base = summarize(&quot;baseline&quot;, windows[&quot;baseline&quot;])
+    state = {&quot;open&quot;: None, &quot;streak&quot;: 0, &quot;recovered&quot;: 0}
+    audit = []
+    for name, rows in windows.items():
+        current = summarize(name, rows)
+        # A simulated owner verifies the fix-day incident disposition before recovery.
+        resolved = name.startswith(&quot;recovery&quot;)
+        action = alert_step(base, current, state, resolved)
+        audit.append({&quot;window&quot;: name, &quot;summary&quot;: current, &quot;standard&quot;: standardized(base, current),
+                      &quot;action&quot;: action, &quot;state&quot;: dict(state), &quot;incident_resolved&quot;: resolved})
+    return windows, audit
+
+
+def monitoring_report(windows, audit):
+    baseline = audit[0][&quot;summary&quot;]
+    print(&quot;Controlled windows; all records synthetic&quot;)
+    for record in audit:
+        current = record[&quot;summary&quot;]
+        standard = record[&quot;standard&quot;]
+        adjusted = &quot;n/a&quot; if standard is None else f&quot;{standard:.1%}&quot;
+        change = (&quot;n/a&quot; if standard is None else
+                  f&quot;{100 * (current[&#x27;passed&#x27;]/current[&#x27;scored&#x27;] - baseline[&#x27;passed&#x27;]/baseline[&#x27;scored&#x27;]):+.1f} pp&quot;)
+        groups = current[&quot;groups&quot;]
+        print(f&quot;{record[&#x27;window&#x27;]}: {current[&#x27;passed&#x27;]}/{current[&#x27;scored&#x27;]} &quot;
+              f&quot;({pct(current[&#x27;passed&#x27;], current[&#x27;scored&#x27;])}), missing={current[&#x27;total&#x27;]-current[&#x27;scored&#x27;]}; &quot;
+              f&quot;routine {groups[&#x27;routine&#x27;][&#x27;passed&#x27;]}/{groups[&#x27;routine&#x27;][&#x27;scored&#x27;]} of {groups[&#x27;routine&#x27;][&#x27;total&#x27;]}, &quot;
+              f&quot;policy {groups[&#x27;policy&#x27;][&#x27;passed&#x27;]}/{groups[&#x27;policy&#x27;][&#x27;scored&#x27;]} of {groups[&#x27;policy&#x27;][&#x27;total&#x27;]}; &quot;
+              f&quot;baseline-mix {adjusted}; comparable raw change {change}; {record[&#x27;action&#x27;]}&quot;)
+    lookup = {row[&quot;id&quot;]: row for rows in windows.values() for row in rows}
+    for cutoff in (6, 8):
+        complete, arrived = available_feedback(cutoff, FEEDBACK)
+        valid = [row for row in complete if lookup[row[&quot;request&quot;]][&quot;quality&quot;] is not None]
+        disagree = [row[&quot;event&quot;] for row in valid if (row[&quot;label&quot;] == &quot;PASS&quot;) != lookup[row[&quot;request&quot;]][&quot;quality&quot;]]
+        print(f&quot;Synthetic reviews at cutoff {cutoff}: {len(complete)} final of {arrived} arrived, &quot;
+              f&quot;{len(FEEDBACK)-arrived} not arrived; disagreement events: {&#x27;, &#x27;.join(disagree)}&quot;)
+    print(&quot;Investigate:&quot;, &quot;drop-3:policy:000&quot;, &quot;critical:policy:000&quot;,
+          &quot;| owner: evaluation on-call, then authorization incident lead&quot;)
+
+
+def export_langfuse(windows, audit):
+    from langfuse import get_client, propagate_attributes
+
+    required = (&quot;LANGFUSE_BASE_URL&quot;, &quot;LANGFUSE_PUBLIC_KEY&quot;, &quot;LANGFUSE_SECRET_KEY&quot;)
+    if not all(os.environ.get(key) for key in required):
+        raise ValueError(&quot;Set the three Langfuse variables from M14-T01 before exporting&quot;)
+    base = urlsplit(os.environ[&quot;LANGFUSE_BASE_URL&quot;])
+    if base.scheme != &quot;http&quot; or base.hostname not in {&quot;127.0.0.1&quot;, &quot;localhost&quot;, &quot;::1&quot;} or (
+            base.username or base.password or base.path not in (&quot;&quot;, &quot;/&quot;) or base.query or base.fragment):
+        raise ValueError(&quot;This export expects the loopback Langfuse Lite origin&quot;)
+    client = get_client()
+    feedback, _ = available_feedback(8, FEEDBACK)
+    reviewed = {row[&quot;request&quot;]: row for row in feedback}
+    actions = {row[&quot;window&quot;]: row[&quot;action&quot;] for row in audit}
+    selected = (&quot;mix:routine:000&quot;, &quot;drop-3:policy:000&quot;, &quot;critical:policy:000&quot;, &quot;recovery-2:policy:079&quot;)
+    try:
+        for identity in selected:
+            name = identity.split(&quot;:&quot;)[0]
+            row, = [item for item in windows[name] if item[&quot;id&quot;] == identity]
+            tags = [&quot;synthetic-monitoring&quot;, row[&quot;version&quot;][0], row[&quot;version&quot;][1]]
+            with client.start_as_current_observation(name=&quot;monitoring-replay&quot;,
+                    input={&quot;record&quot;: identity}, metadata={&quot;window&quot;: name, &quot;category&quot;: row[&quot;category&quot;]}) as root:
+                with propagate_attributes(tags=tags, metadata={&quot;model_version&quot;: row[&quot;version&quot;][0],
+                                                               &quot;prompt_version&quot;: row[&quot;version&quot;][1]}):
+                    with client.start_as_current_observation(name=&quot;inspect-quality&quot;, as_type=&quot;evaluator&quot;,
+                            output={&quot;quality&quot;: row[&quot;quality&quot;], &quot;signal&quot;: row[&quot;signal&quot;],
+                                    &quot;receipt&quot;: row[&quot;receipt&quot;]}):
+                        pass
+                root.update(output={&quot;alert&quot;: actions[name]})
+                if row[&quot;quality&quot;] is not None:
+                    client.score_current_trace(name=&quot;fixture_quality_pass&quot;, value=float(row[&quot;quality&quot;]),
+                                               data_type=&quot;NUMERIC&quot;)
+                if identity in reviewed:
+                    label = reviewed[identity]
+                    client.score_current_trace(name=&quot;simulated_human_label&quot;, value=label[&quot;label&quot;],
+                                               data_type=&quot;CATEGORICAL&quot;, comment=label[&quot;issue&quot;])
+                print(&quot;Trace ID to look up after flush:&quot;, identity, client.get_current_trace_id())
+    finally:
+        client.flush()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(&quot;--workbook&quot;, type=Path, default=WORKBOOK)
+    parser.add_argument(&quot;--export-langfuse&quot;, action=&quot;store_true&quot;)
+    parser.add_argument(&quot;--audit&quot;, type=Path, help=&quot;New file for the monitoring decision history&quot;)
+    args = parser.parse_args()
+    rows, stamp = historical(args.workbook)
+    historical_report(rows, stamp, args.workbook)
+    windows, audit = history()
+    monitoring_report(windows, audit)
+    if args.audit:
+        decisions = [{**row, &quot;summary&quot;: {**row[&quot;summary&quot;], &quot;versions&quot;: sorted(row[&quot;summary&quot;][&quot;versions&quot;])}}
+                     for row in audit]
+        packet = {&quot;provenance&quot;: &quot;controlled synthetic windows&quot;, &quot;rule&quot;: POLICY, &quot;decisions&quot;: decisions,
+                  &quot;owner&quot;: &quot;evaluation on-call&quot;,
+                  &quot;incident_events&quot;: [{&quot;window&quot;: &quot;critical&quot;, &quot;status&quot;: &quot;opened&quot;, &quot;owner&quot;: &quot;authorization lead&quot;},
+                                      {&quot;window&quot;: &quot;recovery-1&quot;, &quot;status&quot;: &quot;acknowledged and fix verified&quot;},
+                                      {&quot;window&quot;: &quot;recovery-2&quot;, &quot;status&quot;: &quot;closed after recovery check&quot;}],
+                  &quot;workbook_sha256&quot;: hashlib.sha256(args.workbook.read_bytes()).hexdigest(),
+                  &quot;workbook_batch&quot;: stamp, &quot;sampling_seed&quot;: SEED,
+                  &quot;sample_ids&quot;: {name: [row[&quot;id&quot;] for row in selected]
+                                 for name, selected in samples(rows, 20, SEED).items()},
+                  &quot;synthetic_feedback&quot;: FEEDBACK}
+        with args.audit.open(&quot;x&quot;, encoding=&quot;utf-8&quot;) as report:
+            json.dump(packet, report, indent=2, sort_keys=True)
+    if args.export_langfuse:
+        export_langfuse(windows, audit)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+</div>
+<h5>Execute and preserve the report</h5>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python &quot;$MONITOR_LAB_DIR/monitor_lab.py&quot; --audit &quot;$MONITOR_LAB_DIR/decisions.json&quot;
+</code></pre>
+</div>
+<p>The output below was reproduced from the committed workbook and the inline controlled windows. Record the workbook fingerprint, Python version, seed, sample rule, scoring versions and audit file when comparing a rerun.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Workbook SHA-256: 786ad2055e6b2b1f1cf4c39b5764da0ff9cffb0cca623e87214f116b0384b056
+Workbook batch: Generated: 2026-03-05 17:07; request timestamps/trace IDs: absent
+Population 49: Context Retention=7, Hallucination=11, Out of Scope=7, Prompt Injection=16, Refusal=8; responses=49
+random: 20/49; categories 5/5; risk tags 8/16; Context Retention=2, Hallucination=4, Out of Scope=4, Prompt Injection=8, Refusal=2
+stratified: 20/49; categories 5/5; risk tags 4/16; Context Retention=4, Hallucination=4, Out of Scope=4, Prompt Injection=4, Refusal=4
+risk: 20/49; categories 3/5; risk tags 16/16; Hallucination=1, Out of Scope=3, Prompt Injection=16
+Stratified human PASS: raw 60.0%; population-weighted estimate 57.1%
+Saved agreement: 31/49 (63.3%); disagreement: 18; unpaired: 0
+Disagreements by category: Context Retention=1, Hallucination=7, Out of Scope=1, Prompt Injection=6, Refusal=3
+Disagreements by recorded issue: Confabulation=3, Context Fabrication=1, False Grounding=2, Financial Confabulation=1, N/A=11
+Judge PASS / human FAIL: 5, 6, 35, 41, 42, 43, 45, 48
+Controlled windows; all records synthetic
+baseline: 82/100 (82.0%), missing=0; routine 72/80 of 80, policy 10/20 of 20; baseline-mix 82.0%; comparable raw change +0.0 pp; NORMAL / CONTINUE MONITORING
+mix: 58/100 (58.0%), missing=0; routine 18/20 of 20, policy 40/80 of 80; baseline-mix 82.0%; comparable raw change -24.0 pp; MIX SHIFT / INVESTIGATE
+drop-1: 42/100 (42.0%), missing=0; routine 18/20 of 20, policy 24/80 of 80; baseline-mix 78.0%; comparable raw change -40.0 pp; WATCH / INVESTIGATE
+gap: 18/35 (51.4%), missing=65; routine 18/20 of 20, policy 0/15 of 80; baseline-mix n/a; comparable raw change n/a; INSUFFICIENT / COLLECT MORE EVIDENCE
+drop-2: 42/100 (42.0%), missing=0; routine 18/20 of 20, policy 24/80 of 80; baseline-mix 78.0%; comparable raw change -40.0 pp; WATCH / INVESTIGATE
+drop-3: 42/100 (42.0%), missing=0; routine 18/20 of 20, policy 24/80 of 80; baseline-mix 78.0%; comparable raw change -40.0 pp; WARNING / MITIGATE
+critical: 1/1 (100.0%), missing=1; routine 1/1 of 1, policy 0/0 of 1; baseline-mix n/a; comparable raw change n/a; CRITICAL / ESCALATE
+recovery-1: 58/100 (58.0%), missing=0; routine 18/20 of 20, policy 40/80 of 80; baseline-mix 82.0%; comparable raw change -24.0 pp; RECOVERY WATCH / CONTINUE MONITORING
+recovery-2: 58/100 (58.0%), missing=0; routine 18/20 of 20, policy 40/80 of 80; baseline-mix 82.0%; comparable raw change -24.0 pp; RECOVERED / CONTINUE MONITORING
+Synthetic reviews at cutoff 6: 2 final of 3 arrived, 1 not arrived; disagreement events: F03
+Synthetic reviews at cutoff 8: 3 final of 4 arrived, 0 not arrived; disagreement events: F03
+Investigate: drop-3:policy:000 critical:policy:000 | owner: evaluation on-call, then authorization incident lead
+</code></pre></details>
+<h5>Decide what belongs in each queue</h5>
+<p>The population is the set you want to describe. Here it is the 49 workbook rows, and a sample of 20 is 40.8% of that set. Seed 14 makes reruns repeatable from the same sorted IDs and Python sampling implementation. In a real collector, deduplicate by request ID, preserve retry attempts separately, and decide the sampling unit before selecting rows. Use a stable ID and a deterministic random rule to avoid selecting only fast requests or only people who leave feedback.</p>
+<ul><li><strong>Routine monitoring.</strong> Simple random sampling gives all rows equal selection chance. This draw covers all five categories but tags 8/16 of the risk cases. For separate category estimates, stratify by request category or another declared traffic segment and keep model/prompt versions separate.</li><li><strong>Balanced human review.</strong> The stratified draw gives four cases to each of five categories. Its raw 60% is a sample statistic. Weight each category’s sampled human pass rate by its share of the workbook to estimate the original workbook mix. For Hallucination the weight is 11/49, even though that category supplies 4/20 of the sample. The resulting estimate is 57.1%. The archived labels have limitations, and a weighted sample estimates the workbook population under this sampling design.</li><li><strong>Risk surveillance.</strong> The risk draw deliberately includes all 16 rows tagged Prompt Injection, with the other four drawn from the remaining rows. It covers only three categories. Those tags are review priorities. The workbook does not prove these cases were critical production incidents. Always route an independently confirmed critical effect to the incident queue and use a separate failure-focused queue for exploratory review. Keep queue metrics and population estimates separate.</li></ul>
+<h5>Reconcile feedback and automatic verdicts</h5>
+<p>The 18 saved disagreements are concentrated in Hallucination (7) and Prompt Injection (6). Select case 6 for a policy-grounding review and case 3, where the judge fails a response the human label passes. In case 3, check whether a generic clarification fulfills the requirement to correct a false interest claim. If the labels used different replies, obtain both and re-label a shared immutable response. If reviewers disagree on the same response, resolve the reference first. Update the rubric or recalibrate the judge only when supported by adjudicated examples. If the application actually violated the approved policy, repair it and add the case to the locked suite.</p>
+<p>At a controlled cutoff of 6, two of three arrived review events are final and a fourth has not arrived. At 8, three of four are final, and F04 still needs adjudication. F03 is a simulated feedback PASS against a fixture automated failure. Ask a second reviewer to compare the same response with the rubric. Do not change the scoring threshold based on one disagreement. Treat missing or delayed feedback as unknown.</p>
+<p>A real feedback event should carry a stable event and trace or response ID, model and prompt versions, reviewer role or permitted pseudonym, event time, status, rubric version, issue code, score and optional minimized comment. Keep user thumbs-up/down distinct from correctness judged against a rubric. A thumbs-down rate divides negatives by submitted ratings, and rating coverage divides rated requests by eligible requests. Record consent or the approved collection basis, restrict review access, redact before ingestion, keep secrets out, and set deletion and retention periods. Keep untrusted free text out of automatic alert commands.</p>
+<h5>Decide whether the application got worse</h5>
+<p>Compare the observed rates with an estimate that holds the baseline group weights fixed. Baseline traffic is 80% routine and 20% policy, giving <code>0.8 × 0.90 + 0.2 × 0.50 = 0.82</code>. In <code>mix</code>, the rates within each group are identical and more requests are in the harder policy group. The raw pass rate drops from 82% to 58%, while the baseline-mix estimate stays 82%. Restore representation in sampling and investigate the incoming traffic before attributing the drop to the model.</p>
+<p>In <code>drop-3</code>, policy pass rate goes from 10/20 (50%) to 24/80 (30%). Both windows use the same controlled model, prompt, evaluator and policy IDs. The baseline-mix estimate falls to 78%, and the raw rate falls to 42%. Use the policy slice to investigate missing applicable context. In this controlled fixture that cause is supplied in the records. In a real system, confirm it in the retrieval and context observations before changing configuration or code.</p>
+<p>The 65 missing labels in <code>gap</code> include all policy passes by construction. The 18/35 partial rate cannot validate a drop or a recovery. Check request counts, label arrival, trace exports and policy-slice coverage. If a model, prompt, evaluator or policy changes, compare within compatible versions or rebaseline explicitly. A change in requests, available documents, operator behavior, evaluator criteria or data collection can each move the report. These synthetic counts are exact for the exercise and do not establish statistical significance. Use the earlier uncertainty lesson before inferring a population change.</p>
+<h5>Make the alert actionable</h5>
+<p>A window is one declared batch of observations. Require at least 20 scored policy requests, full policy-label coverage and at least 80% overall scored coverage for ordinary alerts. A 15-percentage-point or larger policy drop produces a watch, and two qualifying windows in a row produce a warning. The gap breaks the sequence. A mix check flags when the sum of absolute share changes is at least 40 percentage points. With two groups, that means a shift of at least 20 points in either group. Use a simple window chart in production with denominators, 50% baseline and 35% planning threshold marked. A statistical control chart requires limits estimated under a justified stable process and sample design. The thresholds here are engineering decision rules.</p>
+<p>The warning routes <code>drop-3:policy:000</code> to evaluation on-call. Check the retrieval result and what was passed into the answer. Verify against the policy corpus, then restore the missing applicable document in the controlled mitigation, and verify comparable coverage and two clean policy windows. An acknowledged incident remains open until it meets the recovery rule. In this simulation the authorization lead acknowledges and verifies the repair before the two recovery observations close the incident. A real team must independently verify the containment and correction.</p>
+<p>The critical fixture has only one scored request and that request passes. A separate corroborated receipt marks an unauthorized write. It escalates immediately, without waiting for the ordinary window rule. Page the authorization owner to contain the write path, preserve independent state evidence and follow the release policy before deciding on rollback. A count of one can establish a severe effect with corroboration. One unverified low score cannot. Review thresholds, repeated notification grouping and operator acknowledgment to limit false pages without hiding serious failures.</p>
+<h4>Inspect the Alert in Langfuse</h4>
+<p>Repeat the Langfuse Lite loopback setup from <a href="#m14-t01">Traces, monitoring and Langfuse</a> using SDK 5.2.0 and Lite 0.1.1 in the lab environment. Keep its server running in a second terminal and set its local base URL and documented placeholder keys in the first. Install the two pinned packages into the same environment as <code>openpyxl</code>. In the second terminal, set <code>MONITOR_LAB_DIR</code> to the printed temporary path, activate that environment and run the loopback server with optional Lite telemetry disabled. Use only the supplied synthetic records.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python -m pip install &#x27;langfuse==5.2.0&#x27; &#x27;langfuse-lite==0.1.1&#x27;
+</code></pre>
+</div>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash"># Second terminal, after setting MONITOR_LAB_DIR to the printed path
+. &quot;$MONITOR_LAB_DIR/venv/bin/activate&quot;
+TELEMETRY_ENABLED=false langfuse-lite serve --host 127.0.0.1 --port 3000 --db &quot;$MONITOR_LAB_DIR/monitoring.db&quot;
+</code></pre>
+</div>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash"># First terminal, from the repository root
+export LANGFUSE_BASE_URL=http://127.0.0.1:3000
+export LANGFUSE_PUBLIC_KEY=pk-lf-local
+export LANGFUSE_SECRET_KEY=sk-lf-local
+python &quot;$MONITOR_LAB_DIR/monitor_lab.py&quot; --export-langfuse
+</code></pre>
+</div>
+<p>Run Lite using a fresh <code>monitoring.db</code> in the temporary directory, referred to as <code>MONITOR_LAB_DIR</code> below. The program prints a trace ID for each selected synthetic request. Look up the ID associated with <code>drop-3:policy:000</code> or <code>critical:policy:000</code>. The repair-check trace is <code>recovery-2:policy:079</code>. Inspect root <code>monitoring-replay</code> and child <code>inspect-quality</code>. Explain why the critical record has a receipt and no quality score. Tags identify the model and prompt versions. Use these values with the full Tracing filters, or inspect or export the local trees.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">langfuse-lite tree TRACE_ID --db &quot;$MONITOR_LAB_DIR/monitoring.db&quot; --io
+langfuse-lite export --db &quot;$MONITOR_LAB_DIR/monitoring.db&quot; --out &quot;$MONITOR_LAB_DIR/monitoring-viewer.html&quot;
+</code></pre>
+</div>
+<p>Local verification stored four trace trees, eight observations, three automatic fixture scores and two simulated human labels. These are genuinely exported monitoring replays. They carry new trace IDs and report the simulated window in metadata. The original workbook was not uploaded. The exported timestamps measure the replay rather than the nominal monitoring window.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Signal</th><th scope="col">Meaning and source</th></tr></thead><tbody><tr><td>Trace and observation volume, elapsed latency, token use and cost</td><td>Timing comes from instrumented operations. Usage and cost require measured provider data, and cost may be derived under configured pricing. Treat unknown separately from zero</td></tr><tr><td>Retrieval, tool and timeout rates</td><td>Record status per applicable attempt. Divide each failure count by attempted retrievals, calls or requests as appropriate</td></tr><tr><td>Quality, critical failures and human negatives</td><td>Attach a versioned score or a corroborated event. Quality failure rate uses completed evaluations, and a critical signal uses verified effects. Track feedback response rate separately</td></tr><tr><td>Coverage and mix</td><td>Divide scored unique requests by eligible requests. Compare each category’s share of observed traffic in compatible versions and test whether missing telemetry changed the mix</td></tr></tbody></table></div>
+<p>Full Langfuse provides metric dashboards and APIs, configured alerts with routing via automations, and annotation queues for selected traces. Create a queue with a score configuration, filter the trace population by version and category, add the selected review set, and keep adjudicated labels separate from user ratings. In the full project’s Alerts page, open New Alert. Choose the quality metric, version and category filters, assessment window, threshold and notification automation. Route a warning to evaluation on-call and confirmed severe effects to the incident lead. Verify the routing in a safe test before relying on it. Keep the successive-window, minimum-count, comparability and incident recovery rules in your pipeline unless you have verified equivalent behavior in the configured alert system. Lite has no dashboard metrics API, annotation queues or hosted alert routing. Full Langfuse, delivery to alert destinations, and live-model behavior weren’t exercised here.</p>
+<p>Official references are <code>https://langfuse.com/docs/langfuse-lite</code>, <code>https://langfuse.com/docs/evaluation/evaluation-methods/scores-via-sdk</code>, <code>https://langfuse.com/docs/evaluation/evaluation-methods/annotation-queues</code>, <code>https://langfuse.com/docs/metrics/overview</code>, and <code>https://langfuse.com/docs/observability/features/alerts</code>.</p>
+<h4>Investigation Worksheet</h4>
+<p>Given the reported decline, use the output and records to decide among traffic mix, regression within a category and insufficient evidence. Write the population, sampling rule, scored denominators, per-category rates and baseline-mix estimate. Explain how the 18 historical disagreement cases limit confidence in the judge. Link the warning and critical observations using their trace IDs or local record keys. State the owner, action, repair verification and the evidence that would change your recommendation.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<p>The move from 82% to 58% under <code>mix</code> occurs while both slices keep their old rates. The baseline-mix estimate stays 82%. Adjust the review sample for the new traffic and validate the harder policy slice. <code>drop-3</code> is different. Policy pass rate is 30% versus 50% with compatible versions, two qualified drops and a supplied missing-context signal. Inspect the retrieval evidence before mitigation. <code>gap</code> has 35/100 scored, including only 15/80 policy requests. Collect missing evidence before making a comparable estimate.</p>
+<p>The workbook labels disagree on 18/49 case rows. The runner may have regenerated a response, so inspect a frozen response before attributing any difference to evaluator calibration. The critical synthetic receipt overrides the ordinary evidence gate for escalation, and any rollback still follows the release policy. The two clean windows verify recovery within the controlled policy slice. A compatible production holdout with timely labels and independent receipts could change the recommendation.</p>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li>If the workbook cannot be read, run from the repository root and verify the installed dependency and <code>JudgeResults</code> sheet. Keep both historical agreement figures with their own artifact.</li><li>If new workbooks change the sampling frame, update the strata and budget. Recompute from unique eligible IDs before comparing.</li><li>If a trace ID prints but cannot be found, check the loopback origin, Lite database path and flush result. Lookup or export must show the stored rows.</li><li>Stop the local server with Ctrl+C. Remove the temporary database and viewer when finished, and unset the environment variables. Keep approved real evidence only in its configured retention and access boundary.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
 <summary>Original TestNeural Experiment</summary>
 <div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-5" data-relevance="Primary">
+<h5>Test 5: LLM-as-a-Judge</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare saved model and human verdicts on banking case IDs.</dd></div><div><dt>How it was tested</dt><dd>Join a previously entered human verdict to the judge verdict by case. The runner calls the bot again before judging, so the labels may refer to different replies. The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning. The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough reports 28 agreements out of 49 (57%). In the committed JudgeResults workbook, 31 of 49 saved label pairs agree (63.3%) and 18 disagree. The artifacts are retained separately.</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div><div><dt>Connection to this lesson</dt><dd>Primary. Sample the committed workbook by case category, compare its saved human and judge verdicts, and preserve the discrepancy with the walkthrough.</dd></div></dl>
+<p><a href="test5.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx">Original verdicts and judge reasoning workbook</a> · <a href="#original-test-5">Evidence files and related lessons</a></p>
+</article>
 <article data-original-experiment="TEST-14" data-relevance="Supporting">
 <h5>Test 14: Langfuse Observability</h5>
 <p>Methodology Available — Results Missing</p>
 <dl class="field-list"><div><dt>What was tested</dt><dd>Instrument a banking bot evaluation so traces, latency, and scores can be inspected in Langfuse.</dd></div><div><dt>How it was tested</dt><dd>Create a local Langfuse setup and log evaluation traces, spans, tags, and keyword-pass scores. The original workbook contains 20 cases across six banking categories. The page shows the instrumentation and what to inspect. The checked-in configuration names llama3.1:8b. The original walkthrough describes a local Docker and Langfuse setup.</dd></div><div><dt>Actual results</dt><dd>Original methodology is available. No recorded results were found.</dd></div><div><dt>Original findings</dt><dd>The walkthrough explains how a trace connects the input, model call, evaluator, and latency for inspection.</dd></div><div><dt>Evidence notes</dt><dd>The results directory contains only a placeholder. No recorded trace export, dashboard screenshot, or run summary was found.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the documented categories and tags as an example of dimensions for production sampling.</dd></div></dl>
 <p><a href="test14.html">View Complete Original Experiment</a> · <a href="#original-test-14">Evidence files and related lessons</a></p>
 </article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Sample for the question you need to answer. Hold the traffic mix fixed when comparing group performance, keep missing feedback visible, and use corroborated trace evidence to decide whether to investigate, mitigate or escalate. Next is <a href="#m14-t03">Cost, tail latency and operational reliability</a>.</p></div>
+  <details class="lesson-disclosure" data-reading-skip>
+    <summary>Prerequisites</summary>
+    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a>, <a href="#m14-t01">Traces, monitoring and Langfuse</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m11-t02">Bias, fairness and privacy controls</a>, <a href="#m13-t03">Release decisions, rollback and governance</a></dd></div></dl></div>
+  </details>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -26196,11 +26664,11 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 </details>
 <details id="original-test-5" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 5: LLM-as-a-Judge · Recorded Results Available</summary>
-<dl class="field-list"><div><dt>Objective</dt><dd>Compare a model judge’s verdicts with human judgments on saved banking replies.</dd></div><div><dt>Methodology</dt><dd>Use the same saved reply for a human Pass, Fail, or Partial judgment and a second model judgment, then inspect disagreements.</dd></div><div><dt>Prompts and inputs</dt><dd>The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning.</dd></div><div><dt>Models and configuration</dt><dd>The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough records agreement on 28 of 49 cases (57%) and disagreement on 21 of 49 (43%).</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div></dl>
+<dl class="field-list"><div><dt>Objective</dt><dd>Compare saved model and human verdicts on banking case IDs.</dd></div><div><dt>Methodology</dt><dd>Join a previously entered human verdict to the judge verdict by case. The runner calls the bot again before judging, so the labels may refer to different replies.</dd></div><div><dt>Prompts and inputs</dt><dd>The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning.</dd></div><div><dt>Models and configuration</dt><dd>The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.</dd></div><div><dt>Actual results</dt><dd>The walkthrough reports 28 agreements out of 49 (57%). In the committed JudgeResults workbook, 31 of 49 saved label pairs agree (63.3%) and 18 disagree. The artifacts are retained separately.</dd></div><div><dt>Original findings</dt><dd>The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.</dd></div><div><dt>Evidence notes</dt><dd>Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.</dd></div></dl>
 <p><a href="test5.html">View Complete Original Experiment</a> <code>docs/test5.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx">Original verdicts and judge reasoning workbook</a> <code>phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/llm-as-a-judge/llm_judge_evaluator.py">Judge evaluator</a> <code>phase-2-evaluation-techniques/llm-as-a-judge/llm_judge_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m06-t01">M06-T01 — Pointwise LLM-as-a-Judge</a> · Primary. Inspect how the same saved response gets a pointwise verdict and reason.</li><li><a href="#m06-t02">M06-T02 — Human agreement, calibration and bias</a> · Primary. Distinguish verdict agreement from correctness and review individual disagreements.</li><li><a href="#m11-t01">M11-T01 — Risk taxonomy, harmful content and refusal</a> · Supporting. Inspect how the historical review distinguished explicit refusal from topic switching.</li><li><a href="#m11-t02">M11-T02 — Bias, fairness and privacy controls</a> · Supporting. Compare human and model verdicts on the same banking cases before treating annotations as ground truth.</li></ul>
+<ul><li><a href="#m14-t02">M14-T02 — Production sampling, human feedback, drift and alerts</a> · Primary. Sample the committed workbook by case category, compare its saved human and judge verdicts, and preserve the discrepancy with the walkthrough.</li><li><a href="#m06-t01">M06-T01 — Pointwise LLM-as-a-Judge</a> · Primary. Inspect how the same saved response gets a pointwise verdict and reason.</li><li><a href="#m06-t02">M06-T02 — Human agreement, calibration and bias</a> · Primary. Distinguish verdict agreement from correctness and review individual disagreements.</li><li><a href="#m11-t01">M11-T01 — Risk taxonomy, harmful content and refusal</a> · Supporting. Inspect how the historical review distinguished explicit refusal from topic switching.</li><li><a href="#m11-t02">M11-T02 — Bias, fairness and privacy controls</a> · Supporting. Compare human and model verdicts on the same banking cases before treating annotations as ground truth.</li></ul>
 </details>
 <details id="original-test-6" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 6: Semantic Similarity Scoring · Recorded Results Available</summary>

@@ -221,11 +221,11 @@
       "title": "Test 5: LLM-as-a-Judge",
       "source": "docs/test5.html",
       "evidence": "recorded",
-      "objective": "Compare a model judge’s verdicts with human judgments on saved banking replies.",
-      "method": "Use the same saved reply for a human Pass, Fail, or Partial judgment and a second model judgment, then inspect disagreements.",
+      "objective": "Compare saved model and human verdicts on banking case IDs.",
+      "method": "Join a previously entered human verdict to the judge verdict by case. The runner calls the bot again before judging, so the labels may refer to different replies.",
       "inputs": "The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning.",
       "configuration": "The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.",
-      "results": "The walkthrough records agreement on 28 of 49 cases (57%) and disagreement on 21 of 49 (43%).",
+      "results": "The walkthrough reports 28 agreements out of 49 (57%). In the committed JudgeResults workbook, 31 of 49 saved label pairs agree (63.3%) and 18 disagree. The artifacts are retained separately.",
       "findings": "The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.",
       "limitations": "Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.",
       "artifacts": [
@@ -241,6 +241,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M14-T02",
+          "relevance": "Primary",
+          "connection": "Sample the committed workbook by case category, compare its saved human and judge verdicts, and preserve the discrepancy with the walkthrough."
+        },
         {
           "id": "M06-T01",
           "relevance": "Primary",
