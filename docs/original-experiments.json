@@ -208,6 +208,11 @@
           "id": "M11-T03",
           "relevance": "Supporting",
           "connection": "Read a saved category breakdown when deciding what to test again."
+        },
+        {
+          "id": "M12-T01",
+          "relevance": "Supporting",
+          "connection": "Use the recorded behavioral categories to illustrate a scoped evaluation with distinct expected outcomes."
         }
       ]
     },
@@ -453,6 +458,11 @@
           "id": "M11-T03",
           "relevance": "Supporting",
           "connection": "Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings."
+        },
+        {
+          "id": "M12-T01",
+          "relevance": "Supporting",
+          "connection": "Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card."
         }
       ]
     },
