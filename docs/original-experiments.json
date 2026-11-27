@@ -250,6 +250,11 @@
           "id": "M11-T01",
           "relevance": "Supporting",
           "connection": "Inspect how the historical review distinguished explicit refusal from topic switching."
+        },
+        {
+          "id": "M11-T02",
+          "relevance": "Supporting",
+          "connection": "Compare human and model verdicts on the same banking cases before treating annotations as ground truth."
         }
       ]
     },
@@ -673,6 +678,11 @@
           "id": "M02-T03",
           "relevance": "Supporting",
           "connection": "Connect offline evaluations with the trace evidence used in an operational workflow."
+        },
+        {
+          "id": "M11-T02",
+          "relevance": "Supporting",
+          "connection": "Identify where the documented trace captures request and response text before designing log minimization checks."
         },
         {
           "id": "M14-T01",
