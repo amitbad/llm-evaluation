@@ -445,6 +445,11 @@
       ],
       "topics": [
         {
+          "id": "M13-T03",
+          "relevance": "Supporting",
+          "connection": "Use the reported wrong boundary decision in TC21 to discuss what aggregate retrieval and judge scores can support in a release packet."
+        },
+        {
           "id": "M13-T01",
           "relevance": "Supporting",
           "connection": "Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate."
@@ -621,6 +626,11 @@
       ],
       "topics": [
         {
+          "id": "M13-T03",
+          "relevance": "Supporting",
+          "connection": "Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation."
+        },
+        {
           "id": "M13-T02",
           "relevance": "Supporting",
           "connection": "Use TC10's saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass."
@@ -692,6 +702,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M13-T03",
+          "relevance": "Supporting",
+          "connection": "Compare the saved passing judge verdict for TC10 with Test 12’s separate deterministic mismatch before signing off on execution behavior."
+        },
         {
           "id": "M13-T02",
           "relevance": "Supporting",

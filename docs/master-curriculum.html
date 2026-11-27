@@ -24089,34 +24089,758 @@ data-subject="Production Engineering" data-status="New" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m13-t03">
-  <p class="lesson-intro" data-lesson-search>A release requires ownership, explicit risk acceptance and a reversible decision backed by evidence.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Version sign-off, model and prompt change management, canary/shadow comparison, kill criteria, rollback, approval trail and evidence retention.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Turn a green CI check into an evidence packet that an authorized release owner can review.</li><li>Distinguish evaluation evidence, release recommendations and approval for a specific version and scope.</li><li>Plan a staged rollout with monitoring, containment and a tested rollback target.</li><li>Preserve a history of findings, exceptions, approvals, canary observations and the repaired release decision.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>A shop tests a new refund register before opening. The test receipt looks right. The manager still checks who can use it, how errors will be noticed and whether the old register can take over. Passing the test answers one question. Opening the shop takes more evidence and an accountable decision.</p>
+<p>Northstar Support handles refunds, order lookup, retrieved policy, customer verification, action authorization, privacy and escalation. Its fictional candidate uses prompt-v2 and improves on prompt-v1 in the frozen evaluation. CI passes. The exercise records what the team needs before exposing the candidate to customers and what it does when a canary shows a confirmed unauthorized action. All Northstar records are synthetic.</p>
+<p>Allow about five and a half hours for the lab. Complete <a href="#m02-t03">Offline, online and the evaluation lifecycle</a> and <a href="#m13-t02">CI/CD quality gates and regression evidence</a>. <a href="#m12-t03">Mitigation verification, reporting and defensive tooling</a> is recommended. There is no conditional prerequisite. Use the run contract from <a href="#m13-t01">Evaluation pipelines and versioned run contracts</a> to identify which model, prompt, evaluator and policy the evidence covers.</p>
+<h4>Beginner Explanation</h4>
+<h5>Follow the candidate from test to approval</h5>
+<p>A release candidate is a specific version proposed for use. Deployment installs or activates it in an environment. Release makes it available to users. The team can deploy internally first and later use a feature flag, a setting that controls access, to expose the same version to a small fraction of customers.</p>
+<p>Open the green CI report and ask which version and cases it actually checked. If the report covers refund eligibility and order lookup, it tells you how those cases ran. You still need current authorization findings and a named person to approve exposing the candidate. It may miss traffic, tool behavior or policy changes outside that suite. Release readiness also depends on current findings, complete receipts, privacy checks, a functioning monitor and a way to contain or revert the change.</p>
+<p>The release owner coordinates the decision. The approval authority is a named person whose assigned role permits the proposed scope. Northstar requires a separate reviewer. This separation of duties stops the person who submitted a high-risk change from being its only approver. A versioned release policy tells both people what to verify. The evidence package holds the CI report, manifest, findings, risk register, exact candidate and previous approved configuration, rollout and rollback plans and sign-off.</p>
+<h5>Decide what remains unresolved</h5>
+<p>A critical finding is a confirmed defect with severe impact, such as an unauthorized financial write. It blocks this release even if the frozen cases all passed. Investigate why the finding and the green run coexist. A valid CI run can cover a different slice of behavior. Repair the cause, add the missing regression case and produce new evidence.</p>
+<p>Suppose Northstar adds a human fallback for confusing refund questions. A customer can still wait longer for clarification. That delay is residual risk. The support owner records how the team will track it and when to review the acceptance. Document its impact, mitigation, owner, evidence and reassessment date. An accountable risk owner can accept a defined remaining risk within policy. An exception is a scoped deviation from a normal requirement. It moves from request to review and approval, then expiry and closure or renewal. Give it an ID, justification, approved version and scope, owner, approver, evidence and expiry. An expired exception cannot support a new decision. Neither ordinary risk acceptance nor an exception can waive Northstar’s critical authorization or privacy requirements.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Pre-release decision</th><th scope="col">Northstar rule</th><th scope="col">Next step</th></tr></thead><tbody><tr><td>INVALID EVIDENCE</td><td>Conflicting versions, identity, scope record or evaluation metadata make the packet unreliable</td><td>Repair the packet before comparing</td></tr><tr><td>BLOCK</td><td>A valid packet reports a failed CI or critical check, unresolved non-waivable finding, or rejected approval</td><td>Repair or escalate and retest</td></tr><tr><td>REVIEW</td><td>Coverage or approvals are incomplete, an exception is expired, scope is too wide, or monitoring or rollback is unready</td><td>Obtain the missing evidence or narrow the request</td></tr><tr><td>APPROVE</td><td>All required evidence and human sign-off agree on this version and permitted scope</td><td>Proceed only within that scope</td></tr></tbody></table></div>
+<p>Inspect identity and integrity first, then known blocking failures, then missing prerequisites. An invalid packet cannot authorize release. Independently confirmed severe incidents still need immediate operational escalation. A rejected or unauthorized approval is not usable. Northstar sends an unrecognized approver to REVIEW and treats an explicit rejection from an authorized approver as BLOCK.</p>
+<h5>Limit exposure and watch the results</h5>
+<p>Start with an internal rehearsal. In a shadow evaluation the candidate can propose answers or actions for comparison, but its decisions do not change customer state. Restrict data to approved inputs and isolate tool writes. A canary is a small live exposure. Northstar caps initial approval at 5%, then requires a clean observation window and new scope approval before 25% or full rollout. Small exposure limits the affected population. It cannot eliminate severe effects on the exposed customers.</p>
+<p>Monitoring observes real or simulated production signals. An increase in timeouts or missing receipts can be an early warning. A confirmed unauthorized write, privacy disclosure or customer complaint is an outcome observed after the event. The lab uses a minimum 50 canary requests for ordinary rate judgments. An error rate above 4% pauses expansion. A missing receipt pauses independently of rates. One confirmed unauthorized write or private disclosure triggers rollback regardless of the sample size. If the first 100 requests have two errors and complete evidence, keep the canary at 5%. That window gives the approver evidence to consider a 25% request. The original signature still authorizes only 5%.</p>
+<h5>Rehearse the return path</h5>
+<p>If the canary causes an unauthorized refund, stop exposing the candidate and check that northstar-v1 can still use the current policy, tools and data format. Restore its configuration and route, then independently confirm which version is serving. That return to a prior approved version is a rollback. Test the route switch and confirm the restored version with an independent observation. A rollback cannot undo a refund or retract a disclosed value. Contain the affected tool, preserve minimized evidence and let the incident owner decide remediation. If the old version is unsafe or incompatible, pause and isolate the route, then assess a roll-forward to a corrected version through a new review.</p>
+<p>An incident is an event that requires investigation. Determine severity from impact and confidence in the evidence. Notify the on-call operator, release owner and security or privacy owner as appropriate. Separate model drift, a behavior or input change over time, from a change to the underlying support policy or measurement. When the policy or evaluator changes, update references and rebaseline rather than comparing incompatible totals. Schedule post-release evaluation and review again after alerts, material changes or incidents. In the retrospective, record the missing test, the owner and the next dataset revision. Governance means keeping those responsibilities and decisions accountable over time.</p>
+<h5>Release decision architecture</h5>
+<p><strong>Versioned evaluation run → CI quality gate → evidence package → release policy validation → risk and exception review → authorized decision → staged rollout → production monitoring → continue, pause or rollback → audit and follow-up</strong></p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Stage</th><th scope="col">Required input</th><th scope="col">Validation</th><th scope="col">Responsible role</th><th scope="col">Output</th><th scope="col">Failure behavior</th><th scope="col">Evidence retained</th></tr></thead><tbody><tr><td>Evaluation</td><td>Frozen manifests and tied receipts</td><td>Versions, digest and case coverage</td><td>Evaluation engineer</td><td>Comparable results</td><td>Reject mismatch</td><td>Run and case IDs</td></tr><tr><td>CI</td><td>Results and gate policy</td><td>Critical cases and coverage</td><td>CI runner</td><td>Machine status</td><td>Route failure or missing data</td><td>CI report</td></tr><tr><td>Package</td><td>Candidate, previous version and artifacts</td><td>Provenance and completeness</td><td>Release owner</td><td>Review packet</td><td>Gather evidence</td><td>Artifact references</td></tr><tr><td>Policy</td><td>Packet and approved release policy</td><td>Required clauses and scope</td><td>Policy validator</td><td>Recommendation</td><td>Invalid evidence or review</td><td>Version and reasons</td></tr><tr><td>Risk</td><td>Findings and exception requests</td><td>Severity, scope, ownership and expiry</td><td>Security and risk owners</td><td>Risk disposition</td><td>Block critical or review unresolved risk</td><td>Findings and sign-offs</td></tr><tr><td>Approval</td><td>Valid packet and authorized reviewer</td><td>Role, independence, version and scope</td><td>Release approver</td><td>Signed scope decision</td><td>No exposure</td><td>Actor, time and scope</td></tr><tr><td>Rollout</td><td>Approved scope and readiness</td><td>Target and traffic cap</td><td>Release operator</td><td>Limited exposure</td><td>Keep prior routing</td><td>Config and flag change</td></tr><tr><td>Monitoring</td><td>Linked signals and denominators</td><td>Freshness, scope and triggers</td><td>On-call operator</td><td>Observation</td><td>Pause on gaps</td><td>Window and minimized events</td></tr><tr><td>Operational action</td><td>Trigger and tested return path</td><td>Restore and verify, or contain</td><td>Incident lead and operator</td><td>Continue, pause or rollback</td><td>Keep write path contained</td><td>Prior and restored versions</td></tr><tr><td>Follow-up</td><td>Outcome, approvals and incident notes</td><td>Traceability and access</td><td>Release owner</td><td>Auditable record and new tests</td><td>Keep affected gate closed</td><td>Decisions and retained evidence</td></tr></tbody></table></div>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Green CI, blocked release</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Northstar asks whether to release a candidate whose automated suite passed.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>An open critical authorization finding blocks release independently of the CI score.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The fictional candidate’s CI reports PASS. A separately verified finding shows an unresolved unauthorized refund path.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>BLOCK. Link the finding to its receipt and the authorization owner. Repair the path and add the incident shape to the next dataset revision.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Confirmed governance blocker outside the scenarios measured by the green CI gate.</span></p>
+<h5>Example 2. Approve only a limited rollout</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Can Northstar start a canary at 5%?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Require passing comparable evaluation, complete receipts, no blocking findings, a tested return path, monitoring and explicit authority for the candidate and scope.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Synthetic refund and privacy controls pass. Priya signs the 5% scope as release approver after the operator verifies the rollback target.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>APPROVE LIMITED ROLLOUT. At 5%, verify the authorized scope and evaluate the first window before requesting further approval.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>No release blocker in this packet. Full rollout needs separate evidence and approval.</span></p>
+<h5>Example 3. Roll back after a severe canary event</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Should the rollout proceed after the first canary window looks healthy and the next includes an unauthorized refund?</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>One confirmed unauthorized execution triggers rollback. The previously approved version must be available and verified.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The fictional assistant reports a denial. A matched backend receipt and independent ledger show one execution.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Stop candidate exposure and restore northstar-v1 in the simulation. Record the trigger, incident evidence, who acted and the independent restoration check. Notify the incident lead, security owner and release owner.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Critical post-release incident. Add the captured case to regression evaluation and require a fresh approval for any repair.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Copy Code, open the linked online editor, paste and run. Predict the result before opening Expected output. Change only the specified line, rerun and explain the engineering action. All data are inline, all activities use standard-library Python, and no system is deployed.</p>
+</div></details>
+<h5>Step 1 — Build a release evidence checklist</h5>
+<p>A dictionary groups names and their evidence status. <code>.items()</code> supplies each name and value to a list comprehension. The condition keeps only missing items.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">rollback = True
+evidence = {&quot;evaluation manifest&quot;: True, &quot;CI gate&quot;: True, &quot;critical cases&quot;: True,
+            &quot;security findings reviewed&quot;: True, &quot;monitoring&quot;: True,
+            &quot;rollback&quot;: rollback, &quot;approval owner&quot;: True}
+missing = [name for name, present in evidence.items() if not present]
+print(&quot;Incomplete evidence:&quot;, &quot;, &quot;.join(missing) or &quot;none&quot;)
+print(&quot;Readiness:&quot;, &quot;REVIEW&quot; if missing else &quot;CHECKLIST COMPLETE&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Incomplete evidence: none
+Readiness: CHECKLIST COMPLETE
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>rollback = False</code>. Predict which prerequisite remains unsatisfied.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Incomplete evidence: rollback
+Readiness: REVIEW
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The passing gate is still visible. Request a rollback rehearsal record before customer exposure.</p>
+<h5>Step 2 — Validate a release policy</h5>
+<p>A policy identifies its approved version and conditions. <code>==</code> compares values and <code>all</code> requires every condition to hold.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">record_version = &quot;release-policy-v1&quot;
+policy = {&quot;version&quot;: &quot;release-policy-v1&quot;, &quot;checks&quot;: [&quot;CI&quot;, &quot;monitoring&quot;, &quot;rollback&quot;]}
+record = {&quot;version&quot;: record_version, &quot;CI&quot;: True, &quot;monitoring&quot;: True, &quot;rollback&quot;: True}
+if record[&quot;version&quot;] != policy[&quot;version&quot;]:
+    result = &quot;INVALID EVIDENCE&quot;
+elif all(record[key] for key in policy[&quot;checks&quot;]):
+    result = &quot;POLICY CHECKS COMPLETE&quot;
+else:
+    result = &quot;REVIEW&quot;
+print(&quot;Record policy:&quot;, record[&quot;version&quot;])
+print(&quot;Result:&quot;, result)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Record policy: release-policy-v1
+Result: POLICY CHECKS COMPLETE
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>record_version = &#x27;release-policy-v2&#x27;</code>. Predict whether a passing CI record can still authorize review under v1.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Record policy: release-policy-v2
+Result: INVALID EVIDENCE
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The policy identities differ. Recover the authorized record or rerun under the correct rules.</p>
+<h5>Step 3 — Evaluate residual risk</h5>
+<p>A list holds finding dictionaries. Every record carries severity, status, mitigation, evidence, owner and optional expiry. <code>and</code> combines severity and status checks.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">add_critical = False
+findings = [{&quot;id&quot;: &quot;R-delay&quot;, &quot;severity&quot;: &quot;low&quot;, &quot;status&quot;: &quot;accepted&quot;,
+             &quot;mitigation&quot;: &quot;human fallback&quot;, &quot;evidence&quot;: &quot;fixture://delay&quot;,
+             &quot;owner&quot;: &quot;support&quot;, &quot;expires&quot;: 20}]
+if add_critical:
+    findings.append({&quot;id&quot;: &quot;F-auth&quot;, &quot;severity&quot;: &quot;critical&quot;, &quot;status&quot;: &quot;open&quot;,
+                     &quot;mitigation&quot;: &quot;pending&quot;, &quot;evidence&quot;: &quot;fixture://receipt&quot;,
+                     &quot;owner&quot;: &quot;security&quot;, &quot;expires&quot;: None})
+blocked = [item[&quot;id&quot;] for item in findings
+           if item[&quot;severity&quot;] == &quot;critical&quot; and item[&quot;status&quot;] == &quot;open&quot;]
+print(&quot;Blocking findings:&quot;, &quot;, &quot;.join(blocked) or &quot;none&quot;)
+print(&quot;Decision:&quot;, &quot;BLOCK&quot; if blocked else &quot;RISK CHECK COMPLETE&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Blocking findings: none
+Decision: RISK CHECK COMPLETE
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>add_critical = True</code> to add an unresolved authorization finding.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Blocking findings: F-auth
+Decision: BLOCK
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The delay risk can be tracked under its documented limited acceptance. The new critical finding forces BLOCK.</p>
+<h5>Step 4 — Validate approval authority</h5>
+<p>Check a signed fictional approval against a role registry. <code>.get</code> supplies a default for unknown identities. A scoped approval must cover the requested percentage and come from a different person than the author.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">signer = &quot;priya&quot;
+role_and_limit = {&quot;priya&quot;: (&quot;release-approver&quot;, 5), &quot;developer&quot;: (&quot;author&quot;, 0)}
+role, maximum = role_and_limit.get(signer, (&quot;unknown&quot;, 0))
+allowed = role == &quot;release-approver&quot; and maximum &gt;= 5 and signer != &quot;developer&quot;
+print(&quot;Signer:&quot;, signer, &quot;| scope: 5%&quot;)
+print(&quot;Approval:&quot;, &quot;VALID&quot; if allowed else &quot;REJECTED&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Signer: priya | scope: 5%
+Approval: VALID
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>signer = &#x27;developer&#x27;</code>. Predict whether the release can advance.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Signer: developer | scope: 5%
+Approval: REJECTED
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The author has no authority for this sign-off. Ask the release owner for an independent approver.</p>
+<h5>Step 5 — Plan a staged rollout</h5>
+<p>List each stage and its required criteria. A set subtraction finds unmet criteria. <code>break</code> stops the loop at the first incomplete stage.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">monitor_ready = True
+ready = {&quot;internal checks&quot;, &quot;5% approval&quot;} | ({&quot;monitoring&quot;} if monitor_ready else set())
+stages = [(&quot;internal&quot;, {&quot;internal checks&quot;}), (&quot;5% canary&quot;, {&quot;monitoring&quot;, &quot;5% approval&quot;}),
+          (&quot;25% rollout&quot;, {&quot;clean canary&quot;, &quot;25% approval&quot;}),
+          (&quot;full rollout&quot;, {&quot;clean 25% window&quot;, &quot;full approval&quot;})]
+for name, required in stages:
+    gap = sorted(required - ready)
+    print(name + &quot;: &quot; + (&quot;WAIT for &quot; + &quot;, &quot;.join(gap) if gap else &quot;READY&quot;))
+    if gap:
+        break
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">internal: READY
+5% canary: READY
+25% rollout: WAIT for 25% approval, clean canary
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>monitor_ready = False</code>. Predict the furthest permitted stage.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">internal: READY
+5% canary: WAIT for monitoring
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> Internal rehearsal can still be ready. Exposure stops before the 5% canary until monitoring is restored.</p>
+<h5>Step 6 — Evaluate rollback triggers</h5>
+<p>Compare counts and rates from one canary window. <code>if</code> and <code>elif</code> stop at the first applicable rule. A confirmed critical event has priority over rate and evidence warnings.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">unauthorized = 0
+privacy_incidents, missing_receipts, errors, requests = 0, 0, 2, 100
+if unauthorized or privacy_incidents:
+    action = &quot;ROLLBACK&quot;
+elif missing_receipts or requests &lt; 50 or errors / requests &gt; 0.04:
+    action = &quot;PAUSE&quot;
+else:
+    action = &quot;CONTINUE AT 5%&quot;
+print(f&quot;Errors: {errors}/{requests}, unauthorized: {unauthorized}&quot;)
+print(&quot;Action:&quot;, action)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Errors: 2/100, unauthorized: 0
+Action: CONTINUE AT 5%
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>unauthorized = 1</code>. Keep the error rate at 2%.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Errors: 2/100, unauthorized: 1
+Action: ROLLBACK
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The ordinary rate still looks healthy, but the confirmed authorization violation triggers rollback.</p>
+<h5>Step 7 — Generate a release decision record</h5>
+<p>Use <code>json.dumps</code> with sorted keys to print a machine-readable record. The policy version, actor, scope and evidence travel with the decision.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+role = &quot;release-approver&quot;
+record = {&quot;release_id&quot;: &quot;R-42&quot;, &quot;candidate&quot;: &quot;northstar-v2&quot;, &quot;baseline&quot;: &quot;northstar-v1&quot;,
+          &quot;evaluation_manifest&quot;: &quot;EVAL-2&quot;, &quot;ci&quot;: &quot;PASS&quot;, &quot;release_policy&quot;: &quot;release-policy-v1&quot;,
+          &quot;residual_risks&quot;: [&quot;accepted clarification delay&quot;], &quot;approval&quot;: {&quot;role&quot;: role, &quot;scope&quot;: 5},
+          &quot;rollout_percent&quot;: 5, &quot;monitoring&quot;: &quot;ready&quot;, &quot;rollback&quot;: &quot;tested&quot;,
+          &quot;evidence_refs&quot;: [&quot;fixture://EVAL-2&quot;, &quot;fixture://rollback&quot;]}
+record[&quot;decision&quot;] = &quot;APPROVE LIMITED ROLLOUT&quot; if role == &quot;release-approver&quot; else &quot;REVIEW&quot;
+print(json.dumps(record, sort_keys=True))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;approval&quot;: {&quot;role&quot;: &quot;release-approver&quot;, &quot;scope&quot;: 5}, &quot;baseline&quot;: &quot;northstar-v1&quot;, &quot;candidate&quot;: &quot;northstar-v2&quot;, &quot;ci&quot;: &quot;PASS&quot;, &quot;decision&quot;: &quot;APPROVE LIMITED ROLLOUT&quot;, &quot;evaluation_manifest&quot;: &quot;EVAL-2&quot;, &quot;evidence_refs&quot;: [&quot;fixture://EVAL-2&quot;, &quot;fixture://rollback&quot;], &quot;monitoring&quot;: &quot;ready&quot;, &quot;release_id&quot;: &quot;R-42&quot;, &quot;release_policy&quot;: &quot;release-policy-v1&quot;, &quot;residual_risks&quot;: [&quot;accepted clarification delay&quot;], &quot;rollback&quot;: &quot;tested&quot;, &quot;rollout_percent&quot;: 5}
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>role = &#x27;developer&#x27;</code>. Predict the decision while leaving CI and readiness unchanged.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;approval&quot;: {&quot;role&quot;: &quot;developer&quot;, &quot;scope&quot;: 5}, &quot;baseline&quot;: &quot;northstar-v1&quot;, &quot;candidate&quot;: &quot;northstar-v2&quot;, &quot;ci&quot;: &quot;PASS&quot;, &quot;decision&quot;: &quot;REVIEW&quot;, &quot;evaluation_manifest&quot;: &quot;EVAL-2&quot;, &quot;evidence_refs&quot;: [&quot;fixture://EVAL-2&quot;, &quot;fixture://rollback&quot;], &quot;monitoring&quot;: &quot;ready&quot;, &quot;release_id&quot;: &quot;R-42&quot;, &quot;release_policy&quot;: &quot;release-policy-v1&quot;, &quot;residual_risks&quot;: [&quot;accepted clarification delay&quot;], &quot;rollback&quot;: &quot;tested&quot;, &quot;rollout_percent&quot;: 5}
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The same technical evidence remains valid. The release needs an authorized independent sign-off.</p>
+<h4>Real Release Governance Workflow</h4>
+<h5>Review the release packet</h5>
+<ol><li>Freeze the candidate, previously approved configuration, intended scope and release policy. Retrieve the evaluation and CI reports from their trusted store, validate their versions and digests, and check pairing, coverage, critical cases and receipts.</li><li>Review open findings, privacy and security controls, retained data and residual risks. Escalate non-waivable defects. Review exception requests with an accountable owner, approval and expiry. Verify that the person approving the release has authority for its scope and is independent where policy requires it.</li><li>Confirm internal and shadow readiness, the monitored cohort, alert owner, explicit thresholds, runbook, tested return path and target configuration. Generate a recommendation and obtain a version-bound approval. Archive the packet, human decision, reasons, time and permitted exposure.</li></ol>
+<h5>Operate and learn</h5>
+<ol><li>Begin the authorized stage. Observe linked canary signals and their denominators. Continue within scope if the window passes. Pause for inadequate evidence or a noncritical threshold breach. For a confirmed critical signal, stop exposure and restore the verified target, or isolate the candidate while the return path is investigated.</li><li>Keep the incident evidence, triggering window, previous and restored version, operator, notifications and verification of restored behavior. Assess affected writes or disclosures separately.</li><li>If the candidate changes materially, generate new evaluation evidence and request fresh approval. Update the regression dataset, rebaseline if the policy or evaluator changed, close or renew exceptions through their owner, and record the lessons and monitoring follow-up.</li></ol>
+<h5>Illustrative GitHub governance workflow</h5>
+<p>Required status checks can enforce a CI condition for merging. Review the trusted check source and the required policy in repository settings. For example, keep the previous lesson’s offline evaluation check required and route missing evidence to REVIEW. A green check provides one input to governance.</p>
+<p>GitHub environments can protect a job with reviewers, branch or tag rules, and other safeguards where the repository plan and visibility support them. Required reviewers permit one listed reviewer to advance a job. Enable prevention of self-review if it is part of your policy. If Northstar requires separate risk and release sign-offs, validate the risk sign-off in the packet and enforce the independent release approval through the supported controls. Review bypass settings and permissions.</p>
+<p>The example below illustrates <code>jobs.&lt;job_id&gt;.environment</code> in a training repository. The manual event would dispatch an evidence-review job. The job prints a fixed message after any configured environment protections allow it. It deploys no application and needs no token permissions beyond the empty permissions mapping. Keep this as documentation. An environment named in a real workflow can create or record deployment activity even when the referenced job has no deployment command. Preconfigure the intended training environment and protections before relying on a hosted approval.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">name: Northstar evidence review example
+&#x27;on&#x27;: workflow_dispatch
+permissions: {}
+jobs:
+  evidence-review:
+    runs-on: ubuntu-latest
+    environment:
+      name: northstar-training-review
+    steps:
+      - name: Acknowledge reviewed packet
+        run: echo &quot;Review the signed scope in the release packet.&quot;
+</code></pre>
+</div>
+<p>In a real governance process, use GitHub deployment activity to correlate an environment job, source revision and status with your own release ID. A completed environment job tells the reviewer that a workflow step ran. Check the traffic flag and observe a request on the approved route to confirm which version is serving. Preserve both the process record and the observed result. Retain restricted links to the signed scope and redacted supporting artifacts. Keep approvals, final rollout status and any rollback record even if the report was later corrected. Official references are <code>https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments</code>, <code>https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments</code> and <code>https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches</code>.</p>
+<p>For an evaluation evidence artifact, the documented <code>promptfoo eval --output northstar-results.json</code> exports results from an already configured, authorized suite. Read case outcomes and execution errors, retain the export version and checksum, and bind it to the release run contract. Save only approved data. The report cannot provide release authority. See <code>https://www.promptfoo.dev/docs/configuration/outputs/</code>. The illustrative YAML was parsed locally. Hosted Actions and Promptfoo execution, deployment and live-model behavior remain unverified. The lab below is a complete offline substitute.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Block despite green CI</h5>
+<p>The gate passes all frozen critical cases, but an independent review found an open critical authorization defect. Name the evidence that takes priority and describe the retest.</p>
+<h5>Practice 2. Verify the signer</h5>
+<p>Evaluation, monitoring and rollback evidence is complete. The candidate’s developer is the only person who signed. Decide whether the system can be exposed and what sign-off must replace this one.</p>
+<h5>Practice 3. Respect the canary ceiling</h5>
+<p>Priya signed 5% scope. The canary has just started. A teammate requests 100% immediately. Explain which independent evidence and authority are missing.</p>
+<h5>Practice 4. Contain a confirmed severe incident</h5>
+<p>The canary has 2/100 ordinary errors and one confirmed unauthorized write. State the operational action and notification list, and describe how to verify restoration and handle the completed write.</p>
+<h4>Independent Assignment</h4>
+<p>Use the full lab program as your standalone runner. Verify the manifest, CI result, release policy and records. Review critical and residual risks, exceptions, approval, monitoring and rollback plans. Submit a short explanation of the decision, the permitted scope and the next concrete action. Turn <code>SHOW_JSON</code> on to inspect the decision record and archived approvals.</p>
+<p>Variant A sets <code>MODE = &quot;wide_scope&quot;</code>. A signer with authority for wider scope signs 25%, but this is still an initial rollout. Explain the gate that prevents expansion. Variant B sets <code>MODE = &quot;wrong_evaluator&quot;</code>. The CI record is internally linked to a manifest using evaluator-v2. Explain why the packet is invalid for this release policy even when CI is green. Run both variants from clean copies of the same complete program.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>The independent confirmed finding is a blocker even though the automated suite reports PASS. Record BLOCK and retain both evidence sources. Route the finding to the authorization owner. Verify the repaired deny path and a permitted control, add the incident shape to the regression dataset, and require a new run and sign-off.</p>
+<h5>Solution 2</h5>
+<p>The developer cannot fulfill the documented independence requirement. Return REVIEW without exposing the candidate. Ask an authorized reviewer to sign the candidate, configuration digest, evaluation, policy and exact scope. Check the signer’s identity, role assignment and time against the packet before allowing rollout.</p>
+<h5>Solution 3</h5>
+<p>The 5% approval binds the canary ceiling. Collect a complete observation window, reconcile all critical receipts and confirm the rate is within policy. Request a new approval before 25% and later before 100% under the rollout plan. Validate the new scope against the same candidate and evidence.</p>
+<h5>Solution 4</h5>
+<p>The rate is 2% and cannot offset a confirmed unauthorized write. Restore the previously approved configuration if compatible and independently verified. Notify on-call, release owner and the authorization owner. Preserve the linked receipt and ledger, assess the existing side effect and verify both routing and state after the restore. If the rollback target cannot be verified, isolate the candidate and escalate containment.</p>
+<h5>Lab and assignment answer key</h5>
+<p>A holds for sign-off. B blocks the unresolved critical authorization finding. C approves only 5%. D records the initial clean window then pauses at 5/100 errors. E records a confirmed incident and restores the approved v1 configuration. F preserves the old approval, rejects it for the repair, and approves only after the new evaluation and sign-off. G sends the expired exception for renewal or closure. Both assignments illustrate green CI with an additional governance constraint.</p>
+<h6>Scenario C — signed canary</h6>
+<p>Set <code>MODE = &quot;approved&quot;</code>. Priya’s signature binds EVAL-2 and the 5% ceiling.</p>
+<ul><li><code>NS-REL-42 | approved | 24 evidence records</code></li><li><code>Release: APPROVE LIMITED ROLLOUT | signed for 5% canary only</code></li><li><code>Audit: A, B, C</code></li></ul>
+<h6>Scenario D — canary warning</h6>
+<p>Set <code>MODE = &quot;warning&quot;</code>. Retain both windows. Keep the candidate at its current capped scope while investigating the warning.</p>
+<ul><li><code>NS-REL-42 | warning | 24 evidence records</code></li><li><code>Operations: CONTINUE | within thresholds; stay at 5%</code></li><li><code>Active: northstar-v2 -&gt; northstar-v2</code></li><li><code>Operations: PAUSE | error rate above 4%; freeze expansion</code></li><li><code>Active: northstar-v2 -&gt; northstar-v2</code></li><li><code>Audit: A, B, C, W40, D</code></li></ul>
+<h6>Scenario E — verified rollback</h6>
+<p>Set <code>MODE = &quot;rollback&quot;</code>. Retain both the confirmed effect and independently verified target version. Notify on-call, the release owner and the authorization owner.</p>
+<ul><li><code>NS-REL-42 | rollback | 24 evidence records</code></li><li><code>Operations: ROLLBACK | confirmed authorization violation</code></li><li><code>Active: northstar-v2 -&gt; northstar-v1</code></li><li><code>Audit: A, B, C, W40, D, E</code></li></ul>
+<h6>Scenario F — repair with new sign-off</h6>
+<p>Set <code>MODE = &quot;repaired&quot;</code>. The original approval remains in the audit without covering the repaired configuration.</p>
+<ul><li><code>NS-REL-42 | repaired | 24 evidence records</code></li><li><code>Release: REVIEW | fresh version- and scope-bound approval required</code></li><li><code>Release: APPROVE LIMITED ROLLOUT | signed for 5% canary only</code></li><li><code>Audit: A, B, C, W40, D, E, F-previous, F-fresh</code></li></ul>
+<h6>Scenario G — expired exception</h6>
+<p>Set <code>MODE = &quot;expired&quot;</code>. At sequence 60 the exception no longer applies. Ask its owner to close or renew it.</p>
+<ul><li><code>NS-REL-42 | expired | 24 evidence records</code></li><li><code>Release: REVIEW | expired risk or exception EX-1</code></li><li><code>Audit: A, B, C, W40, D, E, F-previous, F-fresh, G</code></li></ul>
+<h6>Assignment A — excessive initial scope</h6>
+<p>Set <code>MODE = &quot;wide_scope&quot;</code>. A wider role does not override the initial scope cap.</p>
+<ul><li><code>NS-REL-42 | wide_scope | 24 evidence records</code></li><li><code>Release: REVIEW | initial rollout exceeds 5% or scope plan differs</code></li><li><code>Audit: A, B, C, W40, D, E, F-previous, F-fresh, G, Assignment</code></li></ul>
+<h6>Assignment B — incompatible evaluator</h6>
+<p>Set <code>MODE = &quot;wrong_evaluator&quot;</code>. An internally consistent CI reference still names a scorer outside the policy.</p>
+<ul><li><code>NS-REL-42 | wrong_evaluator | 24 evidence records</code></li><li><code>Release: INVALID EVIDENCE | release or evaluation provenance mismatch</code></li><li><code>Audit: A, B, C, W40, D, E, F-previous, F-fresh, G, Assignment</code></li></ul>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>How does release differ from deployment?</li><li>Why can a green evaluation or CI run still require REVIEW?</li><li>What is residual risk and who accepts it?</li><li>What makes a finding non-waivable in this lesson?</li><li>What does a valid approval bind together?</li><li>Why does a 5% canary approval leave further rollout pending?</li><li>What observation can trigger rollback before you reach 50 requests?</li><li>What must you retain when a repaired candidate gets new approval?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Deployment installs or activates a version in an environment. Release makes it available to the intended users. Controls can separate the two steps.</li><li>CI covers its declared evaluation evidence. Release also requires current findings, compatible evidence, a signed scope, monitoring and a verified rollback plan.</li><li>It is risk that remains after mitigation. The accountable risk owner documents acceptance, scope, evidence, expiry and follow-up.</li><li>A confirmed severe authorization or privacy defect cannot be overridden under Northstar’s current policy, regardless of aggregate performance.</li><li>Bind an independent authorized identity to the release ID, candidate and configuration, evaluation run, policy version, scope and time.</li><li>It authorizes only the first small exposure. Later stages need their own observation evidence and approval.</li><li>A confirmed authorization or privacy violation triggers emergency action independently of the ordinary error-rate sample.</li><li>Keep the old approval, rollback or incident evidence, new candidate, new evaluation and CI reports, closure evidence, revised scope and fresh approval.</li></ol>
+</div></details>
+<h4>Guided Engineering Lab</h4>
+<h5>Northstar Release Readiness, Canary Rollout and Rollback Governance</h5>
+<p>Northstar’s approved version is northstar-v1. A green CI run covers northstar-v2 and prompt-v2. The 24 inline evidence records carry ID, category, severity, version, owner, sequence, source and verification status. The manifest binds the evaluation to the candidate configuration. It reports 18 passes out of 20 planned and completed cases, with zero critical failures in that frozen set. Calculate 18/20 = 90%. The separate F-AUTH finding in Scenario B addresses a path outside those frozen cases.</p>
+<p><strong>Inspect the packet, then predict.</strong> A has no approval. B adds a critical finding and a signature. Neither may expose the candidate. C has independent canary approval. D’s first window has 2/100 errors and the next has 5/100. Only the second is above the 4% threshold. E has a matching incident receipt and ledger change. E pauses customer exposure by restoring the verified northstar-v1 target in the simulation. F uses northstar-v3, prompt-v3 and EVAL-3 with a verified mitigation on the affected path. First it tries the old approval, then it obtains a new one. G exercises expiry exactly at the current sequence. This model treats an exception as expired when the current sequence reaches its expiry.</p>
+<p><strong>Follow the code.</strong> <code>enumerate(..., 1)</code> assigns a sequence and <code>:02d</code> displays the number with two digits. <code>deepcopy</code> creates independent nested records. <code>canonical</code> sorts JSON keys so <code>digest</code> can fingerprint consistent bytes. An integrity check needs a trusted source for the expected fingerprint. <code>decide</code> returns a release result and reason at the first matching rule. <code>observe</code> checks the canary separately and only acts on an authorized current candidate and a later window. <code>archive</code> keeps a serialized snapshot and checksum per ID, so changing a subsequent approval does not rewrite the earlier packet. The expressions with <code>:=</code> assign a named value while passing it to the archive. <code>assert</code> checks the dataset count and the old approval outcome.</p>
+<p><strong>Run the tabletop.</strong> Use <code>no_approval</code> and <code>critical</code> for the first two decisions. Run <code>approved</code>, <code>warning</code>, <code>rollback</code>, <code>repaired</code> and <code>expired</code> from fresh copies. Check the folded solutions. Set <code>SHOW_JSON = True</code> to see full decision records and archived snapshots. The result’s <code>decision</code> field is the policy validator’s conclusion from supplied evidence. The <code>approval</code> field contains the simulated human decision. Nothing here signs for a person, changes traffic or executes a refund.</p>
+<p><strong>Advance by scope.</strong> The initial canary limit is 5%. Before 25%, obtain a clean authorized canary window, verify monitor and rollback availability again and obtain a named 25% sign-off. Before 100%, repeat those checks on 25% and get full-scope approval. The program simulates the initial gate and canary actions only. Internal rehearsal and shadow comparisons supply evidence for canary entry. No clean window changes a signed traffic limit.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from copy import deepcopy
+from hashlib import sha256
+import json
+
+MODE = &quot;no_approval&quot;  # See the scenarios and assignments.
+SHOW_JSON = False
+RELEASE = &quot;NS-REL-42&quot;
+BASELINE = &quot;northstar-v1&quot;
+POLICY = {
+    &quot;release_policy_version&quot;: &quot;release-policy-v1&quot;,
+    &quot;require_passing_ci_gate&quot;: True,
+    &quot;require_complete_evaluation_evidence&quot;: True,
+    &quot;allow_unresolved_critical_findings&quot;: False,
+    &quot;require_authorized_approval&quot;: True,
+    &quot;require_monitoring_readiness&quot;: True,
+    &quot;require_rollback_readiness&quot;: True,
+    &quot;maximum_initial_rollout_percent&quot;: 5,
+    &quot;require_new_approval_after_material_change&quot;: True,
+    &quot;minimum_window_requests&quot;: 50,
+    &quot;maximum_error_percent&quot;: 4.0,
+}
+LOCK = {&quot;dataset_version&quot;: &quot;northstar-eval-v1&quot;, &quot;evaluator_version&quot;: &quot;evaluator-v1&quot;,
+        &quot;policy_version&quot;: &quot;refund-policy-v1&quot;, &quot;gate_policy_version&quot;: &quot;gate-policy-v1&quot;,
+        &quot;previous_prompt&quot;: &quot;prompt-v1&quot;}
+APPROVERS = {&quot;Priya&quot;: (&quot;release-approver&quot;, 5), &quot;Marin&quot;: (&quot;release-approver&quot;, 100)}
+RISK_APPROVER = &quot;Inez&quot;
+STAGES = {&quot;internal&quot;: 0, &quot;canary&quot;: 5, &quot;expanded&quot;: 25, &quot;full&quot;: 100}
+# Each row describes the category, severity, status, owner, and required action.
+EVIDENCE_ROWS = [
+    (&quot;evaluation&quot;, &quot;high&quot;, &quot;PASS&quot;, &quot;eval&quot;, &quot;validate paired manifest&quot;),
+    (&quot;ci&quot;, &quot;high&quot;, &quot;PASS&quot;, &quot;ci&quot;, &quot;verify signed CI reference&quot;),
+    (&quot;critical-security&quot;, &quot;critical&quot;, &quot;PASS&quot;, &quot;security&quot;, &quot;require critical cases&quot;),
+    (&quot;privacy&quot;, &quot;critical&quot;, &quot;PASS&quot;, &quot;privacy&quot;, &quot;verify minimized captures&quot;),
+    (&quot;tool-authorization&quot;, &quot;critical&quot;, &quot;PASS&quot;, &quot;backend&quot;, &quot;reconcile execution receipts&quot;),
+    (&quot;rag&quot;, &quot;high&quot;, &quot;PASS&quot;, &quot;retrieval&quot;, &quot;check approved citation&quot;),
+    (&quot;order-lookup&quot;, &quot;medium&quot;, &quot;PASS&quot;, &quot;support&quot;, &quot;run permitted control&quot;),
+    (&quot;human-escalation&quot;, &quot;medium&quot;, &quot;PASS&quot;, &quot;support&quot;, &quot;test human routing&quot;),
+    (&quot;coverage&quot;, &quot;high&quot;, &quot;PASS&quot;, &quot;eval&quot;, &quot;check 20 planned verdicts&quot;),
+    (&quot;receipt-completeness&quot;, &quot;high&quot;, &quot;PASS&quot;, &quot;backend&quot;, &quot;inspect required receipts&quot;),
+    (&quot;monitoring&quot;, &quot;high&quot;, &quot;READY&quot;, &quot;on-call&quot;, &quot;verify alert route&quot;),
+    (&quot;rollback&quot;, &quot;critical&quot;, &quot;TESTED&quot;, &quot;operator&quot;, &quot;rehearse previous version&quot;),
+    (&quot;approval-authority&quot;, &quot;high&quot;, &quot;VERIFIED&quot;, &quot;release&quot;, &quot;verify independent role&quot;),
+    (&quot;residual-risk&quot;, &quot;low&quot;, &quot;ACCEPTED&quot;, &quot;support&quot;, &quot;revisit clarification risk&quot;),
+    (&quot;exception-request&quot;, &quot;low&quot;, &quot;RECORDED&quot;, &quot;risk&quot;, &quot;review when invoked&quot;),
+    (&quot;canary-plan&quot;, &quot;high&quot;, &quot;READY&quot;, &quot;operator&quot;, &quot;cap to signed traffic scope&quot;),
+    (&quot;canary-window&quot;, &quot;high&quot;, &quot;PLANNED&quot;, &quot;on-call&quot;, &quot;observe requests and receipts&quot;),
+    (&quot;incident-signal&quot;, &quot;critical&quot;, &quot;ARMED&quot;, &quot;security&quot;, &quot;contain and verify effect&quot;),
+    (&quot;audit&quot;, &quot;high&quot;, &quot;READY&quot;, &quot;release&quot;, &quot;retain immutable decisions&quot;),
+    (&quot;previous-version&quot;, &quot;high&quot;, &quot;VERIFIED&quot;, &quot;operator&quot;, &quot;verify compatibility&quot;),
+    (&quot;configuration&quot;, &quot;high&quot;, &quot;VERIFIED&quot;, &quot;release&quot;, &quot;bind prompt and model&quot;),
+    (&quot;monitoring-privacy&quot;, &quot;high&quot;, &quot;PASS&quot;, &quot;privacy&quot;, &quot;check retention&quot;),
+    (&quot;incident-contact&quot;, &quot;medium&quot;, &quot;READY&quot;, &quot;on-call&quot;, &quot;verify owner handoff&quot;),
+    (&quot;shadow-isolation&quot;, &quot;high&quot;, &quot;PASS&quot;, &quot;backend&quot;, &quot;verify no side effects&quot;),
+]
+BASE_SNAPSHOT = {&quot;release&quot;: BASELINE, &quot;prompt&quot;: &quot;prompt-v1&quot;, &quot;model&quot;: &quot;fixture-model-v1&quot;,
+                 &quot;policy&quot;: &quot;refund-policy-v1&quot;, &quot;tool_schema&quot;: &quot;support-tools-v1&quot;}
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(&quot;,&quot;, &quot;:&quot;), allow_nan=False)
+
+def digest(value):
+    return sha256(canonical(value).encode(&quot;utf-8&quot;)).hexdigest()
+
+def snapshot_key(packet):
+    return digest(packet[&quot;candidate_config&quot;])
+
+def evidence(candidate):
+    return [{&quot;id&quot;: f&quot;E{number:02d}&quot;, &quot;category&quot;: category, &quot;severity&quot;: severity,
+             &quot;status&quot;: status, &quot;version&quot;: candidate, &quot;source&quot;: f&quot;fixture://{candidate}/E{number:02d}&quot;,
+             &quot;owner&quot;: owner, &quot;sequence&quot;: number, &quot;action&quot;: action, &quot;verified&quot;: True}
+            for number, (category, severity, status, owner, action)
+            in enumerate(EVIDENCE_ROWS, 1)]
+
+def packet(sequence=30, repaired=False):
+    candidate = &quot;northstar-v3&quot; if repaired else &quot;northstar-v2&quot;
+    prompt = &quot;prompt-v3&quot; if repaired else &quot;prompt-v2&quot;
+    run = &quot;EVAL-3&quot; if repaired else &quot;EVAL-2&quot;
+    data = {
+        &quot;release_id&quot;: RELEASE, &quot;sequence&quot;: sequence, &quot;release_policy_version&quot;: POLICY[&quot;release_policy_version&quot;],
+        &quot;candidate&quot;: candidate, &quot;previous&quot;: BASELINE, &quot;author&quot;: &quot;Devon&quot;, &quot;scope&quot;: &quot;canary&quot;,
+        &quot;candidate_config&quot;: {&quot;release&quot;: candidate, &quot;prompt&quot;: prompt, &quot;model&quot;: &quot;fixture-model-v1&quot;,
+                             &quot;policy&quot;: LOCK[&quot;policy_version&quot;], &quot;tool_schema&quot;: &quot;support-tools-v1&quot;},
+        &quot;evidence&quot;: evidence(candidate), &quot;approval&quot;: None, &quot;findings&quot;: [], &quot;exceptions&quot;: [],
+        &quot;risks&quot;: [{&quot;id&quot;: &quot;R-delay&quot;, &quot;severity&quot;: &quot;low&quot;, &quot;status&quot;: &quot;accepted&quot;, &quot;owner&quot;: &quot;support&quot;,
+                   &quot;mitigation&quot;: &quot;human fallback&quot;, &quot;evidence&quot;: &quot;E14&quot;, &quot;accepted_by&quot;: RISK_APPROVER,
+                   &quot;version&quot;: candidate, &quot;expires&quot;: 90}],
+        &quot;monitoring_plan&quot;: {&quot;ready&quot;: True, &quot;owner&quot;: &quot;on-call&quot;, &quot;ref&quot;: &quot;E11&quot;,
+                            &quot;minimum_requests&quot;: POLICY[&quot;minimum_window_requests&quot;],
+                            &quot;maximum_error_percent&quot;: POLICY[&quot;maximum_error_percent&quot;],
+                            &quot;critical_events_allowed&quot;: 0},
+        &quot;rollback_plan&quot;: {&quot;ready&quot;: True, &quot;target&quot;: BASELINE, &quot;target_digest&quot;: digest(BASE_SNAPSHOT),
+                          &quot;compatible&quot;: True, &quot;operator&quot;: &quot;on-call&quot;, &quot;ref&quot;: &quot;E12&quot;},
+    }
+    data[&quot;rollout_plan&quot;] = {&quot;stages_percent&quot;: deepcopy(STAGES), &quot;requested&quot;: &quot;canary&quot;,
+                            &quot;entry&quot;: &quot;verified internal rehearsal&quot;}
+    data[&quot;manifest&quot;] = {**LOCK, &quot;id&quot;: run, &quot;candidate&quot;: candidate, &quot;previous&quot;: BASELINE,
+                        &quot;config_sha256&quot;: snapshot_key(data), &quot;planned&quot;: 20,
+                        &quot;completed&quot;: 20, &quot;passed&quot;: 19 if repaired else 18, &quot;critical_failures&quot;: 0}
+    data[&quot;ci&quot;] = {&quot;run&quot;: run, &quot;status&quot;: &quot;PASS&quot;, &quot;manifest_sha256&quot;: digest(data[&quot;manifest&quot;]),
+                  &quot;gate_policy_version&quot;: LOCK[&quot;gate_policy_version&quot;], &quot;id&quot;: &quot;CI-&quot; + run}
+    return data
+
+def sign(data, person=&quot;Priya&quot;, status=&quot;SIGNED&quot;):
+    return {&quot;person&quot;: person, &quot;role&quot;: APPROVERS.get(person, (&quot;developer&quot;, 0))[0],
+            &quot;candidate&quot;: data[&quot;candidate&quot;], &quot;evaluation&quot;: data[&quot;manifest&quot;][&quot;id&quot;],
+            &quot;scope&quot;: data[&quot;scope&quot;], &quot;release_id&quot;: data[&quot;release_id&quot;],
+            &quot;config_sha256&quot;: snapshot_key(data), &quot;policy&quot;: data[&quot;release_policy_version&quot;],
+            &quot;sequence&quot;: data[&quot;sequence&quot;], &quot;status&quot;: status}
+
+def verdict(data, result, reason):
+    return {&quot;release_id&quot;: data[&quot;release_id&quot;], &quot;sequence&quot;: data[&quot;sequence&quot;],
+            &quot;candidate&quot;: data[&quot;candidate&quot;], &quot;previous_approved&quot;: data[&quot;previous&quot;],
+            &quot;evaluation_run_id&quot;: data[&quot;manifest&quot;][&quot;id&quot;], &quot;evaluation_manifest&quot;: deepcopy(data[&quot;manifest&quot;]),
+            &quot;ci&quot;: deepcopy(data[&quot;ci&quot;]), &quot;candidate_config&quot;: deepcopy(data[&quot;candidate_config&quot;]),
+            &quot;release_policy&quot;: data[&quot;release_policy_version&quot;], &quot;findings&quot;: deepcopy(data[&quot;findings&quot;]),
+            &quot;residual_risks&quot;: deepcopy(data[&quot;risks&quot;]), &quot;exceptions&quot;: deepcopy(data[&quot;exceptions&quot;]),
+            &quot;approval&quot;: deepcopy(data[&quot;approval&quot;]), &quot;scope&quot;: data[&quot;scope&quot;],
+            &quot;monitoring_plan&quot;: deepcopy(data[&quot;monitoring_plan&quot;]),
+            &quot;rollback_plan&quot;: deepcopy(data[&quot;rollback_plan&quot;]), &quot;decision&quot;: result,
+            &quot;authorized_scope_percent&quot;: STAGES[data[&quot;scope&quot;]] if result == &quot;APPROVE&quot; else None,
+            &quot;rationale&quot;: reason, &quot;evidence_records&quot;: deepcopy(data[&quot;evidence&quot;]),
+            &quot;evidence_refs&quot;: [row[&quot;source&quot;] for row in data[&quot;evidence&quot;]]}
+
+def decide(data):
+    manifest, ci = data[&quot;manifest&quot;], data[&quot;ci&quot;]
+    now, scope = data[&quot;sequence&quot;], data[&quot;scope&quot;]
+    records = data[&quot;evidence&quot;]
+    ids = [row[&quot;id&quot;] for row in records]
+    expected = {row[&quot;id&quot;]: row for row in evidence(data[&quot;candidate&quot;])}
+    if (data[&quot;release_policy_version&quot;] != POLICY[&quot;release_policy_version&quot;]
+            or scope not in STAGES or data[&quot;previous&quot;] != BASELINE
+            or any(manifest.get(key) != value for key, value in LOCK.items())
+            or manifest.get(&quot;config_sha256&quot;) != snapshot_key(data)
+            or manifest.get(&quot;candidate&quot;) != data[&quot;candidate&quot;]
+            or manifest.get(&quot;previous&quot;) != data[&quot;previous&quot;]
+            or data[&quot;candidate_config&quot;][&quot;release&quot;] != data[&quot;candidate&quot;]
+            or data[&quot;candidate_config&quot;][&quot;policy&quot;] != LOCK[&quot;policy_version&quot;]
+            or ci.get(&quot;run&quot;) != manifest.get(&quot;id&quot;) or ci.get(&quot;manifest_sha256&quot;) != digest(manifest)
+            or ci.get(&quot;gate_policy_version&quot;) != LOCK[&quot;gate_policy_version&quot;]
+            or len(ids) != len(set(ids)) or set(ids) - expected.keys()
+            or any(row[&quot;version&quot;] != data[&quot;candidate&quot;] or row[&quot;source&quot;] != expected[row[&quot;id&quot;]][&quot;source&quot;]
+                   or row[&quot;sequence&quot;] &gt; now for row in records)):
+        return verdict(data, &quot;INVALID EVIDENCE&quot;, &quot;release or evaluation provenance mismatch&quot;)
+    counts = [manifest.get(key) for key in (&quot;passed&quot;, &quot;completed&quot;, &quot;planned&quot;, &quot;critical_failures&quot;)]
+    if (not all(type(value) is int and value &gt;= 0 for value in counts)
+            or not 0 &lt;= counts[0] &lt;= counts[1] &lt;= counts[2] == 20
+            or counts[3] &gt; counts[1] - counts[0]
+            or ci[&quot;status&quot;] not in {&quot;PASS&quot;, &quot;BLOCK&quot;, &quot;REVIEW&quot;}):
+        return verdict(data, &quot;INVALID EVIDENCE&quot;, &quot;invalid evaluation counts or CI result&quot;)
+    critical = [row[&quot;id&quot;] for row in data[&quot;findings&quot;]
+                if row[&quot;severity&quot;] == &quot;critical&quot; and not (
+                    row[&quot;status&quot;] == &quot;verified-closed&quot; and row.get(&quot;verified_for&quot;) == data[&quot;candidate&quot;]
+                    and row.get(&quot;closure_ref&quot;) == &quot;E05&quot;
+                    and any(item[&quot;id&quot;] == &quot;E05&quot; and item[&quot;verified&quot;] and item[&quot;status&quot;] == &quot;PASS&quot;
+                            for item in records))]
+    critical.extend(row[&quot;id&quot;] for row in records
+                    if row[&quot;severity&quot;] == &quot;critical&quot; and row[&quot;status&quot;] == &quot;FAIL&quot; and row[&quot;verified&quot;])
+    if critical and not POLICY[&quot;allow_unresolved_critical_findings&quot;]:
+        return verdict(data, &quot;BLOCK&quot;, &quot;non-waivable critical finding &quot; + &quot;, &quot;.join(critical))
+    if manifest[&quot;critical_failures&quot;] or (POLICY[&quot;require_passing_ci_gate&quot;] and ci[&quot;status&quot;] == &quot;BLOCK&quot;):
+        return verdict(data, &quot;BLOCK&quot;, &quot;critical case or CI gate failed&quot;)
+    if (POLICY[&quot;require_complete_evaluation_evidence&quot;]
+            and (manifest[&quot;completed&quot;] != manifest[&quot;planned&quot;] or set(ids) != set(expected)
+                 or any(not row[&quot;verified&quot;] or row[&quot;status&quot;] != expected[row[&quot;id&quot;]][&quot;status&quot;]
+                        for row in records))):
+        return verdict(data, &quot;REVIEW&quot;, &quot;required evidence incomplete&quot;)
+    if POLICY[&quot;require_passing_ci_gate&quot;] and ci[&quot;status&quot;] != &quot;PASS&quot;:
+        return verdict(data, &quot;REVIEW&quot;, &quot;CI has no passing decision&quot;)
+    for item in data[&quot;risks&quot;] + data[&quot;exceptions&quot;]:
+        if item[&quot;status&quot;] == &quot;closed&quot;:
+            continue
+        if type(item[&quot;expires&quot;]) is not int:
+            return verdict(data, &quot;REVIEW&quot;, &quot;risk or exception needs an expiry&quot;)
+        if now &gt;= item[&quot;expires&quot;]:
+            return verdict(data, &quot;REVIEW&quot;, &quot;expired risk or exception &quot; + item[&quot;id&quot;])
+        if (item[&quot;severity&quot;] == &quot;critical&quot; or item[&quot;accepted_by&quot;] != RISK_APPROVER
+                or item[&quot;version&quot;] != data[&quot;candidate&quot;] or not item[&quot;owner&quot;] or item[&quot;evidence&quot;] not in ids
+                or item[&quot;status&quot;] != &quot;accepted&quot;):
+            return verdict(data, &quot;REVIEW&quot;, &quot;risk or exception needs authorized disposition&quot;)
+    for item in data[&quot;exceptions&quot;]:
+        if item[&quot;status&quot;] == &quot;accepted&quot; and (item[&quot;scope&quot;] != scope or not item.get(&quot;justification&quot;)):
+            return verdict(data, &quot;REVIEW&quot;, &quot;exception scope or justification needs review&quot;)
+
+    approval = data[&quot;approval&quot;]
+    if POLICY[&quot;require_authorized_approval&quot;]:
+        if approval is None:
+            return verdict(data, &quot;REVIEW&quot;, &quot;authorized sign-off missing&quot;)
+        role, maximum = APPROVERS.get(approval[&quot;person&quot;], (&quot;unknown&quot;, 0))
+        if role != approval[&quot;role&quot;] or role != &quot;release-approver&quot; or approval[&quot;person&quot;] == data[&quot;author&quot;]:
+            return verdict(data, &quot;REVIEW&quot;, &quot;signer lacks independent release authority&quot;)
+        signed = (approval[&quot;candidate&quot;], approval[&quot;evaluation&quot;], approval[&quot;scope&quot;],
+                  approval[&quot;release_id&quot;], approval[&quot;config_sha256&quot;], approval[&quot;policy&quot;])
+        needed = (data[&quot;candidate&quot;], manifest[&quot;id&quot;], scope, data[&quot;release_id&quot;],
+                  snapshot_key(data), data[&quot;release_policy_version&quot;])
+        if signed != needed or approval[&quot;sequence&quot;] &gt; now:
+            return verdict(data, &quot;REVIEW&quot;, &quot;fresh version- and scope-bound approval required&quot;)
+        if approval[&quot;status&quot;] == &quot;REJECTED&quot;:
+            return verdict(data, &quot;BLOCK&quot;, &quot;authorized reviewer rejected promotion&quot;)
+        if approval[&quot;status&quot;] != &quot;SIGNED&quot; or STAGES[scope] &gt; maximum:
+            return verdict(data, &quot;REVIEW&quot;, &quot;approval does not cover scope&quot;)
+    if (data[&quot;rollout_plan&quot;][&quot;requested&quot;] != scope or scope == &quot;internal&quot;
+            or STAGES[scope] &gt; POLICY[&quot;maximum_initial_rollout_percent&quot;]):
+        return verdict(data, &quot;REVIEW&quot;, &quot;initial rollout exceeds 5% or scope plan differs&quot;)
+    monitoring, rollback = data[&quot;monitoring_plan&quot;], data[&quot;rollback_plan&quot;]
+    if POLICY[&quot;require_monitoring_readiness&quot;] and (
+            not monitoring[&quot;ready&quot;] or not monitoring[&quot;owner&quot;] or monitoring[&quot;ref&quot;] not in ids
+            or monitoring[&quot;minimum_requests&quot;] != POLICY[&quot;minimum_window_requests&quot;]
+            or monitoring[&quot;maximum_error_percent&quot;] != POLICY[&quot;maximum_error_percent&quot;]
+            or monitoring[&quot;critical_events_allowed&quot;] != 0):
+        return verdict(data, &quot;REVIEW&quot;, &quot;monitoring not verified&quot;)
+    if POLICY[&quot;require_rollback_readiness&quot;] and (
+            not rollback[&quot;ready&quot;] or not rollback[&quot;compatible&quot;] or not rollback[&quot;operator&quot;]
+            or rollback[&quot;ref&quot;] not in ids
+            or rollback[&quot;target&quot;] != data[&quot;previous&quot;] or rollback[&quot;target_digest&quot;] != digest(BASE_SNAPSHOT)):
+        return verdict(data, &quot;REVIEW&quot;, &quot;rollback not verified&quot;)
+    return verdict(data, &quot;APPROVE&quot;, &quot;signed for 5% canary only&quot;)
+
+def window(sequence, errors=2, missing=0, violation=None, requests=100):
+    return {&quot;id&quot;: f&quot;W{sequence}&quot;, &quot;sequence&quot;: sequence, &quot;candidate&quot;: &quot;northstar-v2&quot;,
+            &quot;scope&quot;: &quot;canary&quot;, &quot;requests&quot;: requests, &quot;errors&quot;: errors,
+            &quot;missing_receipts&quot;: missing, &quot;violation&quot;: violation,
+            &quot;source&quot;: f&quot;fixture://monitor/W{sequence}&quot;}
+
+def observe(approval, active, observation, target):
+    result = {&quot;phase&quot;: &quot;operations&quot;, &quot;sequence&quot;: observation[&quot;sequence&quot;],
+              &quot;active_before&quot;: active, &quot;active_after&quot;: active, &quot;action&quot;: &quot;PAUSE&quot;,
+              &quot;reason&quot;: &quot;no active, authorized canary&quot;, &quot;observation&quot;: deepcopy(observation),
+              &quot;notify&quot;: [], &quot;restored_verified&quot;: False}
+    if (approval[&quot;decision&quot;] != &quot;APPROVE&quot; or approval[&quot;authorized_scope_percent&quot;] != 5
+            or approval[&quot;candidate&quot;] != active or observation[&quot;candidate&quot;] != active
+            or observation[&quot;scope&quot;] != &quot;canary&quot; or observation[&quot;sequence&quot;] &lt;= approval[&quot;sequence&quot;]):
+        return result
+    violation = observation[&quot;violation&quot;]
+    if violation is not None:
+        confirmed = (violation[&quot;verified&quot;] and violation[&quot;kind&quot;] in {&quot;authorization&quot;, &quot;privacy&quot;}
+                     and violation[&quot;ref&quot;] == observation[&quot;source&quot;] + &quot;/incident&quot;
+                     and (violation.get(&quot;receipt&quot;) == &quot;EXECUTED&quot; and violation.get(&quot;ledger_delta&quot;) == 1
+                          if violation[&quot;kind&quot;] == &quot;authorization&quot; else violation.get(&quot;disclosed&quot;) is True))
+        result[&quot;notify&quot;] = [&quot;on-call&quot;, &quot;release-owner&quot;, violation[&quot;kind&quot;] + &quot;-owner&quot;]
+        plan = approval[&quot;rollback_plan&quot;]
+        if (confirmed and target[&quot;verified&quot;] and target[&quot;compatible&quot;]
+                and target[&quot;active&quot;] == plan[&quot;target&quot;] == approval[&quot;previous_approved&quot;]
+                and target[&quot;sha256&quot;] == plan[&quot;target_digest&quot;]):
+            result.update(action=&quot;ROLLBACK&quot;, active_after=target[&quot;active&quot;], restored_verified=True,
+                          reason=&quot;confirmed &quot; + violation[&quot;kind&quot;] + &quot; violation&quot;, restoration=deepcopy(target))
+        else:
+            result.update(active_after=&quot;isolated&quot;, reason=&quot;isolate candidate while evidence or restoration is unverified&quot;)
+        return result
+    count, errors = observation[&quot;requests&quot;], observation[&quot;errors&quot;]
+    if (type(count) is not int or type(errors) is not int or not 0 &lt;= errors &lt;= count
+            or count &lt; POLICY[&quot;minimum_window_requests&quot;] or observation[&quot;missing_receipts&quot;] != 0):
+        result[&quot;reason&quot;] = &quot;missing evidence or insufficient observations&quot;
+    elif errors * 100 / count &gt; POLICY[&quot;maximum_error_percent&quot;]:
+        result[&quot;reason&quot;] = &quot;error rate above 4%; freeze expansion&quot;
+    else:
+        result.update(action=&quot;CONTINUE&quot;, reason=&quot;within thresholds; stay at 5%&quot;)
+    return result
+
+def archive(history, key, value):
+    if key in history:
+        raise ValueError(&quot;duplicate audit key&quot;)
+    history[key] = (canonical(value), digest(value))
+
+def load_entry(entry):
+    payload, checksum = entry
+    value = json.loads(payload)
+    if digest(value) != checksum:
+        raise ValueError(&quot;audit digest mismatch&quot;)
+    return value
+
+MODES = (&quot;no_approval&quot;, &quot;critical&quot;, &quot;approved&quot;, &quot;warning&quot;, &quot;rollback&quot;,
+         &quot;repaired&quot;, &quot;expired&quot;, &quot;wide_scope&quot;, &quot;wrong_evaluator&quot;)
+
+def build(mode):
+    history = {}
+    base = packet()
+    archive(history, &quot;A&quot;, verdict_a := decide(base))
+    if mode == &quot;no_approval&quot;:
+        return [verdict_a], history
+    blocked = packet(31)
+    blocked[&quot;findings&quot;] = [{&quot;id&quot;: &quot;F-AUTH&quot;, &quot;severity&quot;: &quot;critical&quot;, &quot;status&quot;: &quot;open&quot;,
+                            &quot;evidence&quot;: &quot;fixture://incident/F-AUTH&quot;, &quot;owner&quot;: &quot;security&quot;}]
+    blocked[&quot;approval&quot;] = sign(blocked)
+    archive(history, &quot;B&quot;, verdict_b := decide(blocked))
+    if mode == &quot;critical&quot;:
+        return [verdict_b], history
+
+    approved = packet(32)
+    approved[&quot;approval&quot;] = sign(approved)
+    canary = decide(approved)
+    archive(history, &quot;C&quot;, canary)
+    if mode == &quot;approved&quot;:
+        return [canary], history
+    target = {&quot;active&quot;: BASELINE, &quot;verified&quot;: True, &quot;compatible&quot;: True,
+              &quot;sha256&quot;: digest(BASE_SNAPSHOT), &quot;ref&quot;: &quot;fixture://restore/northstar-v1&quot;}
+    initial = observe(canary, approved[&quot;candidate&quot;], window(40), target)
+    archive(history, &quot;W40&quot;, initial)
+    warning = observe(canary, initial[&quot;active_after&quot;], window(41, errors=5), target)
+    archive(history, &quot;D&quot;, warning)
+    if mode == &quot;warning&quot;:
+        return [initial, warning], history
+    incident = {&quot;kind&quot;: &quot;authorization&quot;, &quot;verified&quot;: True, &quot;ref&quot;: &quot;fixture://monitor/W42/incident&quot;,
+                &quot;receipt&quot;: &quot;EXECUTED&quot;, &quot;ledger_delta&quot;: 1}
+    rolled = observe(canary, warning[&quot;active_after&quot;], window(42, errors=5, violation=incident), target)
+    archive(history, &quot;E&quot;, rolled)
+    if mode == &quot;rollback&quot;:
+        return [rolled], history
+
+    repaired = packet(50, repaired=True)
+    repaired[&quot;findings&quot;] = [{&quot;id&quot;: &quot;F-AUTH&quot;, &quot;severity&quot;: &quot;critical&quot;, &quot;status&quot;: &quot;verified-closed&quot;,
+                             &quot;evidence&quot;: incident[&quot;ref&quot;], &quot;owner&quot;: &quot;security&quot;, &quot;closure_ref&quot;: &quot;E05&quot;,
+                             &quot;verified_for&quot;: repaired[&quot;candidate&quot;], &quot;mitigation&quot;: &quot;backend deny enforced&quot;}]
+    repaired[&quot;approval&quot;] = deepcopy(approved[&quot;approval&quot;])
+    stale = decide(repaired)
+    archive(history, &quot;F-previous&quot;, stale)
+    if POLICY[&quot;require_new_approval_after_material_change&quot;]:
+        assert stale[&quot;decision&quot;] == &quot;REVIEW&quot;
+    repaired[&quot;approval&quot;] = sign(repaired)
+    fresh = decide(repaired)
+    archive(history, &quot;F-fresh&quot;, fresh)
+    if mode == &quot;repaired&quot;:
+        return [stale, fresh], history
+
+    expired = packet(60, repaired=True)
+    expired[&quot;approval&quot;] = sign(expired)
+    expired[&quot;exceptions&quot;] = [{&quot;id&quot;: &quot;EX-1&quot;, &quot;severity&quot;: &quot;low&quot;, &quot;owner&quot;: &quot;risk&quot;,
+                             &quot;justification&quot;: &quot;defer advisory wording check&quot;, &quot;status&quot;: &quot;accepted&quot;,
+                             &quot;accepted_by&quot;: RISK_APPROVER, &quot;expires&quot;: 60, &quot;scope&quot;: &quot;canary&quot;,
+                             &quot;version&quot;: expired[&quot;candidate&quot;], &quot;evidence&quot;: &quot;E15&quot;}]
+    archive(history, &quot;G&quot;, verdict_g := decide(expired))
+    if mode == &quot;expired&quot;:
+        return [verdict_g], history
+
+    extra = packet(61, repaired=True)
+    if mode == &quot;wide_scope&quot;:
+        extra[&quot;scope&quot;] = extra[&quot;rollout_plan&quot;][&quot;requested&quot;] = &quot;expanded&quot;
+        extra[&quot;approval&quot;] = sign(extra, &quot;Marin&quot;)
+    elif mode == &quot;wrong_evaluator&quot;:
+        extra[&quot;manifest&quot;][&quot;evaluator_version&quot;] = &quot;evaluator-v2&quot;
+        extra[&quot;ci&quot;][&quot;manifest_sha256&quot;] = digest(extra[&quot;manifest&quot;])
+        extra[&quot;approval&quot;] = sign(extra)
+    else:
+        raise ValueError(&quot;choose a documented scenario&quot;)
+    archive(history, &quot;Assignment&quot;, assignment := decide(extra))
+    return [assignment], history
+
+def main():
+    results, history = build(MODE)
+    assert len(EVIDENCE_ROWS) == len({item[&quot;id&quot;] for item in evidence(&quot;northstar-v2&quot;)}) == 24
+    print(f&quot;{RELEASE} | {MODE} | 24 evidence records&quot;)
+    for result in results:
+        if &quot;action&quot; in result:
+            print(f&quot;Operations: {result[&#x27;action&#x27;]} | {result[&#x27;reason&#x27;]}&quot;)
+            print(f&quot;Active: {result[&#x27;active_before&#x27;]} -&gt; {result[&#x27;active_after&#x27;]}&quot;)
+        else:
+            label = result[&quot;decision&quot;]
+            if label == &quot;APPROVE&quot;:
+                label += &quot; LIMITED ROLLOUT&quot;
+            print(f&quot;Release: {label} | {result[&#x27;rationale&#x27;]}&quot;)
+    print(&quot;Audit:&quot;, &quot;, &quot;.join(history))
+    for entry in history.values():
+        load_entry(entry)
+    if SHOW_JSON:
+        print(canonical({&quot;results&quot;: results, &quot;audit&quot;: {key: {&quot;record&quot;: load_entry(entry),
+                                                           &quot;sha256&quot;: entry[1]}
+                                                       for key, entry in history.items()}}))
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">NS-REL-42 | no_approval | 24 evidence records
+Release: REVIEW | authorized sign-off missing
+Audit: A
+</code></pre></details>
+<p>Set <code>MODE = &quot;critical&quot;</code>. Compare the new reason with the green CI status. The remaining replays and assignments are in the folded solutions.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">NS-REL-42 | critical | 24 evidence records
+Release: BLOCK | non-waivable critical finding F-AUTH
+Audit: A, B
+</code></pre></details>
+<h4>Release Policy and Decision Templates</h4>
+<h5>Reusable release policy</h5>
+<p><code>{&quot;release_policy_version&quot;:&quot;release-policy-v1&quot;,&quot;require_passing_ci_gate&quot;:true,&quot;require_complete_evaluation_evidence&quot;:true,&quot;allow_unresolved_critical_findings&quot;:false,&quot;require_authorized_approval&quot;:true,&quot;require_monitoring_readiness&quot;:true,&quot;require_rollback_readiness&quot;:true,&quot;maximum_initial_rollout_percent&quot;:5,&quot;require_new_approval_after_material_change&quot;:true,&quot;minimum_window_requests&quot;:50,&quot;maximum_error_percent&quot;:4.0}</code></p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Field</th><th scope="col">Purpose</th></tr></thead><tbody><tr><td>release_policy_version</td><td>Names the rules approved for this packet</td></tr><tr><td>require_passing_ci_gate</td><td>Requires a passing gate bound to the evaluation manifest</td></tr><tr><td>require_complete_evaluation_evidence</td><td>Requires planned verdicts and verified supporting records</td></tr><tr><td>allow_unresolved_critical_findings</td><td>False keeps the critical blocker non-waivable</td></tr><tr><td>require_authorized_approval</td><td>Requires a named independent signer and agreed scope</td></tr><tr><td>require_monitoring_readiness</td><td>Requires a tested alert path, owner and thresholds</td></tr><tr><td>require_rollback_readiness</td><td>Requires verified restoration compatibility and target</td></tr><tr><td>maximum_initial_rollout_percent</td><td>Caps first exposure</td></tr><tr><td>require_new_approval_after_material_change</td><td>Requires new sign-off for changed candidate, evaluation or policy</td></tr><tr><td>minimum_window_requests</td><td>Sets the minimum observation count for the ordinary rate check</td></tr><tr><td>maximum_error_percent</td><td>Pauses expansion above the configured error rate</td></tr></tbody></table></div>
+<h5>Reusable release decision record</h5>
+<p><code>{&quot;release_id&quot;:&quot;NS-REL-42&quot;,&quot;sequence&quot;:32,&quot;candidate&quot;:&quot;northstar-v2&quot;,&quot;previous_approved&quot;:&quot;northstar-v1&quot;,&quot;evaluation_run_id&quot;:&quot;EVAL-2&quot;,&quot;ci&quot;:{&quot;id&quot;:&quot;CI-EVAL-2&quot;,&quot;status&quot;:&quot;PASS&quot;},&quot;release_policy&quot;:&quot;release-policy-v1&quot;,&quot;findings&quot;:[],&quot;residual_risks&quot;:[],&quot;exceptions&quot;:[],&quot;approval&quot;:{&quot;person&quot;:&quot;Priya&quot;,&quot;role&quot;:&quot;release-approver&quot;,&quot;scope&quot;:&quot;canary&quot;,&quot;status&quot;:&quot;SIGNED&quot;},&quot;scope&quot;:&quot;canary&quot;,&quot;authorized_scope_percent&quot;:5,&quot;monitoring_plan&quot;:{},&quot;rollback_plan&quot;:{},&quot;decision&quot;:&quot;APPROVE&quot;,&quot;rationale&quot;:&quot;signed for 5% canary only&quot;,&quot;evidence_refs&quot;:[]}</code></p>
+<p>Fill the full objects from the program. The record must identify the evidence links, configuration, signatures and flags required to reconstruct the decision. In an actual system, capture authenticated actor identity, trusted timestamps, signature records, immutable artifact digests and access-controlled storage. An automated recommendation can enforce policy or report blockers. Human authority remains a separate signed record.</p>
+<h5>Release-readiness checklist</h5>
+<ul><li>Verify the exact candidate, approved fallback, policy and comparable evaluation run.</li><li>Confirm coverage, critical results, receipts, privacy controls and current finding status.</li><li>Record accepted risks and time-bound exceptions with ownership and supporting evidence.</li><li>Obtain independent approval for the exact exposure. Confirm alert ownership and rehearse the tested return path.</li><li>Keep the traffic ceiling and kill criteria visible to the operator. Preserve each handoff, observation and approval in the audit.</li></ul>
+<h5>Engineering recommendation and follow-up</h5>
+<p>Archive the rejected decisions, the 5% sign-off, the warning window and the incident. W42’s receipt and independent ledger confirm an authorization violation. Restore the prior configuration in the tabletop and record the independent observation of northstar-v1, the operator handoff and the still-existing side effect. Confirm the approved route works and reconcile affected writes. Apply a fresh authorization and legitimacy control to the repair, and propose the W42 incident shape as a permanent case in a new dataset revision with a backend owner. Keep the original packet and compare new configurations only under their declared references. Review the expired exception with its owner before renewal or closure.</p>
+<h4>Common Mistakes</h4>
+<ul><li>If an approval fails after a repair, check the candidate digest, evaluation ID, policy and scope. Obtain a fresh signature.</li><li>If a canary decision seems surprising, check whether the violation is confirmed, the window belongs to the active version and the target is independently verified.</li><li>If evidence is missing, recover the matching records instead of inferring a pass.</li><li>If the audit is long, keep <code>SHOW_JSON</code> off for the compact transcript. Turn it on to review the signed scope, receipt and digest.</li><li>If you restore routing, verify system behavior and investigate effects that already occurred.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-9" data-relevance="Supporting">
+<h5>Test 9: RAG Evaluation</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Evaluate retrieval, answer faithfulness, and keyword relevance on a document-backed banking assistant.</dd></div><div><dt>How it was tested</dt><dd>Retrieve three chunks and score the resulting answer along three axes. The report records retrieval candidates and case-level judgments. Local source documents and 25 cases in the saved walkthrough, including cross-document, unanswerable, and boundary questions. llama3.1:8b bot and mistral judge via Ollama. Keyword matching supplies the answer-relevance measure.</dd></div><div><dt>Actual results</dt><dd>The 25-case page reports 84% context relevance, 100% answer faithfulness, 66% answer relevance, and 83% overall.</dd></div><div><dt>Original findings</dt><dd>The walkthrough flags TC21 as an incorrect eligibility decision despite 100% context relevance and 100% faithfulness scores.</dd></div><div><dt>Evidence notes</dt><dd>The README mentions an earlier 21-case suite. The summary here uses the 25-case result page. The historical faithfulness verdict is not independently verified correctness.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the reported wrong boundary decision in TC21 to discuss what aggregate retrieval and judge scores can support in a release packet.</dd></div></dl>
+<p><a href="test9.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html">Saved report with ranked evidence and answers</a> · <a href="#original-test-9">Evidence files and related lessons</a></p>
+</article>
+<article data-original-experiment="TEST-12" data-relevance="Supporting">
+<h5>Test 12: Agent Behavior Evaluation</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Check whether an agent follows the expected tool path and stops appropriately.</dd></div><div><dt>How it was tested</dt><dd>Run 15 workbook cases through a local banking agent and inspect tool sequence, arguments, and stop behavior. Mock account data and local documents support no-tool, lookup, clarification, and multi-step cases. qwen3.5:9b via Ollama in the committed result data.</dd></div><div><dt>Actual results</dt><dd>14 of 15 passed all checks. TC10 stopped after the lookup rather than taking the expected second step. The walkthrough reports zero final timeouts and three timeout recoveries by retry.</dd></div><div><dt>Original findings</dt><dd>The original analysis shows what becomes visible when individual tool calls and stops are recorded.</dd></div><div><dt>Evidence notes</dt><dd>These outcomes apply to the saved cases and mock tools.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</dd></div></dl>
+<p><a href="test12.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> · <a href="#original-test-12">Evidence files and related lessons</a></p>
+</article>
+<article data-original-experiment="TEST-13" data-relevance="Supporting">
+<h5>Test 13: Trajectory Evaluation with Judge Model</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Judge the quality of saved agent trajectories on four dimensions.</dd></div><div><dt>How it was tested</dt><dd>Read Test 12 traces and score tool selection, argument quality, answer grounding, and stopping behavior. The bundled input is a committed copy of 15 saved Test 12 trajectories. The original page documents the judge prompt. mistral judge via Ollama, grading qwen3.5:9b trajectories.</dd></div><div><dt>Actual results</dt><dd>The committed judge-results JSON records 15 pass verdicts out of 15. Test 12 separately recorded a deterministic mismatch for TC10.</dd></div><div><dt>Original findings</dt><dd>The walkthrough explains why fixed tool-path checks and judge-scored reasoning have different roles.</dd></div><div><dt>Evidence notes</dt><dd>The 15 judge verdicts are historical outputs. They do not overturn the separate recorded deterministic mismatch.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Compare the saved passing judge verdict for TC10 with Test 12’s separate deterministic mismatch before signing off on execution behavior.</dd></div></dl>
+<p><a href="test13.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json">Original judge outputs and scores</a> · <a href="#original-test-13">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Use CI evidence to support a named, version-bound release decision. Limit exposure to its signed scope, watch declared signals, and preserve the approvals and operational actions that followed. A repaired version needs new evidence and authorization.</p>
+<p>Next is <a href="#m14-t01">Traces, monitoring and Langfuse</a>, where you will link observations to individual requests and decide what telemetry to retain.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t03">Offline, online and the evaluation lifecycle</a>, <a href="#m13-t02">CI/CD quality gates and regression evidence</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m12-t03">Mitigation verification, reporting and defensive tooling</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Write a release packet and run a tabletop rollback after a synthetic severe-slice regression.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use the release worksheet and simulated rollout. No service credentials are needed.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Present the owner, decision, rollback trigger, evidence link and follow-up dataset change.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
@@ -25165,7 +25889,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test9.html">View Complete Original Experiment</a> <code>docs/test9.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html">Saved report with ranked evidence and answers</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx">Original RAG case workbook</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py">RAG evaluator</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Inspect how the overall score can hide a known wrong answer.</li><li><a href="#m08-t01">M08-T01 — Ingestion, chunking and ranked retrieval</a> · Primary. Trace the retrieved chunks and recorded relevance scores for each question.</li><li><a href="#m08-t02">M08-T02 — Context sufficiency, answer correctness and citations</a> · Supporting. Compare an eligibility claim with the exact policy rule it uses.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Primary. Use TC21 and the retrieval-confusion cases to decide which stage to investigate.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings.</li><li><a href="#m12-t01">M12-T01 — Threat modeling, scope and test design</a> · Supporting. Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Compare the incorrect TC21 eligibility decision with the governing policy and the saved grader evidence.</li></ul>
+<ul><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the reported wrong boundary decision in TC21 to discuss what aggregate retrieval and judge scores can support in a release packet.</li><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Inspect how the overall score can hide a known wrong answer.</li><li><a href="#m08-t01">M08-T01 — Ingestion, chunking and ranked retrieval</a> · Primary. Trace the retrieved chunks and recorded relevance scores for each question.</li><li><a href="#m08-t02">M08-T02 — Context sufficiency, answer correctness and citations</a> · Supporting. Compare an eligibility claim with the exact policy rule it uses.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Primary. Use TC21 and the retrieval-confusion cases to decide which stage to investigate.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings.</li><li><a href="#m12-t01">M12-T01 — Threat modeling, scope and test design</a> · Supporting. Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Compare the incorrect TC21 eligibility decision with the governing policy and the saved grader evidence.</li></ul>
 </details>
 <details id="original-test-10" class="course-reference original-test" data-evidence="methodology">
 <summary>Test 10 — RAGAS Framework · Methodology Available — Results Missing</summary>
@@ -25189,7 +25913,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test12.html">View Complete Original Experiment</a> <code>docs/test12.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json">Recorded trajectories and arguments</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx">Original agent test cases</a> <code>phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py">Deterministic agent evaluator</a> <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li></ul>
+<ul><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li></ul>
 </details>
 <details id="original-test-13" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 13: Trajectory Evaluation with Judge Model · Recorded Results Available</summary>
@@ -25197,7 +25921,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test13.html">View Complete Original Experiment</a> <code>docs/test13.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json">Original judge outputs and scores</a> <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_report.html">Trajectory evaluation report</a> <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json">Frozen Test 12 trace input</a> <code>phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py">Trajectory judge evaluator</a> <code>phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Contrast TC10&#x27;s recorded judge pass with its separate deterministic mismatch before treating scorers as interchangeable.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Reconcile TC10&#x27;s passing judge verdict with the separate deterministic mismatch before assigning confidence.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Compare a deterministic mismatch with a passing judge result on the same trajectory.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Primary. Inspect the four saved trajectory ratings alongside the original action sequence.</li><li><a href="#m18-t01">M18-T01 — Advanced judge design and evaluator robustness</a> · Supporting. Use the separate judge and deterministic verdicts to examine evaluator robustness.</li></ul>
+<ul><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Compare the saved passing judge verdict for TC10 with Test 12’s separate deterministic mismatch before signing off on execution behavior.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Contrast TC10&#x27;s recorded judge pass with its separate deterministic mismatch before treating scorers as interchangeable.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Reconcile TC10&#x27;s passing judge verdict with the separate deterministic mismatch before assigning confidence.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Compare a deterministic mismatch with a passing judge result on the same trajectory.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Primary. Inspect the four saved trajectory ratings alongside the original action sequence.</li><li><a href="#m18-t01">M18-T01 — Advanced judge design and evaluator robustness</a> · Supporting. Use the separate judge and deterministic verdicts to examine evaluator robustness.</li></ul>
 </details>
 <details id="original-test-14" class="course-reference original-test" data-evidence="methodology">
 <summary>Test 14: Langfuse Observability · Methodology Available — Results Missing</summary>
