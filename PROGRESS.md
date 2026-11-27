@@ -1,6 +1,6 @@
 # Project progress
 
-Last updated **2026-11-27**. The last verified live release is `aa01ca7`. Twenty-five topics have authored chapters locally through M09-T01. The other 28 topics retain their outlines.
+Last updated **2026-11-27**. The last verified live release is `aa01ca7`. Twenty-six topics have authored chapters locally through M09-T02. The other 27 topics retain their outlines.
 
 ## Implemented milestones
 
@@ -63,6 +63,7 @@ Last updated **2026-11-27**. The last verified live release is `aa01ca7`. Twenty
 | M08-T03, Failure attribution, optimization and RAG regression | **Rewritten — Awaiting Human Teaching Review.** Three worked demonstrations, seven standalone activities, four solved exercises, eight knowledge checks, and an eight-case oracle and regression lab with two assignment variants. |
 | M09-T01, Common evaluator contract and framework selection | **Rewritten — Awaiting Human Teaching Review.** Three worked demonstrations, seven standalone activities, four solved exercises, eight knowledge checks, and an eight-case portable harness lab with two assignment variants. |
 | Original TestNeural experiment integration | The shared lesson markup and Resources library use one catalog for Tests 0–14. All 15 are mapped across 31 topics, with 21 Primary, 23 Supporting, and one Related mapping. Existing exercises and original evidence remain intact. |
+| M09-T02, DeepEval and RAGAS on frozen RAG records | **Rewritten — Awaiting Human Teaching Review.** Three demonstrations, seven standalone activities, four solved exercises, eight knowledge checks, an eight-case paired lab with two assignment variants, and two versioned framework walkthroughs. |
 
 ## Tested
 
@@ -122,6 +123,7 @@ Last updated **2026-11-27**. The last verified live release is `aa01ca7`. Twenty
 - For M08-T03, seven baselines, seven experiments, three lab replays, two assignment variants, and a boundary and audit run passed in fresh Python 3.12.7 processes. Independent checks confirmed the ranking scores, metric denominators, paired transitions, release gates, and historical trace preservation. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with twenty-four authored chapters. All captures, scores, and latency values are fictional.
 - For M09-T01, seven baselines, seven experiments, three lab modes, two assignment variants, and a boundary and audit run passed in fresh Python 3.12.7 processes. Independent checks confirmed keyword parity, denominators, weighted scores, the mandatory data boundary, and audit preservation. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with twenty-five authored chapters. All Northstar captures and framework ratings are fictional.
 - The original experiment coverage command reported 11 recorded tests, one partial test, three methodology-only tests, 22 topics without references, and zero unresolved catalog source paths. All 55 cited paths matched the pinned repository revision byte for byte. The generated homepage and curriculum synchronized, static validation covered 30 public files, and all 36 checked-in non-browser tests passed. No historical experiment was rerun.
+- For M09-T02, seven baselines, seven experiments, three lab modes, two assignment variants, and a boundary and audit run passed in fresh Python 3.12.7 processes. All offline transcripts matched exactly. Independent arithmetic confirmed paired precision, recall, eligibility and coverage denominators. Four optional Bash blocks and two embedded Python snippets passed syntax checks. The framework APIs were checked against released package files without installing or running the packages. Curriculum synchronization, validation of 30 public files, original experiment coverage, and all 36 non-browser tests passed. Tests 10 and 11 remain linked with their methodology-only and partial evidence labels.
 
 ## Manually verified
 
@@ -133,7 +135,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 2. Review the homepage and curriculum in desktop and mobile browsers using the [README checklist](README.md#manual-browser-checklist). In a guided lesson, open the Navigator, tab through controls and nodes, pan and zoom, minimize with Escape, then reopen to check the saved view. Confirm the X leaves a reopen icon, node selection stays in the path, and the floating control stays clear of lesson actions at small widths.
 3. Add search metadata to the individual lesson pages and coordinate sitemap and crawler policy with the public URL allowlist.
 4. **M01-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to explain what “that” refers to, run a block using the editor link, and use the assignment records to distinguish an omitted fee paragraph from an answer that contradicts it. Record where the learner needed help before approving the reference.
-5. M09-T02, DeepEval and RAGAS on frozen RAG records, is the next unfinished topic.
+5. M09-T03, promptfoo and OpenAI Evals, is the next unfinished topic.
 6. In Chrome and Safari, open an authored lesson in both learning modes. Scroll to verify the wide Listen sidebar stays below the site header. Check for page overflow with a long code line and a long section name. At a narrower width, verify that keyboard users can open and close Listen and that audio continues when the disclosure closes. Test speed, highlighting, and lesson switches in both themes. Open a published experiment directly and confirm the host serves `/assets/lesson-reader.js`. Sticky positioning, visual wrapping, and native audio behavior remain unverified.
 7. **M01-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run an activity in the editor, explain what changing temperature and top-p did, and use the saved comparison to distinguish a wrong answer from a change in the model or prompt.
 8. **M02-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to run a rule check, explain why a correct claim can still need a groundedness review, and defend their first action on the assignment.
@@ -158,6 +160,7 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 27. **M08-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to classify partial context, work an unsupported claim, predict the citation repair, and explain why the critical gates still block the replay. Verify both learning modes and the online editor manually. Live-model evaluation remains pending.
 28. **M08-T03 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to locate the first defect in Q1, predict Q3’s regression, replay both repairs, and defend the release decision. Check both learning modes and the online editor manually. Live-model reliability assessment remains pending.
 29. **M09-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to distinguish an OK failure from ERROR and SKIPPED, verify Q2 parity and Q4's repair, and defend the framework decision under the data boundary. Manual browser and editor checks, real-framework integration, and live-model validation remain pending.
+30. **M09-T02 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to distinguish support from correctness, reproduce the HOLD and REVIEW results, and explain why Q2 changes a denominator. Check both browser modes, online-editor controls, and Test 10 and Test 11 links manually. Real-framework and provider-backed walkthrough tests remain pending.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).
 

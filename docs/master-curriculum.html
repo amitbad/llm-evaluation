@@ -14602,34 +14602,729 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m09-t02">
-  <p class="lesson-intro" data-lesson-search>Named metrics can answer different questions and require different labels or model calls.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>DeepEval test cases, contextual relevance, faithfulness and thresholds. RAGAS variants for context precision, faithfulness and response relevance, reference requirements and judge/embedding calls. Choose DeepEval for Python assertions and RAGAS for retrieval/generation metric suites when prerequisites match.</p>
-  </section>
-  <details class="lesson-disclosure" data-reading-skip>
-    <summary>Prerequisites</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m08-t02">Context sufficiency, answer correctness and citations</a>, <a href="#m09-t01">Common evaluator contract and framework selection</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a> — required when configuring a custom judge rather than reading recorded adapter results</dd></div></dl></div>
-  </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Walk one saved record through both adapters and compare which passages, claims and answers drive scores. Verify known zero, N/A and timeout cases.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P04 for replay. A live run needs the pinned framework, its compatible model or embedding setup, and P05 if hosted.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Explain one matched-input metric disagreement, required reference, expected runtime and optional hosted cost.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section><details class="lesson-disclosure original-experiments" data-reading-skip>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Freeze paired RAG captures with passage IDs, answer text, reference labels, and configuration provenance.</li><li>Explain correctness, claim support, retrieval quality, citation quality, and critical policy gates using the same evidence.</li><li>Map a frozen input into DeepEval and Ragas, identify metric prerequisites, and preserve zero, missing, and error outcomes.</li><li>Compare RAG-V1 and RAG-V2 on matched cases and write a release decision that exposes regressions.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>A Northstar customer asks how long they have to request a refund and what proof they need. The saved reply reads, “30 days from purchase with a valid receipt.” Open the approved policy and put a check beside each correct claim.</p>
+<p>Now open the passages the assistant actually received. One states the 30-day deadline. The others cover shipping and warranty. Which passage would you cite for “valid receipt”? The claim agrees with policy, but you cannot verify it from this capture. Keep both observations. They answer different evaluation questions.</p>
+<p>All Northstar cases, replies, and scores in the exercises are fictional. Allow about six hours. Complete <a href="#m08-t02">Context sufficiency, answer correctness and citations</a> and <a href="#m09-t01">Common evaluator contract and framework selection</a>. <a href="#m06-t01">Pointwise LLM-as-a-Judge</a> is recommended and required before configuring a custom judge. Complete the core work offline. The optional framework walkthroughs have separate local setup and require an approved judge endpoint.</p>
+<h4>Beginner Explanation</h4>
+<h5>Open one record before choosing a metric</h5>
+<p>Northstar’s Q1 asks, “How long do I have and what proof is required?” A case ID ties this task to its reference. A dataset version identifies the frozen set of tasks and source labels. A system version identifies which configuration produced this capture. An answer string records what it actually said. The ordered retrieved IDs and their passage texts record what it had to work with.</p>
+<p>Store a reviewed answer separately from the captured answer. The reviewed answer covers the limit and proof. Store IDs for acceptable supporting passages separately from what appeared in the prompt. A <strong>required field</strong> must exist for the declared check. A <strong>reference answer</strong> is optional for faithfulness and required for the reference-based recall example. Reviewed passage IDs are required for our retrieval counts. A citation points from a claim to evidence. Its source ID and revision tell you what text to open.</p>
+<p>To <strong>freeze</strong> a RAG record, preserve the exact question, answer, ordered context, source versions, reference revision, and system version. In production also save response ID, model and prompt versions, retrieval settings, and capture timestamp. If V2 produces new answers, freeze them under V2 on the same questions. Scoring an old capture establishes what the evaluator sees in that record. To measure future retrieval, capture a new run. If policy or labels change, give them a new revision and score both systems under the same expectations.</p>
+<h5>Ask separate questions of the same answer</h5>
+<p>Suppose the current policy says 30 days. Predict which replies would pass a policy check and which would pass a support check.</p>
+<ul><li><strong>Correct and supported.</strong> The reply says 30 days and the supplied current refund passage says 30 days.</li><li><strong>Correct but unsupported.</strong> The reply says 30 days and the supplied context is about shipping.</li><li><strong>Incorrect but supported.</strong> The reply says 90 days and the supplied obsolete refund passage says 90 days. The approved policy still says 30.</li><li><strong>Incorrect and unsupported.</strong> The reply says 90 days and only the current 30-day rule was supplied.</li></ul>
+<p><strong>Correctness</strong> asks whether a claim agrees with the governing policy. <strong>Faithfulness</strong> asks whether the supplied context supports what the assistant said. Completeness checks that the answer addresses both deadline and proof. A valid citation must lead to a supplied, appropriate passage and support its associated claim. Check it independently. A <strong>critical policy failure</strong>, such as promising a refund to a customer outside the deadline, can block release even when averages improve.</p>
+<h5>Count retrieved evidence before asking a judge</h5>
+<p>Suppose <code>RF</code> gives the deadline and <code>MR</code> gives the required proof. The captured list is <code>RF, SH, WA</code>. Only <code>RF</code> belongs to the reviewed relevant set. It is one true positive. <code>SH</code> and <code>WA</code> are two false positives, since they were retrieved but are irrelevant. <code>MR</code> is one false negative, since it was required but absent. Precision is <code>1/3</code> retrieved passages relevant. Recall is <code>1/2</code> expected passages found. A list with zero matches and a nonempty gold set can score zero recall. An empty retrieved list has no precision denominator under this lesson’s rule. Missing gold labels require review or a skip.</p>
+<p>Move <code>RF</code> from first to last and leave <code>SH</code> and <code>WA</code> in the list. Predict the two fractions again. Precision is still <code>1/3</code> and recall is still <code>1/2</code>. The list contains the same IDs, so our <strong>passage-ID overlap</strong> rule returns the same result. A ranking-sensitive framework metric can give more credit when the useful passage appears earlier. Record the metric and its scoring rule alongside every number.</p>
+<h5>Map the capture before calling a framework</h5>
+<p>DeepEval is a Python evaluation and testing framework. Its <code>LLMTestCase</code> gives a metric the question, actual output, and ordered retrieval context. Faithfulness judges support for generated claims. Contextual relevancy judges which retrieved statements address the question. Those two metrics do not need a reference answer. A threshold turns a score into a metric pass. Calibrate it against reviewed cases. DeepEval faithfulness and contextual relevancy.</p>
+<p>Ragas provides evaluation datasets and RAG metric variants. In the pinned <code>0.3.9</code> walkthrough a <code>SingleTurnSample</code> holds <code>user_input</code>, <code>response</code>, <code>retrieved_contexts</code>, and an optional <code>reference</code>. Faithfulness estimates the share of response claims supported by retrieved text. <code>LLMContextRecall</code> checks claims in the reference answer, so it needs the reference. The reference-based <strong>context precision</strong> variant judges usefulness for the reference and rewards relevant passages placed earlier. The without-reference variant uses the generated response instead. Other variants compare text or check IDs. <strong>Response relevancy</strong> in the documented LLM-and-embedding variant creates questions from the response and compares their embeddings with the original question. It needs a judge and an embedding model. Ragas context recall, context precision, and response relevancy.</p>
+<p>An <strong>adapter</strong> maps the saved question to <code>input</code> or <code>user_input</code>, saved answer to <code>actual_output</code> or <code>response</code>, and ordered passage text to <code>retrieval_context</code> or <code>retrieved_contexts</code>. Keep passage and case IDs outside the framework object. Map results back to the M09-T01 contract with case and response IDs, evaluator ID and effective version, status, score, verdict, reason, and error. If the framework returns only a score, document a threshold before setting a pass verdict. Compare scores only after checking the implementation, denominator, scale, model, prompt, threshold, and handling of errors and missing references. Judge responses can vary. Bias, policy ambiguity, and prompt wording can affect verdicts. On a small set one case can move the average considerably.</p>
+<h5>Preflight before sending requests</h5>
+<p>Decide which fields and models each metric needs before execution. Our overlap check uses labeled IDs. The pinned walkthroughs send retained text to a configured judge. The optional Ragas response-relevancy variant also requires an embedding model. Mark missing metric-specific references SKIPPED with no score. Mark malformed required input, unsupported package versions, missing model configuration, timeouts, rate limits, and invalid output ERROR. Preserve the reason and exclude those rows from numeric means. A measured finite zero remains OK.</p>
+<p>Use an approved endpoint and keep secrets outside the record. Record versions, model, metric settings, thresholds, timeouts, retries, and cases actually scored. A hypothetical two judge calls on each of eight cases makes 16 calls before retries. Time a small pilot and count requests and tokens before extrapolating. Estimate hosted cost from input and output usage at the approved deployment’s current rates, and include embeddings if used. This chapter has no measured runtime or provider costs for the optional walkthroughs.</p>
+<h5>Decide from paired evidence</h5>
+<p>Pair V2 with V1 by frozen case ID. Show fixes and regressions per dimension. Count evaluated cases beside the average. Ask whether a better mean came from changed behavior or a missing case. For the lab use HOLD for a confirmed critical policy error, REVIEW for unresolved evidence or failed quality criteria, and RELEASE when all paired records are scorable, quality gates pass, and no regressions remain. That decision applies to the teaching fixtures.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Grade one answer by hand</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“How long do I have and what proof is required?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>“30 days from purchase with a valid receipt.” Gold passages are <code>RF</code>, “Refund requests close 30 days from purchase,” and <code>MR</code>, “A valid receipt is required.”</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Fictional capture, “30 days from purchase with a valid receipt.” It attaches <code>RF</code> to the deadline and <code>MR</code> to proof.</span></p>
+<p>The delivered passages are <code>RF</code> above, <code>SH</code>, “Contact Support after 45 days about a shipping delay,” and <code>WA</code>, “Start a warranty claim from your order page.” Predict whether the citation to <code>MR</code> can be verified from that context.</p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Both claims are correct against policy and the reply addresses both parts. <code>RF</code> supports the deadline. The receipt claim is unsupported because <code>MR</code> is absent. Support is <code>1/2</code>, and only one of two cited links supports a claim using delivered evidence. Precision is <code>1/3</code> and recall is <code>1/2</code>.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The capture is missing part of the authorized policy. Inspect the ranked retrieval and final context separately before deciding where <code>MR</code> disappeared.</span></p>
+<h5>Example 2. Prepare one input for both adapters</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“How long do I have and what proof is required?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Keep Q1’s expected answer, gold IDs, and frozen dataset revision as above.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Keep the same reply and three received passages. For DeepEval map question, answer and passage text to <code>input</code>, <code>actual_output</code>, and <code>retrieval_context</code>. For Ragas map them to <code>user_input</code>, <code>response</code>, and <code>retrieved_contexts</code>. Supply the approved answer as <code>reference</code> for recall.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Underline “30 days” and “valid receipt” in the approved answer. Reference recall asks which of those expected claims the context covers. Now read the shipping and warranty passages. Contextual relevancy asks whether statements in those passages address the question. The frozen input is the same, but the judges are looking for different evidence. Record a measured zero as <code>OK, score=0</code>. If the reference is missing, record reference recall as <code>SKIPPED, score=None</code>. If the judge times out, record <code>ERROR, score=None</code>. Only the first record contributes a number to the mean.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Input parity alone cannot establish metric parity. Inspect which text drove the measurement and why any execution was skipped or failed.</span></p>
+<h5>Example 3. Decide from four paired cases</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“Can we deploy RAG-V2?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Both versions answer the same four questions under the same reviewed policy. A confirmed critical answer error blocks release.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The fictional review has baseline verdicts <code>FAIL, FAIL, PASS, PASS</code> and candidate verdicts <code>PASS, PASS, PASS, FAIL</code>. The fourth question is the day-45 refund case. V1 gives the 30-day limit and V2 promises up to 90 days even though it received the right rule.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The total rises from <code>2/4</code> to <code>3/4</code>. Q1 and Q2 are fixes, Q3 stays passing, and Q4 regresses. The change is one more correct answer out of four on these fixtures.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>HOLD. The new critical policy failure belongs to answer use rather than missing retrieval. Preserve that row, repair the answer fixture, and recheck coverage and citations before considering release.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Select <strong>Copy Code</strong>, open the Python editor, replace its starter text with the complete program, and click <strong>Run</strong>. Check the expected output. Predict what will change, edit only the named value, and run again. Each activity is standalone and uses only the standard library with fictional data. These programs use reviewed labels. They do not call either framework.</p>
+</div></details>
+<h5>Step 1 — Validate one frozen record</h5>
+<p>A dictionary keeps the dataset, case, and capture fields together. A list holds ordered passage IDs. The expression <code>key not in row</code> checks whether a field is absent before a grader tries to use it.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">row = {&quot;dataset&quot;: &quot;northstar-v1&quot;, &quot;case_id&quot;: &quot;Q1&quot;, &quot;system&quot;: &quot;RAG-V1&quot;,
+       &quot;question&quot;: &quot;When can I request a refund?&quot;,
+       &quot;retrieved&quot;: [&quot;RF-v2:s01&quot;], &quot;answer&quot;: &quot;Within 30 days of purchase.&quot;}
+remove_answer = False
+if remove_answer:
+    del row[&quot;answer&quot;]
+required = (&quot;dataset&quot;, &quot;case_id&quot;, &quot;system&quot;, &quot;question&quot;, &quot;retrieved&quot;, &quot;answer&quot;)
+missing = [key for key in required if key not in row]
+print(row[&quot;dataset&quot;], row[&quot;case_id&quot;], row[&quot;system&quot;])
+print(&quot;ERROR: missing &quot; + &quot;, &quot;.join(missing) if missing else &quot;READY&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">northstar-v1 Q1 RAG-V1
+READY
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>remove_answer</code> to <code>True</code>. Predict whether the grader can score the captured answer.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">northstar-v1 Q1 RAG-V1
+ERROR: missing answer
+</code></pre></details>
+<p>The capture is incomplete. Record a data error instead of inventing a failed answer.</p>
+<p><strong>Checkpoint.</strong> Would a missing optional reference stop every metric? No. Check each metric’s declared inputs.</p>
+<h5>Step 2 — Measure labeled retrieval precision</h5>
+<p>Two of the saved passages match the question. A set holds the distinct gold IDs. The intersection <code>&amp;</code> gives IDs present in both groups. Keep ranked IDs in a list for inspection.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">gold = {&quot;deadline&quot;, &quot;receipt&quot;}
+retrieved = [&quot;deadline&quot;, &quot;receipt&quot;]
+add_noise = False
+if add_noise:
+    retrieved.append(&quot;shipping&quot;)
+hits = len(gold &amp; set(retrieved))
+print(&quot;Ranked:&quot;, &quot;, &quot;.join(retrieved))
+print(f&quot;Precision: {hits}/{len(retrieved)} = {hits / len(retrieved):.3f}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Ranked: deadline, receipt
+Precision: 2/2 = 1.000
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>add_noise</code> to <code>True</code>. Predict which part of the fraction changes.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Ranked: deadline, receipt, shipping
+Precision: 2/3 = 0.667
+</code></pre></details>
+<p>Two IDs are still relevant. The third passage increases the denominator. Read the added text before raising the retrieval limit.</p>
+<p><strong>Checkpoint.</strong> Would reordering the same three IDs change the count? No. Order-sensitive measures ask a different question.</p>
+<h5>Step 3 — Measure labeled retrieval recall</h5>
+<p>The reference set stays fixed even when an important chunk disappears. <code>set(retrieved)</code> lets the intersection count matches just once. The sorted set difference shows the IDs still missing.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">gold = {&quot;deadline&quot;, &quot;receipt&quot;}
+retrieved = [&quot;deadline&quot;, &quot;receipt&quot;, &quot;shipping&quot;]
+drop_receipt = False
+if drop_receipt:
+    retrieved.remove(&quot;receipt&quot;)
+found = gold &amp; set(retrieved)
+print(f&quot;Recall: {len(found)}/{len(gold)} = {len(found) / len(gold):.3f}&quot;)
+print(&quot;Missing:&quot;, &quot;, &quot;.join(sorted(gold - found)) or &quot;none&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Recall: 2/2 = 1.000
+Missing: none
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>drop_receipt</code> to <code>True</code>. Predict whether shipping can make up for the missing policy.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Recall: 1/2 = 0.500
+Missing: receipt
+</code></pre></details>
+<p>Recall falls to one half. Shipping does not cover the receipt condition. Inspect gates that depend on the specific missing fact.</p>
+<p><strong>Checkpoint.</strong> Can recall drop when precision rises? Yes. Removing a gold passage and several distractors can do both.</p>
+<h5>Step 4 — Count support for explicit claims</h5>
+<p>A reviewer has linked each claim to a passage ID. <code>dict.get</code> returns an empty tuple for an unapproved claim. <code>any</code> checks whether the saved context contains at least one approved support ID.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">retrieved = {&quot;deadline&quot;, &quot;receipt&quot;}
+evidence = {&quot;30 days from purchase&quot;: (&quot;deadline&quot;,), &quot;valid receipt&quot;: (&quot;receipt&quot;,)}
+claims = [&quot;30 days from purchase&quot;, &quot;valid receipt&quot;]
+add_promise = False
+if add_promise:
+    claims.append(&quot;refund arrives in two hours&quot;)
+supported = 0
+for claim in claims:
+    found = any(ref in retrieved for ref in evidence.get(claim, ()))
+    supported += int(found)
+    print(claim, &quot;SUPPORTED&quot; if found else &quot;UNSUPPORTED&quot;)
+print(f&quot;Support: {supported}/{len(claims)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">30 days from purchase SUPPORTED
+valid receipt SUPPORTED
+Support: 2/2
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>add_promise</code> to <code>True</code>. Predict the count of supported claims.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">30 days from purchase SUPPORTED
+valid receipt SUPPORTED
+refund arrives in two hours UNSUPPORTED
+Support: 2/3
+</code></pre></details>
+<p>Check the printed lines one at a time. The deadline and receipt requirement still have links to retrieved evidence. The new two-hour promise has no link, so the support fraction falls from <code>2/2</code> to <code>2/3</code>. Python looked up the links a reviewer supplied. A semantic judge has to identify claims and infer support from the wording, so it can disagree with the reviewer.</p>
+<p><strong>Checkpoint.</strong> Would a supported obsolete deadline be correct? Only if the governing policy for that case allowed it.</p>
+<h5>Step 5 — Check each metric’s input requirements</h5>
+<p>Use sets of required field names to record the prerequisite for a particular metric configuration. Set subtraction produces missing fields. The check reports input eligibility, which is a separate step from confirming that a model is configured.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">record = {&quot;question&quot;: &quot;When can I request a refund?&quot;, &quot;answer&quot;: &quot;30 days.&quot;,
+          &quot;retrieved&quot;: [&quot;30 days from purchase.&quot;], &quot;reference&quot;: &quot;Within 30 days of purchase.&quot;}
+remove_reference = False
+if remove_reference:
+    del record[&quot;reference&quot;]
+requirements = {
+    &quot;DeepEval Faithfulness&quot;: {&quot;question&quot;, &quot;answer&quot;, &quot;retrieved&quot;},
+    &quot;Ragas LLMContextRecall&quot;: {&quot;question&quot;, &quot;retrieved&quot;, &quot;reference&quot;},
+    &quot;Ragas Faithfulness&quot;: {&quot;question&quot;, &quot;answer&quot;, &quot;retrieved&quot;},
+}
+for metric, needed in requirements.items():
+    missing = needed - record.keys()
+    print(metric, &quot;SKIPPED: &quot; + &quot;, &quot;.join(sorted(missing)) if missing else &quot;INPUT READY&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">DeepEval Faithfulness INPUT READY
+Ragas LLMContextRecall INPUT READY
+Ragas Faithfulness INPUT READY
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>remove_reference</code> to <code>True</code>. Predict which checks can still use the capture.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">DeepEval Faithfulness INPUT READY
+Ragas LLMContextRecall SKIPPED: reference
+Ragas Faithfulness INPUT READY
+</code></pre></details>
+<p>Reference-based recall skips. Both faithfulness checks have their required input. A judge would still be needed to run them.</p>
+<p><strong>Checkpoint.</strong> Does INPUT READY mean a judge ran? No. It means this configuration has the data it requires.</p>
+<h5>Step 6 — Compare matched cases and apply a critical gate</h5>
+<p>These dictionaries hold reviewed fictional case verdicts. A list comprehension builds matched pairs. Count <code>(False, True)</code> as a fix and <code>(True, False)</code> as a regression. Q4 is the critical deadline case.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">baseline = {&quot;Q1&quot;: False, &quot;Q2&quot;: False, &quot;Q3&quot;: True, &quot;Q4&quot;: True}
+introduce_90_days = False
+candidate = {&quot;Q1&quot;: True, &quot;Q2&quot;: True, &quot;Q3&quot;: True, &quot;Q4&quot;: not introduce_90_days}
+pairs = [(baseline[key], candidate[key]) for key in baseline]
+print(f&quot;Passes: {sum(baseline.values())}/4 -&gt; {sum(candidate.values())}/4&quot;)
+print(&quot;Fixes:&quot;, pairs.count((False, True)))
+print(&quot;Regressions:&quot;, pairs.count((True, False)))
+print(&quot;Critical failures:&quot;, int(not candidate[&quot;Q4&quot;]))
+print(&quot;Decision:&quot;, &quot;RELEASE&quot; if candidate[&quot;Q4&quot;] else &quot;HOLD&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Passes: 2/4 -&gt; 4/4
+Fixes: 2
+Regressions: 0
+Critical failures: 0
+Decision: RELEASE
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>introduce_90_days</code> to <code>True</code>. Compare the release decision with the aggregate change.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Passes: 2/4 -&gt; 3/4
+Fixes: 2
+Regressions: 1
+Critical failures: 1
+Decision: HOLD
+</code></pre></details>
+<p>The candidate still gains one pass overall. The confirmed 90-day regression blocks release in this four-case example.</p>
+<p><strong>Checkpoint.</strong> Which case controls the decision after the edit? Q4 triggers the critical gate.</p>
+<h5>Step 7 — Keep measured zeros and capture failures distinct</h5>
+<p>An OK row has a number and can contribute to an average. ERROR and SKIPPED rows carry <code>None</code>. The f-string prints a mean only when valid results exist. The dataset and metric version identify the comparison.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">critical = True
+rows = [(&quot;Q1&quot;, &quot;OK&quot;, 1.0), (&quot;Q2&quot;, &quot;OK&quot;, 0.0), (&quot;Q3&quot;, &quot;ERROR&quot;, None),
+        (&quot;Q4&quot;, &quot;SKIPPED&quot;, None)]
+scores = [score for _, status, score in rows if status == &quot;OK&quot;]
+print(&quot;northstar-v1 | RAG-V2 | passage-ID overlap v1&quot;)
+print(f&quot;Mean: {sum(scores) / len(scores):.3f}&quot; if scores else &quot;Mean: N/A&quot;)
+print(f&quot;Coverage: {len(scores)}/{len(rows)}&quot;)
+print(&quot;Errors:&quot;, [key for key, status, _ in rows if status == &quot;ERROR&quot;])
+print(&quot;Skipped:&quot;, [key for key, status, _ in rows if status == &quot;SKIPPED&quot;])
+print(&quot;Decision:&quot;, &quot;HOLD&quot; if critical else &quot;REVIEW&quot; if len(scores) != len(rows) else &quot;RELEASE&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">northstar-v1 | RAG-V2 | passage-ID overlap v1
+Mean: 0.500
+Coverage: 2/4
+Errors: [&#x27;Q3&#x27;]
+Skipped: [&#x27;Q4&#x27;]
+Decision: HOLD
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>critical</code> to <code>False</code> without repairing the missing results.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">northstar-v1 | RAG-V2 | passage-ID overlap v1
+Mean: 0.500
+Coverage: 2/4
+Errors: [&#x27;Q3&#x27;]
+Skipped: [&#x27;Q4&#x27;]
+Decision: REVIEW
+</code></pre></details>
+<p>The confirmed blocker disappears. Coverage is still two of four, so the report remains in review. The measured zero remains part of the average.</p>
+<p><strong>Checkpoint.</strong> Can two evaluators report different coverage on the same cases? Yes. They can require different labels or fail on different rows.</p>
+<h4>Optional Framework Walkthroughs</h4>
+<p>These local Bash examples configure real framework calls. <strong>API surfaces were checked against the released wheels. Execution is unverified.</strong> They send only the Northstar fictional fixture to the configured OpenAI judge if you choose to run them with an approved credential and endpoint. They belong in a separate scratch workspace. The seven browser activities and engineering lab work without these packages.</p>
+<h5>Walkthrough A. DeepEval 3.7.0</h5>
+<p>Use Python 3.11 in an isolated virtual environment. The pinned package release supports this Python version. Supply <code>OPENAI_API_KEY</code> from your approved secret store in the current shell. The shown judge is a dated GPT-4o-mini model ID accepted by this release’s <code>GPTModel</code>. Confirm access in your project before running. DeepEval 3.7.0 release files and DeepEval faithfulness API.</p>
+<p>Use the first block to set up the isolated environment. Keep the second command in the same scratch directory and use the same interpreter.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3.11 -m venv .venv-deepeval
+.venv-deepeval/bin/python -m pip install &quot;deepeval==3.7.0&quot;
+.venv-deepeval/bin/python -m pip check
+</code></pre>
+</div>
+<p><code>input</code> is the saved question, <code>actual_output</code> the recorded reply, and <code>retrieval_context</code> the ordered passages the writer saw. <code>GPTModel</code> configures the judge explicitly. Each metric object holds its own threshold and result. <code>async_mode=False</code> makes the measure calls sequential for this demonstration. <code>include_reason=True</code> requests a reason. The script executes one saved case and prints its status and score without making a new RAG generation.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">.venv-deepeval/bin/python - &lt;&lt;&#x27;PY&#x27;
+import os
+import math
+from importlib.metadata import version
+
+if version(&quot;deepeval&quot;) != &quot;3.7.0&quot;:
+    raise SystemExit(&quot;ERROR: expected deepeval 3.7.0&quot;)
+if not os.environ.get(&quot;OPENAI_API_KEY&quot;):
+    raise SystemExit(&quot;ERROR: configure an approved judge credential&quot;)
+
+from deepeval.metrics import ContextualRelevancyMetric, FaithfulnessMetric
+from deepeval.models import GPTModel
+from deepeval.test_case import LLMTestCase
+
+case = LLMTestCase(
+    input=&quot;How long do I have and what proof is required?&quot;,
+    actual_output=&quot;30 days from purchase with a valid receipt.&quot;,
+    retrieval_context=[
+        &quot;Refund requests close 30 days from purchase.&quot;,
+        &quot;Contact Support after 45 days about a shipping delay.&quot;,
+        &quot;Start a warranty claim from your order page.&quot;,
+    ],
+)
+judge = GPTModel(model=&quot;gpt-4o-mini-2024-07-18&quot;)
+for metric_type in (ContextualRelevancyMetric, FaithfulnessMetric):
+    name = metric_type.__name__
+    try:
+        metric = metric_type(model=judge, threshold=0.7, include_reason=True, async_mode=False)
+        metric.measure(case)
+        score = metric.score
+        if score is None or not math.isfinite(score) or not 0 &lt;= score &lt;= 1:
+            raise ValueError(&quot;invalid score&quot;)
+        print(&quot;demo-v1/Q1/capture-1&quot;, name, &quot;OK&quot;, score, metric.is_successful(), metric.reason)
+    except Exception as error:
+        print(&quot;demo-v1/Q1/capture-1&quot;, name, &quot;ERROR&quot;, type(error).__name__)
+PY
+</code></pre>
+</div>
+<p>Read the score and reason for each check. A metric pass just means that metric met its <code>0.7</code> demo threshold. For a Python regression assertion use the validated metric verdict in a test and report execution failures separately. An import failure calls for checking interpreter and package versions. Authentication or rate-limit failures call for checking the approved provider account and execution settings. A timeout is an error, even if an older report stored zero. In a CI run record duration and the effective retry budget. Scrub sensitive inputs or reasons before sharing logs.</p>
+<h5>Walkthrough B. Ragas 0.3.9</h5>
+<p>Use a separate Python 3.11 environment for the documented <code>evaluate</code> API with legacy metric classes. The adapter dependencies below keep the companion LangChain packages on their 0.3 series. These are version assumptions for this walkthrough. Dependency resolution and live provider access remain unverified. Use the evaluator and dataset documentation for your exact installed release before changing APIs. Ragas 0.3.9 release, evaluate API, and LangChain OpenAI adapter 0.3.35.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3.11 -m venv .venv-ragas
+.venv-ragas/bin/python -m pip install &quot;ragas==0.3.9&quot; &quot;langchain==0.3.27&quot; &quot;langchain-community==0.3.31&quot; &quot;langchain-openai==0.3.35&quot;
+.venv-ragas/bin/python -m pip check
+</code></pre>
+</div>
+<p><code>user_input</code> and <code>response</code> are the saved Q1 fields. <code>retrieved_contexts</code> contains the exact three passages from the DeepEval example. <code>reference</code> supplies the reviewed answer used by reference recall. <code>EvaluationDataset</code> wraps the sample. This run uses two LLM metrics and no embedding metric. <code>ChatOpenAI</code> supplies the judge. This one-case adapter prints the stable case and capture ID outside the framework’s result row. Running one metric per call makes a timeout attributable to that metric. For larger jobs batch by metric eligibility and verify row identities before joining results.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">.venv-ragas/bin/python - &lt;&lt;&#x27;PY&#x27;
+import os
+import math
+from importlib.metadata import version
+
+if version(&quot;ragas&quot;) != &quot;0.3.9&quot;:
+    raise SystemExit(&quot;ERROR: expected ragas 0.3.9&quot;)
+if not os.environ.get(&quot;OPENAI_API_KEY&quot;):
+    raise SystemExit(&quot;ERROR: configure an approved judge credential&quot;)
+
+from langchain_openai import ChatOpenAI
+from ragas import EvaluationDataset, RunConfig, SingleTurnSample, evaluate
+from ragas.metrics import Faithfulness, LLMContextRecall
+
+sample = SingleTurnSample(
+    user_input=&quot;How long do I have and what proof is required?&quot;,
+    response=&quot;30 days from purchase with a valid receipt.&quot;,
+    reference=&quot;30 days from purchase with a valid receipt.&quot;,
+    retrieved_contexts=[
+        &quot;Refund requests close 30 days from purchase.&quot;,
+        &quot;Contact Support after 45 days about a shipping delay.&quot;,
+        &quot;Start a warranty claim from your order page.&quot;,
+    ],
+)
+data = EvaluationDataset(samples=[sample])
+judge = ChatOpenAI(model=&quot;gpt-4o-mini-2024-07-18&quot;, temperature=0, timeout=30, max_retries=0)
+for metric in (Faithfulness(), LLMContextRecall()):
+    if isinstance(metric, LLMContextRecall) and not sample.reference:
+        print(&quot;demo-v1/Q1/capture-1&quot;, metric.name, &quot;SKIPPED&quot;, &quot;missing reference&quot;)
+        continue
+    try:
+        result = evaluate(
+            dataset=data, metrics=[metric], llm=judge,
+            raise_exceptions=True, show_progress=False,
+            run_config=RunConfig(timeout=60, max_retries=1, max_workers=1),
+        )
+        score = float(result.scores[0][metric.name])
+        if not math.isfinite(score) or not 0 &lt;= score &lt;= 1:
+            raise ValueError(&quot;invalid score&quot;)
+        print(&quot;demo-v1/Q1/capture-1&quot;, metric.name, &quot;OK&quot;, score)
+    except Exception as error:
+        print(&quot;demo-v1/Q1/capture-1&quot;, metric.name, &quot;ERROR&quot;, type(error).__name__)
+PY
+</code></pre>
+</div>
+<p>For a missing-reference test, remove <code>reference</code> from the sample and run again. Reference recall skips before sending the request for that metric. Faithfulness can still run with the same answer and passages. Check virtual-environment versions if a metric import fails. If a metric runs but returns NaN, preserve the execution outcome as ERROR. Check the provider and timeout settings when a call fails. Keep the scoring response, error details in an approved log, and effective package versions with the run. Ragas 0.3.9 faithfulness and reference-based context recall.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Find the missing fields</h5>
+<p>Q2 has a question, answer, and supplied passage text. The approved answer and reviewed supporting IDs are missing. Identify which of the lab’s ID-overlap, DeepEval faithfulness, and Ragas <code>LLMContextRecall</code> checks have the necessary input. Name what must be added before any model-based check runs.</p>
+<h5>Practice 2. Separate the two verdicts</h5>
+<p>The approved policy says 30 days. The saved answer says 90 days and the sole captured passage is an old 90-day policy. Give a correctness verdict and a faithfulness verdict. Explain what changes if the delivered passage instead says 30 days.</p>
+<h5>Practice 3. Hand-count retrieval</h5>
+<p>The expected set is <code>{RF, MR}</code>. The ranked list is <code>[SH, RF, WA]</code>. Calculate precision and recall. Then replace <code>WA</code> with <code>MR</code> and repeat. Explain why a ranking-aware judge metric may still distinguish <code>[SH, RF, MR]</code> from <code>[RF, MR, SH]</code>.</p>
+<h5>Practice 4. Investigate a misleading aggregate</h5>
+<p>A report says V2 improves precision from 0.43 to 0.86, returns a 90-day refund promise on Q8, and times out on one judge task. Give the decision under the lab policy. Explain how to report the timeout and what to record before estimating the cost and duration of a rerun.</p>
+<h4>Independent Assignment</h4>
+<p>Use the complete guided lab program as your answer key. Reproduce the eight baseline pairs. For each case record the source IDs, precision and recall, correctness, support, citation quality, and framework input readiness. Verify Q1, Q3, Q6, and Q8 by hand. Keep the evaluator error outside scorable means.</p>
+<ol><li>Run <code>mode = &quot;complete-capture&quot;</code> from a fresh copy. It starts with the critical-answer repair and restores only the missing Q6 capture reference. Predict coverage and decide whether the remaining Q3 regression still blocks release.</li><li>Restore the code, then run <code>mode = &quot;citation&quot;</code>. After the answer repair, Q7 cites shipping while keeping the correct answer and retrieved policy passage. Predict what happens to correctness, claim support, and citation validity.</li><li>Submit each decision with matched denominators and a short list of evidence still needed. Include one metric-compatibility caveat and an expected runtime or cost estimation plan for an approved framework pilot.</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>ID overlap needs reviewed relevant IDs and captured retrieved IDs. Ragas <code>LLMContextRecall</code> needs the reference answer, question, and retrieved text. DeepEval faithfulness can consume the question, saved answer, and retrieved text as given. Both model-based configurations need a compatible, authorized judge and a successful run before returning scores.</p>
+<h5>Solution 2</h5>
+<p>The answer fails against current policy and can be supported by the obsolete context. The supplied source is the problem as well as the answer’s outcome. Replacing the old passage with current policy while keeping the reply fixed makes the same reply both incorrect and unsupported. Check source versions as part of the explanation.</p>
+<h5>Solution 3</h5>
+<p>There is one true positive and three retrieved passages. Precision is 1/3 and recall is 1/2. After the replacement there are two true positives, so precision is 2/3 and recall 2/2. Those fractions stay fixed when reordered, while the ranking-aware metric can reward the two useful passages appearing earlier.</p>
+<h5>Solution 4</h5>
+<p>HOLD because the confirmed critical Q8 error persists. Record the timeout as ERROR with no valid score and report planned and valid denominators. Record the metric variant, model and package versions, number of requests, latency per case, and retry policy. Use pilot token usage and the approved provider’s prices when estimating cost. The aggregate gain cannot clear the policy gate.</p>
+<h5>Lab and assignment answer key</h5>
+<p>The exact baseline and answer-repair outputs follow the lab program. Each line below reproduces one output line for the remaining modes. The historical snapshots always begin with the original 90-day fixture.</p>
+<h6>Missing evidence experiment. Remove Q2’s reference</h6>
+<ul><li><code>RAG-V2 | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 FAIL | 0/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2: P=0.857 (n=7) R=0.857 (n=7) correct=6/7 claim-support=6/9 citations=6/9 coverage=7/8 errors=1 reference-skips=0 critical=1</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=1 (n=7) | retrieval recall regressions=1 | unsupported cases=2 | citation gaps=2</code></li><li><code>Decision: HOLD</code></li><li><code>RAG-V2/answer-repair | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2/answer-repair: P=0.857 (n=7) R=0.857 (n=7) correct=7/7 claim-support=8/9 citations=8/9 coverage=7/8 errors=1 reference-skips=0 critical=0</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=0 (n=7) | retrieval recall regressions=1 | unsupported cases=1 | citation gaps=1</code></li><li><code>Decision: REVIEW</code></li><li><code>RAG-V2/reference-probe | northstar-rag-v1 | refs-v1/Q2-omitted | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 SKIPPED | 1.00/1.00 SKIPPED | 1/1 | SKIPPED</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=6/7 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=1 critical=0</code></li><li><code>RAG-V2/reference-probe: P=0.857 (n=7) R=0.857 (n=7) correct=6/6 claim-support=8/9 citations=8/9 coverage=7/8 errors=1 reference-skips=1 critical=0</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=0 (n=6) | retrieval recall regressions=1 | unsupported cases=1 | citation gaps=1</code></li><li><code>Decision: REVIEW</code></li><li><code>Audit runs: 3 | original Q8: Yes. Requests within 90 days can qualify.</code></li></ul>
+<p>Q2’s labeled passage metrics and claim-support checks survive. Both systems omit Q2 from reference-based correctness and the V2 Ragas reference recall configuration skips Q2. The reference revision records the deliberate change. The V2 correctness denominator falls from seven to six, and the result remains REVIEW.</p>
+<h6>Variant A. Restore the Q6 capture</h6>
+<ul><li><code>RAG-V2 | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 FAIL | 0/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2: P=0.857 (n=7) R=0.857 (n=7) correct=6/7 claim-support=6/9 citations=6/9 coverage=7/8 errors=1 reference-skips=0 critical=1</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=1 (n=7) | retrieval recall regressions=1 | unsupported cases=2 | citation gaps=2</code></li><li><code>Decision: HOLD</code></li><li><code>RAG-V2/answer-repair | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2/answer-repair: P=0.857 (n=7) R=0.857 (n=7) correct=7/7 claim-support=8/9 citations=8/9 coverage=7/8 errors=1 reference-skips=0 critical=0</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=0 (n=7) | retrieval recall regressions=1 | unsupported cases=1 | citation gaps=1</code></li><li><code>Decision: REVIEW</code></li><li><code>RAG-V2/capture-repair | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2/capture-repair: P=0.875 (n=8) R=0.875 (n=8) correct=8/8 claim-support=9/10 citations=9/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>Paired precision: 0.438 -&gt; 0.875 (n=8)</code></li><li><code>Answer fixes=1 regressions=0 (n=8) | retrieval recall regressions=1 | unsupported cases=1 | citation gaps=1</code></li><li><code>Decision: REVIEW</code></li><li><code>Audit runs: 3 | original Q8: Yes. Requests within 90 days can qualify.</code></li></ul>
+<p>Q6 becomes scorable. Correctness and capture coverage are both 8/8. Q3 still retrieves warranty text for a shipping question, so the retrieval, support, and citation criteria keep the decision at REVIEW.</p>
+<h6>Variant B. Change only the Q7 citation</h6>
+<ul><li><code>RAG-V2 | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 FAIL | 0/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2: P=0.857 (n=7) R=0.857 (n=7) correct=6/7 claim-support=6/9 citations=6/9 coverage=7/8 errors=1 reference-skips=0 critical=1</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=1 (n=7) | retrieval recall regressions=1 | unsupported cases=2 | citation gaps=2</code></li><li><code>Decision: HOLD</code></li><li><code>RAG-V2/answer-repair | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2/answer-repair: P=0.857 (n=7) R=0.857 (n=7) correct=7/7 claim-support=8/9 citations=8/9 coverage=7/8 errors=1 reference-skips=0 critical=0</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=0 (n=7) | retrieval recall regressions=1 | unsupported cases=1 | citation gaps=1</code></li><li><code>Decision: REVIEW</code></li><li><code>RAG-V2/citation-probe | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1</code></li><li><code>Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input</code></li><li><code>Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY</code></li><li><code>Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR</code></li><li><code>Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY</code></li><li><code>Q8 | 0.50/1.00 PASS | 1.00/1.00 PASS | 2/2 | READY</code></li><li><code>RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0</code></li><li><code>RAG-V2/citation-probe: P=0.857 (n=7) R=0.857 (n=7) correct=7/7 claim-support=8/9 citations=7/9 coverage=7/8 errors=1 reference-skips=0 critical=0</code></li><li><code>Paired precision: 0.429 -&gt; 0.857 (n=7)</code></li><li><code>Answer fixes=1 regressions=0 (n=7) | retrieval recall regressions=1 | unsupported cases=1 | citation gaps=2</code></li><li><code>Decision: REVIEW</code></li><li><code>Audit runs: 3 | original Q8: Yes. Requests within 90 days can qualify.</code></li></ul>
+<p>Q7 remains correct and supported by the retrieved refund rule, but the cited shipping source was never supplied. Citation validity drops from 8/9 to 7/9. Repair the link and validate the delivered passage before reconsidering the candidate.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>What stays fixed when comparing RAG versions on one frozen dataset, and what can change?</li><li>Which pinned checks can use an answer and context without a reviewed text reference?</li><li>Where do the actual answer and retrieved text go in a DeepEval case?</li><li>Why does Ragas reference-based recall need the reviewed answer? What does the response-relevancy variant need?</li><li>How can a reply be faithful and wrong at the same time?</li><li>One of three retrieved passages appears in a two-passage gold set. What are precision and recall?</li><li>A judge returns zero on one case and times out on another. How should the two rows enter the mean?</li><li>V2 wins on precision and introduces one critical, confirmed refund error. What decision follows, and what happens after a repair?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Hold case IDs, questions, reviewed references and rubric fixed. Different systems can produce different saved contexts and replies. Record each version’s capture and compare by case ID.</li><li>The shown DeepEval faithfulness and contextual relevancy checks and the Ragas faithfulness configuration can run with a configured judge and the required question, answer and context.</li><li>Put the saved answer in <code>actual_output</code> and the ordered text in <code>retrieval_context</code>. Keep the stable IDs for reporting outside the framework case.</li><li>The reference-based variant grades support for the expected answer’s claims. The response-relevancy configuration judges from the question and response and uses embeddings. Their inputs and measurement targets differ.</li><li>A reply can repeat an old 90-day passage verbatim even though the approved policy now says 30 days.</li><li>Precision is 1/3 and recall is 1/2. The first denominator counts retrieved passages, and the second counts relevant gold passages.</li><li>Keep the measured zero as OK. The timeout is ERROR, with no numeric score, and remains in the planned coverage denominator.</li><li>HOLD. After repair, re-score all pairs, check invalid records, paired coverage, regressions and citations before release.</li></ol>
+</div></details>
+<h4>Guided Engineering Lab</h4>
+<h5>Evaluate Two Northstar RAG Versions Using Frozen Evidence</h5>
+<p>The eight cases span refund deadline, receipt, shipping, warranty, account access, escalation, citations, and critical refund eligibility. The fixture IDs point to the exact passage texts at the top of the code. The snapshot records those texts under <code>northstar-policy-v2</code>. <code>northstar-rag-v1</code> freezes the task set. <code>refs-v1</code> pins the reference labels and the rubric version identifies these deterministic rules. The baseline and candidate are separate fictional captures. The program does not regenerate any answer, run DeepEval or Ragas, or measure a judge.</p>
+<h5>Count one case before running</h5>
+<p>Start with Q1. Its gold IDs are <code>RF</code> and <code>MR</code>. V1 retrieves <code>RF, SH</code>, so its precision and recall are both 1/2. V2 retrieves <code>RF, MR</code>, so both are 2/2. The answer is identical in both captures. The receipt claim gains support and its link becomes verifiable because the receipt passage reaches the writer. Now check Q8. Both contexts include <code>RF</code>. V2’s 90-day claim contradicts it. Predict which decision wins when precision improves and the critical answer fails.</p>
+<h5>Read the rules and code together</h5>
+<p>A tuple of triples stores claim name, reviewed value, and cited ID. The code uses <code>set</code> intersections for precision and recall, and counts each case equally in their means. Each capture has at most one annotated citation per claim. The support check matches explicit facts, plus the Q8 inference reviewed in advance. Day 45 is after the 30-day deadline. Passages are resolved from the inline source map. In a real evaluation reviewers would confirm each annotation against the saved text and policy version.</p>
+<p>An unknown or duplicate retrieved ID, missing answer, or malformed claims invalidate the capture. ERROR stays in planned coverage and contributes no scores. Missing reviewed answer text skips the reference-based correctness and recall-input checks. Scores that only use IDs or explicit evidence can still be computed. The Ragas column prints input readiness only. DeepEval’s two walkthrough metrics need the question, answer, and retrieved text, but can use Q2 even if its reference is absent. The baseline includes Q6’s bad pointer to demonstrate a capture error. The candidate reference probe applies the same deliberate reference omission to both systems, under a distinct reference revision.</p>
+<p>HOLD wins when a known critical Q8 claim contradicts the policy, including when another part of that capture is invalid. REVIEW applies when paired correctness coverage is below 8/8, the candidate has fewer than eight correct answers, a paired correctness or recall regression remains, or a candidate case has an unsupported claim or citation gap. RELEASE requires all of those checks to clear. A measured zero is OK, and precision over an empty retrieval list is N/A. Citation validity divides supported links by supplied links. The separate citation-gap gate catches missing links, even if the supplied-link rate is high. Claim-support rate divides supported claims by all evaluated claims. The capture error in Q6 affects the per-version denominator. The paired precision line compares only the same cases with defined precision in both systems.</p>
+<p><code>**v2</code> copies the candidate dictionary, and the new Q8 value replaces one slot in that copy. <code>json.dumps</code> captures the input and output rows as an immutable string. Appending a string to the history tuple preserves the original evidence. The program retains full in-memory snapshots and prints a platform-neutral summary.</p>
+<p>Select <strong>Copy Code</strong>, open the linked editor, paste the whole program and run the default baseline.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+from statistics import mean
+
+mode = &quot;baseline&quot;  # baseline, repair, missing-reference, complete-capture, or citation
+dataset = &quot;northstar-rag-v1&quot;
+rubric = &quot;passage-ids+reviewed-facts-v1&quot;
+sources = {
+    &quot;RF&quot;: (&quot;Refund requests close 30 days from purchase.&quot;, (&quot;days&quot;, 30)),
+    &quot;MR&quot;: (&quot;A valid receipt is required.&quot;, (&quot;receipt&quot;, &quot;valid&quot;)),
+    &quot;SH&quot;: (&quot;Contact Support after 45 days about a shipping delay.&quot;, (&quot;shipping_days&quot;, 45)),
+    &quot;WA&quot;: (&quot;Start a warranty claim from your order page.&quot;, (&quot;warranty&quot;, &quot;order page&quot;)),
+    &quot;AC&quot;: (&quot;Reset your password from the sign-in page.&quot;, (&quot;reset&quot;, &quot;sign-in page&quot;)),
+    &quot;ES&quot;: (&quot;Escalate from the case page.&quot;, (&quot;escalate&quot;, &quot;case page&quot;)),
+}
+# Each row has an ID, question, reference answer, gold IDs, and reviewed expected facts.
+cases = (
+    (&quot;Q1&quot;, &quot;How long do I have and what proof is required?&quot;,
+     &quot;30 days from purchase with a valid receipt.&quot;, (&quot;RF&quot;, &quot;MR&quot;), {&quot;days&quot;: 30, &quot;receipt&quot;: &quot;valid&quot;}),
+    (&quot;Q2&quot;, &quot;What proof is required for a refund?&quot;, &quot;A valid receipt.&quot;, (&quot;MR&quot;,), {&quot;receipt&quot;: &quot;valid&quot;}),
+    (&quot;Q3&quot;, &quot;When should I contact Support about shipping?&quot;,
+     &quot;After 45 days.&quot;, (&quot;SH&quot;,), {&quot;shipping_days&quot;: 45}),
+    (&quot;Q4&quot;, &quot;Where does a warranty claim start?&quot;, &quot;On your order page.&quot;, (&quot;WA&quot;,), {&quot;warranty&quot;: &quot;order page&quot;}),
+    (&quot;Q5&quot;, &quot;Where can I reset my password?&quot;, &quot;On the sign-in page.&quot;, (&quot;AC&quot;,), {&quot;reset&quot;: &quot;sign-in page&quot;}),
+    (&quot;Q6&quot;, &quot;Where do I escalate my case?&quot;, &quot;From the case page.&quot;, (&quot;ES&quot;,), {&quot;escalate&quot;: &quot;case page&quot;}),
+    (&quot;Q7&quot;, &quot;What is the refund deadline? Cite it.&quot;, &quot;30 days from purchase.&quot;, (&quot;RF&quot;,), {&quot;days&quot;: 30}),
+    (&quot;Q8&quot;, &quot;Can I request a refund on day 45?&quot;, &quot;No. The deadline is 30 days from purchase.&quot;,
+     (&quot;RF&quot;,), {&quot;eligible&quot;: False, &quot;days&quot;: 30}),
+)
+def capture(retrieved, answer, *claims):
+    return {&quot;retrieved&quot;: retrieved, &quot;answer&quot;: answer, &quot;claims&quot;: claims}
+
+q2 = (&quot;receipt&quot;, &quot;valid&quot;, &quot;MR&quot;)
+q3 = (&quot;shipping_days&quot;, 45, &quot;SH&quot;)
+q4 = (&quot;warranty&quot;, &quot;order page&quot;, &quot;WA&quot;)
+q6 = (&quot;escalate&quot;, &quot;case page&quot;, &quot;ES&quot;)
+correct_deadline = (&quot;days&quot;, 30, &quot;RF&quot;)
+v1 = {
+    &quot;Q1&quot;: capture((&quot;RF&quot;, &quot;SH&quot;), &quot;30 days from purchase with a valid receipt.&quot;,
+                  correct_deadline, q2),
+    &quot;Q2&quot;: capture((&quot;MR&quot;, &quot;SH&quot;), &quot;A valid receipt.&quot;, q2),
+    &quot;Q3&quot;: capture((&quot;SH&quot;, &quot;WA&quot;), &quot;After 45 days.&quot;, q3),
+    &quot;Q4&quot;: capture((&quot;SH&quot;, &quot;WA&quot;), &quot;On your order page.&quot;, q4),
+    &quot;Q5&quot;: capture((&quot;ES&quot;,), &quot;Use the case page to reset your password.&quot;, (&quot;reset&quot;, &quot;case page&quot;, &quot;ES&quot;)),
+    &quot;Q6&quot;: capture((&quot;ES&quot;, &quot;WA&quot;), &quot;From the case page.&quot;, q6),
+    &quot;Q7&quot;: capture((&quot;RF&quot;, &quot;SH&quot;), &quot;30 days from purchase [SH].&quot;, (&quot;days&quot;, 30, &quot;SH&quot;)),
+    &quot;Q8&quot;: capture((&quot;RF&quot;, &quot;SH&quot;), &quot;No. The deadline is 30 days from purchase.&quot;,
+                  (&quot;eligible&quot;, False, &quot;RF&quot;), correct_deadline),
+}
+v2 = {
+    &quot;Q1&quot;: capture((&quot;RF&quot;, &quot;MR&quot;), &quot;30 days from purchase with a valid receipt.&quot;,
+                  correct_deadline, q2),
+    &quot;Q2&quot;: capture((&quot;MR&quot;,), &quot;A valid receipt.&quot;, q2),
+    &quot;Q3&quot;: capture((&quot;WA&quot;,), &quot;After 45 days.&quot;, q3),
+    &quot;Q4&quot;: capture((&quot;WA&quot;,), &quot;On your order page.&quot;, q4),
+    &quot;Q5&quot;: capture((&quot;AC&quot;,), &quot;Use the sign-in page.&quot;, (&quot;reset&quot;, &quot;sign-in page&quot;, &quot;AC&quot;)),
+    &quot;Q6&quot;: capture((&quot;UNKNOWN&quot;,), &quot;From the case page.&quot;, q6),
+    &quot;Q7&quot;: capture((&quot;RF&quot;,), &quot;30 days from purchase [RF].&quot;, correct_deadline),
+    &quot;Q8&quot;: capture((&quot;RF&quot;,), &quot;Yes. Requests within 90 days can qualify.&quot;,
+                  (&quot;eligible&quot;, True, &quot;RF&quot;), (&quot;days&quot;, 90, &quot;RF&quot;)),
+}
+
+def verify_cases(records, baseline, candidate):
+    ids = [case[0] for case in records]
+    if len(set(ids)) != len(ids) or set(baseline) != set(ids) or set(candidate) != set(ids):
+        raise ValueError(&quot;Expected unique case IDs with one slot per system&quot;)
+    for case_id, question, reference, gold, facts in records:
+        if not case_id or not question or not gold or len(gold) != len(set(gold)):
+            raise ValueError(&quot;Invalid case or gold IDs&quot;)
+        if set(gold) - sources.keys() or not facts:
+            raise ValueError(&quot;Invalid gold source or expected facts&quot;)
+        if reference is not None and (not isinstance(reference, str) or not reference.strip()):
+            raise ValueError(&quot;Invalid reference&quot;)
+
+def assess(case, row):
+    _id, _question, reference, gold, expected = case
+    # A known gate can still be evaluated when a capture has another defect.
+    annotated = row.get(&quot;claims&quot;, ()) if isinstance(row, dict) else ()
+    valid_claims = isinstance(annotated, tuple) and all(
+        isinstance(claim, tuple) and len(claim) == 3 and isinstance(claim[0], str)
+        and type(claim[1]) in (str, int, bool) and isinstance(claim[2], str) for claim in annotated
+    )
+    critical = (_id == &quot;Q8&quot; and valid_claims and any(
+        key in expected and (type(val) is not type(expected[key]) or val != expected[key])
+        for key, val, _ in annotated
+    ))
+    if not isinstance(row, dict) or not isinstance(row.get(&quot;answer&quot;), str) or not row[&quot;answer&quot;].strip():
+        return {&quot;status&quot;: &quot;ERROR&quot;, &quot;error&quot;: &quot;missing answer&quot;, &quot;critical&quot;: critical}
+    got = row.get(&quot;retrieved&quot;)
+    if (not isinstance(got, tuple) or any(not isinstance(key, str) for key in got)
+            or len(set(got)) != len(got)
+            or set(got) - sources.keys()):
+        return {&quot;status&quot;: &quot;ERROR&quot;, &quot;error&quot;: &quot;invalid retrieved IDs&quot;, &quot;critical&quot;: critical}
+    if not valid_claims or not annotated or len({key for key, _, _ in annotated}) != len(annotated):
+        return {&quot;status&quot;: &quot;ERROR&quot;, &quot;error&quot;: &quot;invalid claim annotations&quot;, &quot;critical&quot;: critical}
+    facts = {(key, val) for key, val, _ in annotated}
+    hits = len(set(got) &amp; set(gold))
+    matches = (len(facts) == len(expected) and all(key in expected and value == expected[key]
+               and type(value) is type(expected[key]) for key, value in facts))
+    correct = matches if reference is not None else None
+
+    # Q8 supplies the customer&#x27;s purchase age in the question. For this exact
+    # fixture, the approved deadline rule entails ineligibility on day 45.
+    def supports(source, fact):
+        key, value = fact
+        source_key, source_value = sources[source][1]
+        return (key == source_key and type(value) is type(source_value) and value == source_value
+                or (_id == &quot;Q8&quot; and source == &quot;RF&quot; and key == &quot;eligible&quot; and value is False))
+
+    support = sum(any(supports(source, fact) for source in got) for fact in facts)
+    citations = sum(ref in got and supports(ref, (key, val)) for key, val, ref in annotated)
+    return {
+        &quot;status&quot;: &quot;OK&quot;, &quot;precision&quot;: hits / len(got) if got else None,
+        &quot;recall&quot;: hits / len(gold), &quot;correct&quot;: correct, &quot;supported&quot;: support,
+        &quot;claims&quot;: len(facts), &quot;valid_links&quot;: citations, &quot;links&quot;: sum(bool(ref) for _, _, ref in annotated),
+        &quot;critical&quot;: critical, &quot;ragas_recall&quot;: &quot;READY&quot; if reference is not None else &quot;SKIPPED&quot;,
+    }
+
+def ratio(n, d):
+    return f&quot;{n}/{d}&quot; if d else &quot;N/A&quot;
+
+def metric_mean(rows, name):
+    scores = [row[name] for row in rows if row[&quot;status&quot;] == &quot;OK&quot; and row[name] is not None]
+    return f&quot;{mean(scores):.3f} (n={len(scores)})&quot; if scores else &quot;N/A (n=0)&quot;
+
+def totals(rows):
+    valid = [row for row in rows if row[&quot;status&quot;] == &quot;OK&quot;]
+    scored = [row[&quot;correct&quot;] for row in valid if row[&quot;correct&quot;] is not None]
+    return (
+        f&quot;P={metric_mean(rows, &#x27;precision&#x27;)} R={metric_mean(rows, &#x27;recall&#x27;)} &quot;
+        f&quot;correct={ratio(sum(scored), len(scored))} &quot;
+        f&quot;claim-support={ratio(sum(r[&#x27;supported&#x27;] for r in valid), sum(r[&#x27;claims&#x27;] for r in valid))} &quot;
+        f&quot;citations={ratio(sum(r[&#x27;valid_links&#x27;] for r in valid), sum(r[&#x27;links&#x27;] for r in valid))} &quot;
+        f&quot;coverage={len(valid)}/{len(rows)} errors={len(rows)-len(valid)} &quot;
+        f&quot;reference-skips={len(valid)-len(scored)} critical={sum(r[&#x27;critical&#x27;] for r in rows)}&quot;
+    )
+
+def compare(label, records, candidate, baseline=v1, reference_revision=&quot;refs-v1&quot;):
+    verify_cases(records, baseline, candidate)
+    baseline_rows = {}
+    candidate_rows = {}
+    print(f&quot;{label} | {dataset} | {reference_revision} | {rubric}&quot;)
+    print(&quot;Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input&quot;)
+    for case in records:
+        key = case[0]
+        left = baseline_rows[key] = assess(case, baseline[key])
+        right = candidate_rows[key] = assess(case, candidate[key])
+        def compact(row):
+            if row[&quot;status&quot;] == &quot;ERROR&quot;:
+                return &quot;ERROR &quot; + row[&quot;error&quot;]
+            precision = &quot;N/A&quot; if row[&quot;precision&quot;] is None else f&quot;{row[&#x27;precision&#x27;]:.2f}&quot;
+            correct = &quot;SKIPPED&quot; if row[&quot;correct&quot;] is None else &quot;PASS&quot; if row[&quot;correct&quot;] else &quot;FAIL&quot;
+            return f&quot;{precision}/{row[&#x27;recall&#x27;]:.2f} {correct}&quot;
+        support = ratio(right[&quot;supported&quot;], right[&quot;claims&quot;]) if right[&quot;status&quot;] == &quot;OK&quot; else &quot;N/A&quot;
+        print(f&quot;{key} | {compact(left)} | {compact(right)} | {support} | {right.get(&#x27;ragas_recall&#x27;, &#x27;ERROR&#x27;)}&quot;)
+    old, new = list(baseline_rows.values()), list(candidate_rows.values())
+    paired = [(baseline_rows[key], candidate_rows[key]) for key in baseline_rows
+              if baseline_rows[key][&quot;status&quot;] == candidate_rows[key][&quot;status&quot;] == &quot;OK&quot;]
+    equality = [(a[&quot;correct&quot;], b[&quot;correct&quot;]) for a, b in paired
+                if a[&quot;correct&quot;] is not None and b[&quot;correct&quot;] is not None]
+    recalls = sum(b[&quot;recall&quot;] &lt; a[&quot;recall&quot;] for a, b in paired)
+    unsupported = sum(b[&quot;supported&quot;] &lt; b[&quot;claims&quot;] for b in new if b[&quot;status&quot;] == &quot;OK&quot;)
+    citation_gaps = sum(b[&quot;valid_links&quot;] &lt; b[&quot;claims&quot;] or b[&quot;valid_links&quot;] &lt; b[&quot;links&quot;]
+                        for b in new if b[&quot;status&quot;] == &quot;OK&quot;)
+    paired_precision = [(a[&quot;precision&quot;], b[&quot;precision&quot;]) for a, b in paired
+                        if a[&quot;precision&quot;] is not None and b[&quot;precision&quot;] is not None]
+    before = f&quot;{mean(x for x, _ in paired_precision):.3f}&quot; if paired_precision else &quot;N/A&quot;
+    after = f&quot;{mean(y for _, y in paired_precision):.3f}&quot; if paired_precision else &quot;N/A&quot;
+    decision = &quot;RELEASE&quot;
+    if any(row[&quot;critical&quot;] for row in new):
+        decision = &quot;HOLD&quot;
+    elif (not records or len(equality) != len(records)
+          or any(not correct for _, correct in equality) or recalls or unsupported or citation_gaps):
+        decision = &quot;REVIEW&quot;
+    print(&quot;RAG-V1:&quot;, totals(old))
+    print(label + &quot;:&quot;, totals(new))
+    print(f&quot;Paired precision: {before} -&gt; {after} (n={len(paired_precision)})&quot;)
+    print(f&quot;Answer fixes={equality.count((False, True))} regressions={equality.count((True, False))}&quot;
+          f&quot; (n={len(equality)}) | retrieval recall regressions={recalls}&quot;
+          f&quot; | unsupported cases={unsupported} | citation gaps={citation_gaps}&quot;)
+    print(&quot;Decision:&quot;, decision)
+    return json.dumps({&quot;system&quot;: label, &quot;dataset&quot;: dataset, &quot;rubric&quot;: rubric,
+                       &quot;source_revision&quot;: &quot;northstar-policy-v2&quot;, &quot;sources&quot;: sources,
+                       &quot;reference_revision&quot;: reference_revision, &quot;cases&quot;: records,
+                       &quot;baseline&quot;: baseline, &quot;captures&quot;: candidate,
+                       &quot;baseline_results&quot;: baseline_rows, &quot;results&quot;: candidate_rows,
+                       &quot;decision&quot;: decision}, sort_keys=True, allow_nan=False)
+
+def replay(choice):
+    history = (compare(&quot;RAG-V2&quot;, cases, v2),)
+    if choice == &quot;baseline&quot;:
+        print(&quot;Audit runs:&quot;, len(history))
+        return history
+    repaired = {**v2, &quot;Q8&quot;: capture((&quot;RF&quot;,), &quot;No. The deadline is 30 days from purchase.&quot;,
+                                   (&quot;eligible&quot;, False, &quot;RF&quot;), correct_deadline)}
+    history += (compare(&quot;RAG-V2/answer-repair&quot;, cases, repaired),)
+    if choice == &quot;missing-reference&quot;:
+        changed = tuple((key, q, None if key == &quot;Q2&quot; else ref, gold, facts)
+                        for key, q, ref, gold, facts in cases)
+        history += (compare(&quot;RAG-V2/reference-probe&quot;, changed, repaired, reference_revision=&quot;refs-v1/Q2-omitted&quot;),)
+    elif choice == &quot;complete-capture&quot;:
+        completed = {**repaired, &quot;Q6&quot;: capture((&quot;ES&quot;,), &quot;From the case page.&quot;, q6)}
+        history += (compare(&quot;RAG-V2/capture-repair&quot;, cases, completed),)
+    elif choice == &quot;citation&quot;:
+        altered = {**repaired, &quot;Q7&quot;: capture((&quot;RF&quot;,), &quot;30 days from purchase [SH].&quot;, (&quot;days&quot;, 30, &quot;SH&quot;))}
+        history += (compare(&quot;RAG-V2/citation-probe&quot;, cases, altered),)
+    elif choice != &quot;repair&quot;:
+        raise ValueError(&quot;Unknown mode&quot;)
+    print(&quot;Audit runs:&quot;, len(history), &quot;| original Q8:&quot;, json.loads(history[0])[&quot;captures&quot;][&quot;Q8&quot;][&quot;answer&quot;])
+    return history
+
+replay(mode)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">RAG-V2 | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1
+Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input
+Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY
+Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY
+Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY
+Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR
+Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q8 | 0.50/1.00 PASS | 1.00/1.00 FAIL | 0/2 | READY
+RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0
+RAG-V2: P=0.857 (n=7) R=0.857 (n=7) correct=6/7 claim-support=6/9 citations=6/9 coverage=7/8 errors=1 reference-skips=0 critical=1
+Paired precision: 0.429 -&gt; 0.857 (n=7)
+Answer fixes=1 regressions=1 (n=7) | retrieval recall regressions=1 | unsupported cases=2 | citation gaps=2
+Decision: HOLD
+Audit runs: 1
+</code></pre></details>
+<p>Set <code>mode = &quot;repair&quot;</code> and run again. This replays the original and a candidate that changes only Q8’s answer and reviewed annotations. Check the coverage and Q3 rows before deciding whether to ship.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">RAG-V2 | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1
+Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input
+Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY
+Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY
+Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY
+Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR
+Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q8 | 0.50/1.00 PASS | 1.00/1.00 FAIL | 0/2 | READY
+RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0
+RAG-V2: P=0.857 (n=7) R=0.857 (n=7) correct=6/7 claim-support=6/9 citations=6/9 coverage=7/8 errors=1 reference-skips=0 critical=1
+Paired precision: 0.429 -&gt; 0.857 (n=7)
+Answer fixes=1 regressions=1 (n=7) | retrieval recall regressions=1 | unsupported cases=2 | citation gaps=2
+Decision: HOLD
+RAG-V2/answer-repair | northstar-rag-v1 | refs-v1 | passage-ids+reviewed-facts-v1
+Case | V1 P/R answer | V2 P/R answer | V2 support | Ragas reference recall input
+Q1 | 0.50/0.50 PASS | 1.00/1.00 PASS | 2/2 | READY
+Q2 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q3 | 0.50/1.00 PASS | 0.00/0.00 PASS | 0/1 | READY
+Q4 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q5 | 0.00/0.00 FAIL | 1.00/1.00 PASS | 1/1 | READY
+Q6 | 0.50/1.00 PASS | ERROR invalid retrieved IDs | N/A | ERROR
+Q7 | 0.50/1.00 PASS | 1.00/1.00 PASS | 1/1 | READY
+Q8 | 0.50/1.00 PASS | 1.00/1.00 PASS | 2/2 | READY
+RAG-V1: P=0.438 (n=8) R=0.812 (n=8) correct=7/8 claim-support=8/10 citations=7/10 coverage=8/8 errors=0 reference-skips=0 critical=0
+RAG-V2/answer-repair: P=0.857 (n=7) R=0.857 (n=7) correct=7/7 claim-support=8/9 citations=8/9 coverage=7/8 errors=1 reference-skips=0 critical=0
+Paired precision: 0.429 -&gt; 0.857 (n=7)
+Answer fixes=1 regressions=0 (n=7) | retrieval recall regressions=1 | unsupported cases=1 | citation gaps=1
+Decision: REVIEW
+Audit runs: 2 | original Q8: Yes. Requests within 90 days can qualify.
+</code></pre></details>
+<p>Now set <code>mode = &quot;missing-reference&quot;</code>. Compare the full output in the answer key. Q2 changes from READY to SKIPPED for reference recall. The labeled retrieval result stays fixed. The candidate’s correctness numerator and denominator each fall by one.</p>
+<h5>Troubleshoot and write the handoff</h5>
+<p>If Q6 is scored in the baseline, check that its candidate retrieval still names <code>UNKNOWN</code>. If Q8 fails to trigger HOLD, inspect both its day limit and eligibility annotation. If repaired Q8 looks good but the output says REVIEW, check Q3’s saved passage and the unresolved Q6 pointer. If the reference experiment lowers retrieval precision, verify that you removed Q2’s reviewed answer rather than its passage.</p>
+<p>A sample report reads, “Compare the seven matched, scorable captures. V2’s mean precision rose from 0.429 to 0.857. Q8 still told a day-45 customer they could qualify under a 90-day limit, even though the approved rule reached the assistant. Hold the original candidate. The saved repair clears that confirmed error and preserves the failed run in the audit. Keep the repaired candidate in REVIEW. Recover Q6’s missing passage record and investigate why warranty text displaced shipping evidence on Q3. Then check Q3’s answer and its citation again.”</p>
+<p>Finish when you can reproduce all three lab modes, defend the matched denominators, explain the precise capture and release errors, and replay both assignment variants. A future live assessment should export the exact retrieved text and IDs, capture IDs, reviewed references, date, and model, retrieval, and prompt versions before grading. Verify provider access and metric behavior on a small pilot. Compare actual answers and errors case by case.</p>
+<h4>Common Mistakes</h4>
+<ul><li>Re-running retrieval during evaluation of saved captures and mixing the resulting contexts.</li><li>Giving a timeout a numeric zero or treating a missing reference as a model error.</li><li>Passing a judge metric on an old policy and treating that result as approval of the current answer.</li><li>Comparing similarly named metrics without checking their variants and judge settings.</li><li>Treating high retrieval precision as permission to ignore a critical answer regression.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
 <summary>Original TestNeural Experiment</summary>
 <div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
 <article data-original-experiment="TEST-10" data-relevance="Primary">
@@ -14644,6 +15339,13 @@ data-subject="Frameworks" data-status="Needs Correction" data-track="Core">
 <dl class="field-list"><div><dt>What was tested</dt><dd>Compare a framework-based judge with Test 9’s custom scoring on saved RAG cases.</dd></div><div><dt>How it was tested</dt><dd>Build DeepEval test cases with question, reply, and retrieved context, then grade with three metrics at a 0.5 threshold. The original workbook and page list 25 cases, the per-case metrics, and the recorded timeout batches. llama3.1:8b bot and mistral judge over Ollama, as documented in the report.</dd></div><div><dt>Actual results</dt><dd>The page reports 1/25 full passes (TC15). TC01–TC15 are described as fully scored. Some context and faithfulness results in TC16–TC25 were affected by timeouts.</dd></div><div><dt>Original findings</dt><dd>The valid-case comparison explains why two scores labeled context relevance can answer different questions.</dd></div><div><dt>Evidence notes</dt><dd>The original all-case aggregates mix valid results with timeout-affected values. Use the recorded batch and metric notes when interpreting them.</dd></div><div><dt>Connection to this lesson</dt><dd>Primary. Compare the original metric definitions and the qualified recorded results.</dd></div></dl>
 <p><a href="test11.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html">Original per-case report</a> · <a href="#original-test-11">Evidence files and related lessons</a></p>
 </article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Freeze the evidence before you compare versions. Score retrieval, answer correctness, claim support, and citations on their own terms. Map the same saved records into each metric configuration, preserve failures and skips, and apply the release gates to matched evidence.</p>
+<p>Next is <a href="#m09-t03">promptfoo and OpenAI Evals</a>.</p></div>
+  <details class="lesson-disclosure" data-reading-skip>
+    <summary>Prerequisites</summary>
+    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m08-t02">Context sufficiency, answer correctness and citations</a>, <a href="#m09-t01">Common evaluator contract and framework selection</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a> — required when configuring a custom judge rather than reading recorded adapter results</dd></div></dl></div>
+  </details>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
