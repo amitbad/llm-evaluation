@@ -97,7 +97,8 @@ test("keeps the original label and gives manual instructions when copying fails"
 test("generated curriculum adds buttons to executable blocks and leaves transcripts alone", () => {
   const html = read("docs/master-curriculum.html");
   const sources = authoredLessonIds.flatMap(id =>
-    [...read("docs/lessons/" + id.toLowerCase() + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]);
+    [...read("docs/lessons/" + id.toLowerCase() + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]
+      .map(match => Object.assign(match, {lessonId: id})));
   const rendered = [...html.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)];
   const wrapped = [...html.matchAll(/<div class="lesson-code">([\s\S]*?)<\/pre>\n<\/div>/g)];
   const editorUrl = "https://www.online-python.com/";
@@ -120,7 +121,9 @@ test("generated curriculum adds buttons to executable blocks and leaves transcri
       // Intermediate chapters can place the editor link directly before the block.
       assert.equal(html.slice(0, wrapper.index).endsWith(adjacentEditor), true);
     } else {
-      assert.equal(markup.includes(editor), source[1] === "python");
+      const terminalLab = source.lessonId === "M14-T01";
+      // The tracing lab reads repository fixtures and needs a local SDK and collector.
+      assert.equal(markup.includes(editor), source[1] === "python" && !terminalLab);
     }
   }
 });

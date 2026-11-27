@@ -24876,42 +24876,385 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m14-t01">
-  <p class="lesson-intro" data-lesson-search>Observability makes eval context inspectable across stages and repeated incidents.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Trace/span/generation concepts, correlation IDs, tags, scored observations, telemetry loss and redaction. Choose Langfuse for inspectable LLM traces and scores with suitable deployment/data controls. Consider OpenTelemetry for cross-service context, with application-specific quality scoring elsewhere.</p>
-  </section>
-  <details class="lesson-disclosure" data-reading-skip>
-    <summary>Prerequisites</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t03">Offline, online and the evaluation lifecycle</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a>, <a href="#m11-t02">Bias, fairness and privacy controls</a>, <a href="#m13-t01">Evaluation pipelines and versioned run contracts</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m11-t02">Bias, fairness and privacy controls</a> — required when designing privacy controls for your own trace pipeline</dd></div></dl></div>
-  </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Follow a bank request through a saved trace and associate outcome, case ID, model and latency. Optionally reproduce with local Langfuse.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P04 to read saved traces. The optional dashboard needs local Docker and Langfuse configured.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Annotate a trace and show which fields to retain, redact or drop before collection.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section><details class="lesson-disclosure original-experiments" data-reading-skip>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Inspect genuine saved agent steps and separate a successful lookup from a correct next action.</li><li>Import that evidence into Langfuse and capture a second trace while re-executing the original local tools.</li><li>Verify a targeted repair, recognize execution errors and identify one monitoring signal that would catch a recurrence.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>In the saved TestNeural banking run, a customer asks what is wrong with their account and what to do next. The assistant reports that the account is active and identity verification is pending. It then recommends visiting a branch or completing online verification. Which observation supports that advice? Open the saved tool path before guessing whether the lookup failed, the policy was missing, or the agent stopped too soon.</p>
+<p>Complete <a href="#m02-t03">Offline, online and the evaluation lifecycle</a> first. <a href="#m04-t01">Golden schemas, provenance and versioning</a>, <a href="#m11-t02">Bias, fairness and privacy controls</a>, and <a href="#m13-t01">Evaluation pipelines and versioned run contracts</a> are recommended. Complete the privacy lesson before designing controls for your own trace pipeline. P04 helps with the saved JSON. The lab uses the repository’s public mock banking records. Do not substitute real customer data.</p>
+<h4>Observe the Saved Failure</h4>
+<p>Open <a href="test12.html">Test 12, Agent Behavior Evaluation</a> and find TC10. The report records 14 of 15 tool-path matches. Its checked-in JSON, at <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json</code>, records a qwen3.5:9b run via Ollama. The expected sequence is <code>lookup_account_status → search_docs → final</code>.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Recorded evidence</th><th scope="col">What it establishes</th></tr></thead><tbody><tr><td>Question asks for the issue and next action for a mock account</td><td>Both account state and process guidance matter</td></tr><tr><td>Step 1 shows a successful lookup with active status and pending KYC</td><td>The lookup supplied the correct account state. KYC means Know Your Customer or identity verification</td></tr><tr><td>Step 2 is a final answer suggesting branch or online verification</td><td>The model produced a plausible procedure without the expected document search</td></tr><tr><td><code>tool_match</code> and <code>stop_quality_match</code> are false</td><td>The original evaluator flagged a tool-path mismatch and premature stopping</td></tr><tr><td>Test 13’s judge passed TC10</td><td>The judge verdict and the deterministic path check evaluated different evidence</td></tr></tbody></table></div>
+<p>The JSON is a genuine saved application trajectory. It preserves ordered actions, proposals, arguments, tool results and final text. It has no per-step timestamps, full prompts, token counts, costs or original Langfuse trace ID. Test 14 documents separate Langfuse instrumentation, but its results directory has only a placeholder. The traces you create below are new observations about a replay and a new repair run.</p>
+<p>The likely first failure is at finalization. The agent was allowed to answer after a state lookup without retrieving process guidance. The missing call is visible in the saved event list and the original evaluator’s result. To separate early stopping from retrieval quality, execute the missing tool and inspect what it actually returns.</p>
+<h4>Read a Trace Before Changing the Application</h4>
+<p>A trace groups observations from one execution. A span records one operation. A generation is an observation for a model call, with input, output and model information when captured. Parent-child links show which operations happened inside the request. The saved model decision is imported as an ordinary observation so the replay does not imply a new generation.</p>
+<ul><li><strong>Replay root</strong> → <code>lookup_account_status</code> → <code>saved-model-decision</code> → <code>check-tc10-path</code>.</li><li><strong>Repair root</strong> → <code>lookup_account_status</code> → <code>search_docs</code> → <code>assemble-context</code> → <code>finalize</code> → <code>check-tc10-path</code>.</li><li><strong>Optional live root</strong> adds the <code>ollama-draft</code> generation before <code>finalize</code>. The same evidence requirement governs the final answer.</li></ul>
+<p>Each arrow shows reading order. The operations listed after the root are its children. Compare tool arguments and results, then compare assembled context, model draft if present, and delivered answer. Metadata identifies the case, workflow and capture checksum. Use system-generated trace IDs to correlate events. Optional user or session identifiers can group related requests when there is a justified use. This lab omits them, replaces the fixture account and branch with placeholders, and keeps only necessary search fields. Production data needs a stronger redaction and access policy.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Trace symptom</th><th scope="col">Next check</th></tr></thead><tbody><tr><td>Successful lookup followed by final action</td><td>Use recorded steps and stop reason to distinguish premature finalization from a missing span</td></tr><tr><td>Search ran, but the selected passages cover a different account state</td><td>Verify the applicable reference policy. Search success alone gives no procedure</td></tr><tr><td>Applicable evidence is present in retrieval but absent from context assembly</td><td>Compare the forwarded context with the retrieval output</td></tr><tr><td>Correct context reaches the generation and the draft contradicts it</td><td>Inspect the generation and verify the final quality rule</td></tr><tr><td>Tool returns an error or takes too long</td><td>Read status and duration, then verify whether a timeout occurred or a retry eventually succeeded</td></tr><tr><td>Tool arguments or permissions are wrong</td><td>Compare requested arguments and an independent authorization record. This read-only lab does not test access controls</td></tr><tr><td>No child observation appears</td><td>Verify exporter receipt and sampling before treating an absent span as an absent action</td></tr></tbody></table></div>
+<h4>Investigate an LLM Failure Using Langfuse</h4>
+<h5>Set up a temporary local project</h5>
+<p>Use the repository root so Python can read the original capture, fixture account data and policy documents. Use Python 3.11 or newer. The verified versions are Langfuse Python SDK 5.2.0 and Langfuse Lite 0.1.1. Install them into a temporary virtual environment. Langfuse Lite is the official beta emulator with SQLite ingestion and a trace viewer. It needs no account, Docker or paid model. It has no authentication and no production metrics dashboard. Keep it on loopback, turn off optional Lite telemetry, and use only the public fixtures.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">TRACE_LAB_DIR=&quot;$(mktemp -d)&quot;
+python3 -m venv &quot;$TRACE_LAB_DIR/venv&quot;
+. &quot;$TRACE_LAB_DIR/venv/bin/activate&quot;
+python -m pip install &#x27;langfuse==5.2.0&#x27; &#x27;langfuse-lite==0.1.1&#x27;
+printf &#x27;Save the lab program here: %s\n&#x27; &quot;$TRACE_LAB_DIR/trace_lab.py&quot;
+</code></pre>
+</div>
+<p>In a second terminal, activate the same virtual environment using its printed path. Run Lite until you finish. Replace <code>/path/to/lab</code> with the temporary directory from the first terminal. The default port used here is 3000. If it is occupied, select another port and match it in the base URL.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">. /path/to/lab/venv/bin/activate
+TELEMETRY_ENABLED=false langfuse-lite serve --host 127.0.0.1 --port 3000 --db /path/to/lab/lite.db
+</code></pre>
+</div>
+<p>In the first terminal, point the SDK at that server using the documented emulator placeholders. They are sufficient only for Lite and do not grant access to a real project.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">export LANGFUSE_BASE_URL=http://127.0.0.1:3000
+export LANGFUSE_PUBLIC_KEY=pk-lf-local
+export LANGFUSE_SECRET_KEY=sk-lf-local
+</code></pre>
+</div>
+<p>For the full dashboard, choose Langfuse Cloud or a self-hosted Langfuse server compatible with SDK v5, version 4.59.0 or newer. Cloud requires an account and project, and limits and charges depend on plan and usage. Self-hosting requires infrastructure. Use the current official Docker Compose procedure in a dedicated local environment, with loopback exposure and local credentials. Create a project in the UI, open Project Settings → API Keys, create a key allowed to write traces and scores, and set the three environment variables from that project in a private local shell or secret manager. Set the correct regional base URL. Keep keys out of source, logs, shell history, shared screenshots and Git. Use the project’s Tracing page and find the program’s emitted trace ID. The hosted and full self-hosted UI paths have not been exercised here.</p>
+<p>SDK and installation references are <code>https://github.com/langfuse/langfuse-python</code>, <code>https://python.reference.langfuse.com/langfuse</code>, <code>https://langfuse.com/docs/langfuse-lite</code> and <code>https://langfuse.com/self-hosting/deployment/docker-compose</code>.</p>
+<h5>Run the instrumented application</h5>
+<p>Use Copy Code and save the block as <code>trace_lab.py</code> in the printed temporary path. Keep your terminal at the repository root. A <code>with</code> block closes each observation at the end of its operation. The standard-library replay reads saved JSON and verifies the fixture facts. Repair executes the unchanged local lookup and search functions. The finalization step refuses to supply an unverified procedure for the exact active-account case. The optional live mode also asks a locally installed Ollama model for a draft using the same reviewed context, then applies the same finalization rule. No model is required for importing the genuine historical trace or testing the fixed guardrail.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import argparse
+from contextlib import nullcontext
+import hashlib
+import importlib.util
+import json
+import os
+from pathlib import Path
+import sys
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
+from urllib.request import Request, urlopen
+
+AGENT_DIR = Path(&quot;phase-5-production-eval/agent-evaluation&quot;)
+CAPTURE = AGENT_DIR / &quot;results/sample_agent_evaluation_results.json&quot;
+QUESTION = &quot;For this training account, explain the issue and next action.&quot;
+QUERY = &quot;KYC pending active account next action&quot;
+FALLBACK = (&quot;The account is active and identity verification is pending. &quot;
+            &quot;The retrieved policy does not establish the procedure for this case. &quot;
+            &quot;Refer the customer to authorized support.&quot;)
+FENCE = &quot;document evidence required before a procedural answer&quot;
+
+
+class LabError(Exception):
+    pass
+
+
+def training_case():
+    raw = CAPTURE.read_bytes()
+    saved = json.loads(raw)
+    cases = [case for case in saved[&quot;results&quot;] if case[&quot;tc_id&quot;] == &quot;TC10&quot;]
+    if len(cases) != 1:
+        raise LabError(&quot;Expected one saved TC10 record.&quot;)
+    case = cases[0]
+    steps = case[&quot;trace&quot;]
+    if ([step[&quot;action&quot;] for step in steps] != [&quot;tool&quot;, &quot;final&quot;]
+            or steps[0][&quot;tool_name&quot;] != &quot;lookup_account_status&quot;
+            or case[&quot;expected_tool_sequence&quot;].split(&quot; &gt; &quot;) != [&quot;lookup_account_status&quot;, &quot;search_docs&quot;]):
+        raise LabError(&quot;Saved execution differs from the TC10 teaching case.&quot;)
+    account = steps[0][&quot;arguments&quot;][&quot;account_id&quot;]
+    result = steps[0][&quot;tool_result&quot;][&quot;record&quot;]
+    if result[&quot;account_id&quot;] != account:
+        raise LabError(&quot;The historical tool argument and result disagree.&quot;)
+    if not steps[0][&quot;tool_result&quot;][&quot;ok&quot;] or state(result) != {&quot;status&quot;: &quot;active&quot;, &quot;kyc_pending&quot;: True}:
+        raise LabError(&quot;Expected a successful lookup of the active KYC-pending fixture.&quot;)
+    return saved[&quot;bot_model&quot;], steps, hashlib.sha256(raw).hexdigest()
+
+
+def state(record):
+    return {&quot;status&quot;: record[&quot;status&quot;], &quot;kyc_pending&quot;: record[&quot;kyc_pending&quot;]}
+
+
+def safe_answer(text, account, branch):
+    # Narrow redaction for this public, synthetic fixture. Never send an arbitrary saved transcript.
+    for value in (account, branch):
+        if value:
+            text = text.replace(value, &quot;[redacted]&quot;)
+    return text
+
+
+def original_tools():
+    spec = importlib.util.spec_from_file_location(&quot;testneural_tc10_tools&quot;, AGENT_DIR / &quot;tools.py&quot;)
+    module = importlib.util.module_from_spec(spec)
+    # Preserve the historical directory, including avoiding a new __pycache__.
+    sys.dont_write_bytecode = True
+    spec.loader.exec_module(module)
+    return module
+
+
+def span(client, name, as_type=&quot;span&quot;, **fields):
+    if client is None:
+        return nullcontext()
+    return client.start_as_current_observation(name=name, as_type=as_type, **fields)
+
+
+def update(observation, **fields):
+    if observation is not None:
+        observation.update(**fields)
+
+
+def local_chat(model, messages):
+    body = {&quot;model&quot;: model, &quot;messages&quot;: messages, &quot;stream&quot;: False,
+            &quot;options&quot;: {&quot;temperature&quot;: 0, &quot;num_predict&quot;: 200}}
+    request = Request(&quot;http://127.0.0.1:11434/api/chat&quot;, data=json.dumps(body).encode(),
+                      headers={&quot;Content-Type&quot;: &quot;application/json&quot;}, method=&quot;POST&quot;)
+    try:
+        with urlopen(request, timeout=90) as response:
+            reply = json.load(response)
+    except HTTPError as error:
+        raise LabError(f&quot;Ollama HTTP {error.code}. Check the installed model.&quot;) from None
+    except TimeoutError:
+        raise LabError(&quot;Ollama request timed out.&quot;) from None
+    except (URLError, OSError, json.JSONDecodeError):
+        raise LabError(&quot;Ollama is unreachable or returned an invalid response.&quot;) from None
+    if not isinstance(reply, dict) or reply.get(&quot;done&quot;) is not True:
+        raise LabError(&quot;Expected a complete Ollama response.&quot;)
+    message = reply.get(&quot;message&quot;)
+    text = message.get(&quot;content&quot;) if isinstance(message, dict) else None
+    if not isinstance(text, str) or not text.strip():
+        raise LabError(&quot;Ollama returned no answer text.&quot;)
+    usage = {label: reply[key] for label, key in ((&quot;input&quot;, &quot;prompt_eval_count&quot;), (&quot;output&quot;, &quot;eval_count&quot;))
+             if type(reply.get(key)) is int and reply[key] &gt;= 0}
+    return text, usage
+
+
+def run(mode, client=None, model=None, inject_lookup_error=False):
+    recorded_model, steps, checksum = training_case()
+    account = steps[0][&quot;arguments&quot;][&quot;account_id&quot;]
+    historical = steps[0][&quot;tool_result&quot;][&quot;record&quot;]
+    source_mode = {&quot;replay&quot;: &quot;recorded-test12&quot;, &quot;repair&quot;: &quot;local-tool-reexecution&quot;,
+                   &quot;live&quot;: &quot;local-tools-and-ollama&quot;}[mode]
+    metadata = {&quot;case_id&quot;: &quot;TC10&quot;, &quot;provenance&quot;: source_mode, &quot;capture_sha256&quot;: checksum,
+                &quot;workflow_version&quot;: &quot;test12-tracing-v1&quot;, &quot;policy_bundle&quot;: &quot;original-test12-documents&quot;}
+    summary = {&quot;case&quot;: &quot;TC10&quot;, &quot;mode&quot;: mode, &quot;path&quot;: [], &quot;trace_id&quot;: None}
+
+    with span(client, &quot;testneural-tc10&quot;, input={&quot;case&quot;: &quot;TC10&quot;, &quot;question&quot;: QUESTION},
+              metadata=metadata) as root:
+        if client is not None:
+            summary[&quot;trace_id&quot;] = client.get_current_trace_id()
+        try:
+            tools = original_tools() if mode != &quot;replay&quot; else None
+            with span(client, &quot;lookup_account_status&quot;, &quot;tool&quot;,
+                      input={&quot;account_id&quot;: &quot;[redacted]&quot;},
+                      metadata={&quot;evidence&quot;: &quot;recorded&quot; if tools is None else &quot;executed&quot;}) as tool:
+                result = steps[0][&quot;tool_result&quot;] if tools is None else tools.lookup_account_status(account)
+                if inject_lookup_error or not result[&quot;ok&quot;]:
+                    update(tool, level=&quot;ERROR&quot;, status_message=&quot;lookup failed&quot;)
+                    raise LabError(&quot;Account lookup failed. Finalization stopped.&quot;)
+                lookup = state(result[&quot;record&quot;])
+                update(tool, output=lookup)
+                summary[&quot;path&quot;].append(&quot;lookup_account_status&quot;)
+            if mode == &quot;replay&quot;:
+                with span(client, &quot;saved-model-decision&quot;, metadata={&quot;recorded_model&quot;: recorded_model,
+                          &quot;evidence&quot;: &quot;recorded&quot;, &quot;timing&quot;: &quot;import-time-only&quot;}) as saved:
+                    delivered = safe_answer(steps[1][&quot;answer&quot;], account, historical[&quot;branch&quot;])
+                    update(saved, output={&quot;action&quot;: steps[1][&quot;action&quot;], &quot;answer&quot;: delivered})
+                outcome = &quot;FAIL_MISSING_REQUIRED_SEARCH&quot;
+                sources = []
+            else:
+                with span(client, &quot;search_docs&quot;, &quot;tool&quot;, input={&quot;query&quot;: QUERY, &quot;top_k&quot;: 2}) as search:
+                    retrieved = tools.search_docs(QUERY, top_k=2)
+                    if not retrieved[&quot;ok&quot;]:
+                        update(search, level=&quot;ERROR&quot;, status_message=&quot;policy search failed&quot;)
+                        raise LabError(&quot;Policy search failed. Finalization stopped.&quot;)
+                    matches = retrieved[&quot;matches&quot;]
+                    if not any(&quot;To reactivate a dormant account&quot; in item[&quot;text&quot;] for item in matches):
+                        update(search, level=&quot;ERROR&quot;, status_message=&quot;reviewed corpus differs&quot;)
+                        raise LabError(&quot;The reviewed TC10 passages no longer match this fixture.&quot;)
+                    sources = [row[&quot;source&quot;] for row in matches]
+                    update(search, output=[{&quot;source&quot;: item[&quot;source&quot;], &quot;score&quot;: item[&quot;score&quot;],
+                                            &quot;scope&quot;: &quot;dormant-reactivation&quot; if &quot;Form D-1&quot; in item[&quot;text&quot;]
+                                            else &quot;other-policy&quot;,
+                                            &quot;excerpt&quot;: &quot;To reactivate a dormant account&quot; if &quot;Form D-1&quot; in item[&quot;text&quot;]
+                                            else None} for item in matches])
+                    summary[&quot;path&quot;].append(&quot;search_docs&quot;)
+                with span(client, &quot;assemble-context&quot;, &quot;chain&quot;) as assembly:
+                    # Reviewed for this exact fixture. The dormant-account procedure does not cover it.
+                    messages = [
+                        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;Do not give a procedure without applicable policy.&quot;},
+                        {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: f&quot;{QUESTION}\nAccount status: {lookup[&#x27;status&#x27;]}. &quot;
+                         f&quot;KYC pending: {lookup[&#x27;kyc_pending&#x27;]}.\n&quot;
+                         &quot;Reviewed sources contain no approved procedure for this active-account case.&quot;},
+                    ]
+                    update(assembly, output={&quot;sources&quot;: sources, &quot;applicable_policy&quot;: False})
+                if mode == &quot;live&quot;:
+                    with span(client, &quot;ollama-draft&quot;, &quot;generation&quot;, input=messages, model=model,
+                              model_parameters={&quot;temperature&quot;: 0, &quot;num_predict&quot;: 200}) as generation:
+                        try:
+                            draft, usage = local_chat(model, messages)
+                        except LabError:
+                            update(generation, level=&quot;ERROR&quot;, status_message=&quot;local model call failed&quot;)
+                            raise
+                        details = {&quot;usage_details&quot;: usage} if usage else {}
+                        update(generation, output=safe_answer(draft, account, historical[&quot;branch&quot;]), **details)
+                with span(client, &quot;finalize&quot;, &quot;guardrail&quot;, input={&quot;rule&quot;: FENCE}) as final:
+                    delivered = FALLBACK
+                    update(final, output={&quot;route&quot;: &quot;human-review&quot;, &quot;answer&quot;: delivered})
+                outcome = &quot;PASS_SEARCH_AND_SAFE_ESCALATION&quot;
+            with span(client, &quot;check-tc10-path&quot;, &quot;evaluator&quot;) as evaluation:
+                update(evaluation, output={&quot;outcome&quot;: outcome, &quot;tool_path&quot;: summary[&quot;path&quot;]})
+                if client is not None:
+                    client.score_current_trace(name=&quot;tc10_path_and_safe_finalization&quot;,
+                                               value=float(outcome.startswith(&quot;PASS&quot;)),
+                                               data_type=&quot;NUMERIC&quot;)
+            summary.update(outcome=outcome, sources=sources, answer=delivered)
+            update(root, output={&quot;outcome&quot;: outcome, &quot;answer&quot;: delivered})
+        except LabError:
+            update(root, level=&quot;ERROR&quot;, status_message=&quot;run stopped before evaluation&quot;)
+            raise
+    return summary
+
+
+def langfuse_client():
+    required = (&quot;LANGFUSE_BASE_URL&quot;, &quot;LANGFUSE_PUBLIC_KEY&quot;, &quot;LANGFUSE_SECRET_KEY&quot;)
+    if any(not os.environ.get(key, &quot;&quot;).strip() for key in required):
+        raise LabError(&quot;Set the Langfuse base URL and project keys, or use --no-export.&quot;)
+    url = urlsplit(os.environ[&quot;LANGFUSE_BASE_URL&quot;])
+    if (url.scheme not in {&quot;http&quot;, &quot;https&quot;} or not url.hostname or url.username or url.password
+            or url.query or url.fragment or url.path not in (&quot;&quot;, &quot;/&quot;)
+            or url.scheme == &quot;http&quot; and url.hostname not in {&quot;localhost&quot;, &quot;127.0.0.1&quot;, &quot;::1&quot;}):
+        raise LabError(&quot;Use a Langfuse base origin. Plain HTTP is allowed only on loopback.&quot;)
+    from langfuse import get_client
+    return get_client()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(&quot;--mode&quot;, required=True, choices=(&quot;replay&quot;, &quot;repair&quot;, &quot;live&quot;))
+    parser.add_argument(&quot;--model&quot;)
+    parser.add_argument(&quot;--no-export&quot;, action=&quot;store_true&quot;)
+    parser.add_argument(&quot;--inject-lookup-error&quot;, action=&quot;store_true&quot;)
+    args = parser.parse_args()
+    if args.mode == &quot;live&quot; and not args.model:
+        parser.error(&quot;--mode live requires --model with a locally installed model tag&quot;)
+    if args.mode == &quot;replay&quot; and args.inject_lookup_error:
+        parser.error(&quot;failure injection is only available for new executions&quot;)
+    client = None
+    try:
+        client = None if args.no_export else langfuse_client()
+        summary = run(args.mode, client, args.model, args.inject_lookup_error)
+        print(json.dumps(summary, sort_keys=True))
+    except (LabError, OSError, ImportError, ValueError, KeyError, TypeError) as error:
+        # Unexpected dependency/payload errors can contain request or configuration details.
+        message = str(error) if isinstance(error, LabError) else &quot;Check dependencies and repository inputs.&quot;
+        print(f&quot;Lab stopped: {message}&quot;, file=sys.stderr)
+        return 1
+    finally:
+        if client is not None:
+            client.flush()
+    return 0
+
+
+if __name__ == &quot;__main__&quot;:
+    raise SystemExit(main())
+</code></pre>
+</div>
+<h5>Replay, repair, then inspect both traces</h5>
+<p>Run the two modes in separate Python processes. Keep each printed trace ID. The historical case supplies the initial fault. The replay never dispatches another historical tool or makes a new model call. The repair reenacts the lookup and adds the missing search with the original TestNeural tool code. It requires applicable policy before answering the procedural part.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python &quot;$TRACE_LAB_DIR/trace_lab.py&quot; --mode replay
+python &quot;$TRACE_LAB_DIR/trace_lab.py&quot; --mode repair
+langfuse-lite observations --db &quot;$TRACE_LAB_DIR/lite.db&quot;
+langfuse-lite export --db &quot;$TRACE_LAB_DIR/lite.db&quot; --out &quot;$TRACE_LAB_DIR/tc10-viewer.html&quot;
+</code></pre>
+</div>
+<p>Open the local HTML export manually in a browser. Select each <code>testneural-tc10</code> root using its trace ID and expand its children. On a full Langfuse project, use Tracing and open the matching ID instead. You can also inspect the same local records without a browser. Replace <code>REPLAY_ID</code> and <code>REPAIR_ID</code> with the values you recorded.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">langfuse-lite tree REPLAY_ID --db &quot;$TRACE_LAB_DIR/lite.db&quot; --io
+langfuse-lite tree REPAIR_ID --db &quot;$TRACE_LAB_DIR/lite.db&quot; --io
+</code></pre>
+</div>
+<ol><li>Open <code>lookup_account_status</code> in both trees. Confirm the lookup succeeded and returned active status with KYC pending. The argument is redacted because its identity is unnecessary for this analysis.</li><li>In replay, read <code>saved-model-decision</code>. It records a final action and the original answer with two redactions. <code>search_docs</code> is absent and the original tool-path check also recorded a mismatch. The saved answer cannot establish that its next step came from an approved policy.</li><li>In repair, inspect <code>search_docs</code>. The original tool returned two sections from <code>Operations_Guide.txt</code>, scored 2 and 1 by term overlap. The first mentions the procedure for a <strong>dormant</strong> account. The second describes the guide’s scope. These match the query lexically and do not cover the active-account procedure. Open the original guide in <code>phase-5-production-eval/agent-evaluation/documents/Operations_Guide.txt</code> to verify the distinction.</li><li>Open <code>assemble-context</code> and <code>finalize</code>. The reviewed fixture records no applicable policy. Finalization reports the known account state and routes the request to authorized support instead of giving unverified instructions. The rule is specific to the reviewed TC10 material. In a general application the team would maintain an applicability and precedence check for the relevant policy.</li><li>Open <code>check-tc10-path</code> and compare outcomes. The attached numeric score is 0 for the saved failure and 1 for the repair. It measures this fixture’s path and safe finalization. It does not grade general answer quality.</li></ol>
+<h5>Compare what this experiment actually recorded</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Execution</th><th scope="col">Recorded result in Langfuse Lite</th></tr></thead><tbody><tr><td>Historical replay</td><td>1 root and 3 child observations. The saved answer is retained with redactions. Lookup only. Outcome <code>FAIL_MISSING_REQUIRED_SEARCH</code></td></tr><tr><td>Local repair</td><td>1 root and 5 children. Lookup and search execute, two ranked sections are captured, no applicable policy is identified and the program escalates. Outcome <code>PASS_SEARCH_AND_SAFE_ESCALATION</code></td></tr><tr><td>Injected lookup error</td><td>1 root and 1 child, both marked ERROR. The run stops before search or evaluation</td></tr></tbody></table></div>
+<p>These are new local traces captured with Python SDK 5.2.0 and Lite 0.1.1. Their durations measure reading or local tool work during this lab. They cannot recover the original model’s latency. Neither recorded replay nor repair ran a model, so model token usage and cost were unavailable.</p>
+<p>To reproduce the injected failure separately, run the command below. It exits 1 with <code>Lab stopped: Account lookup failed. Finalization stopped.</code> Retrieve the latest root by running <code>langfuse-lite observations</code> and check that it contains no evaluator verdict. Compare its ERROR status with the replay, which ran successfully as an import but represents a failed quality check.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python &quot;$TRACE_LAB_DIR/trace_lab.py&quot; --mode repair --inject-lookup-error
+</code></pre>
+</div>
+<p>For a genuinely new model call, start Ollama locally, use a model you have installed, and substitute its tag for <code>INSTALLED_MODEL_TAG</code>. Ollama needs local model storage and compute. The request uses the loopback chat API. Predict whether a model draft can override the evidence rule, then inspect <code>ollama-draft</code> and <code>finalize</code> separately. Use the captured model ID and parameters for comparison. Available token counts appear under usage. There is no billed cost estimate for this local call. Hosted models would require separately authorized credentials and may incur charges. This live Ollama mode was API-checked and remains unverified.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python &quot;$TRACE_LAB_DIR/trace_lab.py&quot; --mode live --model INSTALLED_MODEL_TAG
+</code></pre>
+</div>
+<p>The decision is to keep the finalization guard for the tested pathway and add a regression case requiring document lookup and safe escalation when no applicable procedure is retrieved. Before a broader release, verify a positive control with an approved active-account procedure and evaluate other scenarios or live model versions. The recorded repair demonstrates a safe fallback. It does not establish that the existing guide contains the missing procedure.</p>
+<h4>Monitor the Failure You Just Investigated</h4>
+<p>Suppose an alert identifies one missing-required-search score among 20 completed requests needing document guidance. The rate is 1/20 or 5%. A teaching threshold of any occurrence routes the event for investigation. Open the alert’s trace ID and check the lookup result, presence of a search, applicability, and the point where the answer was delivered. If 25 requests were expected and only 20 traces arrived, report 80% trace coverage separately. A drop in received traces calls for checking collection and sampling before attributing a change to model behavior. These counts are an illustrative alert, not monitoring history.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Signal</th><th scope="col">What to collect or verify</th></tr></thead><tbody><tr><td>Error rate and latency</td><td>The instrumented observation has timing. Set error status and a safe status message. Divide errors by the applicable attempt count and compare latency within the same tier</td></tr><tr><td>Token use and cost</td><td>Capture provider usage for generations. Langfuse can derive cost for supported configured models and pricing, or ingest supplied cost. Keep unknown separate from zero</td></tr><tr><td>Retrieval and tool failures</td><td>Emit application-specific results such as zero applicable passages, missing required searches, tool failure or authorization rejection</td></tr><tr><td>Quality over time</td><td>Attach evaluator name, version and score, then compare the same case or cohort definitions. Verify sample coverage and distinguish collection gaps</td></tr><tr><td>Critical effects</td><td>Route unauthorized action or disclosure to an appropriate owner based on independent evidence. Keep critical signals visible even when normal traces are sampled</td></tr></tbody></table></div>
+<p>Langfuse groups timestamps, observations and recorded scores for review. A production dashboard or alerting pipeline needs appropriate configuration or metrics integrations. Lite can show individual local traces, not a production dashboard. OpenTelemetry can correlate spans across services when both instrumentation and propagation are in place. Application-specific quality still needs an evaluator. Sample routine requests with a documented denominator, restrict who can read the data, shorten retention to the investigation need, and retain only approved evidence. Avoid raw production prompts, account IDs, secrets or full tool responses in telemetry.</p>
+<h4>Investigation Worksheet</h4>
+<p>Record the two trace IDs, the last correct observed step, the missing or faulty step, the original evidence, the single workflow change and the observed result. Name one alternative explanation and the evidence that would distinguish it. State which fields you retained, redacted or dropped. End with a release or monitoring action that the evidence actually supports.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<p>TC10’s lookup succeeded. The original action list, stop quality result and imported decision support premature finalization. A dropped exporter span alone would be insufficient evidence. The repair executed a real search and found only unrelated or dormant-account guidance for the procedural question. It declined to invent a procedure. Keep the guard, add the locked regression test and require an approved document and a positive test before teaching or releasing the active-account workflow. Watch missing searches and trace coverage separately.</p>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li>If no trace appears, check the selected project, base URL, SDK keys and Lite database path. A printed ID alone establishes that the SDK created a context, not that a server stored it. Inspect observations after the process flushes.</li><li>If the program cannot find inputs, return to the repository root and check the original Test 12 files. If required passages change, treat the replay as a new configuration.</li><li>If a local model call fails, check Ollama is running and the tag is installed. A timeout or provider error leaves the generation unverified. Use the genuine saved replay to continue investigating the original failure.</li><li>If running Lite, stop the second terminal’s server with Ctrl+C. Keep the synthetic SQLite file and exported HTML only as long as required. Remove the temporary directory when finished and unset the three Langfuse environment variables in your shell. For an actual project, follow the approved retention and access policy and revoke temporary keys when appropriate.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
 <summary>Original TestNeural Experiment</summary>
 <div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-12" data-relevance="Supporting">
+<h5>Test 12: Agent Behavior Evaluation</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Check whether an agent follows the expected tool path and stops appropriately.</dd></div><div><dt>How it was tested</dt><dd>Run 15 workbook cases through a local banking agent and inspect tool sequence, arguments, and stop behavior. Mock account data and local documents support no-tool, lookup, clarification, and multi-step cases. qwen3.5:9b via Ollama in the committed result data.</dd></div><div><dt>Actual results</dt><dd>14 of 15 passed all checks. TC10 stopped after the lookup rather than taking the expected second step. The walkthrough reports zero final timeouts and three timeout recoveries by retry.</dd></div><div><dt>Original findings</dt><dd>The original analysis shows what becomes visible when individual tool calls and stops are recorded.</dd></div><div><dt>Evidence notes</dt><dd>These outcomes apply to the saved cases and mock tools.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair.</dd></div></dl>
+<p><a href="test12.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> · <a href="#original-test-12">Evidence files and related lessons</a></p>
+</article>
+<article data-original-experiment="TEST-13" data-relevance="Supporting">
+<h5>Test 13: Trajectory Evaluation with Judge Model</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Judge the quality of saved agent trajectories on four dimensions.</dd></div><div><dt>How it was tested</dt><dd>Read Test 12 traces and score tool selection, argument quality, answer grounding, and stopping behavior. The bundled input is a committed copy of 15 saved Test 12 trajectories. The original page documents the judge prompt. mistral judge via Ollama, grading qwen3.5:9b trajectories.</dd></div><div><dt>Actual results</dt><dd>The committed judge-results JSON records 15 pass verdicts out of 15. Test 12 separately recorded a deterministic mismatch for TC10.</dd></div><div><dt>Original findings</dt><dd>The walkthrough explains why fixed tool-path checks and judge-scored reasoning have different roles.</dd></div><div><dt>Evidence notes</dt><dd>The 15 judge verdicts are historical outputs. They do not overturn the separate recorded deterministic mismatch.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Compare the saved judge pass on TC10 with Test 12’s tool-path mismatch. Identify what a trace and a score each establish.</dd></div></dl>
+<p><a href="test13.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json">Original judge outputs and scores</a> · <a href="#original-test-13">Evidence files and related lessons</a></p>
+</article>
 <article data-original-experiment="TEST-14" data-relevance="Primary">
 <h5>Test 14: Langfuse Observability</h5>
 <p>Methodology Available — Results Missing</p>
 <dl class="field-list"><div><dt>What was tested</dt><dd>Instrument a banking bot evaluation so traces, latency, and scores can be inspected in Langfuse.</dd></div><div><dt>How it was tested</dt><dd>Create a local Langfuse setup and log evaluation traces, spans, tags, and keyword-pass scores. The original workbook contains 20 cases across six banking categories. The page shows the instrumentation and what to inspect. The checked-in configuration names llama3.1:8b. The original walkthrough describes a local Docker and Langfuse setup.</dd></div><div><dt>Actual results</dt><dd>Original methodology is available. No recorded results were found.</dd></div><div><dt>Original findings</dt><dd>The walkthrough explains how a trace connects the input, model call, evaluator, and latency for inspection.</dd></div><div><dt>Evidence notes</dt><dd>The results directory contains only a placeholder. No recorded trace export, dashboard screenshot, or run summary was found.</dd></div><div><dt>Connection to this lesson</dt><dd>Primary. Follow the original instrumentation from prompt to spans and scores.</dd></div></dl>
 <p><a href="test14.html">View Complete Original Experiment</a> · <a href="#original-test-14">Evidence files and related lessons</a></p>
 </article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>The recording showed a successful lookup and a missing policy search. The new trace confirmed the search alone was insufficient, because its strongest result covered a different account state. The verified repair adds the evidence step and safe escalation. The next lesson, <a href="#m14-t02">Production sampling, human feedback, drift and alerts</a>, expands from one investigated trace to monitoring a population of requests.</p></div>
+  <details class="lesson-disclosure" data-reading-skip>
+    <summary>Prerequisites</summary>
+    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m02-t03">Offline, online and the evaluation lifecycle</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a>, <a href="#m11-t02">Bias, fairness and privacy controls</a>, <a href="#m13-t01">Evaluation pipelines and versioned run contracts</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m11-t02">Bias, fairness and privacy controls</a> — required when designing privacy controls for your own trace pipeline</dd></div></dl></div>
+  </details>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -25913,7 +26256,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test12.html">View Complete Original Experiment</a> <code>docs/test12.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json">Recorded trajectories and arguments</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx">Original agent test cases</a> <code>phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py">Deterministic agent evaluator</a> <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li></ul>
+<ul><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li></ul>
 </details>
 <details id="original-test-13" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 13: Trajectory Evaluation with Judge Model · Recorded Results Available</summary>
@@ -25921,7 +26264,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test13.html">View Complete Original Experiment</a> <code>docs/test13.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json">Original judge outputs and scores</a> <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_report.html">Trajectory evaluation report</a> <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json">Frozen Test 12 trace input</a> <code>phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py">Trajectory judge evaluator</a> <code>phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Compare the saved passing judge verdict for TC10 with Test 12’s separate deterministic mismatch before signing off on execution behavior.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Contrast TC10&#x27;s recorded judge pass with its separate deterministic mismatch before treating scorers as interchangeable.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Reconcile TC10&#x27;s passing judge verdict with the separate deterministic mismatch before assigning confidence.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Compare a deterministic mismatch with a passing judge result on the same trajectory.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Primary. Inspect the four saved trajectory ratings alongside the original action sequence.</li><li><a href="#m18-t01">M18-T01 — Advanced judge design and evaluator robustness</a> · Supporting. Use the separate judge and deterministic verdicts to examine evaluator robustness.</li></ul>
+<ul><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Compare the saved judge pass on TC10 with Test 12’s tool-path mismatch. Identify what a trace and a score each establish.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Compare the saved passing judge verdict for TC10 with Test 12’s separate deterministic mismatch before signing off on execution behavior.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Contrast TC10&#x27;s recorded judge pass with its separate deterministic mismatch before treating scorers as interchangeable.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Reconcile TC10&#x27;s passing judge verdict with the separate deterministic mismatch before assigning confidence.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Compare a deterministic mismatch with a passing judge result on the same trajectory.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Primary. Inspect the four saved trajectory ratings alongside the original action sequence.</li><li><a href="#m18-t01">M18-T01 — Advanced judge design and evaluator robustness</a> · Supporting. Use the separate judge and deterministic verdicts to examine evaluator robustness.</li></ul>
 </details>
 <details id="original-test-14" class="course-reference original-test" data-evidence="methodology">
 <summary>Test 14: Langfuse Observability · Methodology Available — Results Missing</summary>

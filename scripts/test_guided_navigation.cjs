@@ -282,7 +282,14 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
   assert.equal([...html.matchAll(/id="module-objectives-m\d+"/g)].length, 18);
   for (const [, id, markup] of sources) {
     const topic = data.topics[id.toUpperCase()];
-    const sections = authoredLessons.has(topic.id) ? [
+    const focusedTraceLesson = topic.id === "M14-T01";
+    const sections = focusedTraceLesson ? [
+      "What You Will Learn", "Why This Lesson Matters", "Observe the Saved Failure",
+      "Read a Trace Before Changing the Application", "Investigate an LLM Failure Using Langfuse",
+      "Monitor the Failure You Just Investigated", "Investigation Worksheet",
+      "Worked Solutions to Practice", "Common Mistakes", "Lesson Summary and Next Step",
+      "<summary>Detailed time estimates</summary>",
+    ] : authoredLessons.has(topic.id) ? [
       "What You Will Learn", "Why This Lesson Matters", "Beginner Explanation", "Worked Demonstration",
       "Hands-On Python Exercise", "Practice Exercises", "Worked Solutions to Practice",
       "<h4>Knowledge Check</h4>", "Knowledge Check Answers", "Common Mistakes", "Lesson Summary and Next Step",
@@ -296,7 +303,16 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
     assert.equal(markup.includes("<summary>Prerequisites</summary>"), prerequisites.length > 0);
     assert.doesNotMatch(markup, />M\d+-T\d+<\/a>/);
     assert.doesNotMatch(markup, /<details\b[^>]*\bopen\b/);
-    if (authoredLessons.has(topic.id)) {
+    if (focusedTraceLesson) {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives|www\.online-python\.com/);
+      assert.match(markup, /href="test12\.html"/);
+      assert.match(markup, /class="language-python">[\s\S]*start_as_current_observation/);
+      assert.match(markup, /trace_lab\.py[^\n]*--mode replay/);
+      assert.match(markup, /trace_lab\.py[^\n]*--mode repair/);
+      assert.match(markup, /langfuse-lite tree/);
+      assert.match(markup, /langfuse-lite export/);
+      assert.match(markup, /class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice/);
+    } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
       assert.equal([...markup.matchAll(/<h5>Practice \d\./g)].length, 4);

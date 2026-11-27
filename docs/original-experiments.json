@@ -626,6 +626,11 @@
       ],
       "topics": [
         {
+          "id": "M14-T01",
+          "relevance": "Supporting",
+          "connection": "Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair."
+        },
+        {
           "id": "M13-T03",
           "relevance": "Supporting",
           "connection": "Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation."
@@ -702,6 +707,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M14-T01",
+          "relevance": "Supporting",
+          "connection": "Compare the saved judge pass on TC10 with Test 12’s tool-path mismatch. Identify what a trace and a score each establish."
+        },
         {
           "id": "M13-T03",
           "relevance": "Supporting",
