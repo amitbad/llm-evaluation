@@ -13606,34 +13606,734 @@ data-subject="Frameworks" data-status="Needs Improvement" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m09-t01">
-  <p class="lesson-intro" data-lesson-search>Portable contracts keep experiments reproducible when a framework or judge changes.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Case/response IDs, metric intent and input schema, results with valid/error/N/A, provenance, offline runner versus hosted service, cost, telemetry and capability fit.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Standardize a saved reply and its evaluator results while preserving case IDs, response IDs, and scoring versions.</li><li>Translate legacy outputs, validate scores, and keep valid failures, evaluator errors, and skipped checks visible.</li><li>Check per-case parity on frozen inputs and explain why scores can diverge.</li><li>Compare evaluation approaches with a weighted matrix, mandatory data boundaries, and an auditable selection memo.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Northstar Support has three checks for the same refund reply. The first prints <code>False</code>. The second prints <code>{&quot;matched&quot;: 2, &quot;total&quot;: 2}</code>. The third prints <code>&quot;PASS&quot;</code>. A teammate wants to count these as two passes and a failure.</p>
+<p>Before you agree, ask the teammate to point to the case ID and explain what each check tested. None of the outputs carries that information. If the third check printed <code>&quot;FAIL&quot;</code>, Python would still treat the nonempty string as true in an <code>if</code> statement. Try deciding which fields you would need to build a report you could trust.</p>
+<p>All Northstar replies, source IDs, policy labels, and framework ratings are fictional. Allow about 4.5 hours. Complete <a href="#m04-t01">Golden schemas, provenance and versioning</a> first. <a href="#m05-t03">Combining evaluators and handling uncertainty</a> and <a href="#m07-t03">Comparing models, prompts and A/B variants</a> are recommended. The exercises use inline Python and require no model or framework setup.</p>
+<h4>Beginner Explanation</h4>
+<h5>Start with the saved reply</h5>
+<p>“Can I get a refund after 45 days?” is a question, while “Refunds are available within 90 days” is a particular reply. Give the question a stable <strong>case ID</strong> and each saved reply a stable <strong>response ID</strong>. A case contains the task and the references needed to check it. The <strong>evaluation input</strong> is the record you actually hand to a grader. An <strong>evaluator</strong> applies one rule and returns an <strong>evaluation result</strong>. The <strong>runner</strong> sends cases to evaluators and the <strong>report</strong> shows their results and summaries.</p>
+<p>Two scripts can expect the same text under different argument names. One might call it <code>actual</code> and another <code>answer</code>. Even if you manage to run both, <code>False</code> could mean a valid failing verdict or a script’s fallback after an exception. A result without IDs or a scoring version is hard to join back to the original capture. Take the result shapes above and predict which values Python would treat as true. A nonempty dictionary and even the string <code>&quot;FAIL&quot;</code> are truthy. Their truthiness says nothing about evaluation success.</p>
+<p>A <strong>contract</strong> says which fields to send and how to read what comes back. Put the question and answer under stable names. Attach both IDs when you return a result. Record how the metric was computed and what failure means. This gives different implementations a common format without forcing the metrics to agree.</p>
+<h5>Choose the fields for one neutral input</h5>
+<p>Start with <code>case_id</code>, <code>response_id</code>, <code>question</code>, and <code>answer</code>. These required fields identify the task and reply. An empty captured answer can be graded as empty. A missing answer field gives the runner no input. Optional fields carry evidence for particular graders.</p>
+<ul><li><code>expected_answer</code> gives a reviewed text reference. Exact match needs it. Keyword checks can run without it.</li><li><code>context</code> holds ordered supplied passage IDs in this fixture. The source manifest resolves those IDs to versioned text.</li><li><code>expected_sources</code> lists reviewed reference IDs, while <code>citations</code> records the references attached to the actual reply. An explicit empty list means the reviewer recorded no citations. A missing list means there is no annotation to inspect.</li><li><code>required_words</code> and <code>metadata</code> carry rule-specific inputs. Metadata can store segment, capture information, and an annotated deadline.</li></ul>
+<p>A <strong>schema</strong> specifies the expected types and fields. An input schema checks that <code>answer</code> is text. A grading rule checks whether the text meets a requirement. Skip a grader that lacks its optional reference, continue the other checks, and report the gap. If a required ID is missing or duplicated, the lab stops at preflight, the validation step before grading. This prevents rows from being attributed to the wrong reply.</p>
+<h5>Make every outcome readable</h5>
+<p>Use <code>case_id</code> and <code>response_id</code> to join back to the capture. Use <code>evaluator_id</code> and <code>evaluator_version</code> to identify the rule and implementation. The report should carry dataset, source, and capture versions and the rule’s effective settings. These details record <strong>provenance</strong>, where the result came from and how it was made.</p>
+<p>Put three cards on the table. The first says the saved text differs from the reference. The second says the keyword script reported three matches out of two terms. The third says no reviewed text reference exists.</p>
+<p>The first card gets <code>OK</code>, a verdict of <code>False</code>, and score <code>0</code>. A check ran and found a real mismatch. The second gets <code>ERROR</code> because the reported measurement is impossible. The third gets <code>SKIPPED</code> because exact match needs a reference it was never given. A reader can now tell which reply failed and which checks need engineering or data work. Both non-OK outcomes have <code>None</code> for <code>passed</code> and <code>score</code>. Keep a human-readable <code>reason</code>, a list of <code>evidence</code>, and an <code>error</code> code on error rows. An unknown requested evaluator ID can have no resolved version, while the requested ID still identifies the configuration problem.</p>
+<p>A result shape also needs a <strong>metric definition</strong>. A keyword score of <code>0.5</code> means one of two requested terms appeared. Higher is better under that rule. A latency score of 120 ms measures time and lower may be better. Exact match is binary, either zero or one. A reviewer may use categories such as “supported” and “unsupported,” with no numeric score. If you extend the contract for these kinds of metrics, declare the scale, unit, direction, and threshold before aggregating. The lab schema intentionally accepts only finite 0–1 scores on valid deterministic rows. It never treats Booleans, NaN, or out-of-range numbers as scores.</p>
+<h5>Translate an evaluator without changing its meaning</h5>
+<p>Exact match compares the untouched strings. Normalized match can ignore changes the rubric explicitly allows. The lab folds case, collapses whitespace, and removes trailing periods. The original reply stays in the record. Keyword coverage checks required whole tokens. It can pass a false statement that uses the right words. Citation ID validation checks the expected supplied references. Whether the passages actually support the claims requires a separate claim-level review.</p>
+<p>You can preserve a legacy check and write an <strong>adapter</strong>, a small function that translates its inputs and outputs. For example, pass the neutral <code>expected_answer</code> and <code>answer</code> into the Boolean function. Convert <code>True</code> to score 1 and pass <code>True</code>. For a count result, divide matched by total only after validating the counts. If a field is renamed, accept the documented alias deliberately and version that adapter change. A dictionary lookup of a saved human or large language model (LLM) judgment can replay a decision, but it cannot recreate the reviewer’s reasoning. Keep its rubric and judge version alongside the saved evidence.</p>
+<p>Test <strong>parity</strong>, agreement on the same exact case and metric, before swapping implementations. If both count two terms out of two with the same token rules, both should report 1.0. If one ignores capitalization and the other checks exact text, a lowercase reply can pass one and fail the other. That difference is intentional. Record it instead of comparing the scores as if the rules were identical. A registry maps evaluator names to implementations and versions. The runner validates the dataset, looks up each requested evaluator, records its result or error, then continues the remaining checks.</p>
+<h5>Calculate a report before choosing a tool</h5>
+<p>Take four planned checks for one evaluator. The first passes, the second fails, the third times out, and the fourth lacks a reference. Pass rate is <code>1/2</code> because only two checks produced valid verdicts. Coverage is <code>2/4</code> and the error rate is <code>1/4</code>. One was skipped. If the two valid scores are 1 and 0, their mean is <code>(1 + 0)/2 = 0.5</code>. If all checks are errors or skips, the pass rate is N/A. Keep the rows by case and by evaluator so a high keyword score cannot hide a critical refund finding. Count confirmed critical cases separately.</p>
+<p>Northstar’s old scripts make it hard to tell which tool produced a result, what version ran, or what input left the team’s environment. Keep cases, labels, output formats, and evidence independent of any vendor. During a migration, map one frozen case into both interfaces, run matching definitions, and verify identity, errors, skips, and intended divergences before changing the default runner. The saved Test 11 walkthrough is a historical example of why this matters. It shows a case object with separate question, reply and retrieval fields, and describes timeouts that were represented as zero scores in that run. Treat timeouts as execution evidence in this lesson. The walkthrough does not establish how current framework versions handle them.</p>
+<h5>Choose according to the work you need to do</h5>
+<p>If the job is to catch wrong dates in saved replies and keep a few checks repeatable in continuous integration (CI), a plain Python harness can be enough. A harness is the runner, fixtures, and report together. If the team needs experiment comparisons, trace inspection, human review queues, or many reusable metrics, a library or platform may save integration work. Compare the work it removes with the work it introduces. A hybrid can keep the authoritative evaluator contract and CI checks local while sending approved, minimized data to a specialized review workflow.</p>
+<p>Product categories overlap. A Python evaluation library provides callable metrics or tests. A command-line tool runs a configuration or test matrix. A hosted platform may operate shared datasets or experiment records. An observability system collects traces and other measurements, called telemetry, from running applications. Human review workflows capture independent judgments and disagreements. RAG-focused metric suites concentrate on retrieval, evidence and generation. Treat these as capability categories and verify a tool’s actual fit. The repository’s historical tests include DeepEval and Ragas. The next chapter examines saved adapter records. This lesson compares generic approaches and makes no claims about current product features, prices or terms.</p>
+<p>Ask which tasks a candidate supports. Verify deterministic rules, judge-based checks, RAG measures, dataset and experiment comparison, tracing, human review, and CI integration where required. Check reproducibility by replaying a known case with agreed versions on the intended operating system. A <strong>lockfile</strong> records the exact dependency versions to reinstall. Check runtime and training effort, deployment ownership, support costs and monitoring.</p>
+<p>Check where evaluation records, telemetry, raw inputs, judge requests and backups go. Set a mandatory data boundary first. An unapproved external service fails Northstar’s boundary regardless of its weighted score. Verify data retention, credentials, redaction, approved endpoints, and whether the team can export records without losing IDs or versions. Hosted service costs can include computation, model calls, storage, or review seats. Local costs include setup, operational ownership and migration effort. A good memo names what was checked and who would validate what remains. Give a tied matrix to reviewers for a pilot rather than letting option names break the tie.</p>
+<p>A <strong>weighted matrix</strong> multiplies each requirement’s importance by an illustrative fit rating, then adds the products. For example, Python gets ratings 5 for privacy-control fit, 2 for workflow fit, and 5 for ease of operation. With weights 2, 4, and 3, the total is <code>2×5 + 4×2 + 3×5 = 33</code>. A higher score indicates a stronger match to these assumptions. Apply mandatory constraints first. Recommend <strong>ADOPT</strong> for an eligible, verified approach, <strong>PILOT</strong> for a promising eligible approach that still has important unverified requirements, or <strong>REJECT</strong> if a mandatory constraint fails. This selection decision concerns the evaluation setup. Track model policy findings separately.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Three graders return three different shapes</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“How long do I have to request a refund?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>“Refunds within 30 days with a valid receipt.” Required terms are <code>30</code> and <code>receipt</code>. In this small example the authorized evidence list contains only <code>DOC-SHIPPING-02</code>.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Fictional capture, “Refunds within 30 days with a valid receipt. [DOC-REFUND-01]”</span></p>
+<ul><li><code>exact_match(expected, actual)</code> evaluates <code>expected == actual</code> and returns <code>False</code> because of the extra citation.</li><li><code>keyword_check(answer, required_words)</code> counts terms that appear as substrings and returns <code>{&quot;matched&quot;: 2, &quot;total&quot;: 2}</code>.</li><li><code>citation_check(answer, allowed_sources)</code> returns <code>&quot;PASS&quot;</code> whenever it finds <code>&quot;[DOC-REFUND-01]&quot;</code> in the answer. It deliberately ignores <code>allowed_sources</code>. It is a flawed teaching example.</li></ul>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Predict what <code>bool(...)</code> would return for each raw output. The Boolean stays false, and both nonempty objects are truthy. Attach Q1 and R1 to all rows, then translate the first into <code>OK, 0, False</code> and the second into <code>OK, 1.0, True</code>. A valid source rule fails the citation here because the ID is outside the allowed list. The legacy string gives no evidence it checked the boundary.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Inconsistent shapes and a bad citation rule are separate defects. A field adapter fixes the first. Replace the citation rule and version it to fix the second.</span></p>
+<h5>Example 2. Check the runner on three replies</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Three saved tasks ask where to find a receipt (Q2), where a warranty claim starts (Q4), and where to reset a password (Q5).</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Q2 has “Download receipts in Orders.” Q4 has “Start a claim from your order.” Q5 has no reviewed text reference. Its required term is <code>sign-in</code>. The dataset and lab preserve separate response IDs for all three.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Q2 says “download   receipts in orders”. Q4 repeats its reference. Q5 says “Reset from the sign-in page.” These are fictional captures.</span></p>
+<ul><li><strong>Q2.</strong> Exact match returns an OK failure. Normalized match returns an OK pass. Keyword returns <code>2/2</code> in the legacy counts and 1.0 in the translated record. Hand-count <code>receipts</code> and <code>orders</code> to reproduce the value.</li><li><strong>Q4.</strong> Both text checks pass. Keyword returns <code>{&quot;hits&quot;: 2, &quot;total&quot;: 2}</code>. Version 1 expects <code>matched</code> and records ERROR. Version 2 accepts the documented alias and validates the resulting counts before scoring 1.0.</li><li><strong>Q5.</strong> The two text checks are SKIPPED. The independent token check runs and passes at 1.0.</li></ul>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>For exact match, Q4 passes and Q2 fails. Q5 has no text reference. Count one pass out of two valid verdicts and show that those verdicts cover two of the three planned cases. Normalized match passes both scored replies. For the keyword check, Q2 and Q5 pass while Q4 errors, giving <code>2/2</code> pass rate and <code>2/3</code> coverage. After the adapter repair, Q4 adds one pass and one valid execution, giving <code>3/3</code> for both measures. Compare Q2’s direct <code>2/2</code> token count with its adapter score of <code>1.0</code>. That is parity for the keyword rule, even though exact and normalized match disagree.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Q4 is an adapter error, Q5 lacks a reference for two checks, and Q2’s exact-match failure is a valid result for that rule. Preserve all three in the report.</span></p>
+<h5>Example 3. Compare approaches under a mandatory boundary</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“What evaluation setup should we use for our saved support replies?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Northstar requires local replay, portable results and no transfer to an unapproved external service. Use weights <code>2, 4, 3</code> for privacy-control fit, workflow fit, and ease of operation.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The saved fictional review memo recommends the hosted option because its illustrative score is 42.</span></p>
+<ul><li>Python rates <code>(5, 2, 5)</code> for a weighted total of <code>33</code>. It meets the boundary and has completed the fixture trial.</li><li>A local library rates <code>(4, 5, 3)</code> for <code>37</code>. Its proposed architecture meets the boundary in the example. Compatibility and telemetry checks still need a pilot.</li><li>The hosted option rates <code>(5, 5, 4)</code> for <code>42</code>. Its strong privacy-control rating represents assumed controls. It still fails the actual approval requirement for this deployment.</li></ul>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Compare only eligible options for the recommendation. The initial winner is the local library, so recommend PILOT. Raise the privacy-control weight alone from 2 to 7. Compute <code>58</code> for Python and <code>57</code> for the library. The hosted option’s <code>67</code> still cannot enter the eligible comparison. Python leads and earns ADOPT under the fictional criteria.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The memo treated preference points as proof of permission. Record the rejection reason before comparing weights, and include local replay, lockfile and platform checks, approved data paths, and migration effort in the decision.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Select <strong>Copy Code</strong>, open the Python editor, paste the full program into the editing panel, and click <strong>Run</strong>. Compare the output with the expected disclosure. Predict the experiment, make only the named edit, and rerun. Restore the original code before starting another step. The programs are standalone and use fictional Northstar data.</p>
+</div></details>
+<h5>Step 1 — Validate one evaluation input</h5>
+<p>Inspect the identifiers and answer before running a check. A dictionary stores fields by name. <code>get</code> returns <code>None</code> for a missing field. <code>isinstance</code> checks a value’s type, and <code>join</code> makes a readable list of field names.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">case = {
+    &quot;case_id&quot;: &quot;Q1&quot;,
+    &quot;response_id&quot;: &quot;R1&quot;,
+    &quot;question&quot;: &quot;What is the refund deadline?&quot;,
+    &quot;answer&quot;: &quot;30 days from purchase.&quot;,
+}
+remove_answer = False
+if remove_answer:
+    del case[&quot;answer&quot;]
+required = (&quot;case_id&quot;, &quot;response_id&quot;, &quot;question&quot;, &quot;answer&quot;)
+bad = [name for name in required if not isinstance(case.get(name), str)]
+print(&quot;ERROR: invalid or missing &quot; + &quot;, &quot;.join(bad) if bad else &quot;Input valid&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Input valid
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>remove_answer</code> to <code>True</code>. Predict whether a model verdict can be produced.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">ERROR: invalid or missing answer
+</code></pre></details>
+<p>Input validation fails before a grader runs. An absent reply field is different from a captured empty reply.</p>
+<p><strong>Checkpoint.</strong> Does an empty string have the same meaning as a missing answer field? No. One is a text capture and the other has no record to grade.</p>
+<h5>Step 2 — Give a Boolean a result record</h5>
+<p>Wrap a text equality check in a dictionary. The comparison creates a Boolean, either <code>True</code> or <code>False</code>. <code>int</code> converts it to a binary score while keeping the separate verdict.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">expected = &quot;Download receipts in Orders.&quot;
+answer = &quot;Download receipts in Orders.&quot;
+passed = expected == answer
+result = {
+    &quot;case_id&quot;: &quot;Q2&quot;, &quot;response_id&quot;: &quot;R2&quot;, &quot;evaluator_id&quot;: &quot;exact&quot;,
+    &quot;evaluator_version&quot;: &quot;1&quot;, &quot;status&quot;: &quot;OK&quot;, &quot;score&quot;: int(passed),
+    &quot;passed&quot;: passed, &quot;reason&quot;: &quot;Exact text comparison&quot;,
+    &quot;evidence&quot;: [expected, answer], &quot;error&quot;: None,
+}
+print(result[&quot;case_id&quot;], result[&quot;evaluator_id&quot;], &quot;v&quot; + result[&quot;evaluator_version&quot;])
+print(&quot;status =&quot;, result[&quot;status&quot;])
+print(&quot;score =&quot;, result[&quot;score&quot;])
+print(&quot;passed =&quot;, result[&quot;passed&quot;])
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Q2 exact v1
+status = OK
+score = 1
+passed = True
+</code></pre></details>
+<p><strong>Experiment.</strong> Replace the saved answer with <code>&quot;Download receipts from Support.&quot;</code>. Predict which fields change.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Q2 exact v1
+status = OK
+score = 0
+passed = False
+</code></pre></details>
+<p>The check ran successfully, so status remains OK. The zero score and false verdict describe the reply under this rule.</p>
+<p><strong>Checkpoint.</strong> Which field distinguishes an execution error from a valid failure? Start with <code>status</code>.</p>
+<h5>Step 3 — Adapt two legacy formats</h5>
+<p>One evaluator returns a Boolean and the other returns counts. A local adapter translates each. <code>type(x) is int</code> deliberately excludes Booleans. The range check prevents an impossible count from entering the report.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">answer = &quot;contact support&quot;
+words = (&quot;contact&quot;, &quot;support&quot;)
+malformed = False
+legacy_exact = answer == &quot;contact support&quot;
+legacy_keywords = {&quot;matched&quot;: 3 if malformed else sum(word in answer.split() for word in words),
+                   &quot;total&quot;: len(words)}
+
+def adapt_count(result):
+    hits, total = result.get(&quot;matched&quot;), result.get(&quot;total&quot;)
+    if type(hits) is not int or total != len(words) or not 0 &lt;= hits &lt;= total:
+        return (&quot;ERROR&quot;, None, None)
+    return (&quot;OK&quot;, hits / total, hits == total)
+
+print(&quot;exact:&quot;, (&quot;OK&quot;, int(legacy_exact), legacy_exact))
+print(&quot;keywords:&quot;, adapt_count(legacy_keywords))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">exact: (&#x27;OK&#x27;, 1, True)
+keywords: (&#x27;OK&#x27;, 1.0, True)
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>malformed</code> to <code>True</code>. Would three matches out of two describe a bad answer or a bad evaluator output?</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">exact: (&#x27;OK&#x27;, 1, True)
+keywords: (&#x27;ERROR&#x27;, None, None)
+</code></pre></details>
+<p>The impossible count produces an error with no score. The exact-match result still exists. The tuple here is a small preview of the full lab’s result record.</p>
+<p><strong>Checkpoint.</strong> Would changing the malformed count into zero preserve evidence? No. Zero is a legitimate score for zero matches and would hide the defect.</p>
+<h5>Step 4 — Run evaluators by registered ID</h5>
+<p>A dictionary can store functions as values. The runner looks up each requested name before calling it. <code>str.casefold</code> removes case differences for this Latin-script example, and <code>f</code> strings place the result into the printed line.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def exact(case):
+    return case[&quot;answer&quot;] == case[&quot;expected_answer&quot;]
+
+def normalized(case):
+    return case[&quot;answer&quot;].casefold() == case[&quot;expected_answer&quot;].casefold()
+
+case = {&quot;answer&quot;: &quot;ORDERS&quot;, &quot;expected_answer&quot;: &quot;Orders&quot;}
+registry = {&quot;exact&quot;: exact, &quot;normalized&quot;: normalized}
+requested = (&quot;exact&quot;, &quot;normalized&quot;)
+for name in requested:
+    evaluator = registry.get(name)
+    if evaluator is None:
+        print(f&quot;{name}: ERROR unknown evaluator&quot;)
+    else:
+        print(f&quot;{name}: OK passed={evaluator(case)}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">exact: OK passed=False
+normalized: OK passed=True
+</code></pre></details>
+<p><strong>Experiment.</strong> Add <code>&quot;semantic&quot;</code> to <code>requested</code>. Predict whether it stops other checks.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">exact: OK passed=False
+normalized: OK passed=True
+semantic: ERROR unknown evaluator
+</code></pre></details>
+<p>The unknown name is a configuration error. The two existing evaluators still report their own results. A registry keeps tool selection explicit.</p>
+<p><strong>Checkpoint.</strong> Does normalized match passing mean exact match is broken? No. They intentionally apply different rules.</p>
+<h5>Step 5 — Keep errors outside the pass-rate denominator</h5>
+<p>The four records are one evaluator’s planned checks. The comprehension selects verdicts from rows with status <code>OK</code>. <code>sum</code> counts true verdicts, and <code>len</code> counts rows. Report coverage against all four planned checks.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">first_status = &quot;OK&quot;
+rows = [
+    (first_status, True if first_status == &quot;OK&quot; else None),
+    (&quot;OK&quot;, False), (&quot;ERROR&quot;, None), (&quot;SKIPPED&quot;, None),
+]
+valid = [passed for status, passed in rows if status == &quot;OK&quot;]
+print(f&quot;Pass rate: {sum(valid)}/{len(valid)}&quot;)
+print(f&quot;Coverage: {len(valid)}/{len(rows)}&quot;)
+print(&quot;Errors:&quot;, sum(status == &quot;ERROR&quot; for status, _ in rows))
+print(&quot;Skipped:&quot;, sum(status == &quot;SKIPPED&quot; for status, _ in rows))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass rate: 1/2
+Coverage: 2/4
+Errors: 1
+Skipped: 1
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>first_status</code> to <code>&quot;ERROR&quot;</code>. Predict both denominators.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass rate: 0/1
+Coverage: 1/4
+Errors: 2
+Skipped: 1
+</code></pre></details>
+<p>Cross out the first row from the list of valid verdicts, but keep it in the list of four planned checks. You are left with one valid verdict and it failed. The pass rate goes from <code>1/2</code> to <code>0/1</code>, and coverage goes from <code>2/4</code> to <code>1/4</code>. The second row’s answer still failed the rule. The first row now needs an evaluator investigation.</p>
+<p><strong>Checkpoint.</strong> If every row is an error, what should the pass rate be? N/A because nothing produced a verdict.</p>
+<h5>Step 6 — Apply mandatory constraints before comparing scores</h5>
+<p>The numbers are fictional ratings for approaches. A larger effort-fit rating means easier for Northstar. <code>zip</code> pairs each rating with its weight. The sum of their products is the weighted score. An option that cannot meet the data boundary is rejected before choosing a winner.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">privacy_weight = 2
+weights = (privacy_weight, 4, 3)
+options = (
+    (&quot;Python&quot;, (5, 2, 5), True),
+    (&quot;Local library&quot;, (4, 5, 3), True),
+    (&quot;Hosted service&quot;, (5, 5, 4), False),
+)
+eligible = []
+for name, ratings, approved in options:
+    score = sum(weight * rating for weight, rating in zip(weights, ratings))
+    print(f&quot;{name}: {score} {&#x27;eligible&#x27; if approved else &#x27;REJECT&#x27;}&quot;)
+    if approved:
+        eligible.append((score, name))
+print(&quot;Selected:&quot;, max(eligible)[1])
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Python: 33 eligible
+Local library: 37 eligible
+Hosted service: 42 REJECT
+Selected: Local library
+</code></pre></details>
+<p><strong>Experiment.</strong> Raise <code>privacy_weight</code> from <code>2</code> to <code>7</code>. Check which eligible option leads.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Python: 58 eligible
+Local library: 57 eligible
+Hosted service: 67 REJECT
+Selected: Python
+</code></pre></details>
+<p>Python gains more from the extra privacy weight. The hosted option still fails the mandatory data boundary. Verify capabilities on actual approved deployments even when an illustrative score is high.</p>
+<p><strong>Checkpoint.</strong> Could the hosted score of 67 override its boundary failure? No. Eligibility is decided independently.</p>
+<h5>Step 7 — Keep evaluator versions in a portable report</h5>
+<p>The same capture is checked by exact and normalized rules. A function returns text in the form its version compares. <code>json.dumps</code> serializes Python values to JSON, a portable text format. <code>sort_keys=True</code> prints field names in a stable order.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+version = &quot;1&quot;
+case = {&quot;case_id&quot;: &quot;Q2&quot;, &quot;response_id&quot;: &quot;R2&quot;,
+        &quot;expected_answer&quot;: &quot;Download receipts in Orders.&quot;, &quot;answer&quot;: &quot;download receipts in orders&quot;}
+
+def prepare(text):
+    return text if version == &quot;1&quot; else text.casefold().rstrip(&quot;.&quot;)
+
+passed = prepare(case[&quot;answer&quot;]) == prepare(case[&quot;expected_answer&quot;])
+report = {
+    &quot;dataset&quot;: &quot;northstar-v1&quot;, &quot;case_id&quot;: case[&quot;case_id&quot;], &quot;response_id&quot;: case[&quot;response_id&quot;],
+    &quot;evaluator_id&quot;: &quot;text-match&quot;, &quot;evaluator_version&quot;: version, &quot;status&quot;: &quot;OK&quot;,
+    &quot;score&quot;: int(passed), &quot;passed&quot;: passed,
+    &quot;reason&quot;: &quot;Exact text&quot; if version == &quot;1&quot; else &quot;Ignore case and final periods&quot;,
+    &quot;evidence&quot;: [case[&quot;answer&quot;], case[&quot;expected_answer&quot;]], &quot;error&quot;: None,
+    &quot;approach&quot;: &quot;Python&quot;,
+}
+print(json.dumps(report, sort_keys=True))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;approach&quot;: &quot;Python&quot;, &quot;case_id&quot;: &quot;Q2&quot;, &quot;dataset&quot;: &quot;northstar-v1&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;text-match&quot;, &quot;evaluator_version&quot;: &quot;1&quot;, &quot;evidence&quot;: [&quot;download receipts in orders&quot;, &quot;Download receipts in Orders.&quot;], &quot;passed&quot;: false, &quot;reason&quot;: &quot;Exact text&quot;, &quot;response_id&quot;: &quot;R2&quot;, &quot;score&quot;: 0, &quot;status&quot;: &quot;OK&quot;}
+</code></pre></details>
+<p><strong>Experiment.</strong> Change <code>version</code> to <code>&quot;2&quot;</code>. Compare the stable response ID and changed verdict.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;approach&quot;: &quot;Python&quot;, &quot;case_id&quot;: &quot;Q2&quot;, &quot;dataset&quot;: &quot;northstar-v1&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;text-match&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;download receipts in orders&quot;, &quot;Download receipts in Orders.&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Ignore case and final periods&quot;, &quot;response_id&quot;: &quot;R2&quot;, &quot;score&quot;: 1, &quot;status&quot;: &quot;OK&quot;}
+</code></pre></details>
+<p>The reply is identical in both reports. The rule and version changed, so the improved verdict is evidence of a scoring change. Reevaluate both response sets with the same rule before comparing models.</p>
+<p><strong>Checkpoint.</strong> Which ID tells you the assistant reply stayed fixed? The response ID stays R2.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Repair an inconsistent result</h5>
+<p>A valid legacy keyword check returns <code>{&quot;hits&quot;: 1, &quot;total&quot;: 2}</code> for Q3, response R3. The registered evaluator is <code>keywords@2</code>. The rule requires all terms. Write the fields a common result should carry. Then explain how to handle a report with three hits out of two.</p>
+<h5>Practice 2. Tell three outcomes apart</h5>
+<p>An exact check runs and finds different text. A keyword adapter receives an impossible count. Another exact check receives a valid case with no reviewed reference. Give the execution state, verdict, and score for each.</p>
+<h5>Practice 3. Count before averaging</h5>
+<p>For one grader, five cases yield an OK pass at 1.0, an OK failure at 0.5, an ERROR, a SKIPPED, and another OK pass at 1.0. Calculate pass rate, coverage, error rate, skipped count, and mean. Identify the numerator behind each measure.</p>
+<h5>Practice 4. Choose a starting approach</h5>
+<p>Northstar needs deterministic CI checks on approved local machines, replay on a second operating system, and export without losing IDs. A hosted candidate scores highest but its data destination is unapproved. A local library scores above plain Python, but its pinned package set and network behavior have yet to be verified. Recommend ADOPT, PILOT, or REJECT for the candidates. Write one parity test and one interoperability check the pilot must pass.</p>
+<h4>Independent Assignment</h4>
+<p>Use the guided lab program as the standalone answer key. Inspect all eight fictional support cases. Prepare a short evaluation report that lists the dataset and response versions, evaluator IDs and versions, statuses, pass rates, coverage, errors, and critical findings. Manually verify Q2’s keyword score from the saved words and annotate the exact versus normalized disagreement. Explain why Q8 can pass citation-ID and keyword checks and still fail policy.</p>
+<ol><li>Compare <code>baseline</code> and <code>repair</code>. Name the rule that fixes Q4 and the valid failures that remain. Keep the two original results tied to the same response ID.</li><li>Restore the original program and set <code>mode = &quot;unknown&quot;</code>. This compares the repaired runner with one additional requested evaluator called <code>semantic</code>. Predict how many error rows it adds and whether other summaries change.</li><li>Restore the original and use <code>mode = &quot;no-reference&quot;</code>. Only Q1’s optional text reference is removed. Predict which checks skip and which policy result remains valid.</li><li>Submit a tool-choice memo using the lab matrix. Give the data boundary, replay and lockfile checks, expected operational cost, and migration evidence. Explain how changing the privacy weight can change the recommendation without changing any model or evaluator results.</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Attach <code>case_id=Q3</code>, <code>response_id=R3</code>, <code>evaluator_id=keywords</code>, and <code>evaluator_version=2</code>. Outcome is <code>OK</code>, score 0.5, passed false, with a reason naming required-term coverage and evidence <code>1/2</code>. The error field is empty. Three hits out of two violates the adapter contract. Record ERROR with no score or verdict.</p>
+<h5>Solution 2</h5>
+<p>A valid text mismatch is OK, false, and 0. An impossible count is ERROR, with no score or verdict. A missing optional reference is SKIPPED, also with no score or verdict. Keep the reason so a reader can decide whether to investigate the evaluator or prepare the missing input.</p>
+<h5>Solution 3</h5>
+<p>The two passing rows are two of three valid verdicts, so pass rate is 2/3. Three of five planned checks produced a valid verdict, so coverage is 3/5. One of five attempted slots had an error, so error rate is 1/5. One was skipped. Mean score is <code>(1.0 + 0.5 + 1.0)/3 ≈ 0.833</code> for the same grader and version.</p>
+<h5>Solution 4</h5>
+<p>Reject the hosted option for the unapproved data path. Pilot the local library using approved synthetic fixtures and a pinned runtime. Adopt the already verified Python harness for this limited fixture workflow if the proof of repeatability is complete. In the pilot, hand-count two out of two required terms and confirm both adapters return 1.0 with matching IDs. Export the restored rows on both intended operating systems and verify traceability and exact verdicts, including ERROR and SKIPPED. Check outbound traffic, especially optional telemetry and judging calls, against the agreed boundary.</p>
+<h5>Lab and assignment answer key</h5>
+<p>Each bulleted line below reproduces one terminal line exactly. The baseline and adapter repair transcripts appear directly after the lab program.</p>
+<h6>Framework experiment. Raise the privacy-control preference</h6>
+<ul><li><code>baseline | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1</code></li><li><code>Evaluator IDs: exact@1, normalized@1, keywords@1, citation_ids@1, policy_days@1</code></li><li><code>Case | exact | normalized | keywords | citation_ids | policy_days</code></li><li><code>Q1 | PASS | PASS | PASS | PASS | PASS</code></li><li><code>Q2 | FAIL | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED</code></li><li><code>Q4 | PASS | PASS | ERROR | PASS | SKIPPED</code></li><li><code>Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED</code></li><li><code>Q6 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q7 | PASS | PASS | PASS | FAIL | SKIPPED</code></li><li><code>Q8 | FAIL | FAIL | PASS | PASS | FAIL</code></li><li><code>exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571</code></li><li><code>normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714</code></li><li><code>keywords pass=6/7 coverage=7/8 error=1/8 skipped=0 mean=0.929</code></li><li><code>citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750</code></li><li><code>policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500</code></li><li><code>Confirmed critical cases: 1 (Q8)</code></li><li><code>Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: &quot;LegacyShapeError&quot;, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;1&quot;, &quot;evidence&quot;: [], &quot;passed&quot;: null, &quot;reason&quot;: &quot;Evaluator could not produce a valid verdict&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: null, &quot;status&quot;: &quot;ERROR&quot;}</code></li><li><code>Selection weights: 2,4,3</code></li><li><code>  Python: 33 ADOPT</code></li><li><code>  Local library: 37 PILOT</code></li><li><code>  Hosted service: 42 REJECT</code></li><li><code>Recommendation: Local library PILOT</code></li><li><code>repair | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1</code></li><li><code>Evaluator IDs: exact@1, normalized@1, keywords@2, citation_ids@1, policy_days@1</code></li><li><code>Case | exact | normalized | keywords | citation_ids | policy_days</code></li><li><code>Q1 | PASS | PASS | PASS | PASS | PASS</code></li><li><code>Q2 | FAIL | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED</code></li><li><code>Q4 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED</code></li><li><code>Q6 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q7 | PASS | PASS | PASS | FAIL | SKIPPED</code></li><li><code>Q8 | FAIL | FAIL | PASS | PASS | FAIL</code></li><li><code>exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571</code></li><li><code>normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714</code></li><li><code>keywords pass=7/8 coverage=8/8 error=0/8 skipped=0 mean=0.938</code></li><li><code>citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750</code></li><li><code>policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500</code></li><li><code>Confirmed critical cases: 1 (Q8)</code></li><li><code>Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;2/2&quot;, &quot;claim&quot;, &quot;order&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Required token coverage&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: 1.0, &quot;status&quot;: &quot;OK&quot;}</code></li><li><code>Selection weights: 2,4,3</code></li><li><code>  Python: 33 ADOPT</code></li><li><code>  Local library: 37 PILOT</code></li><li><code>  Hosted service: 42 REJECT</code></li><li><code>Recommendation: Local library PILOT</code></li><li><code>privacy | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1</code></li><li><code>Evaluator IDs: exact@1, normalized@1, keywords@2, citation_ids@1, policy_days@1</code></li><li><code>Case | exact | normalized | keywords | citation_ids | policy_days</code></li><li><code>Q1 | PASS | PASS | PASS | PASS | PASS</code></li><li><code>Q2 | FAIL | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED</code></li><li><code>Q4 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED</code></li><li><code>Q6 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q7 | PASS | PASS | PASS | FAIL | SKIPPED</code></li><li><code>Q8 | FAIL | FAIL | PASS | PASS | FAIL</code></li><li><code>exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571</code></li><li><code>normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714</code></li><li><code>keywords pass=7/8 coverage=8/8 error=0/8 skipped=0 mean=0.938</code></li><li><code>citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750</code></li><li><code>policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500</code></li><li><code>Confirmed critical cases: 1 (Q8)</code></li><li><code>Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;2/2&quot;, &quot;claim&quot;, &quot;order&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Required token coverage&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: 1.0, &quot;status&quot;: &quot;OK&quot;}</code></li><li><code>Selection weights: 7,4,3</code></li><li><code>  Python: 58 ADOPT</code></li><li><code>  Local library: 57 PILOT</code></li><li><code>  Hosted service: 67 REJECT</code></li><li><code>Recommendation: Python ADOPT</code></li><li><code>Audit history: baseline -&gt; repair -&gt; privacy</code></li></ul>
+<p>The weight change leaves every evaluator row unchanged. Python becomes the highest-rated eligible option. The hosted option remains rejected even though its numeric score is higher.</p>
+<h6>Variant A. Request an unknown evaluator</h6>
+<ul><li><code>repair | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1</code></li><li><code>Evaluator IDs: exact@1, normalized@1, keywords@2, citation_ids@1, policy_days@1</code></li><li><code>Case | exact | normalized | keywords | citation_ids | policy_days</code></li><li><code>Q1 | PASS | PASS | PASS | PASS | PASS</code></li><li><code>Q2 | FAIL | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED</code></li><li><code>Q4 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED</code></li><li><code>Q6 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q7 | PASS | PASS | PASS | FAIL | SKIPPED</code></li><li><code>Q8 | FAIL | FAIL | PASS | PASS | FAIL</code></li><li><code>exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571</code></li><li><code>normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714</code></li><li><code>keywords pass=7/8 coverage=8/8 error=0/8 skipped=0 mean=0.938</code></li><li><code>citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750</code></li><li><code>policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500</code></li><li><code>Confirmed critical cases: 1 (Q8)</code></li><li><code>Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;2/2&quot;, &quot;claim&quot;, &quot;order&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Required token coverage&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: 1.0, &quot;status&quot;: &quot;OK&quot;}</code></li><li><code>Selection weights: 2,4,3</code></li><li><code>  Python: 33 ADOPT</code></li><li><code>  Local library: 37 PILOT</code></li><li><code>  Hosted service: 42 REJECT</code></li><li><code>Recommendation: Local library PILOT</code></li><li><code>unknown | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1</code></li><li><code>Evaluator IDs: exact@1, normalized@1, keywords@2, citation_ids@1, policy_days@1</code></li><li><code>Case | exact | normalized | keywords | citation_ids | policy_days | semantic</code></li><li><code>Q1 | PASS | PASS | PASS | PASS | PASS | ERROR</code></li><li><code>Q2 | FAIL | PASS | PASS | PASS | SKIPPED | ERROR</code></li><li><code>Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED | ERROR</code></li><li><code>Q4 | PASS | PASS | PASS | PASS | SKIPPED | ERROR</code></li><li><code>Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED | ERROR</code></li><li><code>Q6 | PASS | PASS | PASS | PASS | SKIPPED | ERROR</code></li><li><code>Q7 | PASS | PASS | PASS | FAIL | SKIPPED | ERROR</code></li><li><code>Q8 | FAIL | FAIL | PASS | PASS | FAIL | ERROR</code></li><li><code>exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571</code></li><li><code>normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714</code></li><li><code>keywords pass=7/8 coverage=8/8 error=0/8 skipped=0 mean=0.938</code></li><li><code>citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750</code></li><li><code>policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500</code></li><li><code>semantic pass=N/A coverage=0/8 error=8/8 skipped=0 mean=N/A</code></li><li><code>Confirmed critical cases: 1 (Q8)</code></li><li><code>Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;2/2&quot;, &quot;claim&quot;, &quot;order&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Required token coverage&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: 1.0, &quot;status&quot;: &quot;OK&quot;}</code></li><li><code>Selection weights: 2,4,3</code></li><li><code>  Python: 33 ADOPT</code></li><li><code>  Local library: 37 PILOT</code></li><li><code>  Hosted service: 42 REJECT</code></li><li><code>Recommendation: Local library PILOT</code></li><li><code>Audit history: repair -&gt; unknown</code></li></ul>
+<p>Eight requested checks report ERROR for <code>semantic</code>. Existing evaluators retain their denominators, and Q8 still fails the critical rule. No resolved evaluator implementation or version exists for those eight rows.</p>
+<h6>Variant B. Remove the optional text reference</h6>
+<ul><li><code>repair | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1</code></li><li><code>Evaluator IDs: exact@1, normalized@1, keywords@2, citation_ids@1, policy_days@1</code></li><li><code>Case | exact | normalized | keywords | citation_ids | policy_days</code></li><li><code>Q1 | PASS | PASS | PASS | PASS | PASS</code></li><li><code>Q2 | FAIL | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED</code></li><li><code>Q4 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED</code></li><li><code>Q6 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q7 | PASS | PASS | PASS | FAIL | SKIPPED</code></li><li><code>Q8 | FAIL | FAIL | PASS | PASS | FAIL</code></li><li><code>exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571</code></li><li><code>normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714</code></li><li><code>keywords pass=7/8 coverage=8/8 error=0/8 skipped=0 mean=0.938</code></li><li><code>citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750</code></li><li><code>policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500</code></li><li><code>Confirmed critical cases: 1 (Q8)</code></li><li><code>Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;2/2&quot;, &quot;claim&quot;, &quot;order&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Required token coverage&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: 1.0, &quot;status&quot;: &quot;OK&quot;}</code></li><li><code>Selection weights: 2,4,3</code></li><li><code>  Python: 33 ADOPT</code></li><li><code>  Local library: 37 PILOT</code></li><li><code>  Hosted service: 42 REJECT</code></li><li><code>Recommendation: Local library PILOT</code></li><li><code>no-reference | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1</code></li><li><code>Evaluator IDs: exact@1, normalized@1, keywords@2, citation_ids@1, policy_days@1</code></li><li><code>Case | exact | normalized | keywords | citation_ids | policy_days</code></li><li><code>Q1 | SKIPPED | SKIPPED | PASS | PASS | PASS</code></li><li><code>Q2 | FAIL | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED</code></li><li><code>Q4 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED</code></li><li><code>Q6 | PASS | PASS | PASS | PASS | SKIPPED</code></li><li><code>Q7 | PASS | PASS | PASS | FAIL | SKIPPED</code></li><li><code>Q8 | FAIL | FAIL | PASS | PASS | FAIL</code></li><li><code>exact pass=3/6 coverage=6/8 error=0/8 skipped=2 mean=0.500</code></li><li><code>normalized pass=4/6 coverage=6/8 error=0/8 skipped=2 mean=0.667</code></li><li><code>keywords pass=7/8 coverage=8/8 error=0/8 skipped=0 mean=0.938</code></li><li><code>citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750</code></li><li><code>policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500</code></li><li><code>Confirmed critical cases: 1 (Q8)</code></li><li><code>Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;2/2&quot;, &quot;claim&quot;, &quot;order&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Required token coverage&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: 1.0, &quot;status&quot;: &quot;OK&quot;}</code></li><li><code>Selection weights: 2,4,3</code></li><li><code>  Python: 33 ADOPT</code></li><li><code>  Local library: 37 PILOT</code></li><li><code>  Hosted service: 42 REJECT</code></li><li><code>Recommendation: Local library PILOT</code></li><li><code>Audit history: repair -&gt; no-reference</code></li></ul>
+<p>Q1’s exact and normalized checks skip. Their coverage falls from 7/8 to 6/8, and both lose a passing case from the numerator and denominator. The 30-day policy check uses the separate reviewed day fields, so it stays a valid pass. Critical Q8 and the framework recommendation are unchanged.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Two graders return <code>False</code> and <code>&quot;FAIL&quot;</code>. Why is applying <code>bool</code> to both an unsafe way to compare them?</li><li>A captured case has no reviewed text reference. Which checks can still run and how should exact match report its result?</li><li>A keyword score is 0.8 and latency is 200 ms. Why should the runner avoid averaging them?</li><li>Normalized match passes a saved reply after an evaluator upgrade. What must you check before crediting the model?</li><li>What does it mean for a Boolean adapter and a new implementation to reach parity?</li><li>A judge times out after two successful cases. Where does that case enter the pass rate and coverage?</li><li>A hosted evaluator leads the matrix but cannot meet the approved data boundary. Which decision follows?</li><li>What evidence would justify moving a small CI harness to a hybrid setup?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li><code>False</code> is false and the nonempty string <code>&quot;FAIL&quot;</code> is truthy. Interpret each result under its rule and map it to a shared execution status and verdict.</li><li>The keyword or citation rules can still run when their own evidence is available. Exact match is SKIPPED, with no verdict or score.</li><li>The values have different units, directions, and meanings. Keep them separate unless a decision policy explicitly defines a justified conversion.</li><li>Match the response IDs, inspect the effective rule and version, and rescore the same responses under a common version before drawing a model comparison.</li><li>On the same saved input and decision definition they produce equivalent scores and verdicts with the correct case and response IDs. Agreed field names alone establish only schema agreement.</li><li>It contributes to planned coverage and to the error count. It contributes neither a pass nor a scored failure to pass rate.</li><li>REJECT for this deployment. Eligibility comes from meeting mandatory requirements.</li><li>A demonstrated need such as trace review or a reusable metric can justify a pilot. Check that parity, exports, data boundaries, a local replay path, and operational effort are acceptable.</li></ol>
+</div></details>
+<h4>Guided Engineering Lab</h4>
+<h5>Build a Portable LLM Evaluation Harness and Select the Right Framework</h5>
+<p>Northstar needs nightly offline checks of refunds, receipts, shipping, warranty, account access, escalation, and citations. The captured cases, source manifest, response IDs, and review labels are inline. The baseline keyword adapter expects <code>matched</code>. Only Q4’s saved legacy shape uses <code>hits</code>. The repair teaches the adapter to recognize that known alias. It validates actual counts before producing a verdict.</p>
+<p>Before running, score Q8 by hand. The annotated 90-day reply contains the required tokens “refunds” and “days.” It points to the expected source and that source is in context. Neither check compares the claimed deadline with 30 days. The fifth evaluator uses the explicitly reviewed day annotations and returns a valid policy failure. There is one confirmed critical case even after the adapter repair. The fixture does not extract facts from prose, and citation-ID agreement does not establish factual grounding.</p>
+<h5>Run the versioned harness</h5>
+<p>The case validator checks IDs, types, optional annotation fields, and expected source references. The <strong>registry</strong> maps each requested name to a version and function. The runner unpacks the evaluator’s returned tuple as score, verdict, reason, and evidence. Returning <code>None</code> marks a skipped check. An exception or invalid tuple becomes ERROR. If the registry cannot resolve an ID, it records an error row and continues. <code>isfinite</code> rejects non-finite scores. The code preserves an exception’s class name without emitting raw provider messages.</p>
+<p>Each evaluator in this fixture uses a 0–1 scale where higher scores are better under that evaluator’s declared rule. Exact, normalized, citation, and deadline checks use binary scores. Keyword uses the fraction of required whole terms found and passes only at 1.0. The tokenizer uses <code>re.findall</code> to collect words and keeps a hyphen between word groups. That lets <code>sign-in</code> remain one term. The report displays one column per evaluator and stores full result records. Per-evaluator pass rate and mean use OK rows. Coverage and error rate use all planned rows. Old results stay in an audit tuple of JSON snapshots. A tuple groups the immutable strings, and <code>json.dumps</code> captures the complete input and output record at the moment of the run. An in-memory snapshot demonstrates reproducible history. Use persistent approved storage and access controls for a real audit.</p>
+<p>Select <strong>Copy Code</strong>, open the editor, paste the program into an empty editing pane, and run the baseline.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+import re
+from math import isfinite
+
+mode = &quot;baseline&quot;  # baseline, repair, privacy, unknown, or no-reference
+dataset_id = &quot;northstar-cases-v1&quot;
+contract_id = &quot;evaluator-contract-v1&quot;
+source_text = {
+    &quot;RF-v2:s01&quot;: &quot;Request refunds within 30 days of purchase and provide a valid receipt.&quot;,
+    &quot;MR-v1:s01&quot;: &quot;Download receipts in Orders.&quot;,
+    &quot;SH-v1:s01&quot;: &quot;Contact Support after 45 days.&quot;,
+    &quot;WA-v2:s01&quot;: &quot;Start a claim from your order.&quot;,
+    &quot;AC-v1:s01&quot;: &quot;Reset from the sign-in page.&quot;,
+    &quot;ES-v1:s01&quot;: &quot;Escalate from the case page.&quot;,
+}
+
+def make_case(number, category, question, expected, answer, terms, source, refs,
+              extra_sources=(), fixture_shape=&quot;matched&quot;, expected_days=None, observed_days=None):
+    return {
+        &quot;case_id&quot;: f&quot;Q{number}&quot;, &quot;response_id&quot;: f&quot;capture-{number}-v1&quot;,
+        &quot;question&quot;: question, &quot;answer&quot;: answer, &quot;expected_answer&quot;: expected,
+        &quot;context&quot;: [source, *extra_sources], &quot;expected_sources&quot;: [source],
+        &quot;citations&quot;: refs, &quot;required_words&quot;: terms,
+        &quot;metadata&quot;: {&quot;segment&quot;: category, &quot;legacy_shape&quot;: fixture_shape,
+                     &quot;expected_days&quot;: expected_days, &quot;observed_days&quot;: observed_days},
+    }
+
+cases = (
+    make_case(1, &quot;refund&quot;, &quot;What is the refund deadline?&quot;,
+              &quot;Refunds within 30 days with a valid receipt.&quot;,
+              &quot;Refunds within 30 days with a valid receipt.&quot;, [&quot;30&quot;, &quot;receipt&quot;],
+              &quot;RF-v2:s01&quot;, [&quot;RF-v2:s01&quot;], expected_days=30, observed_days=30),
+    make_case(2, &quot;receipt&quot;, &quot;Where do I find a receipt?&quot;,
+              &quot;Download receipts in Orders.&quot;, &quot;download   receipts in orders&quot;, [&quot;receipts&quot;, &quot;orders&quot;],
+              &quot;MR-v1:s01&quot;, [&quot;MR-v1:s01&quot;]),
+    make_case(3, &quot;shipping&quot;, &quot;When do I contact Support about shipping?&quot;,
+              &quot;Contact Support after 45 days.&quot;, &quot;Contact Support.&quot;, [&quot;support&quot;, &quot;45&quot;],
+              &quot;SH-v1:s01&quot;, []),
+    make_case(4, &quot;warranty&quot;, &quot;Where does a claim start?&quot;,
+              &quot;Start a claim from your order.&quot;, &quot;Start a claim from your order.&quot;, [&quot;claim&quot;, &quot;order&quot;],
+              &quot;WA-v2:s01&quot;, [&quot;WA-v2:s01&quot;], fixture_shape=&quot;hits&quot;),
+    make_case(5, &quot;account&quot;, &quot;Where can I reset my password?&quot;,
+              None, &quot;Reset from the sign-in page.&quot;, [&quot;sign-in&quot;],
+              &quot;AC-v1:s01&quot;, [&quot;AC-v1:s01&quot;]),
+    make_case(6, &quot;escalation&quot;, &quot;How do I escalate?&quot;,
+              &quot;Escalate from the case page.&quot;, &quot;Escalate from the case page.&quot;, [&quot;case&quot;, &quot;page&quot;],
+              &quot;ES-v1:s01&quot;, [&quot;ES-v1:s01&quot;]),
+    make_case(7, &quot;citation&quot;, &quot;What proof do refunds need?&quot;,
+              &quot;A valid receipt.&quot;, &quot;A valid receipt.&quot;, [&quot;receipt&quot;],
+              &quot;RF-v2:s01&quot;, [&quot;SH-v1:s01&quot;], extra_sources=(&quot;SH-v1:s01&quot;,)),
+    make_case(8, &quot;critical refund&quot;, &quot;Can I still request a refund after 45 days?&quot;,
+              &quot;No. The deadline is 30 days from purchase.&quot;, &quot;Yes. Refunds are available within 90 days.&quot;,
+              [&quot;refunds&quot;, &quot;days&quot;], &quot;RF-v2:s01&quot;, [&quot;RF-v2:s01&quot;],
+              expected_days=30, observed_days=90),
+)
+
+def validate_cases(records):
+    case_ids, response_ids = set(), set()
+    for case in records:
+        for key in (&quot;case_id&quot;, &quot;response_id&quot;, &quot;question&quot;, &quot;answer&quot;):
+            if not isinstance(case.get(key), str) or (key != &quot;answer&quot; and not case[key].strip()):
+                raise ValueError(f&quot;missing or invalid {key}&quot;)
+        if case[&quot;case_id&quot;] in case_ids or case[&quot;response_id&quot;] in response_ids:
+            raise ValueError(&quot;duplicate case or response ID&quot;)
+        reference = case.get(&quot;expected_answer&quot;)
+        if reference is not None and not isinstance(reference, str):
+            raise ValueError(&quot;invalid expected_answer&quot;)
+        for key in (&quot;context&quot;, &quot;expected_sources&quot;, &quot;citations&quot;, &quot;required_words&quot;):
+            values = case.get(key)
+            if values is not None and (
+                not isinstance(values, list)
+                or any(not isinstance(value, str) or not value.strip() for value in values)
+                or len(values) != len(set(values))
+            ):
+                raise ValueError(f&quot;invalid {key}&quot;)
+        if any(key not in source_text for key in case.get(&quot;context&quot;) or []):
+            raise ValueError(&quot;invalid context reference&quot;)
+        if case.get(&quot;context&quot;) is not None and any(
+            key not in case[&quot;context&quot;] for key in case.get(&quot;expected_sources&quot;) or []
+        ):
+            raise ValueError(&quot;gold citation source absent from context&quot;)
+        if not isinstance(case.get(&quot;metadata&quot;, {}), dict):
+            raise ValueError(&quot;invalid metadata&quot;)
+        case_ids.add(case[&quot;case_id&quot;])
+        response_ids.add(case[&quot;response_id&quot;])
+
+def legacy_exact(expected, answer):
+    return expected == answer
+
+def normalized(text):
+    return &quot; &quot;.join(text.casefold().split()).rstrip(&quot;.&quot;)
+
+def legacy_keyword(answer, words, shape):
+    tokens = set(re.findall(r&quot;\w+(?:-\w+)*&quot;, answer.casefold()))
+    return {shape: sum(word.casefold() in tokens for word in words), &quot;total&quot;: len(words)}
+
+def evaluate_exact(case):
+    reference = case.get(&quot;expected_answer&quot;)
+    if reference is None:
+        return None
+    passed = legacy_exact(reference, case[&quot;answer&quot;])
+    return int(passed), passed, &quot;Exact text&quot;, [reference, case[&quot;answer&quot;]]
+
+def evaluate_normalized(case):
+    reference = case.get(&quot;expected_answer&quot;)
+    if reference is None:
+        return None
+    expected, actual = normalized(reference), normalized(case[&quot;answer&quot;])
+    passed = expected == actual
+    return int(passed), passed, &quot;Normalized text&quot;, [expected, actual]
+
+class LegacyShapeError(ValueError):
+    pass
+
+
+def adapt_keyword(case, allow_alias):
+    words = case.get(&quot;required_words&quot;)
+    if not words:
+        return None
+    shape = case.get(&quot;metadata&quot;, {}).get(&quot;legacy_shape&quot;, &quot;matched&quot;)
+    raw = legacy_keyword(case[&quot;answer&quot;], words, shape)
+    if allow_alias and isinstance(raw, dict) and set(raw) == {&quot;hits&quot;, &quot;total&quot;}:
+        raw = {&quot;matched&quot;: raw[&quot;hits&quot;], &quot;total&quot;: raw[&quot;total&quot;]}
+    if not isinstance(raw, dict) or set(raw) != {&quot;matched&quot;, &quot;total&quot;}:
+        raise LegacyShapeError(&quot;malformed result&quot;)
+    hits, total = raw[&quot;matched&quot;], raw[&quot;total&quot;]
+    if type(hits) is not int or type(total) is not int or total != len(words) or not 0 &lt;= hits &lt;= total:
+        raise ValueError(&quot;invalid counts&quot;)
+    return hits / total, hits == total, &quot;Required token coverage&quot;, [f&quot;{hits}/{total}&quot;, *words]
+
+def evaluate_citations(case):
+    expected, context = case.get(&quot;expected_sources&quot;), case.get(&quot;context&quot;)
+    refs = case.get(&quot;citations&quot;)
+    if expected is None or context is None or refs is None:
+        return None
+    passed = set(refs) == set(expected) and set(refs) &lt;= set(context)
+    return int(passed), passed, &quot;Expected supplied source IDs&quot;, refs
+
+def evaluate_deadline(case):
+    metadata = case.get(&quot;metadata&quot;, {})
+    expected, observed = metadata.get(&quot;expected_days&quot;), metadata.get(&quot;observed_days&quot;)
+    if expected is None or observed is None:
+        return None
+    if type(expected) is not int or type(observed) is not int or min(expected, observed) &lt; 0:
+        raise ValueError(&quot;invalid day annotation&quot;)
+    passed = expected == observed
+    return int(passed), passed, &quot;Annotated refund deadline&quot;, [f&quot;expected={expected}&quot;, f&quot;observed={observed}&quot;]
+
+def registry(allow_alias):
+    return {
+        &quot;exact&quot;: (&quot;1&quot;, evaluate_exact),
+        &quot;normalized&quot;: (&quot;1&quot;, evaluate_normalized),
+        &quot;keywords&quot;: (&quot;2&quot; if allow_alias else &quot;1&quot;, lambda case: adapt_keyword(case, allow_alias)),
+        &quot;citation_ids&quot;: (&quot;1&quot;, evaluate_citations),
+        &quot;policy_days&quot;: (&quot;1&quot;, evaluate_deadline),
+    }
+
+def result(case, evaluator, version, status, score=None, passed=None, reason=&quot;&quot;, evidence=(), error=None):
+    return {
+        &quot;case_id&quot;: case[&quot;case_id&quot;], &quot;response_id&quot;: case[&quot;response_id&quot;],
+        &quot;evaluator_id&quot;: evaluator, &quot;evaluator_version&quot;: version,
+        &quot;status&quot;: status, &quot;score&quot;: score, &quot;passed&quot;: passed,
+        &quot;reason&quot;: reason, &quot;evidence&quot;: list(evidence), &quot;error&quot;: error,
+    }
+
+def run_checks(records, requested, available):
+    validate_cases(records)
+    if len(set(requested)) != len(requested):
+        raise ValueError(&quot;duplicate evaluator ID&quot;)
+    rows = []
+    for case in records:
+        for name in requested:
+            selected = available.get(name)
+            if selected is None:
+                rows.append(result(case, name, None, &quot;ERROR&quot;, reason=&quot;Evaluator is not registered&quot;,
+                                   error=&quot;UnknownEvaluator&quot;))
+                continue
+            version, check = selected
+            try:
+                returned = check(case)
+                if returned is None:
+                    row = result(case, name, version, &quot;SKIPPED&quot;, reason=&quot;Required grading evidence absent&quot;)
+                else:
+                    score, passed, reason, evidence = returned
+                    if (type(score) not in (int, float) or not isfinite(score) or not 0 &lt;= score &lt;= 1
+                            or type(passed) is not bool or not isinstance(reason, str) or not reason
+                            or not isinstance(evidence, list) or any(not isinstance(item, str) for item in evidence)):
+                        raise ValueError(&quot;invalid result&quot;)
+                    row = result(case, name, version, &quot;OK&quot;, score, passed, reason, evidence)
+            except Exception as exc:
+                # Preserve the safe error class without printing raw provider messages.
+                row = result(case, name, version, &quot;ERROR&quot;, reason=&quot;Evaluator could not produce a valid verdict&quot;,
+                             error=type(exc).__name__)
+            rows.append(row)
+    return rows
+
+def fraction(n, d):
+    return f&quot;{n}/{d}&quot; if d else &quot;N/A&quot;
+
+def summarize(rows, name):
+    group = [row for row in rows if row[&quot;evaluator_id&quot;] == name]
+    valid = [row for row in group if row[&quot;status&quot;] == &quot;OK&quot;]
+    errors = sum(row[&quot;status&quot;] == &quot;ERROR&quot; for row in group)
+    skipped = sum(row[&quot;status&quot;] == &quot;SKIPPED&quot; for row in group)
+    passed = sum(row[&quot;passed&quot;] for row in valid)
+    mean = f&quot;{sum(row[&#x27;score&#x27;] for row in valid) / len(valid):.3f}&quot; if valid else &quot;N/A&quot;
+    return (f&quot;pass={fraction(passed, len(valid))} coverage={fraction(len(valid), len(group))} &quot;
+            f&quot;error={fraction(errors, len(group))} skipped={skipped} mean={mean}&quot;)
+
+options = (
+    (&quot;Python&quot;, (5, 2, 5), True, True),
+    (&quot;Local library&quot;, (4, 5, 3), True, False),
+    (&quot;Hosted service&quot;, (5, 5, 4), False, False),
+)
+
+def select(privacy, candidates=options):
+    weights = (privacy, 4, 3)
+    comparison = []
+    for name, ratings, boundary_ok, pilot_complete in candidates:
+        score = sum(weight * rating for weight, rating in zip(weights, ratings))
+        decision = &quot;REJECT&quot; if not boundary_ok else &quot;ADOPT&quot; if pilot_complete else &quot;PILOT&quot;
+        comparison.append((name, score, decision))
+    eligible = [(score, name, decision) for name, score, decision in comparison if decision != &quot;REJECT&quot;]
+    if not eligible:
+        return comparison, (&quot;none&quot;, &quot;REJECT&quot;)
+    best = max(score for score, _, _ in eligible)
+    leaders = [(name, decision) for score, name, decision in eligible if score == best]
+    return comparison, leaders[0] if len(leaders) == 1 else (&quot;tie&quot;, &quot;PILOT&quot;)
+
+def label(row):
+    if row[&quot;status&quot;] != &quot;OK&quot;:
+        return row[&quot;status&quot;]
+    return &quot;PASS&quot; if row[&quot;passed&quot;] else &quot;FAIL&quot;
+
+def report(name, records, allow_alias, privacy, extra=()):
+    available = registry(allow_alias)
+    requested = tuple(available) + extra
+    rows = run_checks(records, requested, available)
+    comparison, decision = select(privacy)
+    history_row = {
+        &quot;run&quot;: name, &quot;dataset&quot;: dataset_id, &quot;contract&quot;: contract_id,
+        &quot;runtime&quot;: &quot;Python standard library&quot;, &quot;model_capture&quot;: &quot;northstar-captures-v1&quot;,
+        &quot;rubric&quot;: &quot;northstar-deterministic-v1&quot;,
+        &quot;source_manifest&quot;: source_text, &quot;cases&quot;: records, &quot;results&quot;: rows,
+        &quot;weights&quot;: [privacy, 4, 3], &quot;approaches&quot;: comparison, &quot;recommendation&quot;: decision,
+    }
+    print(f&quot;{name} | {dataset_id} | {contract_id} | northstar-captures-v1&quot;)
+    print(&quot;Evaluator IDs:&quot;, &quot;, &quot;.join(f&quot;{key}@{entry[0]}&quot; for key, entry in available.items()))
+    print(&quot;Case | &quot; + &quot; | &quot;.join(requested))
+    for case in records:
+        print(case[&quot;case_id&quot;] + &quot; | &quot; + &quot; | &quot;.join(label(row) for row in rows if row[&quot;case_id&quot;] == case[&quot;case_id&quot;]))
+    for evaluator in requested:
+        print(evaluator, summarize(rows, evaluator))
+    critical = [row[&quot;case_id&quot;] for row in rows if row[&quot;evaluator_id&quot;] == &quot;policy_days&quot;
+                and row[&quot;status&quot;] == &quot;OK&quot; and row[&quot;passed&quot;] is False]
+    print(f&quot;Confirmed critical cases: {len(critical)} ({&#x27;, &#x27;.join(critical) or &#x27;none&#x27;})&quot;)
+    focus = next((row for row in rows if row[&quot;case_id&quot;] == &quot;Q4&quot; and row[&quot;evaluator_id&quot;] == &quot;keywords&quot;), None)
+    if focus:
+        print(&quot;Q4 keyword record:&quot;, json.dumps(focus, sort_keys=True, allow_nan=False))
+    print(f&quot;Selection weights: {privacy},4,3&quot;)
+    for name, score, route in comparison:
+        print(f&quot;  {name}: {score} {route}&quot;)
+    print(&quot;Recommendation:&quot;, *decision)
+    return json.dumps(history_row, sort_keys=True, allow_nan=False)
+
+def replay(choice):
+    plans = {
+        &quot;baseline&quot;: (&quot;baseline&quot;,),
+        &quot;repair&quot;: (&quot;baseline&quot;, &quot;repair&quot;),
+        &quot;privacy&quot;: (&quot;baseline&quot;, &quot;repair&quot;, &quot;privacy&quot;),
+        &quot;unknown&quot;: (&quot;repair&quot;, &quot;unknown&quot;),
+        &quot;no-reference&quot;: (&quot;repair&quot;, &quot;no-reference&quot;),
+    }
+    history = ()
+    for name in plans[choice]:
+        records = cases
+        if name == &quot;no-reference&quot;:
+            records = (dict(cases[0], expected_answer=None), *cases[1:])
+        history += (report(name, records, name != &quot;baseline&quot;, 7 if name == &quot;privacy&quot; else 2,
+                           (&quot;semantic&quot;,) if name == &quot;unknown&quot; else ()),)
+    print(&quot;Audit history:&quot;, &quot; -&gt; &quot;.join(json.loads(entry)[&quot;run&quot;] for entry in history))
+    return history
+
+replay(mode)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">baseline | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1
+Evaluator IDs: exact@1, normalized@1, keywords@1, citation_ids@1, policy_days@1
+Case | exact | normalized | keywords | citation_ids | policy_days
+Q1 | PASS | PASS | PASS | PASS | PASS
+Q2 | FAIL | PASS | PASS | PASS | SKIPPED
+Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED
+Q4 | PASS | PASS | ERROR | PASS | SKIPPED
+Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED
+Q6 | PASS | PASS | PASS | PASS | SKIPPED
+Q7 | PASS | PASS | PASS | FAIL | SKIPPED
+Q8 | FAIL | FAIL | PASS | PASS | FAIL
+exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571
+normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714
+keywords pass=6/7 coverage=7/8 error=1/8 skipped=0 mean=0.929
+citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750
+policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500
+Confirmed critical cases: 1 (Q8)
+Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: &quot;LegacyShapeError&quot;, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;1&quot;, &quot;evidence&quot;: [], &quot;passed&quot;: null, &quot;reason&quot;: &quot;Evaluator could not produce a valid verdict&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: null, &quot;status&quot;: &quot;ERROR&quot;}
+Selection weights: 2,4,3
+  Python: 33 ADOPT
+  Local library: 37 PILOT
+  Hosted service: 42 REJECT
+Recommendation: Local library PILOT
+Audit history: baseline
+</code></pre></details>
+<p>Change only <code>mode = &quot;baseline&quot;</code> to <code>mode = &quot;repair&quot;</code>. Predict whether Q4’s score will become zero or one and whether the critical case count will change. The run repeats the original report and adds the repaired adapter report.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">baseline | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1
+Evaluator IDs: exact@1, normalized@1, keywords@1, citation_ids@1, policy_days@1
+Case | exact | normalized | keywords | citation_ids | policy_days
+Q1 | PASS | PASS | PASS | PASS | PASS
+Q2 | FAIL | PASS | PASS | PASS | SKIPPED
+Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED
+Q4 | PASS | PASS | ERROR | PASS | SKIPPED
+Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED
+Q6 | PASS | PASS | PASS | PASS | SKIPPED
+Q7 | PASS | PASS | PASS | FAIL | SKIPPED
+Q8 | FAIL | FAIL | PASS | PASS | FAIL
+exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571
+normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714
+keywords pass=6/7 coverage=7/8 error=1/8 skipped=0 mean=0.929
+citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750
+policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500
+Confirmed critical cases: 1 (Q8)
+Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: &quot;LegacyShapeError&quot;, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;1&quot;, &quot;evidence&quot;: [], &quot;passed&quot;: null, &quot;reason&quot;: &quot;Evaluator could not produce a valid verdict&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: null, &quot;status&quot;: &quot;ERROR&quot;}
+Selection weights: 2,4,3
+  Python: 33 ADOPT
+  Local library: 37 PILOT
+  Hosted service: 42 REJECT
+Recommendation: Local library PILOT
+repair | northstar-cases-v1 | evaluator-contract-v1 | northstar-captures-v1
+Evaluator IDs: exact@1, normalized@1, keywords@2, citation_ids@1, policy_days@1
+Case | exact | normalized | keywords | citation_ids | policy_days
+Q1 | PASS | PASS | PASS | PASS | PASS
+Q2 | FAIL | PASS | PASS | PASS | SKIPPED
+Q3 | FAIL | FAIL | FAIL | FAIL | SKIPPED
+Q4 | PASS | PASS | PASS | PASS | SKIPPED
+Q5 | SKIPPED | SKIPPED | PASS | PASS | SKIPPED
+Q6 | PASS | PASS | PASS | PASS | SKIPPED
+Q7 | PASS | PASS | PASS | FAIL | SKIPPED
+Q8 | FAIL | FAIL | PASS | PASS | FAIL
+exact pass=4/7 coverage=7/8 error=0/8 skipped=1 mean=0.571
+normalized pass=5/7 coverage=7/8 error=0/8 skipped=1 mean=0.714
+keywords pass=7/8 coverage=8/8 error=0/8 skipped=0 mean=0.938
+citation_ids pass=6/8 coverage=8/8 error=0/8 skipped=0 mean=0.750
+policy_days pass=1/2 coverage=2/8 error=0/8 skipped=6 mean=0.500
+Confirmed critical cases: 1 (Q8)
+Q4 keyword record: {&quot;case_id&quot;: &quot;Q4&quot;, &quot;error&quot;: null, &quot;evaluator_id&quot;: &quot;keywords&quot;, &quot;evaluator_version&quot;: &quot;2&quot;, &quot;evidence&quot;: [&quot;2/2&quot;, &quot;claim&quot;, &quot;order&quot;], &quot;passed&quot;: true, &quot;reason&quot;: &quot;Required token coverage&quot;, &quot;response_id&quot;: &quot;capture-4-v1&quot;, &quot;score&quot;: 1.0, &quot;status&quot;: &quot;OK&quot;}
+Selection weights: 2,4,3
+  Python: 33 ADOPT
+  Local library: 37 PILOT
+  Hosted service: 42 REJECT
+Recommendation: Local library PILOT
+Audit history: baseline -&gt; repair
+</code></pre></details>
+<h5>Test the framework recommendation</h5>
+<p>The three approaches have fictional 1–5 ratings in the order <code>privacy control, workflow fit, ease of operation</code>. The hosted deployment has no approval to receive customer-support data. Its ratings describe assumed features and it is ineligible regardless of points. In the initial matrix the local library leads the eligible options and needs a pilot to verify its pinned package, target operating systems, exports, network behavior, and migration effort. The plain Python option has met the fixture trial and can be adopted for that workload when it leads the weighted choice.</p>
+<p>Set <code>mode = &quot;privacy&quot;</code> to keep the adapter repair and raise only the privacy-control weight from 2 to 7. Check the exact output under “Framework experiment” in the answer key. The recommendation switches to Python ADOPT. No policy verdict changes. This illustrates the team’s selection assumptions and does not establish real product compatibility or prove the live assistant is ready.</p>
+<h5>Troubleshoot and hand off the decision</h5>
+<p>If an entire run stops at validation, check case and response IDs and the required input types. If Q4 still errors, confirm the printed keyword version and the adapter branch that translates <code>hits</code>. If Q8 passes the critical rule, compare its reviewed 90 days with the approved 30 days. If the top numeric framework is selected despite rejection, filter by the mandatory constraint before choosing the largest score.</p>
+<p>A sample evaluation report reads, “Q4’s keyword adapter now understands the documented <code>hits</code> field. The old ERROR remains in the audit under the same response ID. Coverage rose from 7/8 to 8/8, and Q8 still failed the 30-day policy check despite passing keyword and citation-ID checks. Pilot the local library at the original weights, using frozen cases to test parity, package compatibility, and outbound traffic. With privacy-control fit weighted at seven, adopt the Python harness for the current fixture checks. The hosted service remains rejected because this data path lacks approval.”</p>
+<p>Finish when you can reproduce both evaluator transcripts, identify the unchanged critical finding, reproduce the matrix by hand, replay the two assignment variants, and write a memo that states the data boundary and what needs verification before a real pilot.</p>
+<p>For a real extension, map the neutral question, answer and versioned context to the pinned tool’s case object. Map the tool’s status, score, verdict, and evidence back, including explicit ERROR and SKIPPED cases. Keep the neutral IDs in a join table if the tool cannot store them. Save the effective model, rubric, threshold, framework and dependency versions, operating system, and data path. Run side by side on frozen fixtures and compare scores only when definitions match. Validate privacy with approved synthetic records before allowing any support data or trace to leave the local boundary.</p>
+<h4>Common Mistakes</h4>
+<ul><li>Counting errors as zero scores or allowing every nonempty result to pass.</li><li>Treating a missing reference as an empty reference.</li><li>Averaging incompatible metrics because their numbers share a range.</li><li>Changing an evaluator version without keeping the original capture and scoring settings.</li><li>Letting a weighted score override a data-boundary requirement.</li></ul>
+<h4>Lesson Summary and Next Step</h4>
+<p>Keep the case and response IDs stable, define what each evaluator receives and returns, and validate the output before aggregating. Check that equivalent metric definitions produce equivalent results across adapters. Use documented requirements and data boundaries to choose a tool, with a local replay that can verify the decision.</p>
+<p>Next is <a href="#m09-t02">DeepEval and RAGAS on frozen RAG records</a>.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m05-t03">Combining evaluators and handling uncertainty</a>, <a href="#m07-t03">Comparing models, prompts and A/B variants</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Map one frozen evaluation record to candidate adapter inputs and verify a known score against Python.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P04 to inspect case and result schemas. Adapter assessment can run from saved input and output records.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Write a tool-choice memo covering local replay, lockfile/platform, data boundary and migration cost.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>4h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h</dd></div></dl></div>
