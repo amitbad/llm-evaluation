@@ -383,6 +383,11 @@
       ],
       "topics": [
         {
+          "id": "M13-T02",
+          "relevance": "Supporting",
+          "connection": "Compare a stable model’s saved verdicts with the shifting case outcomes of the other model across temperatures. Use the case table to motivate paired CI evidence."
+        },
+        {
           "id": "M13-T01",
           "relevance": "Supporting",
           "connection": "Use the saved temperature settings and per-case verdicts to identify what belongs in a model configuration comparison."
@@ -549,6 +554,11 @@
       ],
       "topics": [
         {
+          "id": "M13-T02",
+          "relevance": "Supporting",
+          "connection": "Use the saved timeout qualifications to distinguish pipeline execution gaps from scored model-quality failures."
+        },
+        {
           "id": "M13-T01",
           "relevance": "Supporting",
           "connection": "Use the documented evaluator timeouts to distinguish an incomplete score from a valid quality failure."
@@ -610,6 +620,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M13-T02",
+          "relevance": "Supporting",
+          "connection": "Use TC10's saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass."
+        },
         {
           "id": "M12-T03",
           "relevance": "Supporting",
@@ -677,6 +692,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M13-T02",
+          "relevance": "Supporting",
+          "connection": "Contrast TC10's recorded judge pass with its separate deterministic mismatch before treating scorers as interchangeable."
+        },
         {
           "id": "M12-T03",
           "relevance": "Supporting",
