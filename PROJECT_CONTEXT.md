@@ -15,6 +15,7 @@ The academy uses static HTML, CSS, and vanilla JavaScript. A Python standard-lib
 | [docs/lessons/m02-t01.md](docs/lessons/m02-t01.md) | First complete learner-facing chapter and an example of the teaching standard |
 | [docs/lessons/m02-t02.md](docs/lessons/m02-t02.md) | Complete chapter on evidence, reference answers, and versioned benchmarks |
 | [docs/generate_master_curriculum.py](docs/generate_master_curriculum.py) | Validates curriculum data and generates the homepage and interactive curriculum |
+| [Original experiment catalog](docs/original-experiments.json), [catalog renderer](docs/original_experiments.py) | Historical evidence inventory, lesson mappings, Resources library, and lesson disclosures |
 | [docs/index.html](docs/index.html), [docs/home.html](docs/home.html) | Generated homepage and compatibility entry point |
 | [docs/master-curriculum.html](docs/master-curriculum.html), [homepage template](docs/templates/academy-home.html) | Standalone curriculum and homepage source template |
 | [docs/assets/](docs/assets/) | Shared academy styles, behavior, and approved V1 branding under `branding/` |
@@ -40,7 +41,7 @@ The homepage puts Quick Learning and Complete Course first. The homepage and cur
 2. **Complete Course** shows the full sequence and labels preparation and electives as optional.
 3. **Learning Roadmap** shows dependencies and supports SVG, PNG, and standalone HTML downloads.
 4. **About the Course** contains course outcomes, hour estimates, and progress controls.
-5. **Resources** links to published examples, the concepts reference, and the Teaching Plan. The former coverage link takes readers to the public example links.
+5. **Resources** contains the Original Practical Tests Library and links to the concepts reference and Teaching Plan. The homepage Practical materials section links to the same library.
 
 Both learning modes use the same topic IDs and content. Quick Learning links carry both the path and the topic in the URL fragment, so reload and browser history retain the exact lesson. The guided view temporarily moves the original topic material from Complete Course and restores it when the learner leaves. Required prerequisites appear in the lesson sequence. Complete Course keeps its existing topic links and provides module breadcrumbs.
 
@@ -109,6 +110,16 @@ M09-T01, [Common evaluator contract and framework selection](docs/lessons/m09-t0
 The Learning Navigator launcher appears on guided lessons at the bottom of the desktop course sidebar. On narrower screens it becomes a bottom-left icon with reserved space beside the reading column. It opens a native dialog that shows the path order, prerequisites, current lesson, and completion state. Selecting a node opens the lesson in Quick Learning. Zoom and pan are retained per path while the page stays open.
 
 Continue Learning opens the first unfinished required topic in order. In Quick Learning and About the Course this opens a guided lesson, while Complete Course resumes in its own view. Progress is stored in the current browser's local storage when available. It does not synchronize across devices. The versioned JSON backup transfers completed topic IDs and the optional selected path. Imports require a preview and explicit apply, with merge or replace available. Reset requires confirmation.
+
+## Original TestNeural experiments
+
+The generator builds the Resources library at `master-curriculum.html#original-practical-tests` and adds one collapsed Original TestNeural Experiment section to each mapped topic. Quick Learning and Complete Course share the generated topic markup. Historical evidence is excluded from lesson Read Aloud so it stays outside the core learning sequence. The original walkthroughs, reports, workbooks, and results remain source material.
+
+To add an experiment, add its stable TEST ID, exact original title and path, evidence state, verified summary, and available artifact paths to [the catalog](docs/original-experiments.json). Map it to curriculum topic IDs with Primary, Supporting, or Related relevance and a short connection to each topic. Use the existing published pages for local links. For archive-only files, verify that the exact source and artifact bytes exist at the catalog's pinned public repository revision before publishing their links. When advancing the pin for newly indexed evidence, verify the existing artifact links at the new revision too. Generate both pages and run `python3 docs/generate_master_curriculum.py --experiment-coverage`, the sync check, static validation, and the non-browser tests. A mapped topic inherits the disclosure when its outline or authored lesson is generated.
+
+Coverage includes all 15 numbered originals and 31 of the 53 curriculum topics. There are 21 Primary, 23 Supporting, and one Related mapping. Eleven tests have recorded results, Test 11 has partial evidence due to timeouts, and Tests 0, 10, and 14 have methodology with no recorded run found. No separate historical screenshots were found. Historical claims and evidence qualifications appear separately from the curriculum connections.
+
+**Every future lesson must be checked against the Original TestNeural Experiments Library. Applicable experiments must be linked with their actual recorded evidence. If no relevant experiment exists, no reference is required.**
 
 ## Deployment and development boundaries
 

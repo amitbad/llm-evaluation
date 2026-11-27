@@ -10,6 +10,8 @@ import posixpath
 import re
 from urllib.parse import quote
 
+import original_experiments
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "MASTER_CURRICULUM.md"
@@ -390,7 +392,7 @@ def named_references(text, titles):
     return LINK.sub(lambda match: f"[{titles.get(match[1], match[1])}]({match[2]})", text)
 
 
-def authored_lesson(topic_id, difficulty):
+def authored_lesson(topic_id, difficulty, experiment_disclosure):
     source = ROOT / "docs/lessons" / f"{topic_id.lower()}.md"
     if not source.is_file():
         return None
@@ -414,6 +416,8 @@ def authored_lesson(topic_id, difficulty):
                     disclosure_level = None
                 label = heading[2]
                 markup = f"<h{level}>{inline(label)}</h{level}>"
+                if label == "Lesson Summary and Next Step" and experiment_disclosure:
+                    rendered.append(experiment_disclosure)
                 if label in folded_headings:
                     skip = " data-reading-skip" if label != "Setup and run" else ""
                     rendered.append(f'<details class="lesson-disclosure lesson-supplement"{skip}><summary>{markup}</summary>'
@@ -451,10 +455,12 @@ def authored_lesson(topic_id, difficulty):
     render_text(text[offset:])
     if disclosure_level is not None:
         rendered.append("</div></details>")
+    if experiment_disclosure and experiment_disclosure not in rendered:
+        rendered.append(experiment_disclosure)
     return '<div class="lesson-section lesson-chapter" data-lesson-search>' + "\n".join(rendered) + "</div>"
 
 
-def lesson_material(topic, titles):
+def lesson_material(topic, titles, experiment_mappings, archive_revision):
     fields = topic["fields"]
     prerequisites = {key: named_references(fields[key], titles) for key in DEPENDENCIES if fields[key] != "—"}
     preparation = ""
@@ -464,7 +470,8 @@ def lesson_material(topic, titles):
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body">{definitions(prerequisites, prerequisites)}</div>
   </details>'''
-    chapter = authored_lesson(topic["id"], fields["Difficulty"])
+    experiments = original_experiments.lesson_disclosure(experiment_mappings.get(topic["id"], []), archive_revision)
+    chapter = authored_lesson(topic["id"], fields["Difficulty"], experiments)
     reading = "\n" + chapter + preparation if chapter is not None else f'''
   <p class="lesson-intro" data-lesson-search>{inline(fields["Why it matters"])}</p>
   <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
@@ -489,7 +496,7 @@ def lesson_material(topic, titles):
   <section class="lesson-section lesson-checkpoint">
     <h4>Checkpoint</h4>
     <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>'''
+  </section>{experiments}'''
     return f'''<div class="topic-material lesson-reading" id="material-{topic['id'].lower()}">{reading}
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
@@ -498,7 +505,7 @@ def lesson_material(topic, titles):
 </div>'''
 
 
-def html_topic(topic, module, titles):
+def html_topic(topic, module, titles, experiment_mappings, archive_revision):
     fields = topic["fields"]
     anchor = topic["id"].lower()
     options = "".join(f"<option>{status}</option>" for status in ("Not Started", "In Progress", "Completed"))
@@ -518,16 +525,17 @@ data-subject="{escape(module['fields']['Subject'])}" data-status="{fields['Statu
     </div>
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
-      {lesson_material(topic, titles)}
+      {lesson_material(topic, titles, experiment_mappings, archive_revision)}
     </div>
   </div>
 </details>'''
 
 
-def html_module(module, titles):
+def html_module(module, titles, experiment_mappings, archive_revision):
     fields = module["fields"]
     anchor = module["id"].lower()
-    topics = "\n".join(html_topic(topic, module, titles) for topic in module["topics"])
+    topics = "\n".join(html_topic(topic, module, titles, experiment_mappings, archive_revision)
+                       for topic in module["topics"])
     return f'''<details class="module" id="{anchor}">
   <summary><span class="item-title"><span class="item-id">{module['id']}</span> {escape(module['title'])}</span>
     <span class="topic-meta">{len(module['topics'])} topics · {duration(module['hours'][4])}</span>
@@ -541,11 +549,11 @@ def html_module(module, titles):
 </details>'''
 
 
-def html_stages(stages, titles):
+def html_stages(stages, titles, experiment_mappings, archive_revision):
     result = []
     for name, modules in stages.items():
         hours = sum_hours(modules)
-        content = "\n".join(html_module(module, titles) for module in modules)
+        content = "\n".join(html_module(module, titles, experiment_mappings, archive_revision) for module in modules)
         result.append(f'''<details class="stage" {"open" if name == "Beginner" else ""}>
   <summary><span class="stage-title">{name}</span><span class="topic-meta">{len(modules)} modules · {duration(hours[4])}</span></summary>
   <div class="stage-body">{content}</div>
@@ -924,18 +932,20 @@ def overview_view(section, data):
 </section>'''
 
 
-def render(title, sections, stages, data):
+def render(title, sections, stages, data, experiment_catalog):
     modules = [module for group in stages.values() for module in group]
     topics = [topic for module in modules for topic in module["topics"]]
     titles = {item["id"]: item["title"] for item in (*modules, *topics)}
-    detailed = filters(modules) + html_stages(stages, titles)
+    revision, entries = experiment_catalog
+    detailed = filters(modules) + html_stages(stages, titles, original_experiments.by_topic(entries), revision)
     views = {
         "quick": quick_view(data, sections["Learning paths"], titles),
         "detail": complete_view(data, detailed),
         "roadmap": roadmap_view(data),
         "overview": overview_view(sections["Course overview"], data),
         "resources": f'''<p id="coverage"><a href="index.html#library">Published examples and downloads</a> ·
-  <a href="concepts.html">Concepts reference</a></p>
+  <a href="concepts.html">Concepts reference</a> · <a href="#original-practical-tests">Original Practical Tests Library</a></p>
+{original_experiments.library(entries, revision, titles)}
 <section aria-labelledby="instructor-resources-title">
   <h3 id="instructor-resources-title">Instructor Resources</h3>
   <details id="teaching" class="course-reference">
@@ -956,7 +966,7 @@ def render(title, sections, stages, data):
     academy_css = (ASSETS / "academy.css").read_text(encoding="utf-8")
     academy_js = (ASSETS / "academy.js").read_text(encoding="utf-8")
     return f'''<!doctype html>
-<!-- Generated from MASTER_CURRICULUM.md by docs/generate_master_curriculum.py. -->
+<!-- Generated from MASTER_CURRICULUM.md and the original experiment catalog by docs/generate_master_curriculum.py. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1043,10 +1053,18 @@ def filters(modules):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Verify the current output without writing files")
+    parser.add_argument("--experiment-coverage", action="store_true", help="Validate and report original experiment coverage")
     args = parser.parse_args()
     try:
-        curriculum = parse(SOURCE.read_text(encoding="utf-8"))
-        outputs = {OUTPUT: render(*curriculum), HOME: render_home(curriculum[-1])}
+        source = SOURCE.read_text(encoding="utf-8")
+        curriculum = parse(source)
+        topic_ids = curriculum[-1]["topics"].keys()
+        experiments = original_experiments.load(topic_ids, source)
+        if args.experiment_coverage:
+            print(json.dumps(original_experiments.coverage(experiments[1], topic_ids), indent=2))
+            if not args.check:
+                return
+        outputs = {OUTPUT: render(*curriculum, experiments), HOME: render_home(curriculum[-1])}
         if not branding_ready():
             missing = ", ".join(name for name in BRAND_FILES if not (BRANDING / name).is_file())
             print(f"Using text branding. Missing assets: {missing}")
@@ -1410,7 +1428,7 @@ function followHash(focus, hash = location.hash) {
   if (target.matches(".topic, .module")) {
     if (focus) target.querySelector("summary").focus({preventScroll: true});
     target.scrollIntoView({block: "start"});
-  } else if (target.matches(".quick-plan, #preparation, #paths, #teaching, #coverage, #course-progress")) {
+  } else if (target.matches(".quick-plan, #preparation, #paths, #teaching, #coverage, #course-progress, #original-practical-tests, .original-test")) {
     if (focus) {
       const heading = target.querySelector("h3, summary") || target;
       if (heading.tagName !== "SUMMARY") heading.tabIndex = -1;

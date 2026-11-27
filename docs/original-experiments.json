@@ -1,0 +1,690 @@
+{
+  "archive_revision": "02d89162dd2bae90ec5a5d652ca40734fc8e7680",
+  "experiments": [
+    {
+      "id": "TEST-0",
+      "title": "Test 0 — Basics & Benchmark Data",
+      "source": "docs/test0.html",
+      "evidence": "methodology",
+      "objective": "Build a first keyword check and inspect benchmark records.",
+      "method": "Run three deterministic keyword checks against local model replies, then inspect two SQuAD validation records separately.",
+      "inputs": "Robot joke, Rayleigh-scattering summary, and a one-word arithmetic answer. SQuAD records provide passage, question, and gold answer.",
+      "configuration": "The checked-in script defaults to llama3.1:8b. The SQuAD inspection makes no model call.",
+      "results": null,
+      "findings": "The walkthrough demonstrates that keyword presence can miss low quality and that both 4 and four can be correct.",
+      "limitations": "The walkthrough shows illustrative verdicts and benchmark examples. No captured model run for the three checks was found.",
+      "artifacts": [
+        {
+          "path": "phase-0-foundations/phase_eval.py",
+          "kind": "method",
+          "label": "Keyword-check script"
+        },
+        {
+          "path": "phase-0-foundations/explore_squad.py",
+          "kind": "input",
+          "label": "SQuAD inspection script"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M02-T01",
+          "relevance": "Supporting",
+          "connection": "Distinguish the kind of failure a keyword check catches from the quality it misses."
+        },
+        {
+          "id": "M02-T02",
+          "relevance": "Primary",
+          "connection": "Look at how a passage, question, and gold answer form a benchmark record."
+        },
+        {
+          "id": "M03-T01",
+          "relevance": "Supporting",
+          "connection": "Compare a literal answer check with accepting both numeric and written forms."
+        }
+      ]
+    },
+    {
+      "id": "TEST-1",
+      "title": "Test 1: Basic Test",
+      "source": "docs/test1.html",
+      "evidence": "recorded",
+      "objective": "Check whether local models respond and compare the saved timing and outputs.",
+      "method": "Submit the same short prompt to four models and record one response and elapsed time for each.",
+      "inputs": "Hello, can you tell me a short joke?",
+      "configuration": "The model-comparison table names deepseek-r1:7b, mistral, llama3.1:8b, and gemma2:9b. All ran through Ollama.",
+      "results": "Elapsed times in the saved comparison were 54.13 s (deepseek-r1:7b), 11.63 s (mistral), 19.39 s (llama3.1:8b), and 20.49 s (gemma2:9b).",
+      "findings": "Three of the four outputs used an atoms joke. The saved run also shows wording and timing differences.",
+      "limitations": "These are individual smoke-test observations from the documented environment.",
+      "artifacts": [
+        {
+          "path": "phase-1-first-experiments/test1_basic_test.py",
+          "kind": "method",
+          "label": "Original smoke-test script"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M01-T01",
+          "relevance": "Supporting",
+          "connection": "Inspect the original request’s single user-role message. The recorded smoke run does not vary or measure context length."
+        },
+        {
+          "id": "M01-T03",
+          "relevance": "Primary",
+          "connection": "Read a smoke test that saves the prompt, answer, and elapsed time before applying quality metrics."
+        }
+      ]
+    },
+    {
+      "id": "TEST-2",
+      "title": "Test 2: Full Evaluations",
+      "source": "docs/test2.html",
+      "evidence": "recorded",
+      "objective": "Compare output quality and consistency across repeated local model calls.",
+      "method": "Repeat generation, factual Q&A, and summarization. The subsequent scoring script records human judgments.",
+      "inputs": "Read the three task prompts in the runner and the saved answers by model and run in the results.",
+      "configuration": "deepseek-r1:7b, mistral, llama3.1:8b, and gemma2:9b through Ollama. Three runs per task and model in the walkthrough.",
+      "results": "The walkthrough records mistral at 116–136 s on text generation and 98–117 s on Q&A. The full results retain the per-run text and timings.",
+      "findings": "The documented factual answers were more consistent across runs than the plots of the robot-garden stories.",
+      "limitations": "Timings and qualitative observations come from the recorded setup and tasks.",
+      "artifacts": [
+        {
+          "path": "phase-1-first-experiments/results/full_results.html",
+          "kind": "result",
+          "label": "Original full results report"
+        },
+        {
+          "path": "phase-1-first-experiments/results/evaluation_results.json",
+          "kind": "result",
+          "label": "Raw response records"
+        },
+        {
+          "path": "phase-1-first-experiments/results/scores.json",
+          "kind": "result",
+          "label": "Saved scoring data"
+        },
+        {
+          "path": "phase-1-first-experiments/test2_full_evaluations.py",
+          "kind": "method",
+          "label": "Prompts and repeated-run script"
+        },
+        {
+          "path": "phase-1-first-experiments/test2_score_evaluations.py",
+          "kind": "method",
+          "label": "Scoring script"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M03-T03",
+          "relevance": "Primary",
+          "connection": "Read saved responses and their separate manual-scoring record."
+        },
+        {
+          "id": "M07-T01",
+          "relevance": "Primary",
+          "connection": "Compare variation across repeated replies for different tasks."
+        }
+      ]
+    },
+    {
+      "id": "TEST-3",
+      "title": "Test 3: Automated Metrics",
+      "source": "docs/test3.html",
+      "evidence": "recorded",
+      "objective": "Measure lexical overlap between a generated summary and a reference.",
+      "method": "Score summaries against the supplied reference with BLEU, ROUGE-1, ROUGE-2, and ROUGE-L.",
+      "inputs": "A summarization prompt and a fixed reference answer, documented in the test page and script.",
+      "configuration": "The results table compares deepseek-r1:7b, mistral, llama3.1:8b, and gemma2:9b.",
+      "results": "The table reports deepseek-r1:7b at BLEU 24.61, ROUGE-L 0.6111, and 84.78 s. Mistral scored BLEU 15.75 and ROUGE-L 0.5385 in 19.11 s.",
+      "findings": "The walkthrough notes that overlap can penalize acceptable paraphrases and should be interpreted with the actual answer.",
+      "limitations": "The numeric scales are those printed in the original table. The walkthrough records one summarization task.",
+      "artifacts": [
+        {
+          "path": "phase-2-evaluation-techniques/test3_bleu_score_evaluation.py",
+          "kind": "method",
+          "label": "Scoring script and reference"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M05-T01",
+          "relevance": "Primary",
+          "connection": "Compare BLEU and ROUGE variants on the same summary and read the limits of word overlap."
+        }
+      ]
+    },
+    {
+      "id": "TEST-4",
+      "title": "Test 4: Deterministic Eval",
+      "source": "docs/test4.html",
+      "evidence": "recorded",
+      "objective": "Check a banking assistant with deterministic rules and a behavioral case set.",
+      "method": "Exercise interactive and batch modes, inspect saved replies, and record PASS, FAIL, or PARTIAL.",
+      "inputs": "Banking product, refusal, unrelated-query, and context-retention cases. The workbook preserves prompts and checks.",
+      "configuration": "llama3.1:8b is the bot identified in the walkthrough.",
+      "results": "The historical table records 29 PASS, 13 FAIL, and 7 PARTIAL across 49 cases (59% pass).",
+      "findings": "The walkthrough documents invented product details and contact information, including failures a keyword can miss.",
+      "limitations": "The run concerns a single fictional bot and test set. Broad conclusions in the original walkthrough should be read in that context.",
+      "artifacts": [
+        {
+          "path": "phase-2-evaluation-techniques/banking-bots/banking_test_cases.xlsx",
+          "kind": "result",
+          "label": "Test cases and saved results workbook"
+        },
+        {
+          "path": "phase-2-evaluation-techniques/banking-bots/banking_evaluator.py",
+          "kind": "method",
+          "label": "Deterministic evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M02-T01",
+          "relevance": "Supporting",
+          "connection": "Use the behavioral categories to separate error types."
+        },
+        {
+          "id": "M03-T01",
+          "relevance": "Primary",
+          "connection": "Inspect deterministic rules and replies that can pass shallow checks."
+        },
+        {
+          "id": "M04-T02",
+          "relevance": "Supporting",
+          "connection": "Inspect the workbook’s proposed and recorded behavioral labels."
+        },
+        {
+          "id": "M11-T01",
+          "relevance": "Supporting",
+          "connection": "Look at historical refusal and unsupported-claim classifications."
+        },
+        {
+          "id": "M11-T03",
+          "relevance": "Supporting",
+          "connection": "Read a saved category breakdown when deciding what to test again."
+        }
+      ]
+    },
+    {
+      "id": "TEST-5",
+      "title": "Test 5: LLM-as-a-Judge",
+      "source": "docs/test5.html",
+      "evidence": "recorded",
+      "objective": "Compare a model judge’s verdicts with human judgments on saved banking replies.",
+      "method": "Use the same saved reply for a human Pass, Fail, or Partial judgment and a second model judgment, then inspect disagreements.",
+      "inputs": "The workbook contains banking prompts, expected behavior, saved responses, and judge reasoning.",
+      "configuration": "The historical walkthrough identifies llama3.1:8b as the bot and Mistral as judge. The checked-in configuration has a different judge default.",
+      "results": "The walkthrough records agreement on 28 of 49 cases (57%) and disagreement on 21 of 49 (43%).",
+      "findings": "The original review shows how disagreements can expose weaknesses in the judge, the human verdict, or an ambiguous expectation.",
+      "limitations": "Use the model named for the historical run. The current config is a separate artifact and replay may require different credentials.",
+      "artifacts": [
+        {
+          "path": "phase-2-evaluation-techniques/llm-as-a-judge/banking_bot_test_results.xlsx",
+          "kind": "result",
+          "label": "Original verdicts and judge reasoning workbook"
+        },
+        {
+          "path": "phase-2-evaluation-techniques/llm-as-a-judge/llm_judge_evaluator.py",
+          "kind": "method",
+          "label": "Judge evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M06-T01",
+          "relevance": "Primary",
+          "connection": "Inspect how the same saved response gets a pointwise verdict and reason."
+        },
+        {
+          "id": "M06-T02",
+          "relevance": "Primary",
+          "connection": "Distinguish verdict agreement from correctness and review individual disagreements."
+        },
+        {
+          "id": "M11-T01",
+          "relevance": "Supporting",
+          "connection": "Inspect how the historical review distinguished explicit refusal from topic switching."
+        }
+      ]
+    },
+    {
+      "id": "TEST-6",
+      "title": "Test 6: Semantic Similarity Scoring",
+      "source": "docs/test6.html",
+      "evidence": "recorded",
+      "objective": "Use embedding similarity to compare healthcare bot replies with reference answers.",
+      "method": "Embed each reply and expected answer, compute cosine similarity, and apply the original threshold bands.",
+      "inputs": "The workbook and report contain the 22 question/reference pairs and the captured replies.",
+      "configuration": "all-MiniLM-L6-v2 embeddings. The associated bot uses llama3.1:8b in the checked-in configuration.",
+      "results": "The walkthrough reports 7 Pass, 15 Partial, and 0 Fail out of 22. TC022 scored 0.8622 and TC021 scored 0.6334.",
+      "findings": "The original discussion shows that a contextually sensible response can fall below a similarity threshold.",
+      "limitations": "These threshold bands belong to this run. A similarity score does not verify policy, source support, or safety.",
+      "artifacts": [
+        {
+          "path": "phase-2-evaluation-techniques/semantic-similarity/healthcare_test_cases.xlsx",
+          "kind": "input",
+          "label": "Question and reference workbook"
+        },
+        {
+          "path": "phase-2-evaluation-techniques/semantic-similarity/results/semantic_similarity_report.html",
+          "kind": "result",
+          "label": "Per-case similarity report"
+        },
+        {
+          "path": "phase-2-evaluation-techniques/semantic-similarity/test6_semantic_similarity.py",
+          "kind": "method",
+          "label": "Similarity evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M05-T02",
+          "relevance": "Primary",
+          "connection": "Relate cosine similarity and a chosen threshold to the saved answer pairs."
+        },
+        {
+          "id": "M05-T03",
+          "relevance": "Supporting",
+          "connection": "Find a borderline score and identify the evidence a reviewer would need."
+        }
+      ]
+    },
+    {
+      "id": "TEST-7",
+      "title": "Test 7: Groundedness Scoring",
+      "source": "docs/test7.html",
+      "evidence": "recorded",
+      "objective": "Check whether individual claims in healthcare bot replies are traceable to supplied source material.",
+      "method": "Send source material, question, and response to a judge that returns a three-level groundedness verdict with reasoning.",
+      "inputs": "The source prompt and healthcare cases are documented. The walkthrough reproduces the judge prompt and the TC001 response.",
+      "configuration": "llama3.1:8b as the bot and gemma2:9b as the judge in the documented 22-case run.",
+      "results": "The summary table reports 5 Grounded, 17 Partial, 0 Ungrounded, and mean 2.23/3.",
+      "findings": "The original manual review found that TC001 invented several specifics that the automated judge missed.",
+      "limitations": "The walkthrough assigns conflicting verdict descriptions to TC001 in different sections. Preserve both and use the case reasoning when reviewing the judge.",
+      "artifacts": [
+        {
+          "path": "phase-2-evaluation-techniques/groundedness/results/sample_groundedness_report.html",
+          "kind": "result",
+          "label": "Per-case groundedness report"
+        },
+        {
+          "path": "phase-2-evaluation-techniques/groundedness/groundedness_evaluator.py",
+          "kind": "method",
+          "label": "Groundedness evaluator"
+        },
+        {
+          "path": "phase-2-evaluation-techniques/semantic-similarity/healthcare_test_cases.xlsx",
+          "kind": "input",
+          "label": "Shared healthcare workbook"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M08-T02",
+          "relevance": "Primary",
+          "connection": "Inspect individual claims rather than inferring factual correctness from a groundedness label."
+        },
+        {
+          "id": "M18-T01",
+          "relevance": "Primary",
+          "connection": "Review a documented case in which the judge missed fabricated details."
+        },
+        {
+          "id": "M06-T02",
+          "relevance": "Supporting",
+          "connection": "Compare the manual TC001 review with the automated verdict."
+        }
+      ]
+    },
+    {
+      "id": "TEST-8",
+      "title": "Test 8: Temperature Sensitivity",
+      "source": "docs/test8.html",
+      "evidence": "recorded",
+      "objective": "Compare a banking bot’s behavior under different sampling temperatures.",
+      "method": "Run the same 15-case suite at four temperatures and compare scores and individual changed outcomes.",
+      "inputs": "Banking-policy, out-of-scope, and defensive robustness cases. Use the original input workbook and per-case table.",
+      "configuration": "llama3.1:8b and deepseek-r1:7b at temperatures 0.0, 0.5, 1.0, and 1.5.",
+      "results": "In temperature order, llama3.1:8b passed 13/15 in all four runs. deepseek-r1:7b passed 13/15, 14/15, 11/15, and 10/15.",
+      "findings": "The original comparison shows stable totals can conceal changes in which cases pass.",
+      "limitations": "A small suite at each setting illustrates sensitivity in those runs. It is not a general temperature recommendation.",
+      "artifacts": [
+        {
+          "path": "phase-3-what-you-are-evaluating/temperature-sensitivity/banking_test_cases.xlsx",
+          "kind": "input",
+          "label": "Original test case workbook"
+        },
+        {
+          "path": "phase-3-what-you-are-evaluating/temperature-sensitivity/results/temperature_sensitivity_report.html",
+          "kind": "result",
+          "label": "Saved temperature report"
+        },
+        {
+          "path": "phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py",
+          "kind": "method",
+          "label": "Temperature evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M01-T02",
+          "relevance": "Primary",
+          "connection": "Compare the same case set across temperatures and inspect individual verdicts."
+        },
+        {
+          "id": "M07-T01",
+          "relevance": "Supporting",
+          "connection": "Read aggregate pass rates beside changing case-level outcomes."
+        },
+        {
+          "id": "M07-T03",
+          "relevance": "Supporting",
+          "connection": "Review a controlled configuration comparison on the same inputs."
+        }
+      ]
+    },
+    {
+      "id": "TEST-9",
+      "title": "Test 9: RAG Evaluation",
+      "source": "docs/test9.html",
+      "evidence": "recorded",
+      "objective": "Evaluate retrieval, answer faithfulness, and keyword relevance on a document-backed banking assistant.",
+      "method": "Retrieve three chunks and score the resulting answer along three axes. The report records retrieval candidates and case-level judgments.",
+      "inputs": "Local source documents and 25 cases in the saved walkthrough, including cross-document, unanswerable, and boundary questions.",
+      "configuration": "llama3.1:8b bot and mistral judge via Ollama. Keyword matching supplies the answer-relevance measure.",
+      "results": "The 25-case page reports 84% context relevance, 100% answer faithfulness, 66% answer relevance, and 83% overall.",
+      "findings": "The walkthrough flags TC21 as an incorrect eligibility decision despite 100% context relevance and 100% faithfulness scores.",
+      "limitations": "The README mentions an earlier 21-case suite. The summary here uses the 25-case result page. The historical faithfulness verdict is not independently verified correctness.",
+      "artifacts": [
+        {
+          "path": "phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html",
+          "kind": "result",
+          "label": "Saved report with ranked evidence and answers"
+        },
+        {
+          "path": "phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx",
+          "kind": "input",
+          "label": "Original RAG case workbook"
+        },
+        {
+          "path": "phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py",
+          "kind": "method",
+          "label": "RAG evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M05-T03",
+          "relevance": "Supporting",
+          "connection": "Inspect how the overall score can hide a known wrong answer."
+        },
+        {
+          "id": "M08-T01",
+          "relevance": "Primary",
+          "connection": "Trace the retrieved chunks and recorded relevance scores for each question."
+        },
+        {
+          "id": "M08-T02",
+          "relevance": "Supporting",
+          "connection": "Compare an eligibility claim with the exact policy rule it uses."
+        },
+        {
+          "id": "M08-T03",
+          "relevance": "Primary",
+          "connection": "Use TC21 and the retrieval-confusion cases to decide which stage to investigate."
+        }
+      ]
+    },
+    {
+      "id": "TEST-10",
+      "title": "RAGAS Framework",
+      "source": "phase-4-frameworks-and-tools/ragas-evaluation/test10_ragas_evaluator.py",
+      "evidence": "methodology",
+      "objective": "Implement a RAGAS scoring workflow for comparison with the original hand-written RAG scorer.",
+      "method": "Run the RAG bot, collect questions, replies, and retrieved context, and submit them to three framework metrics.",
+      "inputs": "The script and workbook preserve the expected input shape and the RAG cases.",
+      "configuration": "The script specifies gpt-4o-mini via OpenAI for judging and text-embedding-3-small for embeddings.",
+      "results": null,
+      "findings": "The implementation defines context precision, faithfulness, and answer relevancy, and prints a comparison with the Test 9 baseline when run.",
+      "limitations": "No completed Test 10 report or saved scores were found. Test 9 comparison constants in the script are not Test 10 results.",
+      "artifacts": [
+        {
+          "path": "phase-4-frameworks-and-tools/ragas-evaluation/ragas_test_cases.xlsx",
+          "kind": "input",
+          "label": "Original RAGAS input workbook"
+        },
+        {
+          "path": "phase-4-frameworks-and-tools/ragas-evaluation/report_generator.py",
+          "kind": "method",
+          "label": "Original report generator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M09-T01",
+          "relevance": "Supporting",
+          "connection": "Read which inputs and external calls a real evaluator adapter would need."
+        },
+        {
+          "id": "M09-T02",
+          "relevance": "Primary",
+          "connection": "Inspect the original RAGAS case mapping and metrics as methodology-only evidence."
+        }
+      ]
+    },
+    {
+      "id": "TEST-11",
+      "title": "Test 11: DeepEval",
+      "source": "docs/test11.html",
+      "evidence": "partial",
+      "objective": "Compare a framework-based judge with Test 9’s custom scoring on saved RAG cases.",
+      "method": "Build DeepEval test cases with question, reply, and retrieved context, then grade with three metrics at a 0.5 threshold.",
+      "inputs": "The original workbook and page list 25 cases, the per-case metrics, and the recorded timeout batches.",
+      "configuration": "llama3.1:8b bot and mistral judge over Ollama, as documented in the report.",
+      "results": "The page reports 1/25 full passes (TC15). TC01–TC15 are described as fully scored. Some context and faithfulness results in TC16–TC25 were affected by timeouts.",
+      "findings": "The valid-case comparison explains why two scores labeled context relevance can answer different questions.",
+      "limitations": "The original all-case aggregates mix valid results with timeout-affected values. Use the recorded batch and metric notes when interpreting them.",
+      "artifacts": [
+        {
+          "path": "phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html",
+          "kind": "result",
+          "label": "Original per-case report"
+        },
+        {
+          "path": "phase-4-frameworks-and-tools/deepeval-evaluation/deepeval_test_cases.xlsx",
+          "kind": "input",
+          "label": "DeepEval case workbook"
+        },
+        {
+          "path": "phase-4-frameworks-and-tools/deepeval-evaluation/test11_deepeval_evaluator.py",
+          "kind": "method",
+          "label": "Framework evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M09-T01",
+          "relevance": "Primary",
+          "connection": "Inspect the input case object and why a timeout needs its own result state."
+        },
+        {
+          "id": "M09-T02",
+          "relevance": "Primary",
+          "connection": "Compare the original metric definitions and the qualified recorded results."
+        },
+        {
+          "id": "M08-T03",
+          "relevance": "Supporting",
+          "connection": "Look at the valid-case comparison when attributing an apparent score drop."
+        },
+        {
+          "id": "M14-T03",
+          "relevance": "Supporting",
+          "connection": "Use the recorded timeout batches to consider operational reliability."
+        }
+      ]
+    },
+    {
+      "id": "TEST-12",
+      "title": "Test 12: Agent Behavior Evaluation",
+      "source": "docs/test12.html",
+      "evidence": "recorded",
+      "objective": "Check whether an agent follows the expected tool path and stops appropriately.",
+      "method": "Run 15 workbook cases through a local banking agent and inspect tool sequence, arguments, and stop behavior.",
+      "inputs": "Mock account data and local documents support no-tool, lookup, clarification, and multi-step cases.",
+      "configuration": "qwen3.5:9b via Ollama in the committed result data.",
+      "results": "14 of 15 passed all checks. TC10 stopped after the lookup rather than taking the expected second step. The walkthrough reports zero final timeouts and three timeout recoveries by retry.",
+      "findings": "The original analysis shows what becomes visible when individual tool calls and stops are recorded.",
+      "limitations": "These outcomes apply to the saved cases and mock tools.",
+      "artifacts": [
+        {
+          "path": "phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html",
+          "kind": "result",
+          "label": "Original agent results report"
+        },
+        {
+          "path": "phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json",
+          "kind": "result",
+          "label": "Recorded trajectories and arguments"
+        },
+        {
+          "path": "phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx",
+          "kind": "input",
+          "label": "Original agent test cases"
+        },
+        {
+          "path": "phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py",
+          "kind": "method",
+          "label": "Deterministic agent evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M03-T02",
+          "relevance": "Supporting",
+          "connection": "Review how structured action parsing affects whether the trace can be evaluated."
+        },
+        {
+          "id": "M10-T01",
+          "relevance": "Primary",
+          "connection": "Inspect recorded calls, expected tool arguments, and stop behavior."
+        },
+        {
+          "id": "M10-T02",
+          "relevance": "Supporting",
+          "connection": "Compare the early stop in TC10 with the expected two-step trajectory."
+        },
+        {
+          "id": "M10-T03",
+          "relevance": "Primary",
+          "connection": "Distinguish retry recovery from the unresolved early-stop failure."
+        }
+      ]
+    },
+    {
+      "id": "TEST-13",
+      "title": "Test 13: Trajectory Evaluation with Judge Model",
+      "source": "docs/test13.html",
+      "evidence": "recorded",
+      "objective": "Judge the quality of saved agent trajectories on four dimensions.",
+      "method": "Read Test 12 traces and score tool selection, argument quality, answer grounding, and stopping behavior.",
+      "inputs": "The bundled input is a committed copy of 15 saved Test 12 trajectories. The original page documents the judge prompt.",
+      "configuration": "mistral judge via Ollama, grading qwen3.5:9b trajectories.",
+      "results": "The committed judge-results JSON records 15 pass verdicts out of 15. Test 12 separately recorded a deterministic mismatch for TC10.",
+      "findings": "The walkthrough explains why fixed tool-path checks and judge-scored reasoning have different roles.",
+      "limitations": "The 15 judge verdicts are historical outputs. They do not overturn the separate recorded deterministic mismatch.",
+      "artifacts": [
+        {
+          "path": "phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json",
+          "kind": "result",
+          "label": "Original judge outputs and scores"
+        },
+        {
+          "path": "phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_report.html",
+          "kind": "result",
+          "label": "Trajectory evaluation report"
+        },
+        {
+          "path": "phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json",
+          "kind": "input",
+          "label": "Frozen Test 12 trace input"
+        },
+        {
+          "path": "phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py",
+          "kind": "method",
+          "label": "Trajectory judge evaluator"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M05-T03",
+          "relevance": "Supporting",
+          "connection": "Compare a deterministic mismatch with a passing judge result on the same trajectory."
+        },
+        {
+          "id": "M10-T02",
+          "relevance": "Primary",
+          "connection": "Inspect the four saved trajectory ratings alongside the original action sequence."
+        },
+        {
+          "id": "M18-T01",
+          "relevance": "Supporting",
+          "connection": "Use the separate judge and deterministic verdicts to examine evaluator robustness."
+        }
+      ]
+    },
+    {
+      "id": "TEST-14",
+      "title": "Test 14: Langfuse Observability",
+      "source": "docs/test14.html",
+      "evidence": "methodology",
+      "objective": "Instrument a banking bot evaluation so traces, latency, and scores can be inspected in Langfuse.",
+      "method": "Create a local Langfuse setup and log evaluation traces, spans, tags, and keyword-pass scores.",
+      "inputs": "The original workbook contains 20 cases across six banking categories. The page shows the instrumentation and what to inspect.",
+      "configuration": "The checked-in configuration names llama3.1:8b. The original walkthrough describes a local Docker and Langfuse setup.",
+      "results": null,
+      "findings": "The walkthrough explains how a trace connects the input, model call, evaluator, and latency for inspection.",
+      "limitations": "The results directory contains only a placeholder. No recorded trace export, dashboard screenshot, or run summary was found.",
+      "artifacts": [
+        {
+          "path": "phase-5-production-eval/langfuse-observability/banking_test_cases.xlsx",
+          "kind": "input",
+          "label": "Observability input workbook"
+        },
+        {
+          "path": "phase-5-production-eval/langfuse-observability/test14_langfuse_evaluator.py",
+          "kind": "method",
+          "label": "Instrumentation script"
+        },
+        {
+          "path": "phase-5-production-eval/langfuse-observability/docker-compose.yml",
+          "kind": "method",
+          "label": "Original local setup definition"
+        }
+      ],
+      "topics": [
+        {
+          "id": "M02-T03",
+          "relevance": "Supporting",
+          "connection": "Connect offline evaluations with the trace evidence used in an operational workflow."
+        },
+        {
+          "id": "M14-T01",
+          "relevance": "Primary",
+          "connection": "Follow the original instrumentation from prompt to spans and scores."
+        },
+        {
+          "id": "M14-T02",
+          "relevance": "Supporting",
+          "connection": "Use the documented categories and tags as an example of dimensions for production sampling."
+        },
+        {
+          "id": "M14-T03",
+          "relevance": "Related",
+          "connection": "See where the instrumentation records latency before designing a measured comparison."
+        }
+      ]
+    }
+  ]
+}

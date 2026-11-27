@@ -62,6 +62,7 @@ Last updated **2026-11-27**. The last verified live release is `aa01ca7`. Twenty
 | M08-T02, Context sufficiency, answer correctness and citations | **Rewritten — Awaiting Human Teaching Review.** Three demonstrations, seven standalone activities, four solved exercises, eight knowledge checks, and a guided claim-and-citation audit with two assignment variants. |
 | M08-T03, Failure attribution, optimization and RAG regression | **Rewritten — Awaiting Human Teaching Review.** Three worked demonstrations, seven standalone activities, four solved exercises, eight knowledge checks, and an eight-case oracle and regression lab with two assignment variants. |
 | M09-T01, Common evaluator contract and framework selection | **Rewritten — Awaiting Human Teaching Review.** Three worked demonstrations, seven standalone activities, four solved exercises, eight knowledge checks, and an eight-case portable harness lab with two assignment variants. |
+| Original TestNeural experiment integration | The shared lesson markup and Resources library use one catalog for Tests 0–14. All 15 are mapped across 31 topics, with 21 Primary, 23 Supporting, and one Related mapping. Existing exercises and original evidence remain intact. |
 
 ## Tested
 
@@ -120,6 +121,7 @@ Last updated **2026-11-27**. The last verified live release is `aa01ca7`. Twenty
 - For M08-T02, seven baselines, seven experiments, two lab replays, two assignment variants, and a boundary and immutable-history run passed in fresh Python 3.12.7 processes. Independent counts confirmed all four lab summaries. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with twenty-three authored chapters. The lab uses human-labeled fictional fixtures.
 - For M08-T03, seven baselines, seven experiments, three lab replays, two assignment variants, and a boundary and audit run passed in fresh Python 3.12.7 processes. Independent checks confirmed the ranking scores, metric denominators, paired transitions, release gates, and historical trace preservation. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with twenty-four authored chapters. All captures, scores, and latency values are fictional.
 - For M09-T01, seven baselines, seven experiments, three lab modes, two assignment variants, and a boundary and audit run passed in fresh Python 3.12.7 processes. Independent checks confirmed keyword parity, denominators, weighted scores, the mandatory data boundary, and audit preservation. Curriculum synchronization, static validation of 30 public files, and all 29 checked-in non-browser tests passed with twenty-five authored chapters. All Northstar captures and framework ratings are fictional.
+- The original experiment coverage command reported 11 recorded tests, one partial test, three methodology-only tests, 22 topics without references, and zero unresolved catalog source paths. All 55 cited paths matched the pinned repository revision byte for byte. The generated homepage and curriculum synchronized, static validation covered 30 public files, and all 36 checked-in non-browser tests passed. No historical experiment was rerun.
 
 ## Manually verified
 
@@ -158,6 +160,8 @@ At Stage A the owner reported that DNS was verified, NGINX 1.24.0 and Certbot 5.
 29. **M09-T01 is Rewritten — Awaiting Human Teaching Review.** Ask a first-time learner to distinguish an OK failure from ERROR and SKIPPED, verify Q2 parity and Q4's repair, and defend the framework decision under the data boundary. Manual browser and editor checks, real-framework integration, and live-model validation remain pending.
 
 Track confirmed issues and separate verification gaps in [BUG_TRACKER.md](BUG_TRACKER.md).
+
+Manual acceptance remains pending for the original experiment integration. Test the Resources library and a mapped lesson in Quick Learning and Complete Course. Use the keyboard to expand disclosures and follow links in both directions. Confirm the third-party archive opens Test 10's source, Test 11 shows partial evidence, and mapped lessons retain their Copy Code, progress, and Read Aloud behavior. Check both themes and a narrow viewport.
 
 ## Beginner Python workflow audit
 
