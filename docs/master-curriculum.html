@@ -22433,34 +22433,802 @@ data-subject="Production Engineering" data-status="Needs Correction" data-track=
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m13-t01">
-  <p class="lesson-intro" data-lesson-search>A run must be attributable to one prompt, model, dataset, scorer and configuration.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Build and score separation, immutable run metadata, fixtures and live tiers, parallelism, caching, secure config, evaluator error taxonomy and artifact integrity.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Turn a manual Northstar evaluation into a pipeline that can identify the exact inputs, scoring rules and results of each run.</li><li>Validate a versioned run contract, lock the case set and score fictional captured predictions independently of model execution.</li><li>Separate model-quality failures from missing or failed evaluation work, then apply pass-rate, coverage and critical-case gates.</li><li>Rebuild a report from archived evidence and explain when two runs support a controlled comparison.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Imagine two people grading a quiz. Both say they graded ten papers. One reports nine passes and the other reports seven. Before changing the quiz, ask for the papers, their answer keys and the rule each used to award a pass.</p>
+<p>Engineer A reports 90% for the fictional Northstar Support Assistant. Engineer B later reports 70%. Maybe a refund case changed, or the evaluator started requiring a citation. Maybe one person accidentally left out two rows and counted them as failures. Ask both engineers to show the case IDs they counted. If only six IDs match, the totals describe different sets. To explain a difference on those six, put each saved reply beside the approved answer and check that both engineers used the same scoring rule.</p>
+<p>Northstar handles refunds, order lookup, policy retrieval, authenticated actions, privacy and escalation. In this chapter, its fictional electronics policy allows requests through day 30 from purchase with a valid receipt. Executing the refund also requires verified ownership and independent approval. Every Northstar case and prediction below is synthetic. Allow about six hours for the guided lab. Complete <a href="#m03-t01">Structured output and schema validation</a> and <a href="#m04-t01">Golden schemas, provenance and versioning</a>. <a href="#m07-t01">Variance, repetition and score aggregation</a> and <a href="#m09-t01">Common evaluator contract and framework selection</a> are recommended. Complete the latter before you build an external framework adapter. Preparation skills P01–P04 support optional local replay.</p>
+<h4>Beginner Explanation</h4>
+<h5>Follow one case through the pipeline</h5>
+<p>Take case N01. The reference says ELIGIBLE, and the saved model decision says ELIGIBLE. To count it, you also need to know whether the reply belongs to N01, which policy governs and whether the evaluation completed. A repeatable series of steps that answers these questions and produces a report is an evaluation pipeline.</p>
+<p>Loading controls the input. Building the run selects cases and binds the captures before scoring. The evaluator then checks the saved prediction against a reference. Separating capture from scoring lets another reviewer replay the evaluator without calling the model or changing the original reply. Suppose the plan names evaluator V2, but the runner has only V1. Stop before grading N01. If V1 silently takes over, the score will be attributed to the wrong rule. A dry run performs this early check, called preflight, without grading any cases.</p>
+<h5>Give every run an identity</h5>
+<p>A run ID names one execution attempt. A dataset version names a snapshot of cases and reference labels that several runs can reuse. The run contract is the written agreement about what to load, how to check it, what results mean and what evidence to save. In a real pipeline, allocate a fresh run ID for each attempt, including retries. Record the earlier run ID if a retry or repair is linked to it.</p>
+<p>Track the model provider and name, temperature, optional seed and token limit. Temperature can affect sampling. A supported seed can make runs more repeatable under specified conditions. Token limits can change which answers get cut off. A hosted alias may change behind the same name, so record a provider revision or resolved identifier where available. Temperature zero and seeds do not guarantee that a new live call will reproduce saved text. A replay uses one saved response. Re-scoring that response evaluates the same artifact. Re-running the live model produces new evidence.</p>
+<p>Track prompt, evaluator, rubric, policy and threshold versions. A one-word prompt edit can change output. The evaluator version identifies the scoring implementation, while the rubric version identifies the judgment rules. The policy version identifies the governing facts. The threshold version identifies how evidence turns into a decision. Save the threshold values as well as their version. Someone may need to reproduce a gate after the team changes it.</p>
+<h5>Check inputs before trusting results</h5>
+<p>A configuration schema states which fields must exist and which types and values they allow. A run can have valid JSON and still refer to a missing evaluator or the wrong policy. Preflight checks both shape and meaning. Then validate required case fields, unique IDs, expected count, approved selection and content integrity. A checksum is a fingerprint of content. Northstar sorts cases by stable ID, serializes the JSON consistently and computes a SHA-256 digest. Reordering inputs preserves the normalized digest. Editing a reference answer changes it. The digest supports integrity checks against a trusted record. Authenticity requires trusted storage or a separate signing mechanism.</p>
+<p>A run manifest records what actually happened and how to find the case results, captures and references. Save the versioned contract, preflight outcome, selected IDs, artifact digests, evaluator results, gate reasons and any error details. Collect actual timestamps and tool or model revisions if available. Keep historical bytes in an append-only store where changes are new entries. Restrict access to evidence and avoid recording secrets in manifests, prompts or logs. Store credential references in approved secret storage and keep keys outside the contract.</p>
+<h5>Read each outcome before adding numbers</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Execution status</th><th scope="col">Quality verdict</th><th scope="col">Example</th></tr></thead><tbody><tr><td>COMPLETED</td><td>PASS</td><td>Valid captured decision matches the approved reference</td></tr><tr><td>COMPLETED</td><td>FAIL</td><td>Valid captured decision conflicts with that reference</td></tr><tr><td>ERROR</td><td>No verdict</td><td>Capture failed or scorer raised an error</td></tr><tr><td>TIMED_OUT</td><td>No verdict</td><td>Evaluator exceeded its time budget</td></tr><tr><td>SKIPPED</td><td>No verdict</td><td>A planned case was explicitly skipped with a reason</td></tr><tr><td>MISSING</td><td>No verdict</td><td>Prediction or required evidence is absent</td></tr></tbody></table></div>
+<p>Start with the eight cases that received a verdict. Seven passed, so the pass-rate denominator is eight. Now count all ten cases you planned. Two have no verdict, so the coverage denominator is ten. With one valid failure, one timeout and one missing case, the resulting pass rate is 7/8 or 87.5%, and coverage is 8/10 or 80%. A run with zero verdicts has an undefined pass rate and zero coverage. Critical failures block advancement even at 100% coverage. Missing evidence requires review even when the evaluated subset passes.</p>
+<h5>Compare on purpose</h5>
+<p>A paired prompt comparison holds the selected dataset bytes, reference policy, rubric, evaluator, model settings, threshold values and execution tier constant. The prompt is the one intended change. The two capture sets carry separate identities because each records results for its own prompt. If the scorer or policy changes, record the difference and rescore both approved captures under a common contract before attributing a score change. When coverage is incomplete, the configuration can still be aligned. Withhold the direct full-suite comparison and inspect missing case IDs.</p>
+<p>Use stable ordering for parallel scoring. Separate workers can score different cases, then return to one merge by ID. If a case crashes, record the error. A cache can save repeated scoring with a key that includes the exact prediction evidence, evaluator, rubric and policy inputs. Include every relevant version, and invalidate on mismatch. Keep fast offline fixtures and authorized live tiers distinct. Later CI can call the pipeline and retain artifacts while a human reviews the decision. Detailed CI gate design and rollback governance are later topics.</p>
+<h5>Northstar pipeline architecture</h5>
+<p>Read the flow from contract to report. Preflight verifies component availability. Dataset validation checks the case lock. Capture loading checks that the evidence belongs to the approved inputs and prompt. The report links both sources so a reviewer can reconstruct a result.</p>
+<p><strong>Versioned contract → preflight → frozen dataset → prediction replay or authorized model execution → evaluator → aggregation → quality gates → manifest and evidence</strong></p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Stage</th><th scope="col">Required inputs</th><th scope="col">Validation</th><th scope="col">Output</th><th scope="col">Failure behavior</th><th scope="col">Evidence retained</th></tr></thead><tbody><tr><td>Load contract</td><td>Contract schema, version IDs, run ID</td><td>Required keys, types and value ranges</td><td>Parsed contract</td><td>Reject malformed contract</td><td>Original attempted contract and validation error</td></tr><tr><td>Preflight</td><td>Parsed contract, approved component registry</td><td>Versions, approved settings and tier</td><td>Validated execution plan</td><td>Stop before evaluation</td><td>Field-specific error or plan ID</td></tr><tr><td>Lock dataset</td><td>Plan, cases, case selection</td><td>Required fields, unique IDs, count, checksum, policy</td><td>Ordered selected cases</td><td>Stop before execution</td><td>Dataset bytes and ordered IDs</td></tr><tr><td>Load predictions</td><td>Ordered cases and approved capture artifact</td><td>Input/prompt linkage, capture checksum, case IDs</td><td>Predictions or explicit status</td><td>Reject artifact mismatch before scoring. Record capture gaps per case</td><td>Capture bytes and references</td></tr><tr><td>Score</td><td>Prediction or status, reference, evaluator</td><td>Required evidence and verdict contract</td><td>Per-case result</td><td>Record timeout or error with no quality verdict</td><td>Expected, actual, provenance, reason</td></tr><tr><td>Aggregate</td><td>Planned IDs and completed results</td><td>One result per planned case</td><td>Counts, pass rate, coverage</td><td>Surface undefined rates and incomplete cases</td><td>Numerators and denominators</td></tr><tr><td>Apply gates</td><td>Metrics, case severity, approved thresholds</td><td>Critical, coverage and quality checks</td><td>READY, REVIEW or HOLD</td><td>Confirmed critical issues block regardless of average</td><td>Decision and reasons</td></tr><tr><td>Preserve report</td><td>Contract, selected IDs and artifacts</td><td>Validate relationships, archive by unique run ID</td><td>Manifest and append-only audit</td><td>Stop publication on archive conflict</td><td>Report digest, parent run link and evidence</td></tr></tbody></table></div>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Compare two unversioned reports</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Northstar asks why its refund and order suite went from 90% to 70%.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>A prompt comparison requires the same cases, references and scoring rules. Predict what you would conclude if only six case IDs overlap.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The two invented captures are from runs with 9/10 answers correct on dataset V1 and 7/10 on V2. Only six cases overlap. V2 includes newly added citation and privacy checks.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The reported totals use different sets. Record the dataset identities and exact selected IDs, then score both prompt versions against the same frozen references. Review matched outcomes for the common cases if a new run is unavailable.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Incompatible comparison. These totals alone provide no evidence that the assistant regressed on unchanged cases.</span></p>
+<h5>Example 2. Stop an invalid run before scoring</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>An engineer submits a run specifying evaluator V2.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>The contract requires V2, and the local registry exposes V1 only. Predict whether any case gets a verdict.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>No captured answer was scored. Preflight reports that evaluator V2 is unavailable.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Make V2 available and record its implementation identity, or create a new contract explicitly selecting V1. Silent substitution would produce a misleading record of the scoring rule.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Configuration failure before execution. There is no pass rate for this attempt.</span></p>
+<h5>Example 3. Hold a run with a critical violation</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>An unapproved requester asks Northstar to execute a refund.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Expect a denied action and no ledger write. Review the captured backend result independently of the reply.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>In the synthetic capture the assistant says it declined. The matched backend evidence records one unauthorized write.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The suite completed all 20 cases and 19 passed. The failed critical case still violates the invariant. The gate returns HOLD at 95% pass rate and 100% coverage.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>Completed quality failure on a critical invariant. The evaluator successfully detected it.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>For each independent activity, use Copy Code, open the online editor, paste and run. Expand Expected output after predicting the result. Make the one stated change, run again and explain which decision changes. Restore the original before starting the next activity. These examples use inline data and Python’s standard library.</p>
+</div></details>
+<h5>Step 1 — Define a run contract</h5>
+<p>Turn one Northstar run into named fields. Curly braces build a dictionary. Each key names one value. A set contains distinct keys. Subtract the keys you have from the required keys to find anything absent.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">include_policy = True
+contract = {
+    &quot;run_id&quot;: &quot;NS-001&quot;, &quot;dataset_version&quot;: &quot;dataset-v1&quot;, &quot;prompt_version&quot;: &quot;prompt-v1&quot;,
+    &quot;model_id&quot;: &quot;fixture-model&quot;, &quot;evaluator_version&quot;: &quot;evaluator-v1&quot;,
+    &quot;policy_version&quot;: &quot;refund-v1&quot;, &quot;threshold&quot;: 0.90, &quot;expected_case_count&quot;: 20,
+}
+required = set(contract)
+if not include_policy:
+    del contract[&quot;policy_version&quot;]
+missing = sorted(required - set(contract))
+print(&quot;Run:&quot;, contract[&quot;run_id&quot;])
+print(&quot;Missing:&quot;, &quot;, &quot;.join(missing) or &quot;none&quot;)
+print(&quot;Preflight:&quot;, &quot;REJECT&quot; if missing else &quot;PASS&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Run: NS-001
+Missing: none
+Preflight: PASS
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>include_policy = False</code>. Predict what evidence the run would lose.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Run: NS-001
+Missing: policy_version
+Preflight: REJECT
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The missing policy makes the reference untraceable. Restore the approved policy field before loading cases.</p>
+<h5>Step 2 — Validate contract compatibility</h5>
+<p>Compare the evaluator requested by Northstar with the one installed in the fictional registry. The equality operator <code>==</code> compares values. Put version negotiation before scoring so a substituted rule cannot enter the report.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">requested = &quot;evaluator-v1&quot;
+available = &quot;evaluator-v1&quot;
+print(f&quot;Requested: {requested}. Available: {available}&quot;)
+if requested == available:
+    print(&quot;Preflight: PASS. Scoring may start.&quot;)
+else:
+    print(&quot;Preflight: REJECT. No cases scored.&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Requested: evaluator-v1. Available: evaluator-v1
+Preflight: PASS. Scoring may start.
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>requested = &#x27;evaluator-v2&#x27;</code>. Predict whether scoring starts.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Requested: evaluator-v2. Available: evaluator-v1
+Preflight: REJECT. No cases scored.
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The mismatch blocks scoring. Install the approved V2 separately or create a contract that explicitly uses V1.</p>
+<h5>Step 3 — Validate dataset integrity</h5>
+<p>Check two out-of-order cases. A list preserves input order, and a comprehension gathers case IDs. <code>any</code> checks whether at least one row is missing required keys. <code>sorted(..., key=...)</code> uses the named value as each row’s sort key.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">second_id = &quot;N01&quot;
+rows = [{&quot;id&quot;: &quot;N02&quot;, &quot;expected&quot;: &quot;FOUND&quot;}, {&quot;id&quot;: second_id, &quot;expected&quot;: &quot;ELIGIBLE&quot;}]
+ids = [row.get(&quot;id&quot;) for row in rows]
+if len(rows) != 2 or any(not {&quot;id&quot;, &quot;expected&quot;} &lt;= row.keys() for row in rows):
+    print(&quot;REJECT: count or required fields&quot;)
+elif len(ids) != len(set(ids)):
+    print(&quot;REJECT: duplicate case ID&quot;)
+else:
+    print(&quot;Ordered:&quot;, &quot;, &quot;.join(row[&quot;id&quot;] for row in sorted(rows, key=lambda row: row[&quot;id&quot;])))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Ordered: N01, N02
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>second_id = &#x27;N02&#x27;</code>. The case count will still be two. Predict whether a grader can identify both cases.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">REJECT: duplicate case ID
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> Two rows with the same ID cannot be paired reliably. Reject them before deriving the stable order.</p>
+<h5>Step 4 — Execute deterministic replay</h5>
+<p>Use a saved prediction for each case. <code>.items()</code> gives the key and value for each reference. An expression with <code>if</code> and <code>else</code> selects the label to print. The evaluator compares one exact label per case.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">refund = &quot;ELIGIBLE&quot;
+reference = {&quot;N01&quot;: &quot;ELIGIBLE&quot;, &quot;N02&quot;: &quot;FOUND&quot;}
+captured = {&quot;N01&quot;: refund, &quot;N02&quot;: &quot;FOUND&quot;}
+for case_id, expected in reference.items():
+    verdict = &quot;PASS&quot; if captured[case_id] == expected else &quot;FAIL&quot;
+    print(f&quot;{case_id}: COMPLETED {verdict}&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">N01: COMPLETED PASS
+N02: COMPLETED PASS
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>refund = &#x27;INELIGIBLE&#x27;</code>. Predict which case changes and whether the run reports an execution error.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">N01: COMPLETED FAIL
+N02: COMPLETED PASS
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> N01 has a captured prediction with the wrong label. The evaluator completed and detected a quality failure. Investigate the saved decision.</p>
+<h5>Step 5 — Aggregate evaluated and planned cases</h5>
+<p>Four cases are planned. The dictionary contains two completed passes, one valid failure and one evaluator error. <code>.count</code> counts each named status in the list. Division produces a rate, and <code>:.1%</code> displays it as a percentage.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">keep_second_pass = True
+planned = [&quot;N01&quot;, &quot;N02&quot;, &quot;N03&quot;, &quot;N04&quot;]
+results = {&quot;N01&quot;: &quot;PASS&quot;, &quot;N02&quot;: &quot;PASS&quot;, &quot;N03&quot;: &quot;FAIL&quot;, &quot;N04&quot;: &quot;ERROR&quot;}
+if not keep_second_pass:
+    del results[&quot;N02&quot;]
+statuses = [results.get(case_id, &quot;MISSING&quot;) for case_id in planned]
+passed, failed, errors, missing = (statuses.count(label) for label in (&quot;PASS&quot;, &quot;FAIL&quot;, &quot;ERROR&quot;, &quot;MISSING&quot;))
+completed = passed + failed
+print(f&quot;Pass/fail/error/missing: {passed}/{failed}/{errors}/{missing}&quot;)
+print(f&quot;Pass rate: {passed}/{completed} ({passed / completed:.1%})&quot;)
+print(f&quot;Coverage: {completed}/{len(planned)} ({completed / len(planned):.1%})&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass/fail/error/missing: 2/1/1/0
+Pass rate: 2/3 (66.7%)
+Coverage: 3/4 (75.0%)
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>keep_second_pass = False</code>. Predict both denominators before running.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass/fail/error/missing: 1/1/1/1
+Pass rate: 1/2 (50.0%)
+Coverage: 2/4 (50.0%)
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The pass rate changes from 2/3 to 1/2. Coverage changes from 3/4 to 2/4 because the missing row remains planned. Report the error separately.</p>
+<h5>Step 6 — Apply quality gates</h5>
+<p>Compare two full-suite scorecards. The second fixes two ordinary cases but introduces an unauthorized write. The tuples hold passes, completed verdicts, critical failures and complete evidence in that order. A function returns a decision at the first applicable rule.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">candidate = False
+passes, completed, critical, evidence = (19, 20, 1, True) if candidate else (18, 20, 0, True)
+
+def gate(passes, completed, critical, evidence):
+    if critical:
+        return &quot;HOLD&quot;
+    if not evidence or completed != 20:
+        return &quot;REVIEW&quot;
+    return &quot;READY&quot; if passes / completed &gt;= 0.9 else &quot;HOLD&quot;
+
+print(f&quot;Pass rate: {passes}/{completed}. Critical failures: {critical}.&quot;)
+print(&quot;Gate:&quot;, gate(passes, completed, critical, evidence))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass rate: 18/20. Critical failures: 0.
+Gate: READY
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>candidate = True</code>. Predict whether 19 passing cases can clear the critical gate.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass rate: 19/20. Critical failures: 1.
+Gate: HOLD
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The critical violation takes priority even though the pass rate rose. The full lab also checks which critical case failed.</p>
+<h5>Step 7 — Generate a run manifest</h5>
+<p>Turn a small result into JSON that another program can read. <code>json.dumps</code> serializes the dictionary. <code>sort_keys=True</code> keeps an identical key order. <code>encode</code> turns text into bytes for SHA-256 and <code>hexdigest</code> turns the hash into printable characters.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import hashlib
+import json
+
+dataset_version = &quot;dataset-v1&quot;
+cases = [{&quot;id&quot;: &quot;N01&quot;, &quot;expected&quot;: &quot;ELIGIBLE&quot;}]
+dataset_bytes = json.dumps(cases, sort_keys=True).encode(&quot;utf-8&quot;)
+manifest = {
+    &quot;run_id&quot;: &quot;NS-001&quot;,
+    &quot;versions&quot;: {&quot;prompt&quot;: &quot;prompt-v1&quot;, &quot;evaluator&quot;: &quot;evaluator-v1&quot;, &quot;policy&quot;: &quot;refund-v1&quot;},
+    &quot;dataset&quot;: {&quot;version&quot;: dataset_version, &quot;sha256&quot;: hashlib.sha256(dataset_bytes).hexdigest()},
+    &quot;counts&quot;: {&quot;planned&quot;: 1, &quot;completed&quot;: 1},
+    &quot;results&quot;: {&quot;N01&quot;: &quot;PASS&quot;}, &quot;gate&quot;: &quot;READY&quot;, &quot;evidence&quot;: [&quot;fixture://NS-001/N01&quot;],
+}
+print(json.dumps(manifest, sort_keys=True))
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;counts&quot;: {&quot;completed&quot;: 1, &quot;planned&quot;: 1}, &quot;dataset&quot;: {&quot;sha256&quot;: &quot;228c0a8e4de5c231c215e2fd81a63120fd89059ba136b0b7494ca5b98b7a235c&quot;, &quot;version&quot;: &quot;dataset-v1&quot;}, &quot;evidence&quot;: [&quot;fixture://NS-001/N01&quot;], &quot;gate&quot;: &quot;READY&quot;, &quot;results&quot;: {&quot;N01&quot;: &quot;PASS&quot;}, &quot;run_id&quot;: &quot;NS-001&quot;, &quot;versions&quot;: {&quot;evaluator&quot;: &quot;evaluator-v1&quot;, &quot;policy&quot;: &quot;refund-v1&quot;, &quot;prompt&quot;: &quot;prompt-v1&quot;}}
+</code></pre></details>
+<p><strong>Experiment.</strong> Set <code>dataset_version = &#x27;dataset-v2&#x27;</code>, keeping the case content fixed. Predict what changes in the manifest and in the digest.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">{&quot;counts&quot;: {&quot;completed&quot;: 1, &quot;planned&quot;: 1}, &quot;dataset&quot;: {&quot;sha256&quot;: &quot;228c0a8e4de5c231c215e2fd81a63120fd89059ba136b0b7494ca5b98b7a235c&quot;, &quot;version&quot;: &quot;dataset-v2&quot;}, &quot;evidence&quot;: [&quot;fixture://NS-001/N01&quot;], &quot;gate&quot;: &quot;READY&quot;, &quot;results&quot;: {&quot;N01&quot;: &quot;PASS&quot;}, &quot;run_id&quot;: &quot;NS-001&quot;, &quot;versions&quot;: {&quot;evaluator&quot;: &quot;evaluator-v1&quot;, &quot;policy&quot;: &quot;refund-v1&quot;, &quot;prompt&quot;: &quot;prompt-v1&quot;}}
+</code></pre></details>
+<p><strong>Investigate and decide.</strong> The manifest now calls the dataset V2, but the checksum is identical because you left N01’s bytes alone. Try predicting the reverse: if someone edits N01 without changing the version label, its checksum changes. Save both so you can detect either mismatch.</p>
+<h4>Real Evaluation Pipeline Workflow</h4>
+<h5>Prepare the execution plan</h5>
+<ol><li>State the engineering question and choose the variable you intend to change. Select frozen Northstar refund, order, RAG, action, privacy and escalation cases. Record the dataset version, sorted IDs and checksum.</li><li>Record the prompt template, its version and rendered or source bytes as appropriate. Record the model provider, name, resolved revision and effective parameters. Record the evaluator, rubric, policy and threshold versions and the actual threshold values.</li><li>Allocate a new run ID. Record any parent run and reserve artifact storage. Build the contract. Check the schema, registry, dataset count, uniqueness, selection, digest and capture linkage in a dry run. Reject invalid settings before issuing model requests.</li></ol>
+<h5>Execute, score and make a decision</h5>
+<ol><li>Choose offline replay or a separately approved live tier. Store one prediction or explicit capture status per case. Retain evidence references, versions, timestamps and sanitized execution details where available.</li><li>Score the captured artifact. Record the evaluation verdict and the execution status separately. Keep errors, timeouts, missing and skipped rows in the planned count. Do not turn an unavailable verdict into a score of zero.</li><li>Calculate completed verdicts, pass rate, coverage and critical failed IDs. Apply critical, coverage and pass-rate rules in their declared order. Render free text with escaping, validate evidence link schemes before making them clickable and check that no sensitive prompt or trace data enters a public report.</li><li>Preserve the manifest, raw or approved redacted evidence and digests by run ID. Replay the archive under the recorded implementation. Compare against a previous run only after validating its contract and coverage. Report what the offline evidence covers, where it ends and which authorized next step the decision allows.</li></ol>
+<h5>Optional documented Promptfoo configuration</h5>
+<p>The Echo provider returns the rendered prompt as output. Use it with saved Northstar decision labels to demonstrate how a test dataset and evaluator assertions appear in a framework. This YAML has two inline cases. Their descriptions and metadata carry stable IDs. The <code>prompts</code> entry inserts the capture. The <code>equals</code> assertion compares the actual label with its expected label. The assertion is binary. The 90% suite threshold, critical-case gate and coverage threshold belong to the surrounding Northstar pipeline. Correlate each assertion result with case identity and missing or failed executions before applying those gates.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash"># promptfooconfig.yaml
+description: &#x27;Northstar frozen replay | dataset-v1 | prompt-v2 | evaluator-v1&#x27;
+prompts:
+  - &#x27;{{capture}}&#x27;
+providers:
+  - echo
+tests:
+  - description: &#x27;N01 refund policy&#x27;
+    metadata:
+      case_id: &#x27;N01&#x27;
+    vars:
+      capture: &#x27;ELIGIBLE&#x27;
+    assert:
+      - type: equals
+        value: &#x27;ELIGIBLE&#x27;
+  - description: &#x27;N11 critical authorization&#x27;
+    metadata:
+      case_id: &#x27;N11&#x27;
+    vars:
+      capture: &#x27;UNAUTHORIZED_WRITE&#x27;
+    assert:
+      - type: equals
+        value: &#x27;DENIED_NO_WRITE&#x27;
+</code></pre>
+</div>
+<p>With an existing approved installation, an operator can validate the configuration using <code>promptfoo validate -c promptfooconfig.yaml</code>, then run <code>promptfoo eval -c promptfooconfig.yaml --output northstar-results.json</code>. Store the YAML bytes and hash, installed tool version, case references, gate settings and exported results as separate artifacts in the surrounding manifest. A check of YAML structure or fields cannot demonstrate execution. For this lesson, the documented syntax and local YAML structure were checked. Promptfoo execution remains unverified. The seven programs and lab provide the complete Python replay without a framework or credentials.</p>
+<p>Official references are <code>https://www.promptfoo.dev/docs/providers/echo/</code>, <code>https://www.promptfoo.dev/docs/configuration/test-cases/</code>, <code>https://www.promptfoo.dev/docs/usage/command-line/</code> and <code>https://www.promptfoo.dev/docs/configuration/outputs/</code>.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Restore missing provenance</h5>
+<p>An engineer submits a contract with 20 rows and no <code>dataset_version</code>. The input filename is <code>latest.json</code>. Write the preflight error, name the metadata to recover, and explain whether yesterday’s dataset can be assumed.</p>
+<h5>Practice 2. Resolve an incompatible evaluator</h5>
+<p>The manifest names evaluator V2 and its run rules strip surrounding whitespace. The available V1 uses an exact comparison. A saved answer is <code>&quot; ELIGIBLE &quot;</code>. Predict both scores and decide how to run legitimately.</p>
+<h5>Practice 3. Restore coverage</h5>
+<p>Twenty cases are planned. Seventeen pass, one validly fails, one times out and one has no prediction. Compute both rates, label the two unresolved rows and decide what to do at a 90% pass-rate and 100% coverage requirement.</p>
+<h5>Practice 4. Hold a critical result</h5>
+<p>The candidate got 19/20 with complete coverage. The failed N11 case has a confirmed unauthorized write. Show the decision and the evidence needed after repair.</p>
+<h4>Independent Assignment</h4>
+<p>Use the complete standalone Northstar lab as your runner. Submit a contract, a per-case result record, coverage and pass-rate calculations, the critical-gate decision and a short report on whether you can compare it with Run A. Save a regenerated manifest using <code>SHOW_MANIFEST = True</code> as an optional inspection step. Trace evidence to the case ID, the selected artifact and its checksum.</p>
+<p>Variant A sets <code>MODE = &quot;timeout&quot;</code> on a fresh copy. N20 has a captured prediction but the evaluator times out. Explain which evidence remains useful and which verdict is absent. Variant B sets <code>MODE = &quot;duplicate&quot;</code> on a fresh copy. The input still has 20 rows, but one ID replaces a different case. Explain why the missing case is never reached and why a rejected attempt has no score to compare. The same complete program runs either variant by changing only the mode.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Preflight expected an explicit dataset version and rejected the contract because the key was missing. The filename is mutable. Retrieve the intended snapshot and selected ID list, verify its count and digest against the trusted record, and submit a new contract. Score only after identity and integrity pass.</p>
+<h5>Solution 2</h5>
+<p>The run expected V2 and could not find it. V2 trims the input and would pass <code>&quot; ELIGIBLE &quot;</code>. V1 would fail it as a different string. Make the approved V2 available or explicitly create a new V1 run. Re-score the approved captures under one shared evaluator before comparing aggregates.</p>
+<h5>Solution 3</h5>
+<p>The error and absent capture have no quality verdict. Pass rate is 17/18 or 94.4%. Coverage is 18/20 or 90.0%. Classify the timeout as TIMED_OUT and the absent capture as MISSING. The gate is REVIEW. Recover the missing capture and re-evaluate the timeout in a fresh run, retaining this attempt in the audit. Recalculate both rates from the resolved verdicts.</p>
+<h5>Solution 4</h5>
+<p>The evidence is complete and the pass rate is 95%, yet N11 records an unauthorized write after the service should have denied it. HOLD. Repair the enforcement layer and supply a correlated denial receipt and unchanged independent state on the unauthorized case. Also verify that the permitted control can still write. Rerun the frozen suite before changing the readiness decision.</p>
+<h5>Lab and assignment answer key</h5>
+<p>A passes the teaching thresholds. B fixes N04 and N09, regresses on N11 and is held. C grades the same captured B predictions successfully but requests a different evaluator. Treat C as a valid independent run and reject both direct comparisons. M contains the corrected prediction labels but has no evidence for N11. It returns REVIEW. R restores the independent evidence for the repaired behavior, and meets the offline gates. R’s READY concerns the fixture contract. Separately verify the change and authorization before live testing.</p>
+<h6>Scenario 3 — incompatible scorer</h6>
+<p>Set <code>MODE = &quot;incompatible&quot;</code>. C completes but cannot be compared directly. Preserve the capture and both scoring rule identities.</p>
+<ul><li><code>Run C | prompt-v2 / evaluator-v2 / refund-policy-v1</code></li><li><code>Preflight: PASS | northstar-eval-v1 | 20 planned</code></li><li><code>Pass/fail: 19/1 | error/timeout/skipped/missing: 0/0/0/0</code></li><li><code>Pass rate: 95.0% | Coverage: 100.0%</code></li><li><code>Critical failures: N11</code></li><li><code>N11 FAIL: evaluated label</code></li><li><code>Gate: HOLD (critical quality failure)</code></li><li><code>Compare with A: INCOMPATIBLE (evaluator_version)</code></li><li><code>Compare with B: INCOMPATIBLE (evaluator_version)</code></li><li><code>Audit: A, B, C | C replay matches saved manifest.</code></li></ul>
+<h6>Scenario 4 — missing evidence</h6>
+<p>Set <code>MODE = &quot;missing&quot;</code>. N11 has no verdict. Its missing result remains planned and reduces coverage.</p>
+<ul><li><code>Run M | prompt-v3 / evaluator-v1 / refund-policy-v1</code></li><li><code>Preflight: PASS | northstar-eval-v1 | 20 planned</code></li><li><code>Pass/fail: 19/0 | error/timeout/skipped/missing: 0/0/0/1</code></li><li><code>Pass rate: 100.0% | Coverage: 95.0%</code></li><li><code>Critical failures: none</code></li><li><code>N11 MISSING: missing prediction or evidence</code></li><li><code>Gate: REVIEW (incomplete evaluation evidence)</code></li><li><code>Compare with A: INSUFFICIENT EVIDENCE (incomplete paired coverage)</code></li><li><code>Audit: A, B, C, M | M replay matches saved manifest.</code></li></ul>
+<h6>Scenario 5 — restored evidence</h6>
+<p>Set <code>MODE = &quot;repaired&quot;</code>. R reaches the offline gate with the evidence restored. The audit retains the earlier HOLD.</p>
+<ul><li><code>Run R | prompt-v3 / evaluator-v1 / refund-policy-v1</code></li><li><code>Preflight: PASS | northstar-eval-v1 | 20 planned</code></li><li><code>Pass/fail: 20/0 | error/timeout/skipped/missing: 0/0/0/0</code></li><li><code>Pass rate: 100.0% | Coverage: 100.0%</code></li><li><code>Critical failures: none</code></li><li><code>Gate: READY (offline thresholds met)</code></li><li><code>Compare with A: COMPATIBLE prompt comparison (fixed: N04, N09; regressed: none)</code></li><li><code>Audit: A, B, C, M, R | R replay matches saved manifest.</code></li></ul>
+<h6>Assignment A — timeout during scoring</h6>
+<p>Set <code>MODE = &quot;timeout&quot;</code>. Keep the N20 prediction evidence. Its timeout belongs in the scoring status with no quality verdict.</p>
+<ul><li><code>Run T | prompt-v3 / evaluator-v1 / refund-policy-v1</code></li><li><code>Preflight: PASS | northstar-eval-v1 | 20 planned</code></li><li><code>Pass/fail: 19/0 | error/timeout/skipped/missing: 0/1/0/0</code></li><li><code>Pass rate: 100.0% | Coverage: 95.0%</code></li><li><code>Critical failures: none</code></li><li><code>N20 TIMED_OUT: evaluator exceeded fixture time budget</code></li><li><code>Gate: REVIEW (incomplete evaluation evidence)</code></li><li><code>Compare with A: INSUFFICIENT EVIDENCE (incomplete paired coverage)</code></li><li><code>Audit: A, B, C, M, R, T | T replay matches saved manifest.</code></li></ul>
+<h6>Assignment B — duplicate before scoring</h6>
+<p>Set <code>MODE = &quot;duplicate&quot;</code>. The count is still 20. The duplicate ID causes rejection before either grading or quality aggregation.</p>
+<ul><li><code>{&quot;error&quot;:&quot;duplicate dataset case ID&quot;,&quot;preflight&quot;:&quot;REJECT&quot;,&quot;run_id&quot;:&quot;D&quot;,&quot;scored&quot;:0}</code></li></ul>
+<h6>Preflight only</h6>
+<p>Set <code>MODE = &quot;preflight&quot;</code>. This validates the contract and artifacts without grading.</p>
+<ul><li><code>Preflight: PASS. 20 selected. Dry run scored 0 cases.</code></li></ul>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Which pipeline steps can fail before you evaluate a single case?</li><li>What distinguishes a run contract from a run manifest?</li><li>Why do you need both dataset and prompt versions?</li><li>Why record model parameters and an evaluator version when the case set has stayed fixed?</li><li>Why check unique IDs and content integrity when the row count is correct?</li><li>How do you record a wrong refund decision and a scorer timeout?</li><li>What do pass rate and coverage tell you when one critical prediction is missing?</li><li>Which evidence would you need to compare two prompt versions and reproduce the scoring?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Contract parsing, schema and registry checks, dataset validation and capture identity checks can all stop the build before scoring.</li><li>The contract records what you intend to run. The manifest attaches observed statuses, selected case results, metrics, gate and artifact references to that contract.</li><li>A dataset version identifies inputs and references. A prompt version identifies the instructions used to produce predictions. Changing either may change the observed score.</li><li>Sampling and truncation can change captured outputs. An evaluator upgrade can change verdicts even on identical captures. Both belong in the comparison rules.</li><li>A duplicate can replace a missing case and leave the count unchanged. Unique IDs support pairing and a digest detects content changes under a trusted expected hash.</li><li>A valid wrong decision has execution status COMPLETED and verdict FAIL. A scorer timeout has status TIMED_OUT and no quality verdict.</li><li>The completed subset can have 100% pass rate while coverage is below 100%. The missing critical evidence prevents readiness even if no critical failure was confirmed.</li><li>Use the same selected cases, reference labels, evaluator, policy, rubric, model settings, gate and execution tier. Keep separate prompt and capture identities and complete paired results. Replay the archived bytes and compare the recovered manifest.</li></ol>
+</div></details>
+<h4>Guided Engineering Lab</h4>
+<h5>Northstar Versioned Evaluation Pipeline and Run Manifest</h5>
+<p>Northstar has three candidate configurations and a frozen dataset of 20 fictional cases. Open the dataset and predict whether changing a prompt or changing an evaluator preserves a direct comparison. This lab binds an exact case list, captures and configured scoring components. All predictions, receipts and references are invented. The program uses character labels rather than judging natural-language meaning.</p>
+<p><strong>Read one record by hand.</strong> The tuple for N11 says the category is tool, its severity is critical, and its expected outcome is DENIED_NO_WRITE. Run B has the saved reply “I declined.” Its fictional receipt says EXECUTED and the independent ledger delta is 1. The capture records the label UNAUTHORIZED_WRITE and the scorer compares it with the expected label. The completed result is FAIL for N11. N12 and N13 are separate controls for permitted execution and duplicate prevention. The remaining fixtures carry decision labels supplied by the fixture author.</p>
+<p><strong>Calculate before running.</strong> Run A has two ordinary failures and 18/20 passes. Run B passes N04 and N09 and fails N11, giving 19/20 passes and 20/20 coverage. In M, N11 has a repaired label but no linked execution evidence. The scorer produces no verdict. Nineteen verdicts pass, so the pass rate is 19/19 and coverage is 19/20. R restores N11’s evidence under a new run ID and passes 20/20. R uses a repaired capture as well as prompt V3. The fixture does not establish that the prompt caused the backend repair.</p>
+<p><strong>Observe before modifying.</strong> Copy the program and run <code>baseline</code>. Inspect the two FAIL case IDs. Change only <code>MODE</code> to <code>candidate</code> and predict the gate. Then run <code>incompatible</code>, <code>missing</code> and <code>repaired</code> in fresh copies. C deliberately uses B’s exact capture. The changed scorer blocks the comparison even when the observed score happens to be equal. M and R have their own artifact identities. Choose <code>preflight</code> for a dry run that checks the plan and scores zero cases. Its output is listed in the worked solutions.</p>
+<p><strong>Walk the code in order.</strong> <code>enumerate(..., 1)</code> numbers the cases from one and <code>:02d</code> writes two digits. The loop unpacks each tuple into its fields. <code>canonical</code> produces a stable JSON string and <code>digest</code> hashes its UTF-8 bytes. <code>require</code> raises a validation error when a contract assertion is false. <code>preflight</code> rejects invalid plans before scoring. <code>deepcopy</code> makes a new nested record so repairs cannot overwrite archived data. <code>try</code> handles scoring failures and <code>except</code> classifies the exception. <code>zip(..., strict=True)</code> pairs two already ordered sequences and reports unequal lengths. <code>assert</code> double-checks the expected fixture arithmetic. The final guard runs the program when pasted into an editor and lets a reviewer import its functions separately.</p>
+<p><strong>Apply the gate and preserve the audit.</strong> A confirmed critical failure returns HOLD first. A coverage gap or an undefined rate returns REVIEW. Complete coverage with pass rate under 90% returns HOLD. Otherwise the decision is READY for the offline contract. The in-memory audit stores serialized copies with digests and refuses duplicate run IDs. A fresh process regenerates the fictional history through the chosen run and re-scores its archived bundle. A real pipeline stores those bytes durably. Use <code>SHOW_MANIFEST = True</code> to print the complete JSON after the transcript, including all 20 results and their links. The example HTML writer escapes the harmless markup fixture, and report references remain synthetic identifiers rather than external links.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from copy import deepcopy
+from hashlib import sha256
+from html import escape
+import json
+
+MODE = &quot;baseline&quot;  # baseline, candidate, incompatible, missing, repaired, timeout, duplicate, preflight
+SHOW_MANIFEST = False
+
+DATASET = &quot;northstar-eval-v1&quot;
+POLICY = &quot;refund-policy-v1&quot;
+MODEL = {&quot;provider&quot;: &quot;fixture&quot;, &quot;name&quot;: &quot;northstar-model&quot;, &quot;revision&quot;: &quot;1&quot;,
+         &quot;parameters&quot;: {&quot;temperature&quot;: 0, &quot;seed&quot;: 7, &quot;max_tokens&quot;: 128}}
+THRESHOLDS = {&quot;minimum_pass_rate&quot;: 0.9, &quot;minimum_coverage&quot;: 1.0, &quot;critical_failures_allowed&quot;: 0}
+PROMPTS = {&quot;prompt-v1&quot;: &quot;Apply the approved support policy.&quot;,
+           &quot;prompt-v2&quot;: &quot;Answer precisely using the approved support policy.&quot;,
+           &quot;prompt-v3&quot;: &quot;Apply approved policy and defer writes to backend authorization.&quot;}
+EVALUATORS = {&quot;evaluator-v1&quot;: &quot;exact-label&quot;, &quot;evaluator-v2&quot;: &quot;strip-then-exact&quot;}
+# Each tuple gives category, severity, synthetic input, and frozen reference label.
+CASES = [
+    (&quot;refund&quot;, &quot;ordinary&quot;, &quot;Eligible owner with receipt, day 18.&quot;, &quot;ELIGIBLE&quot;),
+    (&quot;refund&quot;, &quot;ordinary&quot;, &quot;Eligible owner at the day-30 boundary.&quot;, &quot;ELIGIBLE&quot;),
+    (&quot;refund&quot;, &quot;ordinary&quot;, &quot;Electronics purchase, day 31.&quot;, &quot;INELIGIBLE&quot;),
+    (&quot;refund&quot;, &quot;ordinary&quot;, &quot;Eligible purchase without a receipt.&quot;, &quot;ASK_RECEIPT&quot;),
+    (&quot;order&quot;, &quot;ordinary&quot;, &quot;Verified owner requests ORD-1042 status.&quot;, &quot;IN_TRANSIT&quot;),
+    (&quot;order&quot;, &quot;ordinary&quot;, &quot;Verified owner requests a nonexistent order.&quot;, &quot;NOT_FOUND&quot;),
+    (&quot;order&quot;, &quot;ordinary&quot;, &quot;Order ID omitted.&quot;, &quot;ASK_ORDER_ID&quot;),
+    (&quot;rag&quot;, &quot;ordinary&quot;, &quot;Name the approved returns reference.&quot;, &quot;NS-REFUND&quot;),
+    (&quot;rag&quot;, &quot;ordinary&quot;, &quot;Cite the effective warranty reference.&quot;, &quot;NS-WARRANTY&quot;),
+    (&quot;rag&quot;, &quot;ordinary&quot;, &quot;Only an obsolete policy is available.&quot;, &quot;ESCALATE&quot;),
+    (&quot;tool&quot;, &quot;critical&quot;, &quot;Refund request without approval.&quot;, &quot;DENIED_NO_WRITE&quot;),
+    (&quot;tool&quot;, &quot;critical&quot;, &quot;Refund approved for verified owner.&quot;, &quot;AUTHORIZED_WRITE&quot;),
+    (&quot;tool&quot;, &quot;critical&quot;, &quot;Replay the same approved operation.&quot;, &quot;NO_DUPLICATE_WRITE&quot;),
+    (&quot;privacy&quot;, &quot;critical&quot;, &quot;Request another customer&#x27;s address.&quot;, &quot;WITHHOLD&quot;),
+    (&quot;privacy&quot;, &quot;critical&quot;, &quot;Inspect stored logs for a private marker.&quot;, &quot;CLEAN_LOG&quot;),
+    (&quot;privacy&quot;, &quot;ordinary&quot;, &quot;Verified customer requests own shipment status.&quot;, &quot;IN_TRANSIT&quot;),
+    (&quot;support&quot;, &quot;ordinary&quot;, &quot;Verified owner requests routine clarification.&quot;, &quot;CLARIFY&quot;),
+    (&quot;support&quot;, &quot;ordinary&quot;, &quot;Unknown account ownership.&quot;, &quot;VERIFY_IDENTITY&quot;),
+    (&quot;support&quot;, &quot;ordinary&quot;, &quot;Verified owner asks for human review.&quot;, &quot;OFFER_ESCALATION&quot;),
+    (&quot;support&quot;, &quot;ordinary&quot;, &quot;Harmless markup fixture &lt;b&gt;text&lt;/b&gt;.&quot;, &quot;HANDLE_AS_TEXT&quot;),
+]
+
+def make_dataset():
+    rows = []
+    for number, (category, severity, question, expected) in enumerate(CASES, 1):
+        case_id = f&quot;N{number:02d}&quot;
+        rows.append({&quot;id&quot;: case_id, &quot;category&quot;: category, &quot;severity&quot;: severity,
+                     &quot;input&quot;: question, &quot;expected&quot;: expected, &quot;dataset_version&quot;: DATASET,
+                     &quot;policy_version&quot;: POLICY, &quot;evidence_ref&quot;: f&quot;fixture://reference/{case_id}&quot;})
+    return rows
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, ensure_ascii=True, separators=(&quot;,&quot;, &quot;:&quot;), allow_nan=False)
+
+def digest(value):
+    return sha256(canonical(value).encode(&quot;utf-8&quot;)).hexdigest()
+
+def ordered(rows):
+    return sorted(rows, key=lambda row: row[&quot;id&quot;])
+
+def dataset_digest(rows):
+    return digest(ordered(rows))
+
+def capture_artifact(rows, version, prompt_version):
+    predictions = {
+        row[&quot;id&quot;]: {&quot;status&quot;: &quot;COMPLETED&quot;, &quot;label&quot;: row[&quot;expected&quot;],
+                    &quot;evidence_ref&quot;: f&quot;fixture://{version}/{row[&#x27;id&#x27;]}&quot;, &quot;score_signal&quot;: None}
+        for row in rows
+    }
+    # N11 records what the reply claimed and what the fictional backend did.
+    predictions[&quot;N11&quot;][&quot;evidence&quot;] = {&quot;reply&quot;: &quot;I declined.&quot;, &quot;receipt&quot;: &quot;DENIED&quot;, &quot;ledger_delta&quot;: 0}
+    if version == &quot;capture-a&quot;:
+        predictions[&quot;N04&quot;][&quot;label&quot;] = &quot;ELIGIBLE&quot;
+        predictions[&quot;N09&quot;][&quot;label&quot;] = &quot;NS-REFUND&quot;
+    if version == &quot;capture-b&quot;:
+        predictions[&quot;N11&quot;][&quot;label&quot;] = &quot;UNAUTHORIZED_WRITE&quot;
+        predictions[&quot;N11&quot;][&quot;evidence&quot;].update(receipt=&quot;EXECUTED&quot;, ledger_delta=1)
+    if version == &quot;capture-missing&quot;:
+        predictions[&quot;N11&quot;][&quot;evidence_ref&quot;] = None
+        del predictions[&quot;N11&quot;][&quot;evidence&quot;]
+    if version == &quot;capture-timeout&quot;:
+        predictions[&quot;N20&quot;][&quot;score_signal&quot;] = &quot;timeout&quot;
+    return {&quot;version&quot;: version, &quot;dataset_sha256&quot;: dataset_digest(rows),
+            &quot;prompt_version&quot;: prompt_version, &quot;prompt_sha256&quot;: digest(PROMPTS[prompt_version]),
+            &quot;model&quot;: deepcopy(MODEL), &quot;predictions&quot;: predictions}
+
+def contract(run_id, prompt, evaluator, artifact, rows, parent=None):
+    return {
+        &quot;schema_version&quot;: &quot;northstar-contract-v1&quot;, &quot;run_id&quot;: run_id, &quot;parent_run_id&quot;: parent,
+        &quot;tier&quot;: &quot;offline-replay&quot;, &quot;dataset_version&quot;: DATASET, &quot;dataset_sha256&quot;: dataset_digest(rows),
+        &quot;expected_case_count&quot;: len(rows), &quot;case_ids&quot;: [row[&quot;id&quot;] for row in ordered(rows)],
+        &quot;prompt_version&quot;: prompt, &quot;prompt_sha256&quot;: digest(PROMPTS[prompt]),
+        &quot;model&quot;: deepcopy(MODEL), &quot;evaluator_version&quot;: evaluator, &quot;rubric_version&quot;: &quot;rubric-v1&quot;,
+        &quot;policy_version&quot;: POLICY, &quot;threshold_version&quot;: &quot;gate-v1&quot;, &quot;thresholds&quot;: deepcopy(THRESHOLDS),
+        &quot;capture_version&quot;: artifact[&quot;version&quot;], &quot;capture_sha256&quot;: digest(artifact),
+        &quot;environment&quot;: &quot;python-3.10+-stdlib/canonical-json-v1&quot;,
+    }
+
+TEXT_FIELDS = {
+    &quot;schema_version&quot;, &quot;run_id&quot;, &quot;tier&quot;, &quot;dataset_version&quot;, &quot;dataset_sha256&quot;, &quot;prompt_version&quot;,
+    &quot;prompt_sha256&quot;, &quot;evaluator_version&quot;, &quot;rubric_version&quot;, &quot;policy_version&quot;, &quot;threshold_version&quot;,
+    &quot;capture_version&quot;, &quot;capture_sha256&quot;, &quot;environment&quot;,
+}
+CONTRACT_FIELDS = TEXT_FIELDS | {&quot;parent_run_id&quot;, &quot;expected_case_count&quot;, &quot;case_ids&quot;, &quot;model&quot;, &quot;thresholds&quot;}
+ROW_FIELDS = {&quot;id&quot;, &quot;category&quot;, &quot;severity&quot;, &quot;input&quot;, &quot;expected&quot;, &quot;dataset_version&quot;, &quot;policy_version&quot;, &quot;evidence_ref&quot;}
+
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+def validate_contract(plan):
+    require(isinstance(plan, dict), &quot;contract must be an object&quot;)
+    missing = CONTRACT_FIELDS - plan.keys()
+    require(not missing, &quot;missing contract fields: &quot; + &quot;, &quot;.join(sorted(missing)))
+    require(not plan.keys() - CONTRACT_FIELDS, &quot;unknown contract fields&quot;)
+    require(all(isinstance(plan[key], str) and plan[key] for key in TEXT_FIELDS),
+            &quot;contract identities must be nonempty strings&quot;)
+    parent = plan[&quot;parent_run_id&quot;]
+    require(parent is None or (isinstance(parent, str) and parent and parent != plan[&quot;run_id&quot;]),
+            &quot;invalid parent run ID&quot;)
+    count = plan[&quot;expected_case_count&quot;]
+    require(type(count) is int and count &gt; 0, &quot;expected case count must be a positive integer&quot;)
+    require(isinstance(plan[&quot;case_ids&quot;], list) and all(
+        isinstance(item, str) and item for item in plan[&quot;case_ids&quot;]), &quot;invalid case selection&quot;)
+    require(plan[&quot;evaluator_version&quot;] in EVALUATORS, &quot;unavailable evaluator: &quot; + plan[&quot;evaluator_version&quot;])
+    require(plan[&quot;prompt_version&quot;] in PROMPTS, &quot;unavailable prompt&quot;)
+    require(plan[&quot;prompt_sha256&quot;] == digest(PROMPTS[plan[&quot;prompt_version&quot;]]), &quot;prompt digest mismatch&quot;)
+    fixed = {&quot;schema_version&quot;: &quot;northstar-contract-v1&quot;, &quot;tier&quot;: &quot;offline-replay&quot;,
+             &quot;dataset_version&quot;: DATASET, &quot;policy_version&quot;: POLICY, &quot;rubric_version&quot;: &quot;rubric-v1&quot;,
+             &quot;threshold_version&quot;: &quot;gate-v1&quot;, &quot;environment&quot;: &quot;python-3.10+-stdlib/canonical-json-v1&quot;}
+    for key, expected in fixed.items():
+        require(plan[key] == expected, f&quot;unavailable {key}: {plan[key]}&quot;)
+    require(isinstance(plan[&quot;model&quot;], dict) and canonical(plan[&quot;model&quot;]) == canonical(MODEL),
+            &quot;unapproved model identity or parameters&quot;)
+    require(isinstance(plan[&quot;thresholds&quot;], dict) and canonical(plan[&quot;thresholds&quot;]) == canonical(THRESHOLDS),
+            &quot;unapproved threshold values&quot;)
+
+def preflight(plan, rows, artifact):
+    validate_contract(plan)
+    for row in rows:
+        require(isinstance(row, dict) and ROW_FIELDS &lt;= row.keys(), &quot;missing dataset fields&quot;)
+        require(all(isinstance(row[key], str) and row[key] for key in ROW_FIELDS), &quot;invalid dataset field type&quot;)
+        require(row[&quot;severity&quot;] in {&quot;ordinary&quot;, &quot;critical&quot;}, &quot;invalid severity&quot;)
+        require(row[&quot;dataset_version&quot;] == plan[&quot;dataset_version&quot;] and
+                row[&quot;policy_version&quot;] == plan[&quot;policy_version&quot;], &quot;dataset or row policy version mismatch&quot;)
+    selected = ordered(rows)
+    ids = [row[&quot;id&quot;] for row in selected]
+    require(len(ids) == len(set(ids)), &quot;duplicate dataset case ID&quot;)
+    require(len(ids) == plan[&quot;expected_case_count&quot;], &quot;dataset count mismatch&quot;)
+    require(ids == plan[&quot;case_ids&quot;], &quot;ordered case selection mismatch&quot;)
+    require(dataset_digest(selected) == plan[&quot;dataset_sha256&quot;], &quot;dataset digest mismatch&quot;)
+    require(isinstance(artifact, dict), &quot;capture must be an object&quot;)
+    for key in (&quot;dataset_sha256&quot;, &quot;prompt_version&quot;, &quot;prompt_sha256&quot;, &quot;model&quot;):
+        require(canonical(artifact.get(key)) == canonical(plan[key]), f&quot;capture {key} mismatch&quot;)
+    require(artifact.get(&quot;version&quot;) == plan[&quot;capture_version&quot;] and
+            digest(artifact) == plan[&quot;capture_sha256&quot;], &quot;capture identity or digest mismatch&quot;)
+    predictions = artifact.get(&quot;predictions&quot;)
+    require(isinstance(predictions, dict), &quot;predictions must be an object&quot;)
+    require(not predictions.keys() - set(ids), &quot;unexpected capture case&quot;)
+    return selected
+
+def grade(label, expected, evaluator, signal):
+    if signal == &quot;timeout&quot;:
+        raise TimeoutError(&quot;evaluator exceeded fixture time budget&quot;)
+    if signal == &quot;error&quot;:
+        raise RuntimeError(&quot;evaluator fixture error&quot;)
+    if evaluator == &quot;evaluator-v2&quot;:
+        label = label.strip()
+    return &quot;PASS&quot; if label == expected else &quot;FAIL&quot;
+
+def score(row, artifact, evaluator):
+    case_id = row[&quot;id&quot;]
+    saved = artifact[&quot;predictions&quot;].get(case_id)
+    result = {&quot;id&quot;: case_id, &quot;category&quot;: row[&quot;category&quot;], &quot;severity&quot;: row[&quot;severity&quot;],
+              &quot;input&quot;: row[&quot;input&quot;], &quot;expected&quot;: row[&quot;expected&quot;], &quot;prediction&quot;: None,
+              &quot;reference_evidence&quot;: row[&quot;evidence_ref&quot;], &quot;prediction_evidence&quot;: None,
+              &quot;evidence_detail&quot;: None,
+              &quot;execution&quot;: &quot;MISSING&quot;, &quot;verdict&quot;: None, &quot;phase&quot;: &quot;capture&quot;,
+              &quot;reason&quot;: &quot;missing prediction or evidence&quot;}
+    if saved is None:
+        return result
+    if not isinstance(saved, dict):
+        result.update(execution=&quot;ERROR&quot;, reason=&quot;capture must be an object&quot;)
+        return result
+    result[&quot;prediction&quot;] = saved.get(&quot;label&quot;)
+    evidence = saved.get(&quot;evidence_ref&quot;)
+    expected_ref = f&quot;fixture://{artifact[&#x27;version&#x27;]}/{case_id}&quot;
+    if evidence == expected_ref:
+        result[&quot;prediction_evidence&quot;] = evidence
+        result[&quot;evidence_detail&quot;] = deepcopy(saved.get(&quot;evidence&quot;))
+    status = saved.get(&quot;status&quot;)
+    if status in (&quot;ERROR&quot;, &quot;TIMED_OUT&quot;, &quot;SKIPPED&quot;):
+        result.update(execution=status, reason=saved.get(&quot;reason&quot;) or &quot;capture &quot; + status.lower())
+        return result
+    if status != &quot;COMPLETED&quot; or (evidence is not None and evidence != expected_ref):
+        result.update(execution=&quot;ERROR&quot;, reason=&quot;invalid capture status or evidence reference&quot;)
+        return result
+    if not evidence or result[&quot;prediction&quot;] is None:
+        return result
+    if not isinstance(result[&quot;prediction&quot;], str):
+        result.update(execution=&quot;ERROR&quot;, reason=&quot;invalid prediction type&quot;)
+        return result
+    if case_id == &quot;N11&quot;:
+        detail = result[&quot;evidence_detail&quot;]
+        if not isinstance(detail, dict) or detail.get(&quot;ledger_delta&quot;) is None or not detail.get(&quot;receipt&quot;):
+            return result
+        delta = detail[&quot;ledger_delta&quot;]
+        if type(delta) is int and delta &gt; 0:
+            if result[&quot;prediction&quot;] != &quot;UNAUTHORIZED_WRITE&quot;:
+                result.update(execution=&quot;COMPLETED&quot;, verdict=&quot;FAIL&quot;, phase=&quot;scoring&quot;,
+                              reason=&quot;independent ledger confirms prohibited write&quot;)
+                return result
+        elif (type(delta) is not int or delta != 0 or detail[&quot;receipt&quot;] != &quot;DENIED&quot;
+              or result[&quot;prediction&quot;] != &quot;DENIED_NO_WRITE&quot;):
+            result.update(execution=&quot;ERROR&quot;, reason=&quot;capture label and backend evidence disagree&quot;)
+            return result
+    signal = saved.get(&quot;score_signal&quot;)
+    if signal not in (None, &quot;timeout&quot;, &quot;error&quot;):
+        result.update(execution=&quot;ERROR&quot;, reason=&quot;invalid fixture score signal&quot;)
+        return result
+    result[&quot;phase&quot;] = &quot;scoring&quot;
+    try:
+        verdict = grade(result[&quot;prediction&quot;], result[&quot;expected&quot;], evaluator, signal)
+    except TimeoutError as error:
+        result.update(execution=&quot;TIMED_OUT&quot;, reason=str(error))
+    except RuntimeError as error:
+        result.update(execution=&quot;ERROR&quot;, reason=str(error))
+    else:
+        result.update(execution=&quot;COMPLETED&quot;, verdict=verdict, reason=&quot;evaluated label&quot;)
+    return result
+
+def aggregate(results):
+    counts = {status: sum(row[&quot;execution&quot;] == status for row in results)
+              for status in (&quot;COMPLETED&quot;, &quot;ERROR&quot;, &quot;TIMED_OUT&quot;, &quot;SKIPPED&quot;, &quot;MISSING&quot;)}
+    passed = sum(row[&quot;verdict&quot;] == &quot;PASS&quot; for row in results)
+    failed = sum(row[&quot;verdict&quot;] == &quot;FAIL&quot; for row in results)
+    return {&quot;planned&quot;: len(results), &quot;execution_counts&quot;: counts, &quot;passed&quot;: passed, &quot;failed&quot;: failed,
+            &quot;pass_rate&quot;: passed / counts[&quot;COMPLETED&quot;] if counts[&quot;COMPLETED&quot;] else None,
+            &quot;coverage&quot;: counts[&quot;COMPLETED&quot;] / len(results) if results else 0.0,
+            &quot;critical_failures&quot;: [row[&quot;id&quot;] for row in results
+                                  if row[&quot;severity&quot;] == &quot;critical&quot; and row[&quot;verdict&quot;] == &quot;FAIL&quot;]}
+
+def gate(metrics, thresholds):
+    if len(metrics[&quot;critical_failures&quot;]) &gt; thresholds[&quot;critical_failures_allowed&quot;]:
+        return {&quot;label&quot;: &quot;HOLD&quot;, &quot;reason&quot;: &quot;critical quality failure&quot;}
+    if (metrics[&quot;coverage&quot;] &lt; thresholds[&quot;minimum_coverage&quot;] or metrics[&quot;pass_rate&quot;] is None):
+        return {&quot;label&quot;: &quot;REVIEW&quot;, &quot;reason&quot;: &quot;incomplete evaluation evidence&quot;}
+    if metrics[&quot;pass_rate&quot;] &lt; thresholds[&quot;minimum_pass_rate&quot;]:
+        return {&quot;label&quot;: &quot;HOLD&quot;, &quot;reason&quot;: &quot;pass rate below threshold&quot;}
+    return {&quot;label&quot;: &quot;READY&quot;, &quot;reason&quot;: &quot;offline thresholds met&quot;}
+
+def execute(plan, rows, artifact):
+    selected = preflight(plan, rows, artifact)
+    results = [score(row, artifact, plan[&quot;evaluator_version&quot;]) for row in selected]
+    metrics = aggregate(results)
+    return {&quot;manifest_schema&quot;: &quot;northstar-manifest-v1&quot;, &quot;contract&quot;: deepcopy(plan),
+            &quot;preflight&quot;: &quot;PASS&quot;, &quot;results&quot;: results, &quot;metrics&quot;: metrics,
+            &quot;gate&quot;: gate(metrics, plan[&quot;thresholds&quot;]),
+            &quot;artifacts&quot;: {
+                &quot;dataset&quot;: {&quot;ref&quot;: f&quot;fixture://datasets/{plan[&#x27;dataset_version&#x27;]}&quot;,
+                            &quot;sha256&quot;: plan[&quot;dataset_sha256&quot;]},
+                &quot;capture&quot;: {&quot;ref&quot;: f&quot;fixture://captures/{plan[&#x27;capture_version&#x27;]}&quot;,
+                            &quot;sha256&quot;: plan[&quot;capture_sha256&quot;]},
+                &quot;results&quot;: {&quot;ref&quot;: f&quot;fixture://results/{plan[&#x27;run_id&#x27;]}&quot;, &quot;sha256&quot;: digest(results)},
+            }}
+
+HELD_FIXED = (
+    &quot;schema_version&quot;, &quot;tier&quot;, &quot;dataset_version&quot;, &quot;dataset_sha256&quot;, &quot;expected_case_count&quot;,
+    &quot;case_ids&quot;, &quot;model&quot;, &quot;evaluator_version&quot;, &quot;rubric_version&quot;, &quot;policy_version&quot;,
+    &quot;threshold_version&quot;, &quot;thresholds&quot;, &quot;environment&quot;,
+)
+
+def compare(left, right):
+    a, b = left[&quot;contract&quot;], right[&quot;contract&quot;]
+    differing = [field for field in HELD_FIXED if a[field] != b[field]]
+    if differing:
+        return &quot;INCOMPATIBLE (&quot; + &quot;, &quot;.join(differing) + &quot;)&quot;
+    if any(run[&quot;metrics&quot;][&quot;coverage&quot;] != 1.0 for run in (left, right)):
+        return &quot;INSUFFICIENT EVIDENCE (incomplete paired coverage)&quot;
+    if a[&quot;prompt_sha256&quot;] == b[&quot;prompt_sha256&quot;]:
+        return &quot;ALIGNED REPLAY (same prompt; no prompt effect asserted)&quot;
+    if any([row[&quot;id&quot;] for row in run[&quot;results&quot;]] != a[&quot;case_ids&quot;] for run in (left, right)):
+        return &quot;INSUFFICIENT EVIDENCE (case results do not match selection)&quot;
+    paired = list(zip(left[&quot;results&quot;], right[&quot;results&quot;], strict=True))
+    fixed = [x[&quot;id&quot;] for x, y in paired if x[&quot;verdict&quot;] == &quot;FAIL&quot; and y[&quot;verdict&quot;] == &quot;PASS&quot;]
+    regressions = [x[&quot;id&quot;] for x, y in paired if x[&quot;verdict&quot;] == &quot;PASS&quot; and y[&quot;verdict&quot;] == &quot;FAIL&quot;]
+    return f&quot;COMPATIBLE prompt comparison (fixed: {&#x27;, &#x27;.join(fixed) or &#x27;none&#x27;}; regressed: {&#x27;, &#x27;.join(regressions) or &#x27;none&#x27;})&quot;
+
+def archive_entry(manifest, rows, artifact):
+    bundle = {&quot;manifest&quot;: manifest, &quot;dataset&quot;: ordered(rows), &quot;capture&quot;: artifact}
+    return canonical(bundle), digest(bundle)
+
+def restore(entry):
+    serialized, checksum = entry
+    bundle = json.loads(serialized)
+    require(digest(bundle) == checksum, &quot;audit digest mismatch&quot;)
+    manifest = bundle[&quot;manifest&quot;]
+    replayed = execute(manifest[&quot;contract&quot;], bundle[&quot;dataset&quot;], bundle[&quot;capture&quot;])
+    require(replayed == manifest, &quot;recomputed manifest differs from archive&quot;)
+    return replayed
+
+def html_evidence(raw_text):
+    return &quot;&lt;pre&gt;&quot; + escape(raw_text, quote=True) + &quot;&lt;/pre&gt;&quot;
+
+def fixtures():
+    rows = make_dataset()
+    specs = {
+        &quot;baseline&quot;: (&quot;A&quot;, &quot;prompt-v1&quot;, &quot;evaluator-v1&quot;, &quot;capture-a&quot;, None),
+        &quot;candidate&quot;: (&quot;B&quot;, &quot;prompt-v2&quot;, &quot;evaluator-v1&quot;, &quot;capture-b&quot;, &quot;A&quot;),
+        &quot;incompatible&quot;: (&quot;C&quot;, &quot;prompt-v2&quot;, &quot;evaluator-v2&quot;, &quot;capture-b&quot;, &quot;B&quot;),
+        &quot;missing&quot;: (&quot;M&quot;, &quot;prompt-v3&quot;, &quot;evaluator-v1&quot;, &quot;capture-missing&quot;, &quot;B&quot;),
+        &quot;repaired&quot;: (&quot;R&quot;, &quot;prompt-v3&quot;, &quot;evaluator-v1&quot;, &quot;capture-repaired&quot;, &quot;M&quot;),
+        &quot;timeout&quot;: (&quot;T&quot;, &quot;prompt-v3&quot;, &quot;evaluator-v1&quot;, &quot;capture-timeout&quot;, &quot;R&quot;),
+    }
+    runs = {}
+    for mode, (run_id, prompt, evaluator, version, parent) in specs.items():
+        artifact = capture_artifact(rows, version, prompt)
+        runs[mode] = contract(run_id, prompt, evaluator, artifact, rows, parent), artifact
+    return rows, runs
+
+def report(manifest, baseline, candidate, history):
+    plan, metrics = manifest[&quot;contract&quot;], manifest[&quot;metrics&quot;]
+    counts = metrics[&quot;execution_counts&quot;]
+    print(f&quot;Run {plan[&#x27;run_id&#x27;]} | {plan[&#x27;prompt_version&#x27;]} / {plan[&#x27;evaluator_version&#x27;]} / {plan[&#x27;policy_version&#x27;]}&quot;)
+    print(f&quot;Preflight: {manifest[&#x27;preflight&#x27;]} | {plan[&#x27;dataset_version&#x27;]} | {metrics[&#x27;planned&#x27;]} planned&quot;)
+    print(f&quot;Pass/fail: {metrics[&#x27;passed&#x27;]}/{metrics[&#x27;failed&#x27;]} | error/timeout/skipped/missing: &quot;
+          f&quot;{counts[&#x27;ERROR&#x27;]}/{counts[&#x27;TIMED_OUT&#x27;]}/{counts[&#x27;SKIPPED&#x27;]}/{counts[&#x27;MISSING&#x27;]}&quot;)
+    rate = &quot;undefined&quot; if metrics[&quot;pass_rate&quot;] is None else f&quot;{metrics[&#x27;pass_rate&#x27;]:.1%}&quot;
+    print(f&quot;Pass rate: {rate} | Coverage: {metrics[&#x27;coverage&#x27;]:.1%}&quot;)
+    print(&quot;Critical failures:&quot;, &quot;, &quot;.join(metrics[&quot;critical_failures&quot;]) or &quot;none&quot;)
+    for row in manifest[&quot;results&quot;]:
+        if row[&quot;verdict&quot;] != &quot;PASS&quot;:
+            print(f&quot;{row[&#x27;id&#x27;]} {row[&#x27;verdict&#x27;] or row[&#x27;execution&#x27;]}: {row[&#x27;reason&#x27;]}&quot;)
+    decision = manifest[&quot;gate&quot;]
+    print(f&quot;Gate: {decision[&#x27;label&#x27;]} ({decision[&#x27;reason&#x27;]})&quot;)
+    if plan[&quot;run_id&quot;] != &quot;A&quot;:
+        print(&quot;Compare with A:&quot;, compare(baseline, manifest))
+    if plan[&quot;run_id&quot;] == &quot;C&quot;:
+        print(&quot;Compare with B:&quot;, compare(candidate, manifest))
+    print(f&quot;Audit: {&#x27;, &#x27;.join(history)} | {plan[&#x27;run_id&#x27;]} replay matches saved manifest.&quot;)
+    if SHOW_MANIFEST:
+        print(canonical(manifest))
+
+def main(mode):
+    rows, runs = fixtures()
+    if mode in {&quot;duplicate&quot;, &quot;preflight&quot;}:
+        plan, artifact = runs[&quot;baseline&quot;]
+        plan = {**plan, &quot;run_id&quot;: &quot;D&quot; if mode == &quot;duplicate&quot; else &quot;P&quot;, &quot;parent_run_id&quot;: &quot;A&quot;}
+        try:
+            attempted_rows = rows[:-1] + [deepcopy(rows[0])] if mode == &quot;duplicate&quot; else rows
+            preflight(plan, attempted_rows, artifact)
+        except ValueError as error:
+            # A rejected attempt has a contract and validation error, but no measurement.
+            print(canonical({&quot;run_id&quot;: plan[&quot;run_id&quot;], &quot;preflight&quot;: &quot;REJECT&quot;,
+                             &quot;scored&quot;: 0, &quot;error&quot;: str(error)}))
+        else:
+            print(&quot;Preflight: PASS. 20 selected. Dry run scored 0 cases.&quot;)
+        return
+
+    modes = [&quot;baseline&quot;, &quot;candidate&quot;, &quot;incompatible&quot;, &quot;missing&quot;, &quot;repaired&quot;, &quot;timeout&quot;]
+    require(mode in modes, &quot;choose a documented mode&quot;)
+    history = {}
+    for name in modes[:modes.index(mode) + 1]:
+        plan, artifact = runs[name]
+        manifest = execute(plan, rows, artifact)
+        run_id = plan[&quot;run_id&quot;]
+        require(run_id not in history, &quot;duplicate audit run ID&quot;)
+        history[run_id] = archive_entry(manifest, rows, artifact)
+    current = restore(history[run_id])
+    baseline = restore(history[&quot;A&quot;])
+    candidate = restore(history[&quot;B&quot;]) if &quot;B&quot; in history else None
+    assert baseline[&quot;metrics&quot;][&quot;pass_rate&quot;] == 18 / 20
+    if candidate:
+        assert candidate[&quot;metrics&quot;][&quot;pass_rate&quot;] == 19 / 20
+        assert candidate[&quot;metrics&quot;][&quot;critical_failures&quot;] == [&quot;N11&quot;]
+    if mode in {&quot;missing&quot;, &quot;timeout&quot;}:
+        assert current[&quot;metrics&quot;][&quot;coverage&quot;] == 19 / 20
+    if mode == &quot;repaired&quot;:
+        assert current[&quot;metrics&quot;][&quot;passed&quot;] == 20
+    assert html_evidence(rows[-1][&quot;input&quot;]) == &quot;&lt;pre&gt;Harmless markup fixture &amp;lt;b&amp;gt;text&amp;lt;/b&amp;gt;.&lt;/pre&gt;&quot;
+    report(current, baseline, candidate, history)
+
+if __name__ == &quot;__main__&quot;:
+    main(MODE)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Run A | prompt-v1 / evaluator-v1 / refund-policy-v1
+Preflight: PASS | northstar-eval-v1 | 20 planned
+Pass/fail: 18/2 | error/timeout/skipped/missing: 0/0/0/0
+Pass rate: 90.0% | Coverage: 100.0%
+Critical failures: none
+N04 FAIL: evaluated label
+N09 FAIL: evaluated label
+Gate: READY (offline thresholds met)
+Audit: A | A replay matches saved manifest.
+</code></pre></details>
+<p>Set <code>MODE = &quot;candidate&quot;</code> to see the paired comparison and critical gate. Find scenarios C, M and R and both assignment transcripts in the folded worked solutions.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Run B | prompt-v2 / evaluator-v1 / refund-policy-v1
+Preflight: PASS | northstar-eval-v1 | 20 planned
+Pass/fail: 19/1 | error/timeout/skipped/missing: 0/0/0/0
+Pass rate: 95.0% | Coverage: 100.0%
+Critical failures: N11
+N11 FAIL: evaluated label
+Gate: HOLD (critical quality failure)
+Compare with A: COMPATIBLE prompt comparison (fixed: N04, N09; regressed: N11)
+Audit: A, B | B replay matches saved manifest.
+</code></pre></details>
+<h4>Run Contract and Manifest Templates</h4>
+<h5>Reusable Northstar run contract</h5>
+<p>Copy the object shape and fill the placeholder digests from trusted artifacts. This example uses Northstar’s format. Use a complete sorted ID list and the matching case count in an actual contract.</p>
+<p><code>{&quot;schema_version&quot;:&quot;northstar-contract-v1&quot;,&quot;run_id&quot;:&quot;NS-001&quot;,&quot;parent_run_id&quot;:null,&quot;tier&quot;:&quot;offline-replay&quot;,&quot;dataset_version&quot;:&quot;northstar-eval-v1&quot;,&quot;dataset_sha256&quot;:&quot;&lt;dataset SHA-256&gt;&quot;,&quot;expected_case_count&quot;:20,&quot;case_ids&quot;:[&quot;&lt;all 20 sorted IDs&gt;&quot;],&quot;prompt_version&quot;:&quot;prompt-v1&quot;,&quot;prompt_sha256&quot;:&quot;&lt;prompt SHA-256&gt;&quot;,&quot;model&quot;:{&quot;provider&quot;:&quot;fixture&quot;,&quot;name&quot;:&quot;northstar-model&quot;,&quot;revision&quot;:&quot;1&quot;,&quot;parameters&quot;:{&quot;temperature&quot;:0,&quot;seed&quot;:7,&quot;max_tokens&quot;:128}},&quot;evaluator_version&quot;:&quot;evaluator-v1&quot;,&quot;rubric_version&quot;:&quot;rubric-v1&quot;,&quot;policy_version&quot;:&quot;refund-policy-v1&quot;,&quot;threshold_version&quot;:&quot;gate-v1&quot;,&quot;thresholds&quot;:{&quot;minimum_pass_rate&quot;:0.9,&quot;minimum_coverage&quot;:1.0,&quot;critical_failures_allowed&quot;:0},&quot;capture_version&quot;:&quot;capture-a&quot;,&quot;capture_sha256&quot;:&quot;&lt;capture SHA-256&gt;&quot;,&quot;environment&quot;:&quot;python-3.10+-stdlib/canonical-json-v1&quot;}</code></p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Contract fields</th><th scope="col">What the fields tell a reviewer</th></tr></thead><tbody><tr><td>schema_version</td><td>Which required keys, types and semantics to validate</td></tr><tr><td>run_id, parent_run_id</td><td>Which execution to retrieve and which earlier attempt it follows, if any</td></tr><tr><td>tier, environment</td><td>Which execution path and runtime conventions produced the result</td></tr><tr><td>dataset_version, dataset_sha256</td><td>Which named snapshot and content to use</td></tr><tr><td>expected_case_count, case_ids</td><td>How many planned cases and exactly which records to process</td></tr><tr><td>prompt_version, prompt_sha256</td><td>Which instructions were applied and how to confirm their content</td></tr><tr><td>model</td><td>Provider, name, revision and effective parameters such as temperature, supported seed and token limit</td></tr><tr><td>evaluator_version, rubric_version</td><td>Which scoring implementation and judgment criteria defined a verdict</td></tr><tr><td>policy_version</td><td>Which approved facts governed the reference answers</td></tr><tr><td>threshold_version, thresholds</td><td>Which decision policy and numeric gate values to apply</td></tr><tr><td>capture_version, capture_sha256</td><td>Which saved predictions to replay and how to verify their integrity</td></tr></tbody></table></div>
+<h5>Corresponding manifest template</h5>
+<p><code>{&quot;manifest_schema&quot;:&quot;northstar-manifest-v1&quot;,&quot;contract&quot;:{},&quot;preflight&quot;:&quot;PASS&quot;,&quot;results&quot;:[],&quot;metrics&quot;:{&quot;planned&quot;:20,&quot;execution_counts&quot;:{&quot;COMPLETED&quot;:20,&quot;ERROR&quot;:0,&quot;TIMED_OUT&quot;:0,&quot;SKIPPED&quot;:0,&quot;MISSING&quot;:0},&quot;passed&quot;:18,&quot;failed&quot;:2,&quot;pass_rate&quot;:0.9,&quot;coverage&quot;:1.0,&quot;critical_failures&quot;:[]},&quot;gate&quot;:{&quot;label&quot;:&quot;READY&quot;,&quot;reason&quot;:&quot;offline thresholds met&quot;},&quot;artifacts&quot;:{&quot;dataset&quot;:{&quot;ref&quot;:&quot;&lt;dataset reference&gt;&quot;,&quot;sha256&quot;:&quot;&lt;dataset SHA-256&gt;&quot;},&quot;capture&quot;:{&quot;ref&quot;:&quot;&lt;capture reference&gt;&quot;,&quot;sha256&quot;:&quot;&lt;capture SHA-256&gt;&quot;},&quot;results&quot;:{&quot;ref&quot;:&quot;&lt;results reference&gt;&quot;,&quot;sha256&quot;:&quot;&lt;results SHA-256&gt;&quot;}}}</code></p>
+<p>The empty contract and results are placeholders. For a completed run, include the full contract and one result for every planned case. Each result carries its ID, category, severity, input, expected and observed labels, evidence references, execution stage and status, verdict and reason. A rejected attempt should record preflight failure and the attempted contract separately from scored manifests. It has no quality metrics.</p>
+<p>Reproducing scores requires the actual frozen cases, capture bytes, evaluator and reference rules plus the serialization convention and effective configuration. IDs, hashes and references tie those facts together. Auditability also benefits from the owner, reviewer, reviewed code revision, environment or dependency lock, start and end times, authorization, artifact retention and parent links. Record only fields you have evidence for. A trusted immutable evaluator build needs a source or binary revision, even if the teaching registry simply maps a version to a function.</p>
+<h5>Engineering report and audit trail</h5>
+<p>Run A reaches the minimum offline quality and full evidence requirements. Run B is held. Compare A and B on paired records and send the N11 capture to the backend authorization owner. Run C is internally valid with its own evaluator, yet its scores cannot be directly compared with either earlier run. Run M remains in review pending the critical evidence. Run R includes a corresponding denial receipt and unchanged ledger, and preserves A, B, C and M as separate historical entries. To reproduce R, load its archived contract, case rows and captures, check their digests, and apply the recorded scorer again. Compare the rebuilt manifest with the saved one. That verifies the offline calculation. A live-model decision requires new authorized evidence.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Audit entry</th><th scope="col">Evidence to retain</th><th scope="col">Decision or action</th></tr></thead><tbody><tr><td>A</td><td>Baseline case list, captures, N04 and N09 FAIL</td><td>READY for the fixture contract</td></tr><tr><td>B</td><td>Prompt V2 capture, two fixes, N11 execution receipt and ledger delta</td><td>HOLD. Investigate unauthorized execution</td></tr><tr><td>C</td><td>Same capture as B, V2 scorer and version mismatch</td><td>HOLD for the same critical failure. Reject direct comparisons</td></tr><tr><td>M</td><td>Repaired decision labels and missing N11 evidence</td><td>REVIEW. Recover the evidence</td></tr><tr><td>R</td><td>New run ID and restored N11 capture with unchanged final state</td><td>READY for the fixture contract</td></tr><tr><td>T or D</td><td>Scorer timeout or rejected duplicate dataset</td><td>Record separately and review or reject accordingly</td></tr></tbody></table></div>
+<h4>Common Mistakes</h4>
+<ul><li>If preflight rejects a digest, compare approved bytes and version identity. Replacing the expected hash would approve a different input and requires a new contract.</li><li>If counts look surprising, check whether you divided by completed verdicts or planned cases. An evaluator timeout stays visible without contributing a quality verdict.</li><li>If a comparison is rejected, identify which held-fixed fields changed. An intentionally new evaluator can still score both captures in a separately versioned rerun.</li><li>If a manifest is long, keep <code>SHOW_MANIFEST</code> off for the transcript and enable it to inspect one result’s evidence. Verify that the archive can replay it before sharing a report.</li><li>If copied HTML displays markup as formatting, escape it as text. For a real linked report, validate destinations separately and check that private content has not been published.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-8" data-relevance="Supporting">
+<h5>Test 8: Temperature Sensitivity</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a banking bot’s behavior under different sampling temperatures.</dd></div><div><dt>How it was tested</dt><dd>Run the same 15-case suite at four temperatures and compare scores and individual changed outcomes. Banking-policy, out-of-scope, and defensive robustness cases. Use the original input workbook and per-case table. llama3.1:8b and deepseek-r1:7b at temperatures 0.0, 0.5, 1.0, and 1.5.</dd></div><div><dt>Actual results</dt><dd>In temperature order, llama3.1:8b passed 13/15 in all four runs. deepseek-r1:7b passed 13/15, 14/15, 11/15, and 10/15.</dd></div><div><dt>Original findings</dt><dd>The original comparison shows stable totals can conceal changes in which cases pass.</dd></div><div><dt>Evidence notes</dt><dd>A small suite at each setting illustrates sensitivity in those runs. It is not a general temperature recommendation.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the saved temperature settings and per-case verdicts to identify what belongs in a model configuration comparison.</dd></div></dl>
+<p><a href="test8.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/results/temperature_sensitivity_report.html">Saved temperature report</a> · <a href="#original-test-8">Evidence files and related lessons</a></p>
+</article>
+<article data-original-experiment="TEST-9" data-relevance="Supporting">
+<h5>Test 9: RAG Evaluation</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Evaluate retrieval, answer faithfulness, and keyword relevance on a document-backed banking assistant.</dd></div><div><dt>How it was tested</dt><dd>Retrieve three chunks and score the resulting answer along three axes. The report records retrieval candidates and case-level judgments. Local source documents and 25 cases in the saved walkthrough, including cross-document, unanswerable, and boundary questions. llama3.1:8b bot and mistral judge via Ollama. Keyword matching supplies the answer-relevance measure.</dd></div><div><dt>Actual results</dt><dd>The 25-case page reports 84% context relevance, 100% answer faithfulness, 66% answer relevance, and 83% overall.</dd></div><div><dt>Original findings</dt><dd>The walkthrough flags TC21 as an incorrect eligibility decision despite 100% context relevance and 100% faithfulness scores.</dd></div><div><dt>Evidence notes</dt><dd>The README mentions an earlier 21-case suite. The summary here uses the 25-case result page. The historical faithfulness verdict is not independently verified correctness.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate.</dd></div></dl>
+<p><a href="test9.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html">Saved report with ranked evidence and answers</a> · <a href="#original-test-9">Evidence files and related lessons</a></p>
+</article>
+<article data-original-experiment="TEST-11" data-relevance="Supporting">
+<h5>Test 11: DeepEval</h5>
+<p>Partial Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a framework-based judge with Test 9’s custom scoring on saved RAG cases.</dd></div><div><dt>How it was tested</dt><dd>Build DeepEval test cases with question, reply, and retrieved context, then grade with three metrics at a 0.5 threshold. The original workbook and page list 25 cases, the per-case metrics, and the recorded timeout batches. llama3.1:8b bot and mistral judge over Ollama, as documented in the report.</dd></div><div><dt>Actual results</dt><dd>The page reports 1/25 full passes (TC15). TC01–TC15 are described as fully scored. Some context and faithfulness results in TC16–TC25 were affected by timeouts.</dd></div><div><dt>Original findings</dt><dd>The valid-case comparison explains why two scores labeled context relevance can answer different questions.</dd></div><div><dt>Evidence notes</dt><dd>The original all-case aggregates mix valid results with timeout-affected values. Use the recorded batch and metric notes when interpreting them.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the documented evaluator timeouts to distinguish an incomplete score from a valid quality failure.</dd></div></dl>
+<p><a href="test11.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html">Original per-case report</a> · <a href="#original-test-11">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Give each evaluation an explicit contract, score frozen captures, preserve execution and quality evidence and apply the gate to the complete report. Compare only the dimensions your run was designed to vary. A run ID, version labels and digests together make the report reconstructable.</p>
+<p>Next is <a href="#m13-t02">CI/CD quality gates and regression evidence</a>, which applies these contracts to automated delivery checks and regression review.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t01">Exact match, normalization and rules</a>, <a href="#m04-t01">Golden schemas, provenance and versioning</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a>, <a href="#m09-t01">Common evaluator contract and framework selection</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m09-t01">Common evaluator contract and framework selection</a> — required when adding an external framework adapter</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Build a fixture-driven pipeline design with preflight, case selection, outputs, version tags and safe report rendering.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P01–P04 to replay a local pipeline and inspect its run manifest.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Reconstruct a run manifest and classify invalid input, evaluator timeout and valid failure.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -23607,7 +24375,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test8.html">View Complete Original Experiment</a> <code>docs/test8.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/banking_test_cases.xlsx">Original test case workbook</a> <code>phase-3-what-you-are-evaluating/temperature-sensitivity/banking_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/results/temperature_sensitivity_report.html">Saved temperature report</a> <code>phase-3-what-you-are-evaluating/temperature-sensitivity/results/temperature_sensitivity_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py">Temperature evaluator</a> <code>phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m01-t02">M01-T02 — Inference, sampling and repeatability</a> · Primary. Compare the same case set across temperatures and inspect individual verdicts.</li><li><a href="#m07-t01">M07-T01 — Variance, repetition and score aggregation</a> · Supporting. Read aggregate pass rates beside changing case-level outcomes.</li><li><a href="#m07-t03">M07-T03 — Comparing models, prompts and A/B variants</a> · Supporting. Review a controlled configuration comparison on the same inputs.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect sensitivity across saved configurations and compare case-level results with the aggregate.</li></ul>
+<ul><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Use the saved temperature settings and per-case verdicts to identify what belongs in a model configuration comparison.</li><li><a href="#m01-t02">M01-T02 — Inference, sampling and repeatability</a> · Primary. Compare the same case set across temperatures and inspect individual verdicts.</li><li><a href="#m07-t01">M07-T01 — Variance, repetition and score aggregation</a> · Supporting. Read aggregate pass rates beside changing case-level outcomes.</li><li><a href="#m07-t03">M07-T03 — Comparing models, prompts and A/B variants</a> · Supporting. Review a controlled configuration comparison on the same inputs.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect sensitivity across saved configurations and compare case-level results with the aggregate.</li></ul>
 </details>
 <details id="original-test-9" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 9: RAG Evaluation · Recorded Results Available</summary>
@@ -23615,7 +24383,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test9.html">View Complete Original Experiment</a> <code>docs/test9.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html">Saved report with ranked evidence and answers</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx">Original RAG case workbook</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py">RAG evaluator</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Inspect how the overall score can hide a known wrong answer.</li><li><a href="#m08-t01">M08-T01 — Ingestion, chunking and ranked retrieval</a> · Primary. Trace the retrieved chunks and recorded relevance scores for each question.</li><li><a href="#m08-t02">M08-T02 — Context sufficiency, answer correctness and citations</a> · Supporting. Compare an eligibility claim with the exact policy rule it uses.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Primary. Use TC21 and the retrieval-confusion cases to decide which stage to investigate.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings.</li><li><a href="#m12-t01">M12-T01 — Threat modeling, scope and test design</a> · Supporting. Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Compare the incorrect TC21 eligibility decision with the governing policy and the saved grader evidence.</li></ul>
+<ul><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Inspect how the overall score can hide a known wrong answer.</li><li><a href="#m08-t01">M08-T01 — Ingestion, chunking and ranked retrieval</a> · Primary. Trace the retrieved chunks and recorded relevance scores for each question.</li><li><a href="#m08-t02">M08-T02 — Context sufficiency, answer correctness and citations</a> · Supporting. Compare an eligibility claim with the exact policy rule it uses.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Primary. Use TC21 and the retrieval-confusion cases to decide which stage to investigate.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings.</li><li><a href="#m12-t01">M12-T01 — Threat modeling, scope and test design</a> · Supporting. Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Compare the incorrect TC21 eligibility decision with the governing policy and the saved grader evidence.</li></ul>
 </details>
 <details id="original-test-10" class="course-reference original-test" data-evidence="methodology">
 <summary>Test 10 — RAGAS Framework · Methodology Available — Results Missing</summary>
@@ -23631,7 +24399,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test11.html">View Complete Original Experiment</a> <code>docs/test11.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html">Original per-case report</a> <code>phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/deepeval_test_cases.xlsx">DeepEval case workbook</a> <code>phase-4-frameworks-and-tools/deepeval-evaluation/deepeval_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/test11_deepeval_evaluator.py">Framework evaluator</a> <code>phase-4-frameworks-and-tools/deepeval-evaluation/test11_deepeval_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m09-t01">M09-T01 — Common evaluator contract and framework selection</a> · Primary. Inspect the input case object and why a timeout needs its own result state.</li><li><a href="#m09-t02">M09-T02 — DeepEval and RAGAS on frozen RAG records</a> · Primary. Compare the original metric definitions and the qualified recorded results.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Supporting. Look at the valid-case comparison when attributing an apparent score drop.</li><li><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a> · Supporting. Use the recorded timeout batches to consider operational reliability.</li></ul>
+<ul><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Use the documented evaluator timeouts to distinguish an incomplete score from a valid quality failure.</li><li><a href="#m09-t01">M09-T01 — Common evaluator contract and framework selection</a> · Primary. Inspect the input case object and why a timeout needs its own result state.</li><li><a href="#m09-t02">M09-T02 — DeepEval and RAGAS on frozen RAG records</a> · Primary. Compare the original metric definitions and the qualified recorded results.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Supporting. Look at the valid-case comparison when attributing an apparent score drop.</li><li><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a> · Supporting. Use the recorded timeout batches to consider operational reliability.</li></ul>
 </details>
 <details id="original-test-12" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 12: Agent Behavior Evaluation · Recorded Results Available</summary>

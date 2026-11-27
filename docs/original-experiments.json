@@ -383,6 +383,11 @@
       ],
       "topics": [
         {
+          "id": "M13-T01",
+          "relevance": "Supporting",
+          "connection": "Use the saved temperature settings and per-case verdicts to identify what belongs in a model configuration comparison."
+        },
+        {
           "id": "M01-T02",
           "relevance": "Primary",
           "connection": "Compare the same case set across temperatures and inspect individual verdicts."
@@ -434,6 +439,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M13-T01",
+          "relevance": "Supporting",
+          "connection": "Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate."
+        },
         {
           "id": "M05-T03",
           "relevance": "Supporting",
@@ -538,6 +548,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M13-T01",
+          "relevance": "Supporting",
+          "connection": "Use the documented evaluator timeouts to distinguish an incomplete score from a valid quality failure."
+        },
         {
           "id": "M09-T01",
           "relevance": "Primary",
