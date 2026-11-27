@@ -391,6 +391,11 @@
           "id": "M07-T03",
           "relevance": "Supporting",
           "connection": "Review a controlled configuration comparison on the same inputs."
+        },
+        {
+          "id": "M11-T03",
+          "relevance": "Supporting",
+          "connection": "Inspect sensitivity across saved configurations and compare case-level results with the aggregate."
         }
       ]
     },
@@ -443,6 +448,11 @@
           "id": "M08-T03",
           "relevance": "Primary",
           "connection": "Use TC21 and the retrieval-confusion cases to decide which stage to investigate."
+        },
+        {
+          "id": "M11-T03",
+          "relevance": "Supporting",
+          "connection": "Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings."
         }
       ]
     },
