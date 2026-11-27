@@ -596,6 +596,11 @@
       ],
       "topics": [
         {
+          "id": "M12-T03",
+          "relevance": "Supporting",
+          "connection": "Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion."
+        },
+        {
           "id": "M03-T02",
           "relevance": "Supporting",
           "connection": "Review how structured action parsing affects whether the trace can be evaluated."
@@ -658,6 +663,11 @@
       ],
       "topics": [
         {
+          "id": "M12-T03",
+          "relevance": "Supporting",
+          "connection": "Reconcile TC10's passing judge verdict with the separate deterministic mismatch before assigning confidence."
+        },
+        {
           "id": "M05-T03",
           "relevance": "Supporting",
           "connection": "Compare a deterministic mismatch with a passing judge result on the same trajectory."
@@ -704,6 +714,11 @@
         }
       ],
       "topics": [
+        {
+          "id": "M12-T03",
+          "relevance": "Supporting",
+          "connection": "Use the documented instrumentation to plan retest evidence collection. No historical run or mitigation outcome was recorded."
+        },
         {
           "id": "M02-T03",
           "relevance": "Supporting",
