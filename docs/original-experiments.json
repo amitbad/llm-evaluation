@@ -195,6 +195,11 @@
           "connection": "Inspect the workbook’s proposed and recorded behavioral labels."
         },
         {
+          "id": "M09-T03",
+          "relevance": "Supporting",
+          "connection": "Translate a deterministic banking policy check into a portable assertion, then inspect what the keyword rule misses."
+        },
+        {
           "id": "M11-T01",
           "relevance": "Supporting",
           "connection": "Look at historical refusal and unsupported-claim classifications."

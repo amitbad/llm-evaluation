@@ -15371,34 +15371,742 @@ data-subject="Frameworks" data-status="New" data-track="Core">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m09-t03">
-  <p class="lesson-intro" data-lesson-search>Declarative and hosted runs can support review workflows once score meaning is understood.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>promptfoo for declarative prompt/provider matrices and assertions. OpenAI Evals for evaluation definitions, datasets and grader/runs in an OpenAI-centered workflow. Compare portability, supported graders, spend, data visibility and versioning.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Turn saved support questions and reviewed expectations into a repeatable evaluation suite.</li><li>Compare prompt versions, read assertion evidence, and distinguish a wrong answer from a missing or failed evaluation.</li><li>Express the same frozen checks in promptfoo and in the retiring OpenAI Platform Evals request format.</li><li>Preserve results and apply coverage, regression, and critical policy gates before release.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Northstar Support has ten test questions. After a prompt change, one reviewer skips shipping and reports seven passes from nine checks. Another tests all ten, edits a receipt expectation from memory, and reports eight passes. Before choosing a prompt, ask which questions each person ran and which answers counted as correct. A saved suite records those choices before anyone sees the scores.</p>
+<p>The Northstar questions, policies, and captured replies below are fictional. All seven Python activities and the lab use standard-library code, with no provider calls. Allow about five hours. First complete <a href="#m09-t01">Common evaluator contract and framework selection</a>. Preparation skills P03 and P04 cover inspecting the JSONL and YAML specs. Use P05 for credentials only if the managed walkthrough is explicitly enabled for your project. <a href="#m06-t01">Pointwise LLM-as-a-Judge</a> and <a href="#m07-t03">Comparing models, prompts and A/B variants</a> are recommended.</p>
+<h4>Beginner Explanation</h4>
+<h5>Save one check before building a suite</h5>
+<p>Take the question “What proof is required for a refund?” Northstar expects “A valid receipt is required.” Prompt-V1’s saved answer is “Receipt optional.” Prompt-V2’s saved answer is “A valid receipt is required.” Give this test the ID <code>Q01</code>. The question, reference answer, and rule for deciding pass or fail form one <strong>test case</strong>. A <strong>dataset</strong> is the reviewed collection of cases. A <strong>suite</strong> adds the configurations and checks needed to run those cases consistently.</p>
+<p>An <strong>assertion</strong> is one check, such as whether the two strings are identical. The <strong>evaluator</strong> applies the check and records evidence. A <strong>threshold</strong> is a documented minimum for a graded score or a release condition. A <strong>test run</strong> captures which cases, prompt versions and checks were used. A <strong>report</strong> presents results so someone else can inspect them. A <strong>regression</strong> is a case that passed under the baseline, then fails under the candidate. A missing result cannot establish one.</p>
+<p>If reviewers use different words for the same accepted answer, decide whether exact equality is justified. If the assistant must output a strict JSON shape for downstream code, check the structure. If you need to know whether a paraphrase follows policy, use a rubric with concrete acceptance criteria, compare a judge with human-reviewed cases, and keep disagreements visible. People are needed to settle ambiguous expectations and assess critical cases. A model judge also needs a configured model endpoint, unless you are reading a saved judgment.</p>
+<h5>Describe the test before running it</h5>
+<p>A <strong>prompt template</strong> contains placeholders for values from a case. For example, <code>Question: {{question}}</code> inserts the saved question. A <strong>provider</strong> is the implementation that produces or returns the output. It could call a model endpoint, or in the walkthrough it could just return the fixture you supplied. Keep the provider, model revision, template, dataset, and expected outputs identifiable. If both the model and the prompt change in one trial, you cannot attribute a change to either one alone.</p>
+<p>Start with Q01’s expected answer. In YAML, <code>expected: A valid receipt is required.</code> stores the text under the name <code>expected</code>. A dash starts each entry under <code>tests</code>, and indentation keeps that case’s <code>vars</code> and <code>assert</code> together. In the assertion, <code>value: &#x27;{{expected}}&#x27;</code> tells promptfoo to compare the output with the approved text for the current row. If you move the assertion to Q02, the same placeholder resolves to the warranty answer. Unlike the Python runner in M09-T01, where you wrote the loop, promptfoo reads the configuration and constructs the prompt-by-provider-by-case combinations. Two prompt variants, one provider and two cases give four combinations before any repetitions.</p>
+<h5>Pick an assertion that can ask the right question</h5>
+<p>Predict what happens if “A valid receipt is <strong>not</strong> required” goes through a rule looking for “valid receipt.” The phrase is present and the policy is wrong. Exact equality catches this specific disagreement but may reject a good paraphrase. Normalize only differences the rubric explicitly allows, such as case or whitespace. Regular expressions can check token boundaries and forms. JSON parsing only checks that the text can be read. A schema adds required fields and type checks, and another policy assertion still needs to check the actual value.</p>
+<p>The pinned promptfoo example uses <code>equals</code>. The assertion catalog also describes <code>contains</code>, <code>not-contains</code>, <code>regex</code>, and <code>is-json</code>. A model-graded <code>llm-rubric</code> check evaluates prose against a grading instruction and needs a judge configuration. Review rubric calibration on frozen examples before using its output as a gate. Promptfoo assertion reference.</p>
+<h5>Know which OpenAI workflow a saved run came from</h5>
+<p>The historical open-source <code>openai/evals</code> repository is a Python harness and benchmark registry. It has its own runners, task specs, and result files. OpenAI Platform Evals has a separate managed API for eval definitions, runs, and per-item results. Its request bodies are not local harness configs. <strong>The managed Evals platform became read-only for existing users on October 31, 2026, and is scheduled to shut down November 30, 2026.</strong> The walkthrough preserves its format for reading and migrating saved runs. Use promptfoo or the local fixture suite for new runs. Historical open-source repository, OpenAI deprecation schedule, and OpenAI migration walkthrough.</p>
+<p>In promptfoo you own the YAML, fixture files, provider configuration, and exported results. That makes a local deterministic check easy to repeat in continuous integration (CI), where a test runs on a code change. In the managed Evals model, the service owns the definition and run IDs. Each data item supplies fields the grader references. Historically a run could grade existing captures or generate samples using a configured model. Preserve IDs and exports for migrations. Both workflows can run exact comparisons and use model grading where configured. The costs and data paths differ. A local Echo check uses no model. A hosted grader or model provider can see the data you submit and may incur cost. Use approved endpoints and check provider retention, project access, and output visibility. Bring borderline cases to human review regardless of which tool created the report.</p>
+<h5>Route errors separately from assertions</h5>
+<p>Translate outputs into the M09-T01 contract. Keep case ID, evaluator ID and version, status, score, verdict, reason, evidence, and error code. Add prompt and dataset versions. <code>OK</code> with <code>passed=False</code> and score zero means a valid check rejected the output. <code>ERROR</code> means a valid check could not be completed. A timeout, invalid tool result, bad provider configuration, or malformed test configuration belongs there or in preflight. A missing reference can make a check <code>SKIPPED</code>. A planned row with no capture is <code>MISSING</code> in this lesson’s local report. Neither supplies a score. A captured invalid JSON reply is a valid schema assertion failure because a reply exists to score.</p>
+<p>A tool’s filter or summary can hide rows. Join by the case and prompt IDs, and count expected records before comparing results. When planning CI, fix the suite, data and config versions, run the documented command on a change, and publish an access-controlled artifact. Fail the policy gate for confirmed critical findings. Block automatic release for missing coverage, configuration errors, or regressions that still need review. Let a reviewer inspect the case and assertion evidence.</p>
+<p>Treat all model replies and fixture text as untrusted data. Parse expected structures and grade text without executing commands found in it. Use synthetic questions, avoid sending sensitive records to unapproved providers, keep credentials in an environment variable or secret store, and give result access and retention an explicit owner. A credential in a configuration file or a pasted reply can end up in logs and artifacts. For prompt-injection evaluation use isolated fixtures and verify that the application continues to follow its authorized instructions. This lesson’s harness runs only the assertions written in the suite.</p>
+<h4>Worked Demonstration</h4>
+<h5>Example 1. Turn three manual checks into a suite</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>The team is checking the refund deadline, receipt requirement, and warranty starting point.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Record Q01 as “30 days from purchase,” Q02 as “A valid receipt is required,” and Q03 as “Start from your order page.” Use exact match for these deliberately short fixture strings.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Prompt-V1’s fictional captures match Q01 and Q03, but Q02 says “Receipt optional.” Prompt-V2 matches all three references.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Give each row a stable ID, keep both prompt versions, and run the same three equality checks. The pass rate rises from 2/3 to 3/3. Q02 is the only fix.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>The original Q02 failure is a policy mismatch visible under the rule. If a future run skips Q02, report a coverage gap. The two remaining successes cannot establish that the receipt behavior improved.</span></p>
+<h5>Example 2. Read the promptfoo matrix before executing it</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>Q01 asks for proof of purchase. Q02 asks where to start a warranty claim.</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>Both rows use equality with their own <code>expected</code> value. In the walkthrough configuration, <code>prompts</code> selects the two saved capture fields, <code>providers</code> selects Echo, and <code>tests</code> holds the two fixture rows.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>The frozen Q01 V1 reply is “Receipt optional.” Its V2 reply is “A valid receipt is required.” Both saved Q02 replies say “Start from your order page.”</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>Predict the four cells by reading <code>vars</code> before the provider runs. Echo returns the rendered fixture. Then <code>assert</code> applies <code>equals</code> to the expected text. Look for Q01/V1 to fail and the other three to pass.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>A failing equality result is evidence about the given text and rule. An absent output or an execution error needs a different status. The local provider exercises evaluation and export without generating new replies.</span></p>
+<h5>Example 3. Translate the frozen records into a managed Evals definition</h5>
+<p class="lesson-evidence"><strong>User question.</strong> <span>“How would a team inspect archived OpenAI Platform Evals runs for these two prompts?”</span></p>
+<p class="lesson-evidence"><strong>Approved reference.</strong> <span>An eval definition declares each item’s fields and the string check. Put the known output in <code>item.captured</code> and compare it with <code>item.expected</code>. Version the input dataset and evaluator definition.</span></p>
+<p class="lesson-evidence"><strong>Actual LLM response.</strong> <span>Use the same fictional captures as Example 2. A historical replay would submit two runs, one per prompt version, passing the appropriate saved output in each row rather than sampling a new one.</span></p>
+<p class="lesson-evidence"><strong>Assessment.</strong> <span>The grader targets <code>{{item.captured}}</code> against <code>{{item.expected}}</code> using <code>eq</code>. Before looking at a tool report, predict the same three passes and one failure. On an exported run, join per-item results to the expected case IDs and keep errors separate. These predicted values are illustrative for the managed service.</span></p>
+<p class="lesson-evidence"><strong>Failure classification.</strong> <span>A published request schema does not establish present write access. The service is in its read-only transition, so treat the request as a migration specimen. If an old result export lacks a case or criterion, mark it absent and compare the local fixtures instead.</span></p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Select <strong>Copy Code</strong>, open the editor, paste the full program, and click <strong>Run</strong>. Compare the output with the disclosure. Predict the effect of the stated edit, change just that value, and run again. Restore the original before the next step. All code here uses fictional fixtures with Python’s standard library.</p>
+</div></details>
+<h5>Step 1 — Validate a test suite</h5>
+<p>Northstar is about to merge two refund test lists. Confirm that a case has one stable ID, one question, and one expected answer.</p>
+<p>One dictionary holds one task and its expected reply. A set remembers IDs already seen. <code>in</code> checks whether a record repeats an ID, and <code>append</code> adds an error without losing the previous rows.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cases = [
+    {&quot;id&quot;: &quot;Q1&quot;, &quot;question&quot;: &quot;What is the deadline?&quot;, &quot;expected&quot;: &quot;30 days.&quot;},
+    {&quot;id&quot;: &quot;Q2&quot;, &quot;question&quot;: &quot;What proof do I need?&quot;, &quot;expected&quot;: &quot;A valid receipt.&quot;},
+]
+duplicate = False
+if duplicate:
+    cases.append(dict(cases[0]))
+seen = set()
+errors = []
+for row in cases:
+    if any(not row.get(field) for field in (&quot;id&quot;, &quot;question&quot;, &quot;expected&quot;)):
+        errors.append(&quot;missing required field&quot;)
+    elif row[&quot;id&quot;] in seen:
+        errors.append(&quot;duplicate &quot; + row[&quot;id&quot;])
+    else:
+        seen.add(row[&quot;id&quot;])
+print(&quot;IDs:&quot;, &quot;, &quot;.join(sorted(seen)))
+print(&quot;Validation:&quot;, &quot;, &quot;.join(errors) or &quot;OK&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">IDs: Q1, Q2
+Validation: OK
+</code></pre></details>
+<p><strong>Predict and modify.</strong> Set <code>duplicate</code> to <code>True</code>. Predict whether two Q1 rows can enter the comparison.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">IDs: Q1, Q2
+Validation: duplicate Q1
+</code></pre></details>
+<p>The duplicate can overwrite or double-count a result. Investigate the dataset before running the suite.</p>
+<p><strong>Checkpoint.</strong> Which row needs repair? Investigate the duplicate before either Q1 row contributes to a report.</p>
+<h5>Step 2 — Compare two prompts on identical cases</h5>
+<p>The same deadline and receipt questions were asked of V1 and V2. Trace the two rows manually before comparing the labels.</p>
+<p>Keep the question IDs and expected outputs fixed. Each dictionary maps an ID to a fictional captured reply. <code>items()</code> yields the key and value. A change from <code>True</code> to <code>False</code> on the same case is a regression.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">expected = {&quot;Q1&quot;: &quot;30 days.&quot;, &quot;Q2&quot;: &quot;A valid receipt.&quot;}
+v1 = {&quot;Q1&quot;: &quot;30 days.&quot;, &quot;Q2&quot;: &quot;Receipt optional.&quot;}
+v2 = {&quot;Q1&quot;: &quot;30 days.&quot;, &quot;Q2&quot;: &quot;A valid receipt.&quot;}
+regress = False
+if regress:
+    v2[&quot;Q1&quot;] = &quot;90 days.&quot;
+for key, reference in expected.items():
+    before = v1[key] == reference
+    after = v2[key] == reference
+    transition = &quot;regression&quot; if before and not after else &quot;fix&quot; if after and not before else &quot;unchanged&quot;
+    print(key, before, &quot;-&gt;&quot;, after, transition)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Q1 True -&gt; True unchanged
+Q2 False -&gt; True fix
+</code></pre></details>
+<p><strong>Predict and modify.</strong> Set <code>regress</code> to <code>True</code>. Predict which test still improves and which now regresses.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Q1 True -&gt; False regression
+Q2 False -&gt; True fix
+</code></pre></details>
+<p>Q2 remains a fix. Q1 becomes a regression. A total alone would hide the difference.</p>
+<p><strong>Checkpoint.</strong> Which case would you inspect first? Q1 regressed under the changed capture, even though the Q2 improvement remains.</p>
+<h5>Step 3 — Spot a weak assertion</h5>
+<p>Northstar wants to catch a reply that reverses the receipt rule. Compare what an exact, required-text and forbidden-text check can see.</p>
+<p>An assertion is a rule about one output. <code>==</code> tests exact equality, <code>in</code> looks for text, and <code>not in</code> checks its absence. <code>casefold()</code> ignores capitalization for this small exercise.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">answer = &quot;A valid receipt is required.&quot;
+negation = False
+if negation:
+    answer = &quot;A valid receipt is not required.&quot;
+text = answer.casefold()
+print(&quot;Exact:&quot;, text == &quot;a valid receipt is required.&quot;)
+print(&quot;Required phrase:&quot;, &quot;valid receipt&quot; in text)
+print(&quot;No wrong number:&quot;, &quot;90&quot; not in text)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact: True
+Required phrase: True
+No wrong number: True
+</code></pre></details>
+<p><strong>Predict and modify.</strong> Set <code>negation</code> to <code>True</code>. Which checks can the wrong answer still pass?</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Exact: False
+Required phrase: True
+No wrong number: True
+</code></pre></details>
+<p>The negated reply still contains the required phrase, and it never mentions the forbidden number. Those checks therefore pass even though the reply reverses the receipt rule. Exact equality rejects this fixture. If your rubric accepts paraphrases, add a reviewed negation example to test whether the broader grading rule catches the same failure.</p>
+<p><strong>Checkpoint.</strong> Does the word check test the rule’s meaning? Add the negated example to the suite and review the answer as a whole.</p>
+<h5>Step 4 — Validate a structured answer</h5>
+<p>The refund application expects a JSON object with a numeric deadline. Predict whether removing the deadline makes the response invalid JSON or simply invalid for this application.</p>
+<p><code>json.loads</code> parses JSON text. A parseable object can still lack required fields or use the wrong types. <code>type(value) is int</code> avoids treating the Python Boolean <code>True</code> as the integer 1.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+omit_field = False
+data = {&quot;eligible&quot;: False, &quot;days&quot;: 30}
+if omit_field:
+    del data[&quot;days&quot;]
+raw = json.dumps(data)
+parsed = json.loads(raw)
+schema = {&quot;eligible&quot;: bool, &quot;days&quot;: int}
+problems = [key for key, expected in schema.items()
+            if type(parsed.get(key)) is not expected]
+print(&quot;JSON parsed:&quot;, isinstance(parsed, dict))
+print(&quot;Schema:&quot;, &quot;FAIL &quot; + &quot;, &quot;.join(problems) if problems else &quot;PASS&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">JSON parsed: True
+Schema: PASS
+</code></pre></details>
+<p><strong>Predict and modify.</strong> Set <code>omit_field</code> to <code>True</code>. Predict whether parsing or validation fails.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">JSON parsed: True
+Schema: FAIL days
+</code></pre></details>
+<p>Parsing succeeds. Schema validation finds that the limit is missing. Check policy facts after checking shape.</p>
+<p><strong>Checkpoint.</strong> Which failure should the report name? The reply parses, but it fails the required-field check.</p>
+<h5>Step 5 — Normalize results into a shared contract</h5>
+<p>Northstar receives a local assertion result and an illustrative managed-grader row. Convert them to the same reporting fields so a failure and a timeout remain distinct.</p>
+<p>These two input shapes are teaching adapters, not real API responses. The shared record retains the stable case and evaluator IDs. <code>None</code> represents the absence of a valid measurement.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">timed_out = False
+raw = [
+    (&quot;promptfoo-fixture&quot;, {&quot;success&quot;: False}),
+    (&quot;managed-fixture&quot;, {&quot;outcome&quot;: &quot;timeout&quot; if timed_out else &quot;pass&quot;}),
+]
+for tool, item in raw:
+    error = item.get(&quot;outcome&quot;) == &quot;timeout&quot;
+    passed = None if error else item.get(&quot;success&quot;, item.get(&quot;outcome&quot;) == &quot;pass&quot;)
+    row = {&quot;case_id&quot;: &quot;Q1&quot;, &quot;evaluator_id&quot;: &quot;equality&quot;, &quot;version&quot;: &quot;1&quot;,
+           &quot;status&quot;: &quot;ERROR&quot; if error else &quot;OK&quot;, &quot;score&quot;: None if error else int(passed),
+           &quot;passed&quot;: passed, &quot;reason&quot;: &quot;provider timeout&quot; if error else &quot;scored&quot;,
+           &quot;evidence&quot;: item, &quot;error&quot;: &quot;TIMEOUT&quot; if error else None}
+    print(tool, row[&quot;status&quot;], row[&quot;score&quot;], row[&quot;passed&quot;], row[&quot;error&quot;])
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">promptfoo-fixture OK 0 False None
+managed-fixture OK 1 True None
+</code></pre></details>
+<p><strong>Predict and modify.</strong> Set <code>timed_out</code> to <code>True</code>. Compare the first tool’s valid failure with the second tool’s error.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">promptfoo-fixture OK 0 False None
+managed-fixture ERROR None None TIMEOUT
+</code></pre></details>
+<p>The valid failure still has score zero. The timeout has no valid score and must reduce coverage rather than enter the average.</p>
+<p><strong>Checkpoint.</strong> Should the timeout add a failure to the model’s pass rate? Leave its score and verdict unset and record the infrastructure error.</p>
+<h5>Step 6 — Calculate pass rate and coverage</h5>
+<p>An engineer can report that three results were scored yet still owe the team a fourth result. Measure answer pass rate, coverage and category regressions separately.</p>
+<p>A result can be planned even when no capture arrived. <code>get</code> returns <code>None</code> for absent keys. The comprehension collects only <code>OK</code> results for the pass-rate denominator.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">cases = {&quot;Q1&quot;: &quot;refund&quot;, &quot;Q2&quot;: &quot;shipping&quot;, &quot;Q3&quot;: &quot;warranty&quot;, &quot;Q4&quot;: &quot;account&quot;}
+previous = {&quot;Q1&quot;: True, &quot;Q2&quot;: True, &quot;Q3&quot;: True, &quot;Q4&quot;: True}
+candidate = {&quot;Q1&quot;: (&quot;OK&quot;, True), &quot;Q2&quot;: (&quot;OK&quot;, False), &quot;Q3&quot;: (&quot;ERROR&quot;, None),
+             &quot;Q4&quot;: (&quot;OK&quot;, True)}
+remove_capture = False
+if remove_capture:
+    del candidate[&quot;Q4&quot;]
+valid = {key: passed for key, (status, passed) in candidate.items() if status == &quot;OK&quot;}
+regressions = [cases[key] for key, passed in valid.items() if previous[key] and not passed]
+print(f&quot;Pass rate: {sum(valid.values())}/{len(valid)}&quot;)
+print(f&quot;Coverage: {len(valid)}/{len(cases)}&quot;)
+print(&quot;Errors:&quot;, sum(status == &quot;ERROR&quot; for status, _ in candidate.values()))
+print(&quot;Missing:&quot;, len(cases.keys() - candidate.keys()))
+print(&quot;Critical failures:&quot;, int(valid.get(&quot;Q1&quot;) is False))
+print(&quot;Regression categories:&quot;, &quot;, &quot;.join(regressions) or &quot;none&quot;)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass rate: 2/3
+Coverage: 3/4
+Errors: 1
+Missing: 0
+Critical failures: 0
+Regression categories: shipping
+</code></pre></details>
+<p><strong>Predict and modify.</strong> Set <code>remove_capture</code> to <code>True</code>. Which fraction uses the original four planned cases?</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Pass rate: 1/2
+Coverage: 2/4
+Errors: 1
+Missing: 1
+Critical failures: 0
+Regression categories: shipping
+</code></pre></details>
+<p>Coverage keeps the four-case denominator. The valid denominator falls and the shipping regression stays visible.</p>
+<p><strong>Checkpoint.</strong> Does a higher-looking proportion justify release? Check which successful result disappeared and use the planned case count for coverage.</p>
+<h5>Step 7 — Apply a release policy after scoring</h5>
+<p>V2 can gain more passing cases and still make a serious refund mistake. Apply a release policy to the captured outcomes.</p>
+<p>Cases Q1 and Q2 used to fail. Q3 passed, and Q4 is the critical refund decision. A gate is a condition that must pass before release. <code>all</code> checks whether every value is true after the critical check.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">baseline = {&quot;Q1&quot;: False, &quot;Q2&quot;: False, &quot;Q3&quot;: True, &quot;Q4&quot;: True}
+critical_regression = False
+candidate = {&quot;Q1&quot;: True, &quot;Q2&quot;: True, &quot;Q3&quot;: True, &quot;Q4&quot;: not critical_regression}
+if not candidate[&quot;Q4&quot;]:
+    decision = &quot;HOLD&quot;
+elif not all(candidate.values()):
+    decision = &quot;REVIEW&quot;
+else:
+    decision = &quot;RELEASE&quot;
+print(f&quot;Passes: {sum(baseline.values())}/4 -&gt; {sum(candidate.values())}/4&quot;)
+print(&quot;Critical failures:&quot;, int(not candidate[&quot;Q4&quot;]))
+print(&quot;Decision:&quot;, decision)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Passes: 2/4 -&gt; 4/4
+Critical failures: 0
+Decision: RELEASE
+</code></pre></details>
+<p><strong>Predict and modify.</strong> Set <code>critical_regression</code> to <code>True</code>. Compare overall pass count and release status.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Passes: 2/4 -&gt; 3/4
+Critical failures: 1
+Decision: HOLD
+</code></pre></details>
+<p>The candidate still gains one pass overall. A new critical policy error overrides that gain.</p>
+<p><strong>Checkpoint.</strong> What is the next engineering action? Inspect the critical case and rerun the complete suite after repair.</p>
+<h4>Optional Real Tool Walkthroughs</h4>
+<p>You can finish the lesson using only the Python editor. Use a local terminal for promptfoo. Use the managed Evals commands only if you already have access to a saved run.</p>
+<h5>A. Replay frozen outputs with promptfoo 0.120.8</h5>
+<p>Use Node.js 24 LTS and npm in a scratch directory. The pinned package declares Node 20 or later; the working replay used Node 24.12.0. Installation requires npm registry access. The Echo provider echoes each rendered prompt string and requires no model account or API key. Keep the configuration in a scratch project away from real support records. Pinned npm release · Echo provider documentation</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">mkdir -p northstar-evals
+cd northstar-evals
+node --version
+npm install --no-audit --no-fund promptfoo@0.120.8
+cat &gt; northstar.yaml &lt;&lt;&#x27;YAML&#x27;
+description: Northstar frozen receipt replay
+prompts:
+  - id: &#x27;{{v1_capture}}&#x27;
+    label: Prompt-V1 capture
+  - id: &#x27;{{v2_capture}}&#x27;
+    label: Prompt-V2 capture
+providers:
+  - echo
+tests:
+  - description: Q01 receipt
+    vars:
+      question: What proof is required for a refund?
+      v1_capture: Receipt optional.
+      v2_capture: A valid receipt is required.
+      expected: A valid receipt is required.
+    assert:
+      - type: equals
+        value: &#x27;{{expected}}&#x27;
+  - description: Q02 warranty
+    vars:
+      question: Where do I start a warranty claim?
+      v1_capture: Start from your order page.
+      v2_capture: Start from your order page.
+      expected: Start from your order page.
+    assert:
+      - type: equals
+        value: &#x27;{{expected}}&#x27;
+YAML
+</code></pre>
+</div>
+<p><code>description</code> names the suite. Each <code>prompts</code> entry has an <code>id</code> that renders one saved response from <code>vars</code>, plus a display <code>label</code>. <code>providers</code> contains <code>echo</code>, so that rendered response becomes the evaluation output. Each of the two <code>tests</code> entries is a fixture row. Its description begins with its stable case ID. The question is retained for provenance. <code>vars</code> supplies both captures and the shared expectation. <code>assert</code> lists checks, and <code>type: equals</code> requires exact equality against the rendered <code>value</code>. Keep indentation intact and quote the template placeholders.</p>
+<p>Other documented assertion types include <code>icontains</code> for case-insensitive containment, <code>not-contains</code> for forbidden text, <code>regex</code> for patterns, <code>is-json</code> for JSON (with optional schema), and <code>llm-rubric</code> for configured model grading. A rubric needs judgment instructions, a threshold and an approved judge. A string check can accept a sentence that negates the required words. Inspect the actual output as well as the check. Assertion reference</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">PROMPTFOO_DISABLE_TELEMETRY=1 PROMPTFOO_DISABLE_UPDATE=1 \
+  ./node_modules/.bin/promptfoo eval -c northstar.yaml \
+  -o northstar-results.json --no-cache --no-progress-bar
+</code></pre>
+</div>
+<p>The local run produced Q01 V1 FAIL and V2 PASS, plus two Q02 passes. The CLI reported <strong>3 passed, 1 failed, 0 errors</strong> and exited <strong>100</strong>. Open <code>northstar-results.json</code> and inspect the fixture, prompt label, captured output, grading reason and assertion components. Save it alongside the config, Node version and package lock. An assertion failure and an infrastructure error belong in different report fields. CLI reference</p>
+<p>Predict what happens if you copy <code>northstar.yaml</code> to <code>northstar-repaired.yaml</code> and change just Q01’s <code>v1_capture</code> to <code>A valid receipt is required.</code> Rerun the command with the new configuration and <code>northstar-repaired.json</code>. The verified repair produced <strong>4 passed, 0 failed, 0 errors</strong>, exit <strong>0</strong>. Retain both exports. The new count describes the edited fixtures.</p>
+<p>If the config fails to load, check YAML indentation and that the file is in the current directory. If the local SQLite binding fails to load, confirm the active Node version, allow npm&#x27;s normal installation scripts in the scratch project, and rebuild <code>better-sqlite3</code> for that runtime if needed. If both variants give the same receipt result, inspect which capture variable each template renders. CI can use this command with the lockfile and attach JSON even when an assertion fails.</p>
+<p>For an optional provider-backed run, clone the suite, replace the capture templates with two versioned instruction templates that include <code>{{question}}</code>, and use a documented model provider such as <code>openai:chat:gpt-4o-mini</code> where available to your project. Keep approved test data, external calls, budget and credentials in separate configuration. Supply <code>OPENAI_API_KEY</code> through the process environment or CI secret store. Never put it in YAML or a report. Save the new captures as a separate run. OpenAI provider configuration</p>
+<h5>B. Read a saved OpenAI Platform Evals run and understand its original configuration</h5>
+<p>The historical open-source openai/evals project is a Python evaluation harness with a benchmark registry. Its runner, configuration and results are distinct from the <strong>managed OpenAI Platform Evals API</strong>, which stored eval definitions, runs and output items. This walkthrough uses the managed REST v1 schema and curl with HTTPS. The service became read-only for existing users on <strong>October 31, 2026</strong>, with shutdown scheduled <strong>November 30, 2026</strong>. If you have no existing access, use the frozen examples here to learn the input and output contract. Use promptfoo or the offline harness for new runs. OpenAI deprecation schedule · Official migration guide</p>
+<p>The first JSON specimen describes what a team formerly sent to <code>POST /v1/evals</code>. <code>item_schema</code> specifies the fields for each dataset row. With <code>include_sample_schema</code> set to false, the grader uses the already captured answer in <code>item</code>. The <code>string_check</code> criterion compares that answer to the reference with <code>eq</code>. A model grader would use different criteria and a configured judge. Store its model and rubric versions and audit its disagreements. Eval creation schema</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">cat &gt; northstar-eval-definition.json &lt;&lt;&#x27;JSON&#x27;
+{
+  &quot;name&quot;: &quot;northstar-frozen-v1&quot;,
+  &quot;data_source_config&quot;: {
+    &quot;type&quot;: &quot;custom&quot;,
+    &quot;include_sample_schema&quot;: false,
+    &quot;item_schema&quot;: {
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;properties&quot;: {
+        &quot;case_id&quot;: {&quot;type&quot;: &quot;string&quot;},
+        &quot;prompt_version&quot;: {&quot;type&quot;: &quot;string&quot;},
+        &quot;question&quot;: {&quot;type&quot;: &quot;string&quot;},
+        &quot;captured&quot;: {&quot;type&quot;: &quot;string&quot;},
+        &quot;expected&quot;: {&quot;type&quot;: &quot;string&quot;}
+      },
+      &quot;required&quot;: [&quot;case_id&quot;, &quot;prompt_version&quot;, &quot;question&quot;, &quot;captured&quot;, &quot;expected&quot;]
+    }
+  },
+  &quot;testing_criteria&quot;: [
+    {
+      &quot;type&quot;: &quot;string_check&quot;,
+      &quot;name&quot;: &quot;exact-v1&quot;,
+      &quot;input&quot;: &quot;{{item.captured}}&quot;,
+      &quot;reference&quot;: &quot;{{item.expected}}&quot;,
+      &quot;operation&quot;: &quot;eq&quot;
+    }
+  ]
+}
+JSON
+</code></pre>
+</div>
+<p>The second specimen is a complete <strong>Prompt-V1</strong> run body for <code>POST /v1/evals/{eval_id}/runs</code> as it formerly operated. A managed run could read JSONL records with an <code>item</code> envelope or accept them inline with <code>file_content</code> as below. A V2 body would change the run name and both prompt-version fields and substitute the approved receipt text as Q01’s capture. Q02 would keep the same capture. Predict 1/2 for V1 and 2/2 for V2. These predictions are illustrative. No managed API calls were made for this lesson. Run creation schema</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">cat &gt; northstar-prompt-v1-run.json &lt;&lt;&#x27;JSON&#x27;
+{
+  &quot;name&quot;: &quot;northstar-frozen-v1 / Prompt-V1&quot;,
+  &quot;data_source&quot;: {
+    &quot;type&quot;: &quot;jsonl&quot;,
+    &quot;source&quot;: {
+      &quot;type&quot;: &quot;file_content&quot;,
+      &quot;content&quot;: [
+        {&quot;item&quot;: {&quot;case_id&quot;: &quot;Q01&quot;, &quot;prompt_version&quot;: &quot;Prompt-V1&quot;, &quot;question&quot;: &quot;What proof is required for a refund?&quot;, &quot;captured&quot;: &quot;Receipt optional.&quot;, &quot;expected&quot;: &quot;A valid receipt is required.&quot;}},
+        {&quot;item&quot;: {&quot;case_id&quot;: &quot;Q02&quot;, &quot;prompt_version&quot;: &quot;Prompt-V1&quot;, &quot;question&quot;: &quot;Where do I start a warranty claim?&quot;, &quot;captured&quot;: &quot;Start from your order page.&quot;, &quot;expected&quot;: &quot;Start from your order page.&quot;}}
+      ]
+    }
+  }
+}
+JSON
+</code></pre>
+</div>
+<p>If authorized access is still available, obtain the existing <code>EVAL_ID</code> and <code>RUN_ID</code> from the owning project and supply a project API key through the environment. These read-only requests save the run and the first page of its output items. The run captures aggregate status. Output items include source records and individual grader results. When <code>has_more</code> is true, request another page with <code>after</code> set to the returned <code>last_id</code>. Run retrieval · Output item listing</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">run_url=&quot;https://api.openai.com/v1/evals/${EVAL_ID:?Set EVAL_ID}/runs/${RUN_ID:?Set RUN_ID}&quot;
+curl --fail-with-body --silent --show-error \
+  -H &quot;Authorization: Bearer ${OPENAI_API_KEY:?Set OPENAI_API_KEY}&quot; \
+  &quot;$run_url&quot; -o northstar-run.json
+curl --fail-with-body --silent --show-error \
+  -H &quot;Authorization: Bearer ${OPENAI_API_KEY:?Set OPENAI_API_KEY}&quot; \
+  &quot;$run_url/output_items?limit=100&quot; -o northstar-run-items.json
+</code></pre>
+</div>
+<p>Start by distinguishing a failed request from a grader’s verdict. If you receive a 401 or 403, check the key’s project access without printing it. For a 404, verify that the run belongs to that eval and check whether the service is still available. After a timeout, rate limit or incomplete export, record the status and the items you actually recovered. A missing item leaves the corresponding case unscored. Use exports already held by your team when access ends. Join rows by their saved case and prompt-version fields before comparing. Keep the run and item identifiers as evidence.</p>
+<h5>Compare the workflows and map the evidence</h5>
+<p><strong>Configuration and data.</strong> Local YAML arranges promptfoo prompts, providers, cases and assertions. Commit a reviewed synthetic dataset and lockfile. Managed Evals used REST definitions with schemas and graders, plus separate run resources.</p>
+<p><strong>Portability and grading.</strong> Look for an export you can replay with stable IDs and rules you can reproduce. The Echo replay puts both variants in one report. Managed archives usually require joining distinct runs. Inspect the archived criterion and model before migrating an evaluator.</p>
+<p><strong>CI, human review and spend.</strong> Automate local assertions, save artifacts and route ambiguous or critical rows to people. For managed archives, recover approved evidence while access allows. Actual providers can see the data they receive and may incur costs. Require reviewed retention, access and versioning in either workflow.</p>
+<p>In the common result contract, use <code>case_id</code> from the frozen input, a stable <code>evaluator_id</code> and rule version, <code>status</code>, <code>score</code>, <code>passed</code>, <code>reason</code>, <code>evidence</code> and <code>error</code>. Save a promptfoo assertion record or a managed output item ID and criterion as evidence. A completed failed assertion is <code>OK</code> with <code>passed=False</code>. A timeout maps to <code>ERROR</code> with no score. An omitted case stays absent from the scoring denominator and appears in coverage. Keep raw artifacts alongside normalized rows. Agree on grading rules, inputs and scale before comparing scores from different evaluators.</p>
+<h4>Practice Exercises</h4>
+<h5>Practice 1. Repair a malformed case</h5>
+<p>A merge adds a second Q3 with no question and an unchanged expectation. Show what you would validate before running and what you would record about the repair.</p>
+<h5>Practice 2. Diagnose a false positive</h5>
+<p>A refund reply says “A valid receipt is not required.” The assertion looks for “valid receipt” and passes. Explain the mismatch and propose a stronger check for a strict fixture and for natural writing.</p>
+<h5>Practice 3. Normalize a timeout</h5>
+<p>A tool reports that the call for Q6 timed out before any capture. Write a normalized status, score, verdict, reason, evidence and error. Explain which denominator includes this case.</p>
+<h5>Practice 4. Decide if a regression can ship</h5>
+<p>Six of eight candidate results are scorable. Five pass and the sixth confirms an out-of-window refund. The baseline scored eight cases. Apply the lab’s release policy and name the next two steps.</p>
+<h4>Independent Assignment</h4>
+<p>Use the eight fictional records embedded in the lab. Freeze the case IDs, prompts, assertion version, source checks and baseline captures. Run baseline first. Write a short audit report with the per-version pass denominators, matched comparison, case IDs for fixes and regressions, and reasons for the decision. List the timeout and missing capture separately. Include the policy evidence for the blocked refund.</p>
+<p>Then run <code>retry</code> and <code>negation</code> in fresh sessions. Each starts with the same original history and Q8 repair. Predict what happens to coverage when Q6 returns an approved reply. Separately predict whether the warranty phrase still passes when Q4 reverses the instruction. Explain what additional evidence would justify another comparison. Use the lab program as the complete standalone answer key.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<h5>Solution 1</h5>
+<p>Reject the case list before scoring. Check uniqueness after verifying each ID and question, then recover the intended row from the reviewed dataset. A genuinely new case needs its own ID and approved expected behavior. Record a changed dataset version if the reviewed case set changes. Retain the original input and validation error.</p>
+<h5>Solution 2</h5>
+<p>Read the whole sentence. The match sees the required phrase even though the word “not” reverses its meaning. If wording is part of the contract, use equality against the approved text. If paraphrases are expected, use a policy rubric with examples of affirmations and negations, then review ambiguous cases. Add the negated sentence as a failing case so it guards against a weak check.</p>
+<h5>Solution 3</h5>
+<p>Use <code>case_id=Q6</code>, <code>status=ERROR</code>, <code>score=None</code>, <code>passed=None</code>, <code>reason=&quot;capture could not be graded&quot;</code>, <code>evidence={}</code> and <code>error=TIMEOUT</code>. Attach prompt and evaluator versions and any permitted diagnostic ID. Q6 counts among the eight planned cases for coverage. It contributes zero scorable rows to pass rate or the matched comparison.</p>
+<h5>Solution 4</h5>
+<p>Choose HOLD because the out-of-window refund is a confirmed critical regression. Preserve the offending capture and rerun the candidate after repairing it. Recover the other two rows and run the same suite again before considering RELEASE.</p>
+<h5>Lab and assignment answer key</h5>
+<p>Use the lab block unchanged for <code>baseline</code>. Set its <code>mode</code> to <code>&quot;repair&quot;</code> for the baseline plus repair transcript. Each experiment below starts with the baseline and repair reports from the lab, through <code>Decision: REVIEW</code>. The continuation starts right after that line.</p>
+<h6>Missing capture experiment</h6>
+<p>Set <code>mode = &quot;missing&quot;</code>. Its exact continuation is:</p>
+<ul><li><code>missing | northstar-prompts-v1 | northstar-assertions-v1 | Prompt-V1 vs Prompt-V2/capture-repair</code></li><li><code>Case | V1 | candidate | candidate evidence</code></li><li><code>Q1 | PASS | PASS | days-schema=True, deadline=True</code></li><li><code>Q2 | FAIL | PASS | equals=True</code></li><li><code>Q3 | FAIL | MISSING | no capture saved</code></li><li><code>Q4 | PASS | PASS | order-phrase=True, equals=True</code></li><li><code>Q5 | PASS | PASS | equals=True</code></li><li><code>Q6 | FAIL | ERROR | TIMEOUT</code></li><li><code>Q7 | PASS | MISSING | no capture saved</code></li><li><code>Q8 | PASS | PASS | eligibility-schema=True, deadline=True, ineligible=True</code></li><li><code>V1: pass=5/8 coverage=8/8 errors=0 missing=0 skips=0 critical=0</code></li><li><code>Candidate: pass=5/5 coverage=5/8 errors=1 missing=2 skips=0 critical=0</code></li><li><code>Matched passes: 4/5 -&gt; 5/5</code></li><li><code>Fixes: Q2 | Regressions: none</code></li><li><code>Decision: REVIEW</code></li><li><code>Audit runs: 3 | original Q8: {&quot;days&quot;:90,&quot;eligible&quot;:true}</code></li></ul>
+<h6>Assignment variant A — recover the timeout</h6>
+<p>Set <code>mode = &quot;retry&quot;</code>. Its exact continuation is:</p>
+<ul><li><code>retry | northstar-prompts-v1 | northstar-assertions-v1 | Prompt-V1 vs Prompt-V2/capture-repair</code></li><li><code>Case | V1 | candidate | candidate evidence</code></li><li><code>Q1 | PASS | PASS | days-schema=True, deadline=True</code></li><li><code>Q2 | FAIL | PASS | equals=True</code></li><li><code>Q3 | FAIL | PASS | shipping-regex=True, no-anytime=True</code></li><li><code>Q4 | PASS | PASS | order-phrase=True, equals=True</code></li><li><code>Q5 | PASS | PASS | equals=True</code></li><li><code>Q6 | FAIL | PASS | equals=True</code></li><li><code>Q7 | PASS | MISSING | no capture saved</code></li><li><code>Q8 | PASS | PASS | eligibility-schema=True, deadline=True, ineligible=True</code></li><li><code>V1: pass=5/8 coverage=8/8 errors=0 missing=0 skips=0 critical=0</code></li><li><code>Candidate: pass=7/7 coverage=7/8 errors=0 missing=1 skips=0 critical=0</code></li><li><code>Matched passes: 4/7 -&gt; 7/7</code></li><li><code>Fixes: Q2, Q3, Q6 | Regressions: none</code></li><li><code>Decision: REVIEW</code></li><li><code>Audit runs: 3 | original Q8: {&quot;days&quot;:90,&quot;eligible&quot;:true}</code></li></ul>
+<p>The Q6 retry adds one valid pass and resolves the recorded error for the new replay. Q7 still needs a capture.</p>
+<h6>Assignment variant B — negate the warranty guidance</h6>
+<p>Set <code>mode = &quot;negation&quot;</code>. Its exact continuation is:</p>
+<ul><li><code>negation | northstar-prompts-v1 | northstar-assertions-v1 | Prompt-V1 vs Prompt-V2/capture-repair</code></li><li><code>Case | V1 | candidate | candidate evidence</code></li><li><code>Q1 | PASS | PASS | days-schema=True, deadline=True</code></li><li><code>Q2 | FAIL | PASS | equals=True</code></li><li><code>Q3 | FAIL | PASS | shipping-regex=True, no-anytime=True</code></li><li><code>Q4 | PASS | FAIL | order-phrase=True, equals=False</code></li><li><code>Q5 | PASS | PASS | equals=True</code></li><li><code>Q6 | FAIL | ERROR | TIMEOUT</code></li><li><code>Q7 | PASS | MISSING | no capture saved</code></li><li><code>Q8 | PASS | PASS | eligibility-schema=True, deadline=True, ineligible=True</code></li><li><code>V1: pass=5/8 coverage=8/8 errors=0 missing=0 skips=0 critical=0</code></li><li><code>Candidate: pass=5/6 coverage=6/8 errors=1 missing=1 skips=0 critical=0</code></li><li><code>Matched passes: 4/6 -&gt; 5/6</code></li><li><code>Fixes: Q2, Q3 | Regressions: Q4 (warranty)</code></li><li><code>Decision: REVIEW</code></li><li><code>Audit runs: 3 | original Q8: {&quot;days&quot;:90,&quot;eligible&quot;:true}</code></li></ul>
+<p>Q4 passes the substring assertion and fails equality. A negated instruction is still a regression even though the keywords are present.</p>
+</div></details>
+<h4>Knowledge Check</h4>
+<ol><li>Which records and rules make a suite repeatable?</li><li>What do two prompt templates, one provider, and two cases produce?</li><li>When might <code>contains</code> or <code>is-json</code> pass an unacceptable answer?</li><li>What does Echo return, and where should a model provider key live?</li><li>What role does <code>item</code> play in the managed Evals examples?</li><li>Why would you choose a human-checked rubric over string equality?</li><li>What changes if a timeout is counted as FAIL?</li><li>Can excellent pass rate on six of eight cases clear CI for release?</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Save stable IDs, approved expectations, dataset and assertion versions, prompt and provider configurations, and the captures. The saved configuration lets someone repeat the same checks.</li><li>Four combinations. The evaluator applies the selected assertions to each prompt and case output.</li><li>A negated sentence can contain the target phrase. Valid JSON can contain the wrong value. Add a check that tests the intended behavior.</li><li>Echo returns the rendered text you supplied. Put actual provider credentials in an approved environment or secret store and keep them out of the dataset and artifacts.</li><li>It contains the fields available to the managed grader, including saved case identity, the captured reply, and the reference. The source fields support joins in an archived result.</li><li>There can be multiple equally correct phrasings. Use a rubric with approved examples and negative cases and have humans review uncertain decisions before using it as a gate.</li><li>It lowers the pass rate and can create a false paired regression. Keep the timeout unscored and report incomplete coverage.</li><li>No. A critical policy failure forces HOLD, and unresolved coverage alone forces REVIEW. Inspect the affected cases and archive the evidence even if the trigger runs automatically.</li></ol>
+</div></details>
+<h4>Guided Engineering Lab</h4>
+<h5>Build and Validate a Northstar Prompt Regression Suite</h5>
+<p>The Northstar team wants to rerun all eight approved checks when it changes its support prompt. Begin by reading the policy and source IDs at the top of the program. The dataset lists each question, its category and its expected text where exact wording matters. Each case also names the assertions that decide the result. The two capture dictionaries represent what the fictional prompts returned.</p>
+<p><strong>Work Q8 by hand first.</strong> First read <code>45 days ago</code> in Q8’s question and find <code>within 30 days</code> in the refund policy. Predict <code>eligible: false</code> before reading either capture. V1 gives the 30-day limit and denies eligibility. V2 supplies an integer and a Boolean, so the shape check passes, but the values <code>90</code> and <code>true</code> each violate policy. Since V1 passed the same check, Q8 is a confirmed critical regression.</p>
+<p>The rubric requires every listed assertion to pass. The shipping regex requires the “45 days” phrase with word boundaries and the forbidden-text check rejects “any time.” These are narrow fixture checks. The warranty test combines phrase detection with exact wording. The citation check validates a known source ID and an expected ID. Supporting the claim itself would require checking the cited passage against the answer.</p>
+<p><strong>Decision policy.</strong> Choose HOLD when Q8 confirms a critical violation. Otherwise choose REVIEW if the set is incomplete, a pair is unscored, a regression remains, or any candidate case still fails. Choose RELEASE only for eight scorable pairs, eight passing candidate cases and no critical violation. These thresholds are Northstar’s fixture policy for this lab.</p>
+<p><strong>Read the program in order.</strong> Each tuple binds the labels in the code comment to one case. <code>**v1</code> copies the saved capture fields into V2 before selected values change. <code>type(x) is int</code> makes sure a JSON Boolean cannot stand in for a number. <code>try</code> and <code>except</code> handle malformed JSON as a scored assertion failure. <code>zip(..., strict=True)</code> walks both result lists together and fails if the lengths differ. Validation and case ordering happen before pairing. <code>json.dumps</code> freezes a snapshot of the run as text, so a later capture repair leaves earlier evidence available.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+import re
+
+mode = &quot;baseline&quot;  # baseline, repair, missing, retry, or negation
+dataset = &quot;northstar-prompts-v1&quot;
+config = &quot;northstar-assertions-v1&quot;
+prompts = {
+    &quot;Prompt-V1&quot;: &quot;Answer using the supplied policy. Follow the requested output format.&quot;,
+    &quot;Prompt-V2&quot;: &quot;Answer concisely using only the supplied policy. Follow the requested output format.&quot;,
+}
+policy = &quot;Refunds require a valid receipt and a request within 30 days of purchase.&quot;
+source_text = {
+    &quot;RF&quot;: policy, &quot;SH&quot;: &quot;Contact support after 45 days about a shipping delay.&quot;,
+    &quot;WA&quot;: &quot;Start warranty claims from your order page.&quot;,
+    &quot;AC&quot;: &quot;Reset passwords from sign-in.&quot;, &quot;ES&quot;: &quot;Escalate from the case page.&quot;,
+}
+# ID, category, question, expected text or None, assertion names
+cases = (
+    (&quot;Q1&quot;, &quot;refund deadline&quot;, &quot;What is the refund deadline? JSON with days.&quot;,
+     None, (&quot;days-schema&quot;, &quot;deadline&quot;)),
+    (&quot;Q2&quot;, &quot;receipt&quot;, &quot;What proof is required?&quot;, &quot;A valid receipt.&quot;, (&quot;equals&quot;,)),
+    (&quot;Q3&quot;, &quot;shipping&quot;, &quot;When do I contact support about a delay?&quot;, None, (&quot;shipping-regex&quot;, &quot;no-anytime&quot;)),
+    (&quot;Q4&quot;, &quot;warranty&quot;, &quot;Where do I start a claim?&quot;, &quot;Start from your order page.&quot;, (&quot;order-phrase&quot;, &quot;equals&quot;)),
+    (&quot;Q5&quot;, &quot;account&quot;, &quot;Where do I reset my password?&quot;, &quot;Use sign-in.&quot;, (&quot;equals&quot;,)),
+    (&quot;Q6&quot;, &quot;escalation&quot;, &quot;Where do I escalate this?&quot;, &quot;Use the case page.&quot;, (&quot;equals&quot;,)),
+    (&quot;Q7&quot;, &quot;citation&quot;, &quot;Return the authorized refund source ID as JSON.&quot;, None, (&quot;citation-schema&quot;, &quot;citation-id&quot;)),
+    (&quot;Q8&quot;, &quot;critical refund&quot;, &quot;Purchased 45 days ago with a receipt. Is it eligible? JSON with days and eligible.&quot;,
+     None, (&quot;eligibility-schema&quot;, &quot;deadline&quot;, &quot;ineligible&quot;)),
+)
+v1 = {
+    &quot;Q1&quot;: &#x27;{&quot;days&quot;:30}&#x27;, &quot;Q2&quot;: &quot;Receipt optional.&quot;, &quot;Q3&quot;: &quot;Ask any time.&quot;,
+    &quot;Q4&quot;: &quot;Start from your order page.&quot;, &quot;Q5&quot;: &quot;Use sign-in.&quot;, &quot;Q6&quot;: &quot;Send email.&quot;,
+    &quot;Q7&quot;: &#x27;{&quot;citation&quot;:&quot;RF&quot;}&#x27;, &quot;Q8&quot;: &#x27;{&quot;days&quot;:30,&quot;eligible&quot;:false}&#x27;,
+}
+# A timeout is a capture error. No key for Q7 means no capture was saved.
+v2 = {
+    **v1, &quot;Q2&quot;: &quot;A valid receipt.&quot;, &quot;Q3&quot;: &quot;Contact support after 45 days.&quot;,
+    &quot;Q6&quot;: {&quot;error&quot;: &quot;TIMEOUT&quot;}, &quot;Q8&quot;: &#x27;{&quot;days&quot;:90,&quot;eligible&quot;:true}&#x27;,
+}
+del v2[&quot;Q7&quot;]
+
+rule_ids = {
+    &quot;days-schema&quot;, &quot;deadline&quot;, &quot;equals&quot;, &quot;shipping-regex&quot;, &quot;no-anytime&quot;, &quot;order-phrase&quot;,
+    &quot;citation-schema&quot;, &quot;citation-id&quot;, &quot;eligibility-schema&quot;, &quot;ineligible&quot;,
+}
+schemas = {
+    &quot;days-schema&quot;: {&quot;days&quot;: int},
+    &quot;citation-schema&quot;: {&quot;citation&quot;: str},
+    &quot;eligibility-schema&quot;: {&quot;days&quot;: int, &quot;eligible&quot;: bool},
+}
+
+def validate(records, *captures):
+    ids = [case[0] for case in records]
+    if len(ids) != len(set(ids)):
+        raise ValueError(&quot;duplicate case IDs&quot;)
+    for key, category, question, expected, checks in records:
+        if any(not isinstance(value, str) or not value.strip() for value in (key, category, question)):
+            raise ValueError(&quot;missing required case information&quot;)
+        if not checks or len(set(checks)) != len(checks) or set(checks) - rule_ids:
+            raise ValueError(&quot;unknown or duplicate assertions&quot;)
+        if expected is not None and not isinstance(expected, str):
+            raise ValueError(&quot;invalid reference&quot;)
+    if any(set(capture) - set(ids) for capture in captures):
+        raise ValueError(&quot;unknown capture ID&quot;)
+
+def decisions(checks, expected, raw, parsed):
+    return {
+        &quot;equals&quot;: None if expected is None else raw == expected,
+        &quot;shipping-regex&quot;: bool(re.search(r&quot;\b45 days\b&quot;, raw)),
+        &quot;no-anytime&quot;: &quot;any time&quot; not in raw.casefold(),
+        &quot;order-phrase&quot;: &quot;order page&quot; in raw.casefold(),
+        &quot;deadline&quot;: type(parsed.get(&quot;days&quot;)) is int and parsed[&quot;days&quot;] == 30,
+        &quot;citation-id&quot;: parsed.get(&quot;citation&quot;) == &quot;RF&quot; and &quot;RF&quot; in source_text,
+        &quot;ineligible&quot;: parsed.get(&quot;eligible&quot;) is False,
+        **{rule: all(type(parsed.get(key)) is kind for key, kind in schema.items())
+           for rule, schema in schemas.items() if rule in checks},
+    }
+
+def assess(case, captured, version):
+    key, category, _question, expected, checks = case
+    row = {&quot;case_id&quot;: key, &quot;prompt_version&quot;: version, &quot;category&quot;: category,
+           &quot;evaluator_id&quot;: &quot;northstar-policy-suite&quot;, &quot;version&quot;: config, &quot;score&quot;: None,
+           &quot;passed&quot;: None, &quot;reason&quot;: &quot;&quot;, &quot;evidence&quot;: {}, &quot;error&quot;: None, &quot;critical&quot;: False}
+    if key not in captured:
+        return {**row, &quot;status&quot;: &quot;MISSING&quot;, &quot;reason&quot;: &quot;no capture saved&quot;}
+    raw = captured[key]
+    if not isinstance(raw, str):
+        error = raw.get(&quot;error&quot;) if isinstance(raw, dict) else None
+        error = error if error in (&quot;TIMEOUT&quot;, &quot;RATE_LIMIT&quot;) else &quot;INVALID_CAPTURE&quot;
+        return {**row, &quot;status&quot;: &quot;ERROR&quot;, &quot;error&quot;: error, &quot;reason&quot;: &quot;capture could not be graded&quot;}
+    parsed = {}
+    if set(checks) &amp; schemas.keys():
+        try:
+            value = json.loads(raw)
+        except ValueError:
+            value = None
+        if isinstance(value, dict):
+            parsed = value
+    results = decisions(checks, expected, raw, parsed)
+    evidence = {name: results[name] for name in checks}
+    critical = key == &quot;Q8&quot; and (parsed.get(&quot;eligible&quot;) is True or
+                                 (type(parsed.get(&quot;days&quot;)) is int and parsed[&quot;days&quot;] != 30))
+    if None in evidence.values():
+        return {**row, &quot;status&quot;: &quot;SKIPPED&quot;, &quot;reason&quot;: &quot;missing reference&quot;,
+                &quot;evidence&quot;: evidence, &quot;critical&quot;: critical}
+    passed = all(evidence.values())
+    return {**row, &quot;status&quot;: &quot;OK&quot;, &quot;passed&quot;: passed, &quot;score&quot;: int(passed),
+            &quot;reason&quot;: &quot;all assertions passed&quot; if passed else &quot;assertion mismatch&quot;,
+            &quot;evidence&quot;: evidence, &quot;critical&quot;: critical}
+
+def ratio(n, d):
+    return f&quot;{n}/{d}&quot; if d else &quot;N/A&quot;
+
+def summarize(rows):
+    valid = [row for row in rows if row[&quot;status&quot;] == &quot;OK&quot;]
+    counts = {kind: sum(row[&quot;status&quot;] == kind for row in rows)
+              for kind in (&quot;ERROR&quot;, &quot;MISSING&quot;, &quot;SKIPPED&quot;)}
+    return (f&quot;pass={ratio(sum(row[&#x27;passed&#x27;] for row in valid), len(valid))} &quot;
+            f&quot;coverage={len(valid)}/{len(rows)} errors={counts[&#x27;ERROR&#x27;]} &quot;
+            f&quot;missing={counts[&#x27;MISSING&#x27;]} skips={counts[&#x27;SKIPPED&#x27;]} &quot;
+            f&quot;critical={sum(row[&#x27;critical&#x27;] for row in rows)}&quot;)
+
+def tag(row):
+    return (&quot;PASS&quot; if row[&quot;passed&quot;] else &quot;FAIL&quot;) if row[&quot;status&quot;] == &quot;OK&quot; else row[&quot;status&quot;]
+
+def compare(name, records, baseline, candidate, candidate_version):
+    validate(records, baseline, candidate)
+    old = [assess(case, baseline, &quot;Prompt-V1&quot;) for case in records]
+    new = [assess(case, candidate, candidate_version) for case in records]
+    paired = [(a, b) for a, b in zip(old, new, strict=True) if a[&quot;status&quot;] == b[&quot;status&quot;] == &quot;OK&quot;]
+    fixes = [b[&quot;case_id&quot;] for a, b in paired if not a[&quot;passed&quot;] and b[&quot;passed&quot;]]
+    regressions = [f&quot;{b[&#x27;case_id&#x27;]} ({b[&#x27;category&#x27;]})&quot; for a, b in paired if a[&quot;passed&quot;] and not b[&quot;passed&quot;]]
+    if any(row[&quot;critical&quot;] for row in new):
+        result = &quot;HOLD&quot;
+    elif len(records) != 8 or len(paired) != len(records) or regressions or not all(row[&quot;passed&quot;] for row in new):
+        result = &quot;REVIEW&quot;
+    else:
+        result = &quot;RELEASE&quot;
+    print(f&quot;{name} | {dataset} | {config} | Prompt-V1 vs {candidate_version}&quot;)
+    print(&quot;Case | V1 | candidate | candidate evidence&quot;)
+    for a, b in zip(old, new, strict=True):
+        details = &quot;, &quot;.join(f&quot;{rule}={value}&quot; for rule, value in b[&quot;evidence&quot;].items())
+        print(f&quot;{b[&#x27;case_id&#x27;]} | {tag(a)} | {tag(b)} | {details or b[&#x27;error&#x27;] or b[&#x27;reason&#x27;]}&quot;)
+    print(&quot;V1:&quot;, summarize(old))
+    print(&quot;Candidate:&quot;, summarize(new))
+    print(f&quot;Matched passes: {ratio(sum(a[&#x27;passed&#x27;] for a, _ in paired), len(paired))} -&gt; &quot;
+          f&quot;{ratio(sum(b[&#x27;passed&#x27;] for _, b in paired), len(paired))}&quot;)
+    print(f&quot;Fixes: {&#x27;, &#x27;.join(fixes) or &#x27;none&#x27;} | Regressions: {&#x27;, &#x27;.join(regressions) or &#x27;none&#x27;}&quot;)
+    print(&quot;Decision:&quot;, result)
+    return json.dumps({&quot;run&quot;: name, &quot;dataset&quot;: dataset, &quot;config&quot;: config,
+                       &quot;prompts&quot;: prompts, &quot;policy&quot;: policy, &quot;sources&quot;: source_text,
+                       &quot;cases&quot;: records, &quot;baseline&quot;: baseline, &quot;candidate&quot;: candidate,
+                       &quot;baseline_results&quot;: old, &quot;candidate_results&quot;: new, &quot;decision&quot;: result},
+                      sort_keys=True, allow_nan=False)
+
+def replay(choice):
+    history = (compare(&quot;baseline&quot;, cases, v1, v2, &quot;Prompt-V2&quot;),)
+    if choice == &quot;baseline&quot;:
+        print(&quot;Audit runs:&quot;, len(history))
+        return history
+    repaired = {**v2, &quot;Q8&quot;: &#x27;{&quot;days&quot;:30,&quot;eligible&quot;:false}&#x27;}
+    version = &quot;Prompt-V2/capture-repair&quot;
+    history += (compare(&quot;repair&quot;, cases, v1, repaired, version),)
+    if choice == &quot;missing&quot;:
+        incomplete = {key: value for key, value in repaired.items() if key != &quot;Q3&quot;}
+        history += (compare(&quot;missing&quot;, cases, v1, incomplete, version),)
+    elif choice == &quot;retry&quot;:
+        retry = {**repaired, &quot;Q6&quot;: &quot;Use the case page.&quot;}
+        history += (compare(&quot;retry&quot;, cases, v1, retry, version),)
+    elif choice == &quot;negation&quot;:
+        negated = {**repaired, &quot;Q4&quot;: &quot;Do not start from your order page.&quot;}
+        history += (compare(&quot;negation&quot;, cases, v1, negated, version),)
+    elif choice != &quot;repair&quot;:
+        raise ValueError(&quot;unknown run mode&quot;)
+    print(&quot;Audit runs:&quot;, len(history), &quot;| original Q8:&quot;, json.loads(history[0])[&quot;candidate&quot;][&quot;Q8&quot;])
+    return history
+
+replay(mode)
+</code></pre>
+</div>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">baseline | northstar-prompts-v1 | northstar-assertions-v1 | Prompt-V1 vs Prompt-V2
+Case | V1 | candidate | candidate evidence
+Q1 | PASS | PASS | days-schema=True, deadline=True
+Q2 | FAIL | PASS | equals=True
+Q3 | FAIL | PASS | shipping-regex=True, no-anytime=True
+Q4 | PASS | PASS | order-phrase=True, equals=True
+Q5 | PASS | PASS | equals=True
+Q6 | FAIL | ERROR | TIMEOUT
+Q7 | PASS | MISSING | no capture saved
+Q8 | PASS | FAIL | eligibility-schema=True, deadline=False, ineligible=False
+V1: pass=5/8 coverage=8/8 errors=0 missing=0 skips=0 critical=0
+Candidate: pass=5/6 coverage=6/8 errors=1 missing=1 skips=0 critical=1
+Matched passes: 4/6 -&gt; 5/6
+Fixes: Q2, Q3 | Regressions: Q8 (critical refund)
+Decision: HOLD
+Audit runs: 1
+</code></pre></details>
+<p><strong>Predict and repair.</strong> Set <code>mode = &quot;repair&quot;</code>. Guess what happens to the critical count, coverage and decision before running again. The program prints the original baseline first and adds the repaired replay to history.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">baseline | northstar-prompts-v1 | northstar-assertions-v1 | Prompt-V1 vs Prompt-V2
+Case | V1 | candidate | candidate evidence
+Q1 | PASS | PASS | days-schema=True, deadline=True
+Q2 | FAIL | PASS | equals=True
+Q3 | FAIL | PASS | shipping-regex=True, no-anytime=True
+Q4 | PASS | PASS | order-phrase=True, equals=True
+Q5 | PASS | PASS | equals=True
+Q6 | FAIL | ERROR | TIMEOUT
+Q7 | PASS | MISSING | no capture saved
+Q8 | PASS | FAIL | eligibility-schema=True, deadline=False, ineligible=False
+V1: pass=5/8 coverage=8/8 errors=0 missing=0 skips=0 critical=0
+Candidate: pass=5/6 coverage=6/8 errors=1 missing=1 skips=0 critical=1
+Matched passes: 4/6 -&gt; 5/6
+Fixes: Q2, Q3 | Regressions: Q8 (critical refund)
+Decision: HOLD
+repair | northstar-prompts-v1 | northstar-assertions-v1 | Prompt-V1 vs Prompt-V2/capture-repair
+Case | V1 | candidate | candidate evidence
+Q1 | PASS | PASS | days-schema=True, deadline=True
+Q2 | FAIL | PASS | equals=True
+Q3 | FAIL | PASS | shipping-regex=True, no-anytime=True
+Q4 | PASS | PASS | order-phrase=True, equals=True
+Q5 | PASS | PASS | equals=True
+Q6 | FAIL | ERROR | TIMEOUT
+Q7 | PASS | MISSING | no capture saved
+Q8 | PASS | PASS | eligibility-schema=True, deadline=True, ineligible=True
+V1: pass=5/8 coverage=8/8 errors=0 missing=0 skips=0 critical=0
+Candidate: pass=6/6 coverage=6/8 errors=1 missing=1 skips=0 critical=0
+Matched passes: 4/6 -&gt; 6/6
+Fixes: Q2, Q3 | Regressions: none
+Decision: REVIEW
+Audit runs: 2 | original Q8: {&quot;days&quot;:90,&quot;eligible&quot;:true}
+</code></pre></details>
+<p><strong>Isolate a missing result.</strong> Set <code>mode = &quot;missing&quot;</code>. It starts from the same repair, then removes the Q3 capture. Predict the change from six covered cases to five. The continuation is under the answer key. Save the original record and attach the new case evidence rather than overwriting it.</p>
+<p><strong>Sample report.</strong> On <code>northstar-prompts-v1</code> using <code>northstar-assertions-v1</code>, V2 raises the matched pass count from four to five of six. Q2 and Q3 improve. Q8 changes a valid ineligible decision into an out-of-policy approval. Hold V2. After a fixture repair, Q8 passes and the six scorable candidate cases pass. Send the run for review. Recover the Q6 timeout and obtain the missing Q7 capture before filing a new release recommendation.</p>
+<p><strong>Troubleshoot.</strong> If a count differs, restore the baseline code, run again and compare the first differing row by its case ID. When Q8 fails JSON checks, inspect the exact saved string. When Q6 reports TIMEOUT, it lacks a gradable answer. Check the capture process rather than loosening the policy. For a missing capture, compare case IDs with the capture dictionary. When examining audit data locally, <code>json.loads(history[0])</code> recovers the original record.</p>
+<p><strong>Map the suite to tools.</strong> In promptfoo, use case IDs in test descriptions, question and expected values under <code>vars</code>, and two prompt templates. Transfer the text checks to matching types and use deterministic schema and separate policy checks for Q8. Preserve the JSON artifact and transform assertion results into the common contract. For a previously archived OpenAI Platform Evals workflow, map case IDs, captures and references into <code>item</code> fields. Use a string check for strict text cases. Preserve the policy and schema checks in the local harness unless a verified grader implements the same behavior. Treat a real generation run or model-graded rubric as a separate experiment with configured endpoints and credentials.</p>
+<p><strong>Completion check.</strong> Reproduce the three lab modes, name both missing-coverage cases after repair, explain why Q8 is decisive, and show the original Q8 value in the audit. Then defend what you would pick for local CI and for a team migrating managed evals. Use promptfoo with frozen fixtures for a reproducible CI matrix. For existing managed runs, export approved records while available, then pilot an approved replacement for model grading and preserve the deterministic offline fallback.</p>
+<h4>Common Mistakes</h4>
+<ul><li>Comparing rates across different case coverage without also computing matched counts.</li><li>Treating a timeout, configuration problem or missing output as a confirmed policy rejection.</li><li>Believing the presence of a keyword or a valid JSON structure proves the underlying facts.</li><li>Loading unreviewed test data into a provider or retaining sensitive prompts in open CI logs.</li><li>Using an archived API format as evidence that a new managed run can still be created.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-4" data-relevance="Supporting">
+<h5>Test 4: Deterministic Eval</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Check a banking assistant with deterministic rules and a behavioral case set.</dd></div><div><dt>How it was tested</dt><dd>Exercise interactive and batch modes, inspect saved replies, and record PASS, FAIL, or PARTIAL. Banking product, refusal, unrelated-query, and context-retention cases. The workbook preserves prompts and checks. llama3.1:8b is the bot identified in the walkthrough.</dd></div><div><dt>Actual results</dt><dd>The historical table records 29 PASS, 13 FAIL, and 7 PARTIAL across 49 cases (59% pass).</dd></div><div><dt>Original findings</dt><dd>The walkthrough documents invented product details and contact information, including failures a keyword can miss.</dd></div><div><dt>Evidence notes</dt><dd>The run concerns a single fictional bot and test set. Broad conclusions in the original walkthrough should be read in that context.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Translate a deterministic banking policy check into a portable assertion, then inspect what the keyword rule misses.</dd></div></dl>
+<p><a href="test4.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/banking-bots/banking_test_cases.xlsx">Test cases and saved results workbook</a> · <a href="#original-test-4">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>You turned manual checks into versioned cases and assertions, compared the same cases across prompt versions, and used the case evidence to explain a release decision. Keep the suite, raw artifacts, normalization rules and records together so someone else can revisit the result.</p>
+<p>Next scheduled lesson: <a href="#m10-t01">Execution model, structured calls and tool contracts</a>.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m09-t01">Common evaluator contract and framework selection</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t01">Pointwise LLM-as-a-Judge</a>, <a href="#m07-t03">Comparing models, prompts and A/B variants</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Translate two frozen prompts and one deterministic grading rule into declarative and hosted-style evaluation specs. Inspect mock results locally.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P03 and P04 to inspect declarative specs. The managed variant uses P05 only if explicitly enabled.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Recommend a tool for a CI matrix and another for a team using managed grading, with limits and a fixture fallback.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>1h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>5h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>3h 30m</dd></div></dl></div>
@@ -17138,7 +17846,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test4.html">View Complete Original Experiment</a> <code>docs/test4.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/banking-bots/banking_test_cases.xlsx">Test cases and saved results workbook</a> <code>phase-2-evaluation-techniques/banking-bots/banking_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-2-evaluation-techniques/banking-bots/banking_evaluator.py">Deterministic evaluator</a> <code>phase-2-evaluation-techniques/banking-bots/banking_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m02-t01">M02-T01 — Objectives, dimensions and failure taxonomy</a> · Supporting. Use the behavioral categories to separate error types.</li><li><a href="#m03-t01">M03-T01 — Exact match, normalization and rules</a> · Primary. Inspect deterministic rules and replies that can pass shallow checks.</li><li><a href="#m04-t02">M04-T02 — Annotation, adjudication and synthetic data</a> · Supporting. Inspect the workbook’s proposed and recorded behavioral labels.</li><li><a href="#m11-t01">M11-T01 — Risk taxonomy, harmful content and refusal</a> · Supporting. Look at historical refusal and unsupported-claim classifications.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Read a saved category breakdown when deciding what to test again.</li></ul>
+<ul><li><a href="#m02-t01">M02-T01 — Objectives, dimensions and failure taxonomy</a> · Supporting. Use the behavioral categories to separate error types.</li><li><a href="#m03-t01">M03-T01 — Exact match, normalization and rules</a> · Primary. Inspect deterministic rules and replies that can pass shallow checks.</li><li><a href="#m04-t02">M04-T02 — Annotation, adjudication and synthetic data</a> · Supporting. Inspect the workbook’s proposed and recorded behavioral labels.</li><li><a href="#m09-t03">M09-T03 — promptfoo and OpenAI Evals</a> · Supporting. Translate a deterministic banking policy check into a portable assertion, then inspect what the keyword rule misses.</li><li><a href="#m11-t01">M11-T01 — Risk taxonomy, harmful content and refusal</a> · Supporting. Look at historical refusal and unsupported-claim classifications.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Read a saved category breakdown when deciding what to test again.</li></ul>
 </details>
 <details id="original-test-5" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 5: LLM-as-a-Judge · Recorded Results Available</summary>
