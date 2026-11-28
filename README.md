@@ -160,6 +160,8 @@ These are the models used in this repository. You can use any model available in
 
 ## Setup — First Time Only
 
+For the original historical experiments, start with the [runner and offline replay guide](docs/original-experiment-runner-guide.md). It maps each archived runner to its dependencies, model or provider, input files, outputs and saved evidence. The current Academy lessons have their own setup and replay instructions.
+
 ```bash
 # 1. Clone the repository
 git clone git@github.com:amitbad/llm-evaluation.git

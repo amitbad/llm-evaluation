@@ -39,6 +39,8 @@ Batch 1 preserves the M18-T01 authored lesson and verifies it in all 53 locally 
 
 Batch 2 separates M18-T01 prediction snapshots from scoring labels and binds calibration to the judge version. M12-T02 now executes a retained-history control on inert fixtures. The concepts reference explains archive comparison limits. P01–P05 link to a runnable terminal packet and M14-T01 starts with an offline replay. The [Batch 2 remediation report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_2.md) records eight focused Python tests, 19 Batch 1 Python tests and 79 Node tests. Public M18-T01 deployment, human teaching review and the novice pilot remain pending.
 
+Batch 3 addresses F-009 through F-012 locally. The [archive runner guide](docs/original-experiment-runner-guide.md) separates historical setup from current labs. M13-T02 now binds a frozen candidate capture to the independently supplied revision and digest before scoring. M02-T03 and M07-T03 separate case results, execution evidence, gate recommendations and rollout authority. The [instructor run sheet](docs/instructor-run-sheet.md) is available in Instructor Resources. The [Batch 3 report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_3.md) records 34 Python and 85 Node tests, the unchanged curriculum dependencies and pending acceptance. A fresh public request still found the M18-T01 outline. Public F-001, manual browser checks, human teaching review and the first-time learner pilot remain open.
+
 ## Navigation and progress
 
 The homepage puts Quick Learning and Complete Course first. The homepage and curriculum share this primary order.

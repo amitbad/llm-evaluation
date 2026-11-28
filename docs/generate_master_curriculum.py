@@ -28,6 +28,7 @@ MODES_SCRIPT = ROOT / "docs/learning_modes.js"
 NAVIGATOR_SCRIPT = ROOT / "docs/learning_navigator.js"
 PROGRESS_SCRIPT = ROOT / "docs/learning_progress.js"
 PREPARATION_PACKET = ROOT / "docs/preparation.md"
+INSTRUCTOR_RUN_SHEET = ROOT / "docs/instructor-run-sheet.md"
 READER_SCRIPT = ASSETS / "lesson-reader.js"
 STAGES = ("Beginner", "Intermediate", "Advanced", "Production", "Specialized / Expert")
 SECTIONS = ("Course overview", "Learning paths", "Repository coverage", "Teaching plan", "Detailed curriculum")
@@ -385,6 +386,7 @@ def prose(markdown):
                 "Paper reading pass": "Three-pass research reading worksheet",
                 "Method family": "Emerging evaluation methods and evidence checks",
                 "Evidence worksheet field": "Research evidence checklist",
+                "Capture supplied": "Candidate-bound gate results",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS
@@ -1062,10 +1064,15 @@ def render(title, sections, stages, data, experiment_catalog):
         "roadmap": roadmap_view(data),
         "overview": overview_view(sections["Course overview"], data),
         "resources": f'''<p id="coverage"><a href="index.html#library">Published examples and downloads</a> ·
-  <a href="concepts.html">Concepts reference</a> · <a href="#original-practical-tests">Original Practical Tests Library</a></p>
+  <a href="concepts.html">Concepts reference</a> · <a href="#original-practical-tests">Original Practical Tests Library</a> ·
+  <a href="#instructor-run-sheet">Instructor Run Sheet</a></p>
 {original_experiments.library(entries, revision, titles)}
 <section aria-labelledby="instructor-resources-title">
   <h3 id="instructor-resources-title">Instructor Resources</h3>
+  <details id="instructor-run-sheet" class="course-reference">
+    <summary>Instructor Run Sheet · Three Sample Sessions</summary>
+    {prose(INSTRUCTOR_RUN_SHEET.read_text(encoding="utf-8"))}
+  </details>
   <details id="teaching" class="course-reference">
     <summary>Teaching Plan</summary>
     {prose(sections["Teaching plan"])}
@@ -1609,7 +1616,7 @@ function followHash(focus, hash = location.hash) {
   if (target.matches(".topic, .module")) {
     if (focus) target.querySelector("summary").focus({preventScroll: true});
     target.scrollIntoView({block: "start"});
-  } else if (target.matches(".quick-plan, #preparation, #preparation-packet, #paths, #teaching, #coverage, #course-progress, #original-practical-tests, .original-test")) {
+  } else if (target.matches(".quick-plan, #preparation, #preparation-packet, #paths, #teaching, #instructor-run-sheet, #coverage, #course-progress, #original-practical-tests, .original-test")) {
     if (focus) {
       const heading = target.querySelector("h3, summary") || target;
       if (heading.tagName !== "SUMMARY") heading.tabIndex = -1;

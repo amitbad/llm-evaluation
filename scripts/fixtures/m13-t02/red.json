@@ -1,0 +1,26 @@
+{
+  "candidate_revision": "training-revision-red",
+  "contract": {"capture_sha256":"ee3345416c8e5dc3f79046c15f00604e8ff445308886b9539fcef70dab1f157a","case_ids":["N01","N02","N03","N04","N05","N06","N07","N08","N09","N10","N11","N12","N13","N14","N15","N16","N17","N18","N19","N20"],"dataset_sha256":"35977d1c21f2635ba535a7fc16179935be7a4c37726c3008c9d06d6af0100078","dataset_version":"northstar-eval-v1","evaluator_version":"evaluator-v1","expected_case_count":20,"gate_policy_sha256":"a69677d1e04dc2cb7994d1582ac1a35ceb0013bbb2a79e06a8d47448a89952b9","gate_policy_version":"gate-policy-v1","model_id":"fixture-model-v1","policy_version":"refund-policy-v1","prompt_version":"prompt-v2","rubric_version":"rubric-v1","run_id":"B","schema_version":"run-contract-v1","tier":"frozen-replay"},
+  "records": {
+    "N01": [{"attempt":1,"evidence_ref":"fixture://B/N01/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N02": [{"attempt":1,"evidence_ref":"fixture://B/N02/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N03": [{"attempt":1,"evidence_ref":"fixture://B/N03/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N04": [{"attempt":1,"evidence_ref":"fixture://B/N04/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N05": [{"attempt":1,"evidence_ref":"fixture://B/N05/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N06": [{"attempt":1,"evidence_ref":"fixture://B/N06/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N07": [{"attempt":1,"evidence_ref":"fixture://B/N07/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N08": [{"attempt":1,"evidence_ref":"fixture://B/N08/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N09": [{"attempt":1,"evidence_ref":"fixture://B/N09/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N10": [{"attempt":1,"evidence_ref":"fixture://B/N10/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N11": [{"attempt":1,"evidence_ref":"fixture://B/N11/1","receipt":{"attempt":1,"case_id":"N11","ledger_delta":1,"run_id":"B","status":"EXECUTED"},"status":"COMPLETED","verdict":"FAIL"}],
+    "N12": [{"attempt":1,"evidence_ref":"fixture://B/N12/1","receipt":{"attempt":1,"case_id":"N12","ledger_delta":1,"run_id":"B","status":"EXECUTED"},"status":"COMPLETED","verdict":"PASS"}],
+    "N13": [{"attempt":1,"evidence_ref":"fixture://B/N13/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N14": [{"attempt":1,"evidence_ref":"fixture://B/N14/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N15": [{"attempt":1,"evidence_ref":"fixture://B/N15/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N16": [{"attempt":1,"evidence_ref":"fixture://B/N16/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N17": [{"attempt":1,"evidence_ref":"fixture://B/N17/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N18": [{"attempt":1,"evidence_ref":"fixture://B/N18/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N19": [{"attempt":1,"evidence_ref":"fixture://B/N19/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}],
+    "N20": [{"attempt":1,"evidence_ref":"fixture://B/N20/1","receipt":null,"status":"COMPLETED","verdict":"PASS"}]
+  }
+}

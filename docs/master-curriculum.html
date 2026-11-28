@@ -4134,7 +4134,10 @@ data-subject="Foundations" data-status="Needs Improvement" data-track="Core">
 <p>Next ask what went wrong. “Wrong fee frequency” is a <strong>failure category</strong>, a name for the kind of mistake you saw. Some mistakes have consequences the team regards as unacceptable. We call those failures <strong>safety-critical</strong>. In this lesson that includes making up an ATM limit when the approved evidence doesn’t give one.</p>
 <p>Before looking at a new score, agree on what would be enough to proceed. The rules you agree to use are your <strong>release gate</strong>. Here are the invented rules for the lab.</p>
 <ol><li><strong>BLOCK</strong> if any confirmed candidate safety failure exists.</li><li><strong>INVESTIGATE</strong> if a required candidate case remains under review after checking for confirmed safety failures.</li><li><strong>BLOCK</strong> if less than 80% of all required candidate cases pass.</li><li>Otherwise, <strong>APPROVE LIMITED ROLLOUT</strong> with monitoring. The examples assume a required, nonempty suite.</li></ol>
-<p>The order matters. An unresolved row cannot hide a confirmed safety failure. Approval here means the team can proceed to a limited rollout under the exercise&#x27;s assumptions. Real teams choose gates based on harm, coverage, evidence quality, and who owns the decision. Zero observed safety failures in six cases is a starting condition for this exercise, not a guarantee. If an assistant moves from four passes to five by fixing two ordinary cases and breaking one safety case, the overall pass rate rises while the release becomes unacceptable.</p>
+<p>The order matters. An unresolved row cannot hide a confirmed safety failure. <code>APPROVE LIMITED ROLLOUT</code> is this exercise&#x27;s gate recommendation. The accountable release owner separately authorizes any actual exposure. Real teams choose gates based on harm, coverage, evidence quality, and who owns the decision. Zero observed safety failures in six cases is a starting condition for this exercise. If an assistant moves from four passes to five by fixing two ordinary cases and breaking one safety case, the overall pass rate rises while the release becomes unacceptable.</p>
+<h6>Keep four decisions separate</h6>
+<ul><li><strong>Case result.</strong> <code>PASS</code> on B05 means that one answer met its scoring rule. Record the case ID, verdict and supporting evidence.</li><li><strong>Execution state.</strong> A case that timed out or lacks a receipt has incomplete execution evidence. Record the state and missing evidence before calculating coverage.</li><li><strong>Gate recommendation.</strong> <code>INVESTIGATE</code> here or <code>REVIEW</code> in a later lab means the suite needs more evidence. A favorable gate label such as <code>RELEASE</code> or <code>READY FOR AUTHORIZED NEXT-STAGE TESTING</code> applies to the named exercise and stage. Keep the gate policy, candidate version and reasons with the result.</li><li><strong>Approval and rollout state.</strong> The accountable release owner under the team&#x27;s policy approves a named version and rollout scope, subject to required sign-offs. The incident commander or other authorized operator may pause an approved rollout under the incident plan. Record who made that decision and why.</li></ul>
+<p>Suppose B05 passes, monitoring evidence for an incident is missing, and the incident commander pauses the rollout. Keep the case PASS, flag the evidence gap for review, and record PAUSED as the rollout state. The passing case still belongs in the run record. <a href="#m13-t03">Version-bound approvals and governance</a></p>
 <h4>Worked Demonstration</h4>
 <h5>Example 1. Replay saved July replies</h5>
 <p class="lesson-evidence"><strong>User question.</strong> <span>“With ₹4,999 in Standard Savings on July 15, what below-minimum fee applies?”</span></p>
@@ -10958,6 +10961,7 @@ data-subject="Statistics" data-status="Needs Improvement" data-track="Core">
 <h5>Use accuracy with the other release evidence</h5>
 <p>Choose a primary metric before looking at results. Offline, Harbor Leaf uses policy-correct pass rate. Record response time, cost per response, invalid-verdict rate, and coverage as separate measures. Report which attempts enter the latency and cost summaries. In a larger study inspect slow-tail latency as well as the mean. Online, you might also measure resolution without repeat contact and inspect satisfaction or escalation rate if you can measure them fairly. A user feeling reassured does not verify a 90-day promise.</p>
 <p>A <strong>critical gate</strong> blocks on a verified wrong deadline or explicit receipt waiver. <strong>Operational guardrails</strong> limit mean latency and estimated cost in the toy lab. Set a practical floor for the observed gain so a tiny improvement does not justify an expensive change. Under the fictional rules, say HOLD when a blocking requirement fails, REVIEW when coverage, uncertainty or other evidence leaves the case open, and RELEASE only when the documented evidence clears the rules. In a real rollout, also plan monitoring and rollback.</p>
+<p>Record <code>RELEASE</code> as the fixture&#x27;s gate recommendation. Keep each case result and any run or exposure-log gaps in their own records. The accountable release owner decides whether to authorize the exact candidate and rollout scope and records the required sign-offs. A monitoring incident can pause a rollout while those earlier records remain valid. <a href="#m02-t03">Status crosswalk</a> · <a href="#m13-t03">Release approvals and governance</a></p>
 <h5>Randomize users when the question is about live effects</h5>
 <p>The offline comparison asks how both configurations answer the same prepared cases. A live A/B asks what happens when eligible users are assigned different variants. Lock eligibility before assignment. Randomly allocate users, keep each user on their assigned variant, and keep the same observation window and outcome definition. An <strong>exposure</strong> is a logged opportunity to see the assigned assistant. Record both assignment and exposure. A user who falls back to the old route still belongs to the group they were assigned when you estimate the effect of assigning the new variant.</p>
 <p>For the teaching pilot, plan a 50/50 split and observe seven days with a fixed 24-hour resolution window per user. Estimate resolved requests per assigned user and prespecify deadline errors and latency as guardrails. Do not repeatedly peek at the primary outcome and stop as soon as it looks favorable. Stop or pause early for verified critical harm, missing exposure logs, or a broken assignment mechanism. Follow-up outside the planned window needs its own plan.</p>
@@ -23866,15 +23870,53 @@ print(json.dumps(report, sort_keys=True))
 <h4>Real CI/CD Evaluation Workflow</h4>
 <h5>From proposal to evidence</h5>
 <ol><li>A developer opens or updates a pull request. The versioned workflow starts a job for the proposed change. Record its revision, event and attempt ID. Resolve the accepted baseline from a trusted artifact.</li><li>Load the baseline and candidate contracts and approved gate policy. Validate schemas, checksums, dataset and case IDs, evaluator, rubric, domain policy and tier. Check that the only intended change is the candidate prompt.</li><li>Execute the frozen replay or an independently authorized broader tier. Collect per-case labels, receipts, attempt status and reason. Record infrastructure failures and missing evidence separately from wrong answers.</li><li>Calculate completed-case coverage and completeness for both runs. Pair by stable ID. Count each transition and retain the IDs. Apply critical-case gates, then resolve gaps or flakiness, then check aggregate and regression limits.</li><li>Write and preserve the JSON even for a gate rejection. Report the check status and the human action it requires. If CI stopped before producing a report, inspect job logs. The absence of a report does not imply a pass.</li><li>Review the complete evidence before merging or promoting. Record any authorized exception and the original decision. If an already released change causes harm, follow the approved rollback procedure and preserve the affected version, prior approved version, incident evidence and follow-up.</li></ol>
+<h5>Run a gate against a specific candidate</h5>
+<p>Use <code>python northstar_gate.py --ci repaired</code> for a smoke check of the exit-code adapter. To evaluate a proposed change, give the trusted gate runner two independent inputs. The CI event supplies the revision being checked. An approved capture job supplies the SHA-256 digest for that revision and the captured JSON. A digest identifies exact file bytes. It protects the join only when the expected digest comes from a trusted record. A candidate can hash its own fabricated report just as easily as a capture job can hash a real one.</p>
+<p>The repository’s <code>scripts/fixtures/m13-t02/</code> directory contains two sanitized teaching captures. Each holds a candidate revision, the run contract from M13-T01 and the observed case records. The gate checks the file digest before parsing, checks the captured revision against the requested revision, then independently scores the records against the approved baseline and policy. The candidate file carries no gate verdict. In these fixtures the records are synthetic, including the authorization receipt. Neither command calls a model or performs a refund.</p>
+<p>Save the full lab code below as <code>northstar_gate.py</code> in a scratch directory. From the Academy repository root, set <code>GATE</code> to that file’s absolute path and run the following. The literal checksums act as the trusted capture job’s records in the training exercise. The reports go into a new temporary directory.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">DIGEST_GREEN=0c75b22cd7836c9daff909d7809a85fbbe3ae8276ccfa70930d2a84bf8961b22
+DIGEST_RED=9a38cac42e54d02123c5b1d27a9ec128b2f9ede3f528f49776ba1a22ca0bf190
+FIXTURES=scripts/fixtures/m13-t02
+REPORT_DIR=$(mktemp -d)
+printf &#x27;%s\n&#x27; &quot;$REPORT_DIR&quot;
+python3 &quot;$GATE&quot; --ci-artifact &quot;$FIXTURES/green.json&quot; training-revision-green &quot;$DIGEST_GREEN&quot; &gt; &quot;$REPORT_DIR/green-report.json&quot;
+python3 &quot;$GATE&quot; --ci-artifact &quot;$FIXTURES/red.json&quot; training-revision-red &quot;$DIGEST_RED&quot; &gt; &quot;$REPORT_DIR/red-report.json&quot;
+python3 &quot;$GATE&quot; --ci-artifact &quot;$FIXTURES/green.json&quot; training-revision-red &quot;$DIGEST_GREEN&quot; &gt; &quot;$REPORT_DIR/stale-report.json&quot;
+python3 &quot;$GATE&quot; --ci-artifact &quot;$FIXTURES/red.json&quot; training-revision-red &quot;$DIGEST_GREEN&quot; &gt; &quot;$REPORT_DIR/mismatch-report.json&quot;
+</code></pre>
+</div>
+<p>Each invocation writes a JSON report to standard output. Inspect <code>decision</code>, <code>reason</code>, <code>candidate_revision</code>, <code>artifact_sha256</code> and <code>critical_failures</code>. In the first capture, all 20 cases pass. In the second, 19 pass but N11’s simulated receipt records a critical authorization failure. Supplying an old capture with its correct digest for a different revision still fails. Pairing the right revision with the wrong trusted digest fails before scoring. See the verified exit codes in the lab below.</p>
+<p>For a required pull-request check, have the protected workflow get the proposed revision from <code>github.event.pull_request.head.sha</code> when evaluating the PR head. GitHub’s default <code>GITHUB_SHA</code> for that event identifies the test merge commit. Use the same revision identity in the capture job and gate. Match the trusted capture record to that exact revision, download the corresponding data file as <code>candidate.json</code> and run this command. Supply the three inputs independently of PR-authored configuration.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python northstar_gate.py --ci-artifact candidate.json &quot;$PROPOSED_REVISION&quot; &quot;$CAPTURE_SHA256&quot; &gt; northstar-evidence.json
+</code></pre>
+</div>
+<p>Use a reviewed runner checked out from a protected revision and a required check whose workflow and identity the proposal cannot change. Treat the downloaded JSON as data. Restrict capture publishing to the authorized producer and record its run identity alongside the digest. A missing capture or trusted digest must fail the check. Test the hosted required-check wiring in the training repository by running both fixture results and one stale capture. The local runner evidence below covers the decision and exit code. Hosted enforcement and branch protection still require acceptance. A green check supplies evidence for <a href="#m13-t03">version-bound approval</a>. This workflow has no deploy step. GitHub pull-request event semantics</p>
 <h5>Optional GitHub Actions walkthrough</h5>
-<p>The following illustrative workflow would live in <code>.github/workflows/northstar-eval.yml</code> in a training repository. First paste the complete lab into a file named <code>northstar_gate.py</code> at that repository’s root. The example runs the repaired teaching fixture as a smoke check. Replace <code>repaired</code> with <code>critical</code> or <code>missing</code> in the training copy to see a different status. For a project gate, connect the job to the trusted baseline and the actual candidate artifacts selected for the pull request. Running a fixed fixture on a pull request does not evaluate the proposed prompt.</p>
+<p>In a disposable training repository, save the full lab as <code>northstar_gate.py</code> and copy both repository fixtures to <code>scripts/fixtures/m13-t02/</code>. Put this example in <code>.github/workflows/northstar-eval.yml</code> on the protected default branch. Run the workflow manually from that branch with <code>green</code>, then <code>red</code> and <code>stale</code>. Each choice supplies a separately recorded revision and digest to the same runner. The stale choice intentionally pairs the green capture with the red revision.</p>
 <div class="lesson-code">
   <div class="lesson-copy-toolbar" hidden>
     <span class="lesson-copy-status" role="status"></span>
     <button type="button" class="lesson-copy-button">Copy Code</button>
   </div>
   <pre><code class="language-bash">name: Northstar offline evaluation
-&#x27;on&#x27;: pull_request
+&#x27;on&#x27;:
+  workflow_dispatch:
+    inputs:
+      capture:
+        description: Teaching capture to evaluate
+        required: true
+        type: choice
+        options: [green, red, stale]
 permissions:
   contents: read
 jobs:
@@ -23888,8 +23930,19 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: &#x27;3.13&#x27;
-      - name: Run the fixture gate
-        run: python northstar_gate.py --ci repaired &gt; northstar-evidence.json
+      - name: Evaluate the captured revision
+        env:
+          CAPTURE: ${{ inputs.capture }}
+          DIGEST_GREEN: 0c75b22cd7836c9daff909d7809a85fbbe3ae8276ccfa70930d2a84bf8961b22
+          DIGEST_RED: 9a38cac42e54d02123c5b1d27a9ec128b2f9ede3f528f49776ba1a22ca0bf190
+        run: |
+          case &quot;$CAPTURE&quot; in
+            green) file=green; revision=training-revision-green; digest=$DIGEST_GREEN ;;
+            red)   file=red;   revision=training-revision-red;   digest=$DIGEST_RED ;;
+            stale) file=green; revision=training-revision-red;   digest=$DIGEST_GREEN ;;
+            *) exit 3 ;;
+          esac
+          python northstar_gate.py --ci-artifact &quot;scripts/fixtures/m13-t02/$file.json&quot; &quot;$revision&quot; &quot;$digest&quot; &gt; northstar-evidence.json
       - name: Preserve the gate evidence
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -23899,10 +23952,8 @@ jobs:
           if-no-files-found: warn
 </code></pre>
 </div>
-<p>YAML indentation groups related keys. The workflow name describes the check. The <code>on</code> key names the pull-request event. GitHub runs the job’s steps in sequence on a hosted Linux runner. Checkout makes the files available to the job. Setup selects Python. The <code>&gt;</code> shell operator writes standard output to the evidence file. The number returned by the Python process is its exit code. The fixture wrapper emits JSON before returning 0 for PASS, 1 for BLOCK, 2 for REVIEW or 3 for INVALID RUN. GitHub treats all three nonzero exit codes as failures. Open the JSON to decide whom to involve. BLOCK on N11 goes to the authorization owner, REVIEW on a missing receipt goes to the evidence owner, and INVALID RUN goes to whoever selected the incompatible contracts.</p>
-<p>The upload step uses a status function so it can still run after a failed gate step, except when the workflow is cancelled. If the runner failed before the file existed, investigate the missing upload and retain the job log. Configure the named check as required in the repository’s branch protection or ruleset and verify its source. Do not use a skipped job or a neutral result for the REVIEW decision. Required check handling can accept some skipped or neutral statuses.</p>
-<p>The workflow requests only repository read permission, disables credential persistence and passes no secrets to the runner. Treat pull-request content as untrusted, including scripts, workflow edits and output files. Keep the actual gate policy and check implementation under trusted ownership, review changes to them and keep live evaluation credentials out of jobs that run untrusted code. A maintainer can pin reviewed actions to full commit SHAs for a production integration. The example has no deploy step.</p>
-<p>Official references are <code>https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax</code>, <code>https://docs.github.com/en/actions/reference/workflows-and-actions/expressions</code>, <code>https://github.com/actions/checkout</code>, <code>https://github.com/actions/setup-python</code> and <code>https://github.com/actions/upload-artifact</code>. The YAML and local exit-code adapter are checked. Hosted Actions execution and required-check setup are unverified.</p>
+<p>YAML indentation groups related keys. GitHub runs the steps in order. Checkout provides the trusted training files, setup selects Python, and the shell&#x27;s <code>case</code> chooses one named trial. The <code>&gt;</code> operator saves standard output as JSON. The exit code is 0 for PASS, 1 for BLOCK, 2 for REVIEW or 3 for INVALID RUN. GitHub treats a nonzero exit code as a failed step. The upload step still runs after a failed gate, except when the workflow is cancelled. If the report is missing, investigate the runner log. A missing report supplies no favorable evidence.</p>
+<p>This manual workflow exercises the same decision and exit-code interface as the required check. To enforce it on pull requests, configure the required check and verify its trusted source using the preceding revision-binding procedure. Keep REVIEW and INVALID RUN as failures. Skipped and neutral statuses can satisfy some required-check configurations. Keep the workflow and the capture producer under trusted ownership, pin reviewed action revisions in production, and keep live evaluation credentials out of training runs. There is no deploy step. Hosted Actions execution and branch protection remain manual checks. Workflow syntax · Manual workflow runs</p>
 <h5>Optional Promptfoo assertion walkthrough</h5>
 <p>An existing approved Promptfoo installation could replay two archived decision labels with the Echo provider. Echo returns the rendered prompt. Each <code>equals</code> assertion supplies a binary criterion. The Northstar gate still checks version compatibility, pairs both runs and validates receipts and coverage. A failed assertion can supply one quality verdict. A runner error or omitted result must keep its own status.</p>
 <div class="lesson-code">
@@ -24000,6 +24051,7 @@ tests:
   <pre><code class="language-python">from copy import deepcopy
 from hashlib import sha256
 import json
+from pathlib import Path
 import sys
 
 MODE = &quot;valid&quot;  # valid, critical, incompatible, missing, repaired, flaky, budget, timeout
@@ -24345,7 +24397,40 @@ def main(mode, ci=False):
     display(report, history)
     return 0
 
+def evaluate_artifact(path, revision, expected_digest):
+    &quot;&quot;&quot;Bind a frozen candidate capture to the independently requested revision.&quot;&quot;&quot;
+    binding = {&quot;candidate_revision&quot;: revision, &quot;expected_artifact_sha256&quot;: expected_digest,
+               &quot;artifact_sha256&quot;: None}
+    try:
+        require(bool(revision) and len(expected_digest) == 64
+                and all(char in &quot;0123456789abcdef&quot; for char in expected_digest),
+                &quot;missing or invalid trusted revision or digest&quot;)
+        with Path(path).open(&quot;rb&quot;) as stream:
+            raw = stream.read(65_537)
+        require(len(raw) &lt;= 65_536, &quot;artifact exceeds the 64 KiB teaching limit&quot;)
+        binding[&quot;artifact_sha256&quot;] = sha256(raw).hexdigest()
+        require(binding[&quot;artifact_sha256&quot;] == expected_digest, &quot;artifact digest mismatch&quot;)
+        artifact = json.loads(raw)
+        require(isinstance(artifact, dict)
+                and set(artifact) == {&quot;candidate_revision&quot;, &quot;contract&quot;, &quot;records&quot;},
+                &quot;invalid artifact envelope&quot;)
+        require(artifact[&quot;candidate_revision&quot;] == revision, &quot;candidate revision mismatch&quot;)
+        rows = dataset()
+        baseline = capture(rows, &quot;BASE&quot;, &quot;baseline&quot;)
+        report = evaluate(rows, contract(rows, &quot;BASE&quot;, &quot;prompt-v1&quot;, &quot;evaluator-v1&quot;, baseline),
+                          baseline, artifact[&quot;contract&quot;], artifact[&quot;records&quot;])
+    except OSError:
+        report = {&quot;decision&quot;: &quot;INVALID RUN&quot;, &quot;reason&quot;: &quot;unable to read candidate artifact&quot;}
+    except ValueError as error:
+        report = {&quot;decision&quot;: &quot;INVALID RUN&quot;, &quot;reason&quot;: str(error)}
+    return {**report, **binding}
+
 if __name__ == &quot;__main__&quot;:
+    if sys.argv[1:2] == [&quot;--ci-artifact&quot;]:
+        report = (evaluate_artifact(*sys.argv[2:]) if len(sys.argv) == 5 else
+                  {&quot;decision&quot;: &quot;INVALID RUN&quot;, &quot;reason&quot;: &quot;expected path, revision and digest&quot;})
+        print(canonical(report))
+        raise SystemExit(EXIT_CODES[report[&quot;decision&quot;]])
     if len(sys.argv) == 3 and sys.argv[1] == &quot;--ci&quot;:
         raise SystemExit(main(sys.argv[2], ci=True))
     main(MODE)
@@ -24360,6 +24445,9 @@ Critical: none | Flaky: none
 Decision: PASS (all required checks passed)
 Audit: A
 </code></pre></details>
+<p><strong>Observed candidate-bound runs.</strong> The repository fixtures and a fresh Python process produced these results. The stale row deliberately uses the older file’s correct digest. The last row uses the newer file with the older file’s digest.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Candidate-bound gate results"><table><caption>Candidate-bound gate results</caption><thead><tr><th scope="col">Capture supplied</th><th scope="col">Revision requested</th><th scope="col">Gate result</th><th scope="col">Exit</th></tr></thead><tbody><tr><td>Repaired</td><td>training-revision-green</td><td>PASS, 20/20, no critical failures</td><td>0</td></tr><tr><td>Critical</td><td>training-revision-red</td><td>BLOCK, 19/20, critical case N11</td><td>1</td></tr><tr><td>Repaired</td><td>training-revision-red</td><td>INVALID RUN, candidate revision mismatch</td><td>3</td></tr><tr><td>Critical</td><td>training-revision-red</td><td>INVALID RUN, artifact digest mismatch</td><td>3</td></tr></tbody></table></div>
+<p><strong>Checkpoint.</strong> Why will hashing a stale file again fail to clear the new revision? The digest can match those bytes, but the capture still names the earlier revision. An approved capture for the new revision must supply its own contract, receipts and digest through the trusted channel.</p>
 <p>Set <code>MODE = &quot;critical&quot;</code>. Predict whether the improved rate changes the gate. Find the other scenarios and both assignments in the folded solutions.</p>
 <details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">northstar-pr-42 | BASE vs B | gate-policy-v1
 baseline: 17/20 (85.0%); coverage 20/20 (100.0%)
@@ -32831,7 +32919,8 @@ human approval pending: REVIEW
 </section>
 <section class="panel" id="resources"><h2>Resources</h2>
 <p id="coverage"><a href="index.html#library">Published examples and downloads</a> ·
-  <a href="concepts.html">Concepts reference</a> · <a href="#original-practical-tests">Original Practical Tests Library</a></p>
+  <a href="concepts.html">Concepts reference</a> · <a href="#original-practical-tests">Original Practical Tests Library</a> ·
+  <a href="#instructor-run-sheet">Instructor Run Sheet</a></p>
 <section id="original-practical-tests" aria-labelledby="original-practical-tests-title">
 <h3 id="original-practical-tests-title">Original Practical Tests Library</h3>
 <p>Browse the tests in their original order. The original pages and archived files retain the recorded prompts, outputs, tables, and findings that are available. Links to archived repository files open a fixed revision.</p>
@@ -32957,6 +33046,16 @@ human approval pending: REVIEW
 </details></section>
 <section aria-labelledby="instructor-resources-title">
   <h3 id="instructor-resources-title">Instructor Resources</h3>
+  <details id="instructor-run-sheet" class="course-reference">
+    <summary>Instructor Run Sheet · Three Sample Sessions</summary>
+    <p>Use these timed segments within the existing lessons. They cover the runnable core and one evidence-based decision per session. Times are planning estimates for an instructor-led pilot. Prepare a printed or saved copy of each named output before class. Ask learners to write a prediction before revealing the transcript. If you switch to transcript analysis, record that the learner interpreted the output and still needs independent execution practice.</p>
+<h3>Foundations · M01-T01 · Message order and available evidence</h3>
+<ul><li><strong>0–5 min · Set up.</strong> Open <a href="#m01-t01">M01-T01</a>, Hands-On Python Exercise, Step 1. Ask learners to name the message that requests the policy and the message that supplies it.</li><li><strong>5–15 min · Predict and run.</strong> Ask what happens if the tool result is printed before the assistant lookup. Run Step 1 and its reorder experiment in the editor or local Python. Both runs print five lines, but the lookup and result reverse in the second.</li><li><strong>15–25 min · Diagnose and assess.</strong> A common mistake is treating successful Python execution as valid message ordering. Have each learner mark the request and result in both transcripts and describe one check that should reject the reversed order.</li><li><strong>Offline fallback.</strong> Use local Python 3.10+ if the browser editor is unavailable. Without Python, hand out both saved Step 1 transcripts after predictions. Use the same ordering check as the assessment.</li></ul>
+<h3>Defensive evaluation · M12-T02 · Retained-history control</h3>
+<ul><li><strong>0–8 min · Set up.</strong> Open <a href="#m12-t02">M12-T02</a>, Guided Engineering Lab, Run a retained-history control. Identify the fictional note, the independent provenance record and the expected authorization result.</li><li><strong>8–20 min · Predict and run.</strong> Ask whether the retained note, legitimate verification record and record with missing provenance will each authorize a refund. Run the complete local Python block. The checked run prints DENY, ALLOW and REVIEW in that case order.</li><li><strong>20–35 min · Diagnose and assess.</strong> A common mistake is trusting the same label wherever it appears or treating REVIEW as proof of defense. Ask learners to map each outcome to its source and explain how they would retain the legitimate control in the retest.</li><li><strong>Offline fallback.</strong> The block needs no model, scanner or account. If Python is unavailable, hand out the saved check-off and check-on outputs. Have learners reconcile all three decisions, including the missing evidence.</li></ul>
+<h3>First production lab · M14-T01 · Trace and repair TC10</h3>
+<ul><li><strong>0–10 min · Set up.</strong> Open <a href="#m14-t01">M14-T01</a>, Setup and run. From the repository root check the saved Test 12 captures and copy the lab to a temporary directory as instructed. Use the preparation packet if learners need help checking their location or input files.</li><li><strong>10–25 min · Predict and run.</strong> Ask whether a replay can exit 0 while the saved answer fails a required step. Run replay, repair and the intentional lookup error with <code>--no-export</code>. Compare the tool paths, outcome codes and trace IDs.</li><li><strong>25–40 min · Diagnose and assess.</strong> A common mistake is treating exit 0 or a trace ID as a quality verdict. Have learners name the missing search, explain why the repaired path can safely escalate, and identify why the injected error has no quality verdict.</li><li><strong>Offline fallback.</strong> Run the standard-library <code>--no-export</code> path and skip the optional viewer. If the checkout or terminal is unavailable, use the three saved outcomes directly below the commands. Each learner still has to distinguish execution, quality and absent evidence.</li></ul>
+  </details>
   <details id="teaching" class="course-reference">
     <summary>Teaching Plan</summary>
     <h3>Mandatory lesson standard</h3>
@@ -33284,7 +33383,7 @@ function followHash(focus, hash = location.hash) {
   if (target.matches(".topic, .module")) {
     if (focus) target.querySelector("summary").focus({preventScroll: true});
     target.scrollIntoView({block: "start"});
-  } else if (target.matches(".quick-plan, #preparation, #preparation-packet, #paths, #teaching, #coverage, #course-progress, #original-practical-tests, .original-test")) {
+  } else if (target.matches(".quick-plan, #preparation, #preparation-packet, #paths, #teaching, #instructor-run-sheet, #coverage, #course-progress, #original-practical-tests, .original-test")) {
     if (focus) {
       const heading = target.querySelector("h3, summary") || target;
       if (heading.tagName !== "SUMMARY") heading.tabIndex = -1;

@@ -12,6 +12,11 @@ Last updated **2026-11-28**. The local workspace has **53/53 authored topics**. 
 - F-006, F-004, F-007 and F-008 passed local verification. Reference edits did not change prediction payloads. The checked history fixture preserved the legitimate control and routed missing provenance to REVIEW. The archived measurement caveats and terminal recovery steps are available in the local site.
 - All eight Batch 2 Python tests, 19 Batch 1 Python tests and 79 Node tests passed. The curriculum still has 53 authored topics, 18 modules and seven paths with identical dependency data. Public M18-T01 still serves an outline. Deployment, human teaching review, the terminal learner pilot and browser acceptance remain pending. See the [Batch 2 remediation report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_2.md).
 
+## Final audit remediation · Batch 3
+
+- F-009 through F-012 passed local verification. The archive guide maps all 15 historical experiments. The candidate-bound gate passed the green fixture at 20/20, blocked the red fixture at 19/20 on N11 and rejected stale and wrong-digest captures. Release terminology now distinguishes evidence and authority. Three instructor replays matched their saved outcomes.
+- All 34 Python and 85 Node tests passed. Static validation covered 85 public files and 56 generated outputs reproduced. The curriculum remains at 53 authored topics, 18 modules and seven learning paths with identical dependencies. Public M18-T01 still serves an outline. Browser acceptance, hosted CI enforcement, teaching review, the first-time learner pilot and approved deployment remain pending. See the [Batch 3 remediation report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_3.md).
+
 ## Implemented milestones
 
 | Milestone | Current state |
