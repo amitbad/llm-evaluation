@@ -22,6 +22,8 @@ const CurriculumRoadmap = (() => {
   const CARD = 258;
   const STEP = 310;
   const CARD_HEIGHT = 82;
+  const STAGE_HEIGHT = 34;
+  const ROW_GAP = 17;
 
   function xml(value) {
     return String(value).replace(/[&<>"']/g, char => ({
@@ -122,6 +124,24 @@ const CurriculumRoadmap = (() => {
     return rows;
   }
 
+  function spacing(columns, rows, contentHeight, size) {
+    const inset = 34;
+    const gap = STEP - CARD;
+    const stageSpace = 68;
+    const baseWidth = 2 * inset + columns * CARD + (columns - 1) * gap;
+    const baseHeight = inset + stageSpace + contentHeight;
+    const unit = size ? Math.max(.5, Math.min(size.width / baseWidth, size.height / baseHeight)) : 1;
+    const extraWidth = size ? Math.max(0, size.width - baseWidth * unit) : 0;
+    // Put spare width into both cards and connector gutters when height limits the fit.
+    const card = CARD * unit + extraWidth * .65 / columns;
+    const columnGap = gap * unit + extraWidth * .35 / Math.max(1, columns - 1);
+    const extraHeight = size ? Math.max(0, size.height - baseHeight * unit) : 0;
+    return {
+      unit, card, columnGap, inset: inset * unit, stageSpace: stageSpace * unit,
+      rowGap: ROW_GAP * unit + extraHeight / Math.max(1, rows - 1),
+    };
+  }
+
   function graph(data, options) {
     const {mode, selection, focus, optional, exportPath, title, exporting} = options;
     const markerPrefix = options.markerPrefix || "road-arrow-";
@@ -149,8 +169,11 @@ const CurriculumRoadmap = (() => {
         mark(direct[direction].filter(edge => edge.kind === "mandatory").map(edge => edge[endpoint]), label, color);
         mark(indirect[direction], "Indirect " + label.toLowerCase(), color);
       }
-      mark(direct.upstream.filter(edge => edge.kind !== "mandatory").map(edge => edge.from), "Optional link", linkStyles.recommended.color);
-      mark(direct.downstream.filter(edge => edge.kind !== "mandatory").map(edge => edge.to), "Optional link", linkStyles.recommended.color);
+      for (const kind of ["conditional", "recommended"]) {
+        const label = kind === "conditional" ? "Conditional link" : "Optional link";
+        mark(direct.upstream.filter(edge => edge.kind === kind).map(edge => edge.from), label, linkStyles[kind].color);
+        mark(direct.downstream.filter(edge => edge.kind === kind).map(edge => edge.to), label, linkStyles[kind].color);
+      }
     }
     const optionalNeighbors = new Set(optional && !exportPath ? (selection?.recommended || []).map(asNode) : []);
     if (focus && optional && !selection?.recommended) {
@@ -161,25 +184,39 @@ const CurriculumRoadmap = (() => {
         }
       }
     }
-    const shown = items.filter(item => selectedModule || !selection || (!focus && !exportPath) || chain.has(item.id) ||
+    const shown = items.filter(item => (!topicMode && !exportPath) || !selection || (!focus && !exportPath) || chain.has(item.id) ||
       (!exportPath && (next.has(item.id) || optionalNeighbors.has(item.id))));
     const groups = data.stages.map((_, index) => shown.filter(item => item.stage === index));
     const columns = groups.map((group, index) => [index, group]).filter(([, group]) => group.length);
-    const width = Math.max(930, columns.length * STEP + 46);
-    const header = 188;
+    const labels = new Map(shown.map(item => {
+      const label = lines(item.title, 30);
+      return [item.id, {label, height: Math.max(CARD_HEIGHT, 40 + label.length * 18)}];
+    }));
+    const rows = Math.max(1, ...columns.map(([, group]) => group.length));
+    // Compute the vertical budget from each complete column's wrapped card heights.
+    const contentHeight = Math.max(0, ...columns.map(([, group]) => group.reduce((sum, item) =>
+      sum + labels.get(item.id).height, 0) + (group.length - 1) * ROW_GAP));
+    const geometry = spacing(Math.max(1, columns.length), rows, contentHeight,
+      !topicMode && !exporting ? options.size : null);
+    const {unit, card: cardWidth, columnGap, stageSpace, rowGap, inset} = geometry;
+    const step = cardWidth + columnGap;
+    const width = Math.ceil(Math.max(exporting ? 930 : 0, inset * 2 + columns.length * step - columnGap));
+    // Branding and the legend are HTML in the live view. Exported images carry their own header.
+    const header = exporting ? 188 : 12 * unit;
     const positions = new Map();
-    let lastY = header + 55;
+    let lastY = header + stageSpace;
     const stageLabels = [];
     const groupLabels = [];
     columns.forEach(([stage, group], col) => {
-      const x = 26 + col * STEP;
+      const x = inset + col * step;
       const palette = stageColors[stage];
       stageLabels.push(
-        '<rect x="' + x + '" y="' + header + '" width="' + CARD + '" height="34" rx="9" fill="' + palette.fill + '"/>' +
-        '<text x="' + (x + 13) + '" y="' + (header + 22) + '" fill="' + palette.ink +
-        '" font-size="15" font-weight="700">' + xml(data.stages[stage]) + '</text>'
+        '<rect x="' + x + '" y="' + header + '" width="' + cardWidth + '" height="' + STAGE_HEIGHT * unit +
+        '" rx="' + 9 * unit + '" fill="' + palette.fill + '"/>' +
+        '<text x="' + (x + 13 * unit) + '" y="' + (header + 22 * unit) + '" fill="' + palette.ink +
+        '" font-size="' + 15 * unit + '" font-weight="700">' + xml(data.stages[stage]) + '</text>'
       );
-      let y = header + 68;
+      let y = header + stageSpace;
       let previousModule;
       group.forEach(item => {
         if (topicMode && previousModule !== item.module) {
@@ -188,12 +225,12 @@ const CurriculumRoadmap = (() => {
           previousModule = item.module;
           y += 21;
         }
-        const label = lines(item.title, 30);
-        const height = Math.max(CARD_HEIGHT, 40 + label.length * 18);
+        const label = labels.get(item.id).label;
+        const height = labels.get(item.id).height * unit;
         positions.set(item.id, {x, y, col, label, height});
-        y += height + 17;
+        y += height + rowGap;
       });
-      lastY = Math.max(lastY, y);
+      lastY = Math.max(lastY, y - rowGap);
     });
 
     links = links.filter(edge => positions.has(edge.from) && positions.has(edge.to));
@@ -214,7 +251,7 @@ const CurriculumRoadmap = (() => {
       for (const group of ports.values()) {
         group.sort((a, b) => positions.get(a.other).y - positions.get(b.other).y ||
           kinds.indexOf(a.edge.kind) - kinds.indexOf(b.edge.kind));
-        const step = Math.min(8, 50 / group.length);
+        const step = Math.min(8, 50 / group.length) * unit;
         group.forEach(({edge, end}, i) => { offsets.get(edge)[end] = (i - (group.length - 1) / 2) * step; });
       }
     }
@@ -222,26 +259,29 @@ const CurriculumRoadmap = (() => {
     function line(edge, index) {
       const a = positions.get(edge.from);
       const b = positions.get(edge.to);
-      const left = a.x + CARD;
+      const left = a.x + cardWidth;
       const optionShift = kinds.indexOf(edge.kind) * 4;
       const {start = optionShift, end = optionShift} = offsets.get(edge);
       const y1 = a.y + a.height / 2 + start;
       const y2 = b.y + b.height / 2 + end;
       const sameColumn = a.col === b.col;
       const reversed = a.col > b.col;
-      const dest = sameColumn || reversed ? b.x + CARD + 3 : b.x - 3;
+      const dest = sameColumn || reversed ? b.x + cardWidth + 3 * unit : b.x - 3 * unit;
+      const gutterStep = columnGap / 13;
       let d;
       if (sameColumn) {
-        const gutter = left + 10 + (index % 6) * 4;
-        d = ["M", left, y1, "C", gutter, y1, gutter, y1, gutter, y1 + Math.sign(y2 - y1) * 7,
-          "L", gutter, y2 - Math.sign(y2 - y1) * 7, "Q", gutter, y2, dest, y2].join(" ");
+        const gutter = left + Math.min(inset - 3 * unit, (2 + index % 6) * gutterStep);
+        const bend = Math.sign(y2 - y1) * 7 * unit;
+        d = ["M", left, y1, "C", gutter, y1, gutter, y1, gutter, y1 + bend,
+          "L", gutter, y2 - bend, "Q", gutter, y2, dest, y2].join(" ");
       } else if (!reversed && b.col === a.col + 1) {
         const midpoint = (left + dest) / 2 + optionShift;
         d = ["M", left, y1, "C", midpoint, y1, midpoint, y2, dest, y2].join(" ");
       } else {
-        const exit = left + 9 + index % 5 * 4;
-        const entry = reversed ? dest + 10 + index % 5 * 4 : dest - 7 - index % 5 * 4;
-        const lane = topicMode ? header + 39 + index % 5 * 4 : header + 37 + index % 11 * 2.5;
+        const jog = Math.min(inset - 5 * unit, (2 + index % 5) * gutterStep);
+        const exit = left + jog;
+        const entry = reversed ? dest + jog : dest - jog;
+        const lane = header + (topicMode ? 39 + index % 5 * 4 : 37 + index % 11 * 2.5) * unit;
         d = ["M", left, y1, "L", exit, y1, "L", exit, lane, "L", entry, lane, "L", entry, y2, "L", dest, y2].join(" ");
       }
       const style = linkStyles[edge.kind];
@@ -264,7 +304,7 @@ const CurriculumRoadmap = (() => {
         const color = relation === "downstream" ? downstreamColor : style.color;
         const opacity = emphasis ? 1 : moduleFocus ? .2 : .81;
         return {emphasis, markup: '<path' + attributes + ' data-relation="' + relation + '" d="' + d + '" fill="none" stroke="' +
-          color + '" stroke-width="' + (emphasis === 2 ? 3.1 : emphasis ? 2.2 : 1.6) +
+          color + '" stroke-width="' + (emphasis === 2 ? 3.1 : emphasis ? 2.2 : 1.6) * unit +
           '" opacity="' + opacity + '" stroke-dasharray="' + style.dash +
           '" marker-end="url(#' + markerPrefix + marker + ')"/>'};
       }
@@ -272,7 +312,7 @@ const CurriculumRoadmap = (() => {
       const relevant = !selection || required || (goals.has(edge.from) && next.has(edge.to)) ||
         (edge.kind !== "mandatory" && (goals.has(edge.from) || goals.has(edge.to) ||
           (optionalNeighbors.has(edge.from) && chain.has(edge.to))));
-      return {emphasis: 0, markup: '<path' + attributes + ' d="' + d + '" fill="none" stroke="' + style.color + '" stroke-width="' + (required ? 2.6 : 1.6) +
+      return {emphasis: 0, markup: '<path' + attributes + ' d="' + d + '" fill="none" stroke="' + style.color + '" stroke-width="' + (required ? 2.6 : 1.6) * unit +
         '" opacity="' + (relevant ? (exporting ? 0.93 : 0.81) : 0.18) + '" stroke-dasharray="' + style.dash +
         '" marker-end="url(#' + markerPrefix + edge.kind + ')"/>'};
     }
@@ -293,16 +333,18 @@ const CurriculumRoadmap = (() => {
       const border = current ? "#102c4a" : selectedModule ? relative?.color || palette.ink :
         prerequisite ? "#2d6496" : recommended ? "#66448c" : unlock ? "#26805d" : palette.ink;
       const aria = item.id + " " + item.title + ", " + roadmapDuration(item.hours) + (treatment ? ", " + treatment : "");
-      const labelLines = label.map((row, i) => '<tspan x="' + (x + 14) + '" y="' +
-        (y + 45 + i * 18) + '">' + xml(row) + '</tspan>').join("");
+      const labelLines = label.map((row, i) => '<tspan x="' + (x + 14 * unit) + '" y="' +
+        (y + (45 + i * 18) * unit) + '">' + xml(row) + '</tspan>').join("");
       const card = '<g><rect x="' + x + '" y="' + y +
-        '" width="' + CARD + '" height="' + height + '" rx="10" fill="' + (dim ? "#f1f4f7" : palette.fill) +
-        '" stroke="' + (dim ? "#8996a3" : border) + '" stroke-width="' + (current ? 3.5 : treatment ? 2.4 : 1) +
+        '" width="' + cardWidth + '" height="' + height + '" rx="' + 10 * unit + '" fill="' + (dim ? "#f1f4f7" : palette.fill) +
+        '" stroke="' + (dim ? "#8996a3" : border) + '" stroke-width="' + (current ? 3.5 : treatment ? 2.4 : 1) * unit +
         ((selectedModule ? relative?.label === "Optional link" : recommended) ? '" stroke-dasharray="6 4' : '') +
-        '"/><text x="' + (x + 14) + '" y="' + (y + 19) +
-        '" font-size="12" font-weight="700" fill="' + palette.ink + '">' + item.id + " · " + roadmapDuration(item.hours) +
-        '</text><text x="' + (x + CARD - 13) + '" y="' + (y + 19) + '" text-anchor="end" font-size="12" fill="' +
-        border + '" font-weight="700">' + treatment + '</text><text font-size="15" fill="#172e42" font-weight="700">' +
+        (relative?.label === "Conditional link" ? '" stroke-dasharray="2 5' : '') +
+        '"/><text x="' + (x + 14 * unit) + '" y="' + (y + 19 * unit) +
+        '" font-size="' + 12 * unit + '" font-weight="700" fill="' + palette.ink + '">' + item.id + " · " + roadmapDuration(item.hours) +
+        '</text><text x="' + (x + cardWidth - 13 * unit) + '" y="' + (y + 19 * unit) +
+        '" text-anchor="end" font-size="' + 12 * unit + '" fill="' +
+        border + '" font-weight="700">' + treatment + '</text><text font-size="' + 15 * unit + '" fill="#172e42" font-weight="700">' +
         labelLines + "</text></g>";
       if (exporting) return card;
       return '<a href="#' + item.id.toLowerCase() + '" role="button" tabindex="0" aria-label="' + xml(aria) +
@@ -330,7 +372,7 @@ const CurriculumRoadmap = (() => {
     const subtitle = "Curriculum revision " + data.revision + " · " + (exportPath
       ? selection.closure.length + " topics · " + roadmapDuration(selection.total) + " learner time · Mandatory study only"
       : shown.length + (topicMode ? " topics" : " modules") + (topicMode ? " · Topic dependency links" : " · Overview of links between modules"));
-    const height = lastY + 15;
+    const height = Math.ceil(lastY + (exporting ? 28 : inset - header));
     const logo = data.brandIcon ? '<image href="' + xml(data.brandIcon) + '" x="30" y="12" width="35" height="35"/>' : "";
     const brand = logo + '<text x="' + (logo ? 75 : 30) +
       '" y="35" font-size="15" font-weight="700" fill="#2451a6">TestNeural LLM Academy</text>' +
@@ -346,7 +388,7 @@ const CurriculumRoadmap = (() => {
     const bounds = directCards.length ? {
       left: Math.min(...directCards.map(card => card.x)),
       top: Math.min(...directCards.map(card => card.y)),
-      right: Math.max(...directCards.map(card => card.x + CARD)),
+      right: Math.max(...directCards.map(card => card.x + cardWidth)),
       bottom: Math.max(...directCards.map(card => card.y + card.height)),
     } : null;
     return {
@@ -356,8 +398,9 @@ const CurriculumRoadmap = (() => {
         '" aria-label="' + xml(title || "Learning dependency roadmap") +
         '" font-family="system-ui, sans-serif"><title>' + xml(title || "Learning dependency roadmap") +
         '</title><desc>Arrows point from prerequisite to dependent topic or module. ' + xml(subtitle) + '</desc><defs>' +
-        markers + '</defs><rect width="100%" height="100%" fill="#f8fafc"/>' + headerText + paletteLegend +
-        arrowLegend + stageLabels.join("") + groupLabels.join("") + connectors + cards + '</svg>',
+        markers + '</defs><rect width="100%" height="100%" fill="#f8fafc"/>' +
+        (exporting ? headerText + paletteLegend + arrowLegend : "") +
+        stageLabels.join("") + groupLabels.join("") + connectors + cards + '</svg>',
     };
   }
 
@@ -404,7 +447,7 @@ const CurriculumRoadmap = (() => {
     return source.replace(/<html\b[^>]*>/i, '<html lang="en" data-initial-tab="' + xml(view) + '">');
   }
 
-  function bindFullscreen(surface, header, opener, closer, page, browser) {
+  function bindFullscreen(surface, header, opener, closer, page, browser, layoutChanged) {
     let session = null;
 
     function restore() {
@@ -420,6 +463,7 @@ const CurriculumRoadmap = (() => {
       surface.removeAttribute("aria-labelledby");
       page.documentElement.classList.remove("roadmap-fullscreen");
       header.hidden = true;
+      if (previous.mode !== "pending") layoutChanged(false);
       if (previous.restoreView) {
         opener.focus({preventScroll: true});
         browser.scrollTo({left: previous.x, top: previous.y, behavior: "instant"});
@@ -447,6 +491,7 @@ const CurriculumRoadmap = (() => {
       page.documentElement.classList.add("roadmap-fullscreen");
       header.hidden = false;
       page.addEventListener("keydown", fullscreenKeys, {capture: true});
+      layoutChanged(true);
       closer.focus({preventScroll: true});
     }
 
@@ -538,7 +583,7 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     const el = id => document.getElementById("road-" + id);
     const app = document.getElementById("roadmap-app");
     const fullscreen = road.bindFullscreen(app, el("fullscreen-header"), el("fullscreen-open"),
-      el("fullscreen-close"), document, window);
+      el("fullscreen-close"), document, window, changeFullscreenLayout);
     const viewport = el("viewport");
     const pathMenu = el("path");
     const modeMenu = el("mode");
@@ -552,6 +597,10 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     let selection = null;
     let visibleGraph;
     let camera = {x: 0, y: 0, scale: 1};
+    let autoFit = true;
+    let frame;
+    let windowedView;
+    let resizePending = false;
     let drag = null;
     let initialized = false;
     let moduleFocus = true;
@@ -573,8 +622,8 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       return item.kind === "path" ? "Path " + item.id + " — " + item.title : item.id + " — " + item.title;
     }
 
-    function topicList(ids, notes = {}) {
-      if (!ids.length) return '<p class="road-empty">None.</p>';
+    function topicList(ids, notes = {}, empty = "No topics in this group.") {
+      if (!ids.length) return '<p class="road-empty">' + escape(empty) + '</p>';
       return '<ul class="road-list">' + ids.map(id => "<li>" + makeButton(data.topics[id]) +
         (notes[id] ? '<p class="road-condition">' + escape(notes[id]) + "</p>" : "") + "</li>").join("") + "</ul>";
     }
@@ -589,39 +638,88 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     }
 
     function moduleLinks(ids) {
-      return ids.length ? '<ul class="road-list">' + ids.map(id =>
-        "<li>" + makeButton(data.modules[id]) + "</li>").join("") + "</ul>" : '<p class="road-empty">None.</p>';
+      return '<ul class="road-list">' + ids.map(id =>
+        "<li>" + makeButton(data.modules[id]) + "</li>").join("") + "</ul>";
     }
 
-    function moduleDetail(module, completed, keepOpen) {
-      const {direct, indirect} = road.moduleDependencies(data, module.id);
-      const rows = (direction, endpoint, heading) => {
-        const edges = direct[direction];
-        const links = kind => edges.filter(edge => edge.kind === kind).map(edge => edge[endpoint]).sort();
-        const optional = [
-          ["recommended", direction === "upstream" ? "Recommended preparation" : "Recommended by these modules"],
-          ["conditional", direction === "upstream" ? "Conditional preparation" : "Conditional use in these modules"],
-        ].filter(([kind]) => links(kind).length).map(([kind, label]) =>
-          '<h5><span class="road-edge-key road-edge-' + kind + '" aria-hidden="true"></span>' +
-          label + "</h5>" + moduleLinks(links(kind))).join("");
-        return '<section class="road-dependency road-' + direction + '"><h5>' + heading + '</h5>' +
-          moduleLinks(links("mandatory")) +
-          (indirect[direction].length ? '<h5>Indirect · reached through other topic links</h5>' +
-            moduleLinks(indirect[direction]) : "") +
-          (optional ? '<details data-disclosure="' + direction + '"' + (keepOpen.has(direction) ? " open" : "") +
-            '><summary>Optional links</summary>' + optional + '</details>' : "") + '</section>';
+    function modulePreparation(module) {
+      const external = id => data.topics[id].module !== module.id;
+      const first = data.topics[module.topics[0]];
+      return {
+        first, firstRequired: first.closure.filter(external),
+        allRequired: module.closure.filter(external),
       };
-      const topics = '<ul class="road-list">' + module.topics.map(id =>
-        "<li>" + makeButton(data.topics[id]) + '<span class="road-route-hours">Module target · ' +
-        (completed.has(id) ? "Completed" : "Not completed") + "</span></li>").join("") + "</ul>";
-      return '<h4>Module dependency view</h4><p>Each arrow groups actual links between topics in two modules. ' +
-        'A mandatory arrow means at least one topic requires a topic in the other module. Lists show separate links.</p>' +
-        rows("upstream", "from", "Direct mandatory prerequisites") +
-        '<p class="road-current">' + module.id + ' · Selected module</p>' +
-        rows("downstream", "to", "Direct mandatory dependents") +
-        '<p>Recommended links are suggested preparation. Conditional links apply to named exercises in Topic detail.</p>' +
-        "<h4>Topics in this module</h4><p>All " + module.topics.length +
-        " topics are study targets for the full module. Optional preparation is listed under module links.</p>" + topics;
+    }
+
+    function moduleDetail(module, completed) {
+      const {first, firstRequired, allRequired} = modulePreparation(module);
+      const earlier = new Set(firstRequired);
+      const {direct} = road.moduleDependencies(data, module.id);
+      const progress = id => completed.has(id) ? "Completed" : "Not completed";
+      const topicRows = (ids, describe, openLesson = false) => '<ul class="road-list road-topic-menu">' +
+        ids.map(id => "<li>" + makeButton(data.topics[id]) +
+          '<span class="road-topic-meta">' + progress(id) + describe(id) +
+          (openLesson ? ' · <a href="#' + id.toLowerCase() + '">Open ' + id + ' lesson</a>' : "") +
+          "</span></li>").join("") + "</ul>";
+      const modulesFor = kind => [...new Set(direct.downstream.filter(edge => edge.kind === kind)
+        .map(edge => edge.to))].sort();
+      const connections = kind => module.topics.flatMap(id => data.topics[id][kind]
+        .filter(item => kind !== "recommended" || !data.topics[id].conditional.some(edge => edge.id === item.id))
+        .map(item => ({...item, target: id})));
+      const groupNotes = (items, conditional = false) => {
+        const byTopic = new Map();
+        for (const item of items) {
+          if (!byTopic.has(item.id)) byTopic.set(item.id, []);
+          byTopic.get(item.id).push(item.target + (conditional ? " — " + item.note : ""));
+        }
+        return topicRows([...byTopic.keys()], id =>
+          " · " + (conditional ? "" : "Helpful for ") + escape(byTopic.get(id).join("; ")));
+      };
+      const mandatory = connections("mandatory");
+      const describeRequired = id => {
+        const uses = mandatory.filter(edge => edge.id === id).map(edge => edge.target);
+        return " · " + (uses.length ? "Required for " + uses.join(", ") : "Required earlier in your learning path.");
+      };
+      const later = allRequired.filter(id => !earlier.has(id));
+      const required = !allRequired.length
+        ? '<p>No required preparation. You can start this module.</p>'
+        : '<p>These topics prepare you for specific lessons. Complete the required topics for the lesson you want to start.</p>' +
+          '<h5>Before the first topic (' + first.id + ')</h5>' +
+          (firstRequired.length ? topicRows(firstRequired, describeRequired) : '<p>No required preparation for the first topic.</p>') +
+          (later.length ? '<h5>Before later topics in this module</h5>' + topicRows(later, describeRequired) : "");
+      const topics = topicRows(module.topics, id => {
+        const requiredIds = data.topics[id].mandatory.map(item => item.id);
+        return requiredIds.length ? " · Required for this topic: " + requiredIds.join(", ") : "";
+      }, true);
+      const suggested = connections("recommended");
+      const conditional = connections("conditional");
+      const nextRequired = modulesFor("mandatory");
+      const nextRecommended = modulesFor("recommended");
+      const nextConditional = [];
+      for (const topic of Object.values(data.topics)) {
+        if (topic.module === module.id) continue;
+        for (const edge of topic.conditional) {
+          if (data.topics[edge.id].module === module.id) {
+            nextConditional.push({id: topic.id, target: edge.id, note: edge.note});
+          }
+        }
+      }
+      return '<section class="road-reading-key"><h4>How to read this learning path</h4><dl>' +
+        '<dt>Required</dt><dd>Complete this before starting the topic that uses it.</dd>' +
+        '<dt>Optional</dt><dd>Helpful preparation you can skip.</dd>' +
+        '<dt>Conditional</dt><dd>Required only for a specific exercise or path.</dd>' +
+        '<dt>Next</dt><dd>A later module or topic that builds on this one.</dd></dl>' +
+        '<p>A module arrow summarizes learning connections between topics in those modules.</p></section>' +
+        '<h4>Required before starting this module</h4>' + required +
+        '<h4>Topics in this module</h4><p>These are the topics covered by this module.</p>' + topics +
+        '<h4>Optional preparation</h4><p>These topics may help with the listed lesson. Its required work appears above.</p>' +
+        (suggested.length ? groupNotes(suggested) : '<p>No additional preparation is suggested.</p>') +
+        (conditional.length ? '<h4>Required only for this exercise/path</h4>' + groupNotes(conditional, true) : "") +
+        '<h4>What this module prepares you for</h4><p>These are later learning areas that build on what you study here.</p>' +
+        (nextRequired.length ? '<h5>Required preparation for topics in</h5>' + moduleLinks(nextRequired)
+          : '<p>This module does not have a required next module.</p>') +
+        (nextRecommended.length ? '<h5>Helpful preparation for topics in</h5>' + moduleLinks(nextRecommended) : "") +
+        (nextConditional.length ? '<h5>Required only for this exercise/path</h5>' + groupNotes(nextConditional, true) : "");
     }
 
     function renderInspector(completed, next) {
@@ -631,6 +729,8 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       exportMenu.options[1].disabled = !selection;
       if (!selection && exportMenu.value === "selection") exportMenu.value = "module";
       el("title").textContent = selection ? titleFor(selection) : "Choose a target";
+      const readiness = el("readiness");
+      readiness.hidden = selection?.kind !== "module";
 
       if (!selection) {
         inspectorSelection = null;
@@ -647,6 +747,20 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
         ? [...details.querySelectorAll("details[data-disclosure][open]")].map(item => item.dataset.disclosure) : []);
       inspectorSelection = selection.id;
       const isModule = selection.kind === "module";
+      if (isModule) {
+        const {first, firstRequired, allRequired} = modulePreparation(selection);
+        const remaining = firstRequired.filter(id => !completed.has(id)).length;
+        if (remaining) {
+          const plural = remaining === 1 ? "topic" : "topics";
+          readiness.textContent = "Complete " + remaining + " required " + plural + " before starting with " + first.id + ".";
+        } else if (firstRequired.length) {
+          readiness.textContent = "Ready to start — all required preparation for " + first.id + " is complete.";
+        } else {
+          readiness.textContent = allRequired.length
+            ? "You can start with " + first.id + " now. Some later topics have required preparation."
+            : "You can start this module now.";
+        }
+      }
       el("estimate").textContent = isModule
         ? selection.difficulty + " · " + selection.topics.length + " topics · " + roadmapDuration(selection.hours) +
           " learner time · " + selection.topics.filter(id => completed.has(id)).length + "/" + selection.topics.length + " completed"
@@ -654,24 +768,22 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
           " learner time · " + roadmapDuration(pendingHours) + " still unmarked";
       const goal = selection.outcome ? "<h4>What you’ll demonstrate</h4><p>" + escape(selection.outcome) + "</p>" : "";
       const requirements = isModule
-        ? moduleDetail(selection, completed, keepOpen)
+        ? moduleDetail(selection, completed)
         : selection.kind === "topic" ? selectedTopicDetail(selection)
           : '<p><a href="#quick-' + selection.id.toLowerCase() + '">Open Quick Learning plan</a></p>' +
             "<h4>Optional extensions</h4>" + topicList(selection.recommended || []);
       const targetModule = isModule ? selection.id : selection.module;
       const routeRole = id => {
         if (selection.roots.includes(id)) {
-          return isModule ? "Module target" : selection.kind === "topic" ? "Target topic" : "Path target";
+          return isModule ? "Topic in this module" : selection.kind === "topic" ? "Target topic" : "Path target";
         }
-        if (!targetModule) return "Prerequisite";
-        return data.topics[id].module === targetModule ? "In-module prerequisite" : "Other-module prerequisite";
+        if (!targetModule) return "Required earlier";
+        return data.topics[id].module === targetModule ? "Required earlier in this module" : "Required preparation from another module";
       };
       const required = '<details class="road-route" data-disclosure="route"' + (keepOpen.has("route") ? " open" : "") +
-        '><summary>Detailed topic study route · ' + selection.closure.length + ' topics</summary>' +
-        '<p>This route lists the prerequisite topics needed to reach the selected learning target. ' +
-        'It is different from the module-level dependency graph.</p><p>' +
-        (isModule ? "All topics in this module are targets. " : "Only target topics and their mandatory prerequisites appear here. ") +
-        'Other topics, recommended preparation and conditional extensions sit outside this required route.</p>' +
+        '><summary>Suggested study order — step by step · ' + selection.closure.length + ' topics</summary>' +
+        '<p>Follow this order for the chosen topics and the required preparation that applies to them. ' +
+        'Optional preparation and exercise-specific requirements are listed separately.</p>' +
         '<p>' + roadmapDuration(selection.total) + " learner time · " + roadmapDuration(pendingHours) +
         " still unmarked</p><ol>" +
         selection.closure.map(id => "<li>" + makeButton(data.topics[id]) + '<span class="road-route-hours">' +
@@ -680,8 +792,8 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       const unlocks = '<details class="road-route" data-disclosure="progress"' +
         (keepOpen.has("progress") ? " open" : "") + '><summary>Available next based on your progress</summary>' +
         '<p>Availability comes from your saved topic completions. The dependency arrows show curriculum links.</p>' +
-        '<h5>Available now</h5>' + topicList(road.available(data, completed)) +
-        '<h5>New if you complete this selection</h5>' + topicList(next) + '</details>';
+        '<h5>Available now</h5>' + topicList(road.available(data, completed), {}, "No new topics are available from your saved progress.") +
+        '<h5>New if you complete this selection</h5>' + topicList(next, {}, "Completing this selection won’t make a new topic available yet.") + '</details>';
       const detailLink = selection.kind === "path" ? "" : '<p><a href="#' + selection.id.toLowerCase() +
         '">Open in Complete Course</a></p>';
       const back = history.at(-1);
@@ -694,31 +806,43 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       el("zoom").textContent = Math.round(camera.scale * 100) + "%";
     }
 
-    function resetCamera() {
-      camera = {x: 0, y: 0, scale: Math.max(0.57, Math.min(1, viewport.clientWidth / visibleGraph.width))};
-      const bounds = visibleGraph.bounds;
+    function fittedCamera(model, size) {
+      const {width, height, fitAll} = size;
+      if (fitAll) {
+        const scale = Math.min(1, Math.max(1, width - 12) / model.width, Math.max(1, height - 12) / model.height);
+        return {scale, x: (width - model.width * scale) / 2, y: (height - model.height * scale) / 2};
+      }
+      const bounds = model.bounds;
       if (bounds) {
-        const width = bounds.right - bounds.left;
-        const height = bounds.bottom - bounds.top;
-        const scale = Math.min(1, (viewport.clientWidth - 30) / width, (viewport.clientHeight - 30) / height);
+        const boundsWidth = bounds.right - bounds.left;
+        const boundsHeight = bounds.bottom - bounds.top;
+        const scale = Math.min(1, (width - 30) / boundsWidth, (height - 30) / boundsHeight);
         if (scale >= .45) {
-          camera = {scale, x: (viewport.clientWidth - width * scale) / 2 - bounds.left * scale,
-                    y: (viewport.clientHeight - height * scale) / 2 - bounds.top * scale};
+          return {scale, x: (width - boundsWidth * scale) / 2 - bounds.left * scale,
+                  y: (height - boundsHeight * scale) / 2 - bounds.top * scale};
         }
       }
+      return {x: 0, y: 0, scale: Math.max(.57, Math.min(1, width / model.width))};
+    }
+
+    function resetCamera() {
+      autoFit = true;
+      camera = fittedCamera(visibleGraph, frame);
       applyCamera();
     }
 
     function zoom(factor, x = viewport.clientWidth / 2, y = viewport.clientHeight / 2) {
-      const scale = Math.max(0.2, Math.min(2.6, camera.scale * factor));
+      const scale = Math.max(Math.min(.2, fittedCamera(visibleGraph, frame).scale), Math.min(2.6, camera.scale * factor));
       const ratio = scale / camera.scale;
       camera = {x: x - (x - camera.x) * ratio, y: y - (y - camera.y) * ratio, scale};
+      autoFit = false;
       applyCamera();
     }
 
-    function pan(x, y) {
+    function pan(x, y, user = true) {
       camera.x += x;
       camera.y += y;
+      if (user) autoFit = false;
       applyCamera();
     }
 
@@ -730,24 +854,94 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       const outer = viewport.getBoundingClientRect();
       const card = node.getBoundingClientRect();
       if (card.left < outer.left || card.right > outer.right || card.top < outer.top || card.bottom > outer.bottom) {
-        pan(outer.left + (outer.width - card.width) / 2 - card.left, outer.top + (outer.height - card.height) / 2 - card.top);
+        pan(outer.left + (outer.width - card.width) / 2 - card.left, outer.top + (outer.height - card.height) / 2 - card.top, false);
       }
+    }
+
+    function measure() {
+      return {width: viewport.clientWidth, height: viewport.clientHeight,
+              fitAll: fullscreen.active() && modeMenu.value === "module"};
+    }
+
+    function paintGraph(size, next = road.unlocked(data, selection, completedTopics())) {
+      frame = size;
+      const isModuleView = selection?.kind === "module" && modeMenu.value === "module";
+      focusToggle.checked = isModuleView ? moduleFocus : routeFocus;
+      el("dependent-key").hidden = !isModuleView || !moduleFocus;
+      const heading = modeMenu.value === "module" ? "Module overview" : "Topic detail";
+      const dimensions = {width: Math.max(1, size.width - 24), height: Math.max(1, size.height - 24)};
+      visibleGraph = road.graph(data, {
+        mode: modeMenu.value, selection, focus: focusToggle.checked, optional: optionalToggle.checked, unlocked: next,
+        title: "LLM Evaluation Engineering · " + heading, size: size.fitAll ? dimensions : null,
+      });
+      const meta = "Curriculum revision " + data.revision + " · " + Object.keys(data.modules).length + " modules" +
+        (modeMenu.value === "topic" ? " · " + visibleGraph.count + " topics shown" : "") + " · " + heading;
+      if (el("graph-meta").textContent !== meta) el("graph-meta").textContent = meta;
+      viewport.innerHTML = visibleGraph.svg;
     }
 
     function draw(reset = false) {
       const completed = completedTopics();
       const next = road.unlocked(data, selection, completed);
-      const isModuleView = selection?.kind === "module" && modeMenu.value === "module";
-      focusToggle.checked = isModuleView ? moduleFocus : routeFocus;
-      el("dependent-key").hidden = !isModuleView || !moduleFocus;
-      visibleGraph = road.graph(data, {
-        mode: modeMenu.value, selection, focus: focusToggle.checked, optional: optionalToggle.checked, unlocked: next,
-        title: modeMenu.value === "module" ? "LLM Evaluation Engineering · Module overview" : "LLM Evaluation Engineering · Topic roadmap",
-      });
-      viewport.innerHTML = visibleGraph.svg;
       renderInspector(completed, next);
+      paintGraph(measure(), next);
       if (reset) resetCamera();
       else applyCamera();
+    }
+
+    function resizeGraph() {
+      if (!initialized) return;
+      const size = measure();
+      if (!size.width || !size.height ||
+          (size.width === frame?.width && size.height === frame.height && size.fitAll === frame.fitAll)) return;
+      const focusedNode = document.activeElement?.dataset?.node;
+      const previousModel = visibleGraph;
+      const previousFrame = frame;
+      paintGraph(size);
+      if (autoFit || !previousFrame) {
+        resetCamera();
+        if (!frame.fitAll) reveal(selection?.id);
+      } else {
+        // Preserve the center and the user's zoom relative to the old fit across resizes.
+        const px = (previousFrame.width / 2 - camera.x) / camera.scale / previousModel.width;
+        const py = (previousFrame.height / 2 - camera.y) / camera.scale / previousModel.height;
+        const scale = Math.min(2.6, camera.scale * fittedCamera(visibleGraph, frame).scale /
+          fittedCamera(previousModel, previousFrame).scale);
+        camera = {scale, x: size.width / 2 - px * visibleGraph.width * scale,
+                  y: size.height / 2 - py * visibleGraph.height * scale};
+        applyCamera();
+      }
+      if (focusedNode) viewport.querySelector('[data-node="' + focusedNode + '"]')?.focus({preventScroll: true});
+    }
+
+    function scheduleResize() {
+      if (resizePending) return;
+      resizePending = true;
+      window.requestAnimationFrame(() => {
+        resizePending = false;
+        resizeGraph();
+      });
+    }
+
+    function changeFullscreenLayout(active) {
+      if (active) windowedView = {camera: {...camera}, autoFit, frame, target: selection?.id, mode: modeMenu.value};
+      const size = measure();
+      if (size.width && size.height) {
+        paintGraph(size);
+        const saved = windowedView;
+        if (!active && saved?.target === selection?.id && saved?.mode === modeMenu.value &&
+            saved.frame?.width === size.width && saved.frame.height === size.height) {
+          ({camera, autoFit} = saved);
+          applyCamera();
+        } else {
+          resetCamera();
+          if (!size.fitAll) reveal(selection?.id);
+        }
+      }
+      if (!active) {
+        if (!size.width || !size.height) frame = null;
+        windowedView = null;
+      }
     }
 
     function choose(id, origin) {
@@ -771,7 +965,7 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
         optionalToggle.checked = true;
       }
       draw(selection.kind === "module" ? moduleFocus || previous?.kind !== "module" : routeFocus || origin !== "graph");
-      if (selection.kind !== "path") reveal(id);
+      if (selection.kind !== "path" && !frame.fitAll) reveal(id);
       if (origin === "graph") {
         viewport.querySelector('[data-node="' + id + '"]')?.focus({preventScroll: true});
       } else if (origin === "results" || origin === "inspector" || origin === "back") {
@@ -849,12 +1043,12 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       });
     }
     pathMenu.addEventListener("change", () => pathMenu.value ? choose(pathMenu.value, "path") : clearSelection());
-    modeMenu.addEventListener("change", () => {draw(true); reveal(selection?.id);});
+    modeMenu.addEventListener("change", () => {draw(true); if (!frame.fitAll) reveal(selection?.id);});
     focusToggle.addEventListener("change", () => {
       if (selection?.kind === "module" && modeMenu.value === "module") moduleFocus = focusToggle.checked;
       else routeFocus = focusToggle.checked;
       draw(true);
-      reveal(selection?.id);
+      if (!frame.fitAll) reveal(selection?.id);
     });
     optionalToggle.addEventListener("change", () => draw());
     el("clear").addEventListener("click", () => {clearSelection(); search.focus();});
@@ -965,10 +1159,15 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       'Mandatory dependent of selection</li>';
 
     function enterRoadmap() {
-      if (initialized) return;
+      if (initialized) {
+        scheduleResize();
+        return;
+      }
       initialized = true;
       app.hidden = false;
       draw(true);
+      if (window.ResizeObserver) new window.ResizeObserver(scheduleResize).observe(viewport);
+      else window.addEventListener("resize", scheduleResize);
     }
     document.addEventListener("curriculum-tab", event => {
       if (event.detail === "#roadmap") enterRoadmap();

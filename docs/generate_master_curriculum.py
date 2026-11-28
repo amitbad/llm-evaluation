@@ -600,6 +600,7 @@ def roadmap_view(data):
     paths = "".join(f'<option value="{path["id"]}">{path["id"]} — {escape(path["title"])}</option>'
                     for path in data["paths"].values())
     stages = "".join(f'<option value="{index}">{escape(stage)}</option>' for index, stage in enumerate(data["stages"]))
+    brand_icon = f'<img src="{brand_uri("icon-48.png")}" alt="" width="28" height="28">' if branding_ready() else ""
     return f'''<noscript><p>The interactive roadmap uses JavaScript. Learning Paths under Quick Learning and the Complete Course list the same prerequisites and estimates.</p></noscript>
 <div id="roadmap-app" hidden>
   <div id="road-fullscreen-header" class="road-fullscreen-header" hidden>
@@ -608,7 +609,7 @@ def roadmap_view(data):
       <span aria-hidden="true">×</span> Close
     </button>
   </div>
-  <p>Select a module to highlight its prerequisites and dependents. Arrows point from prerequisite to dependent. Open the topic study route for the exact lessons and study order.</p>
+  <p>Select a module to see what to study before, during and after it. Arrows point from preparation to the lesson or module that uses it.</p>
   <div class="road-controls">
     <div class="road-search">
       <label for="road-search">Find a module or topic</label>
@@ -619,7 +620,12 @@ def roadmap_view(data):
     <label for="road-path">Learning path<select id="road-path"><option value="">Choose A–G</option>{paths}</select></label>
     <label for="road-mode">Graph detail<select id="road-mode"><option value="module">Module overview</option><option value="topic">Topic detail</option></select></label>
   </div>
-  <ul id="road-legend" class="road-legend" aria-label="Graph legend"></ul>
+  <header class="road-map-header" aria-label="Roadmap heading">
+    <p class="road-map-brand">{brand_icon}TestNeural LLM Academy</p>
+    <h3>LLM Evaluation Engineering</h3>
+    <p id="road-graph-meta">Curriculum revision {escape(data["revision"])} · {len(data["modules"])} modules · Module overview</p>
+    <ul id="road-legend" class="road-legend" aria-label="Stages and relationship types"></ul>
+  </header>
   <div class="road-workspace">
     <div class="road-board">
       <div class="road-toolbar">
@@ -633,15 +639,16 @@ def roadmap_view(data):
           </svg> Fullscreen
         </button>
         <label><input id="road-focus" type="checkbox" aria-describedby="road-help" disabled> Focus on selection</label>
-        <label><input id="road-optional" type="checkbox"> Show all optional links</label>
+        <label><input id="road-optional" type="checkbox"> Show optional and conditional links</label>
         <a href="#road-inspector" id="road-jump" hidden>Selection details</a>
       </div>
       <div id="road-viewport" tabindex="0" role="region" aria-label="Learning dependency graph" aria-describedby="road-help"></div>
-      <p id="road-help">Module focus emphasizes the selection’s links, including its optional links. Turn off focus to see the full map at normal contrast. Drag to pan, or focus the map and use arrow keys and + or −.</p>
+      <p id="road-help">Focus highlights the selected module’s connections. Drag or use the arrow keys to pan, and use + or − to zoom.</p>
     </div>
     <aside id="road-inspector" class="road-inspector" aria-label="Selected target">
       <div class="road-inspector-head"><h3 id="road-title">Choose a target</h3><button type="button" id="road-clear" hidden>Clear</button></div>
       <p id="road-estimate" role="status" aria-live="polite"></p>
+      <p id="road-readiness" role="status" aria-live="polite" hidden></p>
       <div id="road-details"></div>
     </aside>
   </div>
@@ -1285,8 +1292,13 @@ ROADMAP_CSS = """
   overflow:auto; padding:.35rem .55rem .55rem; background:white; border:1px solid var(--line);
   border-radius:.45rem; box-shadow:0 6px 22px #142e4526; }
 .road-results p { margin:.25rem .4rem; color:var(--muted); font-size:.86rem; }
-.road-legend { display:flex; flex-wrap:wrap; gap:.3rem 1rem; padding:0; margin:.9rem 0 .65rem; list-style:none; }
-.road-legend li { display:inline-flex; align-items:center; gap:.34rem; margin:0; color:#344b5c; font-size:.85rem; }
+.road-map-header { min-width:0; padding:.45rem .65rem; margin:.5rem 0; background:#f8fafc;
+  border:1px solid var(--line); border-radius:.5rem; color:#142e45; }
+.road-map-header h3 { margin:.12rem 0; font-size:1.06rem; }
+.road-map-header p { margin:0; font-size:.8rem; }
+.road-map-brand { display:flex; align-items:center; gap:.4rem; color:#2451a6; font-weight:700; }
+.road-legend { display:flex; flex-wrap:wrap; gap:.2rem .85rem; padding:0; margin:.3rem 0 0; list-style:none; }
+.road-legend li { display:inline-flex; align-items:center; gap:.34rem; margin:0; color:#344b5c; font-size:.78rem; }
 .road-stage-key { width:.85rem; height:.85rem; border:1px solid var(--key-ink); border-radius:.2rem; background:var(--key); }
 .road-edge-key { width:1.45rem; border-top:2px solid #254f71; }
 .road-edge-recommended { border-top-style:dashed; border-color:#66448c; }
@@ -1314,12 +1326,16 @@ ROADMAP_CSS = """
 .road-inspector h3 { margin:0; line-height:1.3; }
 .road-inspector h4 { margin-top:.95rem; font-size:.92rem; }
 .road-inspector h5 { margin:.65rem 0 .28rem; font-size:.84rem; }
-.road-dependency { border-inline-start:3px solid #254f71; margin:.55rem 0; padding:.12rem .48rem .35rem; }
-.road-downstream { border-inline-start-color:#12634e; }
-.road-dependency h5 .road-edge-key { display:inline-block; margin-inline-end:.38rem; vertical-align:middle; }
-.road-inspector .road-current { background:#eaf2fd; color:#102c4a; padding:.35rem .55rem; font-weight:700; border-radius:.3rem; }
 .road-inspector p { margin:.36rem 0; font-size:.89rem; }
 #road-estimate { font-weight:700; color:#19553a; }
+#road-readiness { padding:.4rem .55rem; background:#e9f6ee; color:#19553a; border-radius:.35rem; font-weight:650; }
+.road-reading-key { padding:.1rem .55rem .45rem; margin:.5rem 0; background:#f8fafc; border-radius:.35rem; }
+.road-reading-key dl { display:grid; grid-template-columns:auto minmax(0,1fr); gap:.2rem .5rem;
+  margin:.35rem 0 0; font-size:.82rem; }
+.road-reading-key dt { font-weight:700; }
+.road-reading-key dd { margin:0; }
+.road-topic-meta { display:block; margin:0 .4rem .32rem; font-size:.82rem; }
+.road-topic-menu a { font-size:.82rem; margin-inline-start:.35rem; }
 .road-list { margin:.25rem 0; padding:0; list-style:none; }
 .road-list li { margin:.2rem 0; }
 .road-item { display:flex; align-items:baseline; gap:.45rem; width:100%; padding:.3rem .4rem; border:0; text-align:left;
@@ -1350,6 +1366,7 @@ html.roadmap-fullscreen, html.roadmap-fullscreen body { overflow:hidden; overscr
 #roadmap-app.is-fullscreen > * { flex-shrink:0; }
 #roadmap-app.is-fullscreen > p, #roadmap-app.is-fullscreen #road-fullscreen-open { display:none; }
 #roadmap-app.is-fullscreen .road-legend, #roadmap-app.is-fullscreen .road-downloads { margin:0; }
+#roadmap-app.is-fullscreen .road-map-header { margin:0; }
 #roadmap-app.is-fullscreen .road-workspace { flex:1 0 16rem; grid-template-rows:minmax(0,1fr); }
 #roadmap-app.is-fullscreen .road-workspace:has(#road-clear[hidden]) .road-inspector { display:none; }
 #roadmap-app.is-fullscreen .road-board { display:flex; flex-direction:column; min-height:0; }

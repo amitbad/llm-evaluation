@@ -12,7 +12,7 @@ const data = html.match(/<script id="roadmap-data" type="application\/json">([^]
 const curriculum = JSON.parse(data);
 const graph = require("../docs/learning_roadmap.js");
 
-function setup(native) {
+function setup(native, useObserver = true) {
   class Element extends EventTarget {
     constructor(id) {
       super();
@@ -87,7 +87,7 @@ function setup(native) {
   };
   const road = id => element("road-" + id);
   const controls = ["path", "mode", "search", "stage", "results", "focus", "optional", "export",
-    "download-status", "details", "jump", "title", "estimate", "zoom", "clear", "zoom-in", "zoom-out",
+    "download-status", "details", "jump", "title", "estimate", "readiness", "graph-meta", "zoom", "clear", "zoom-in", "zoom-out",
     "reset", "legend", "svg", "html", "png"].map(road);
   const app = element("roadmap-app");
   const header = road("fullscreen-header");
@@ -132,10 +132,18 @@ function setup(native) {
     };
     page.exitFullscreen = async () => { exits++; nativeExit(); };
   }
-  const browser = {
+  let observer;
+  const browser = Object.assign(new EventTarget(), {
     scrollX: 4, scrollY: 310, restored: [],
+    requestAnimationFrame(callback) { setImmediate(callback); },
     scrollTo(value) { this.restored.push(value); },
-  };
+  });
+  if (useObserver) {
+    browser.ResizeObserver = class {
+      constructor(notify) { observer = notify; }
+      observe(target) { assert.equal(target, viewport); }
+    };
+  }
   const event = (target, type, props = {}) => {
     const action = new Event(type, {cancelable: true});
     for (const [key, value] of Object.entries(props)) Object.defineProperty(action, key, {value});
@@ -155,6 +163,14 @@ function setup(native) {
   return {app, header, opener, closer, viewport, search, sidebar, heading, existingInert, page, browser, road, click,
     get requests() { return requests; }, get exits() { return exits; }, nativeExit,
     listenerCount: type => listeners.get(type)?.size ?? 0,
+    size: (width, height) => { viewport.clientWidth = width; viewport.clientHeight = height; },
+    resize: async (width, height) => {
+      viewport.clientWidth = width;
+      viewport.clientHeight = height;
+      if (observer) observer();
+      else browser.dispatchEvent(new Event("resize"));
+      await tick();
+    },
     enter: async () => { event(opener, "click"); await tick(); },
     close: async () => { event(closer, "click"); await tick(); },
     key: (key, props = {}) => event(page, "keydown", {key, ...props}),
@@ -171,7 +187,7 @@ test("native fullscreen uses the original roadmap and closes with focus and scro
   assert.equal(ui.app.attrs["aria-modal"], "true");
   assert.equal(ui.header.hidden, false);
   assert.equal(ui.app.classes.has("is-fullscreen-fallback"), false);
-  assert.equal(ui.camera(), original);
+  assert.notEqual(ui.camera(), original, "fullscreen begins with a fitted graph");
   assert.equal(ui.key("Escape").defaultPrevented, false, "browser owns native Escape");
 
   await ui.close();
@@ -222,27 +238,30 @@ test("unsupported and rejected fullscreen keep the diagram available in a keyboa
   }
 });
 
-test("fullscreen preserves zoom and pan, including changes made while expanded", async () => {
+test("fullscreen fits on entry, supports its own zoom and pan, and restores the windowed camera", async () => {
   const ui = setup("missing");
   ui.event(ui.road("zoom-in"), "click");
   const zoomed = ui.camera();
   ui.event(ui.viewport, "keydown", {key: "ArrowLeft"});
   const before = ui.camera();
   assert.notEqual(before, zoomed);
+  ui.size(1480, 680);
   await ui.enter();
-  assert.equal(ui.camera(), before);
-  ui.viewport.clientWidth = 1120;
-  ui.viewport.clientHeight = 280;
+  const fitted = ui.camera();
+  assert.notEqual(fitted, before);
   ui.event(ui.road("zoom-in"), "click");
   const fullscreenZoom = ui.camera();
-  assert.notEqual(fullscreenZoom, before);
+  assert.notEqual(fullscreenZoom, fitted);
   ui.event(ui.viewport, "pointerdown", {pointerId: 1, button: 0, clientX: 80, clientY: 60});
   ui.event(ui.viewport, "pointermove", {pointerId: 1, clientX: 111, clientY: 80});
   ui.event(ui.viewport, "pointerup", {pointerId: 1});
   const full = ui.camera();
   assert.notEqual(full, fullscreenZoom);
+  ui.event(ui.road("reset"), "click");
+  assert.equal(ui.camera(), fitted);
+  ui.size(760, 420);
   await ui.close();
-  assert.equal(ui.camera(), full);
+  assert.equal(ui.camera(), before);
   assert.equal(ui.header.hidden, true);
 });
 
@@ -355,18 +374,19 @@ test("M10 panel separates full module topics, topic prerequisites, and saved pro
   const details = ui.road("details");
   const panel = details.markup;
   assert.match(ui.road("estimate").textContent, /Advanced · 3 topics · 18h learner time · 1\/3 completed/);
-  const upstream = panel.split("Direct mandatory prerequisites")[1].split("<details")[0];
-  assert.deepEqual(panelButtons(upstream), ["M02", "M03"]);
-  assert.match(panel, /Direct mandatory dependents[\s\S]*?data-select="M17"/);
-  assert.match(panel, /Recommended preparation[\s\S]*?Conditional preparation/);
+  const upstream = panel.split("Required before starting this module")[1].split("Topics in this module")[0];
+  assert.deepEqual(panelButtons(upstream), ["M03-T02", "M02-T01"]);
+  assert.match(panel, /What this module prepares you for[\s\S]*?data-select="M17"/);
+  assert.match(panel, /Optional preparation[\s\S]*?Required only for this exercise\/path/);
   const [topics, rest] = panel.split('<details class="road-route" data-disclosure="route">');
-  assert.deepEqual(panelButtons(topics.split("Topics in this module")[1]), ["M10-T01", "M10-T02", "M10-T03"]);
-  assert.match(topics, /Module target · Completed/);
-  assert.match(topics, /Module target · Not completed/);
+  const syllabus = topics.split("Topics in this module")[1].split("Optional preparation")[0];
+  assert.deepEqual(panelButtons(syllabus), ["M10-T01", "M10-T02", "M10-T03"]);
+  assert.match(syllabus, /Completed · Required for this topic: M03-T02/);
+  assert.match(syllabus, /Not completed · Required for this topic: M10-T02/);
   const [route, progress] = rest.split('<details class="road-route" data-disclosure="progress">');
-  assert.match(route, /^<summary>Detailed topic study route · 5 topics/);
+  assert.match(route, /^<summary>Suggested study order — step by step · 5 topics/);
   assert.deepEqual(panelButtons(route), ["M02-T01", "M03-T02", "M10-T01", "M10-T02", "M10-T03"]);
-  assert.equal((route.match(/Other-module prerequisite/g) || []).length, 2);
+  assert.equal((route.match(/Required preparation from another module/g) || []).length, 2);
   assert.match(progress, /Available next based on your progress[\s\S]*saved topic completions/);
   const [available, preview] = progress.split("<h5>New if you complete this selection</h5>");
   assert.ok(panelButtons(available).includes("M10-T02"));
@@ -425,4 +445,154 @@ test("module focus can be disabled without hiding nodes, and Clear restores the 
   assert.equal(ui.page.activeElement, ui.search);
   ui.click(ui.viewport, {node: "M10"});
   assert.equal(focus.checked, true, "a fresh selection gets the default focus");
+});
+
+function cards(svg) {
+  return Object.fromEntries([...svg.matchAll(/<a [^>]*data-node="([^"]+)"[^>]*>[^]*?<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/g)]
+    .map(([, id, ...size]) => [id, size.map(Number)]));
+}
+
+function fittedGraphStaysInView(ui) {
+  const [, width, height] = /viewBox="0 0 (\d+) (\d+)"/.exec(ui.viewport.markup);
+  const [, x, y, scale] = /translate\(([^p]+)px,([^p]+)px\) scale\(([^)]+)\)/.exec(ui.camera()).map(Number);
+  assert.ok(x >= 0 && y >= 0 && scale > 0);
+  assert.ok(x + width * scale <= ui.viewport.clientWidth);
+  assert.ok(y + height * scale <= ui.viewport.clientHeight);
+}
+
+test("fullscreen module geometry uses spare space and keeps cards and connectors inside the SVG", () => {
+  const selected = graph.target(curriculum, "M17");
+  const get = size => graph.graph(curriculum, {mode: "module", selection: selected, focus: true, optional: true, size});
+  const normal = get(null);
+  const wide = get({width: 1900, height: 640});
+  const previous = cards(normal.svg);
+  const expanded = cards(wide.svg);
+  assert.ok(expanded.M17[2] > previous.M17[2]);
+  const gap = (nodes, from, to) => nodes[to][0] - nodes[from][0] - nodes[from][2];
+  assert.ok(gap(expanded, "M01", "M04") > gap(previous, "M01", "M04"));
+  const verticalGap = nodes => nodes.M02[1] - nodes.M01[1] - nodes.M01[3];
+  assert.ok(verticalGap(expanded) > verticalGap(previous));
+  for (const size of [{width: 1900, height: 640}, {width: 1100, height: 510},
+    {width: 880, height: 400}, {width: 650, height: 480}, {width: 320, height: 310}]) {
+    const model = get(size);
+    const nodes = cards(model.svg);
+    assert.equal(Object.keys(nodes).length, 18);
+    for (const [x, y, w, h] of Object.values(nodes)) {
+      assert.ok(x > 0 && y > 0 && w > 0 && h > 0);
+      assert.ok(x + w < model.width && y + h < model.height);
+    }
+    const links = plottedEdges(model.svg);
+    assert.equal(links.length, 110);
+    for (const {from, to, attrs} of links) {
+      const xy = / d="([^"]+)"/.exec(attrs)[1].split(" ").map(Number).filter(Number.isFinite);
+      const [ax, ay, aw, ah] = nodes[from], [bx, by, bw, bh] = nodes[to];
+      const [startX, startY] = xy, [endX, endY] = xy.slice(-2);
+      assert.ok(Math.abs(startX - ax - aw) < .001 && startY > ay && startY < ay + ah);
+      assert.ok(endY > by && endY < by + bh);
+      const distance = ax >= bx ? endX - bx - bw : bx - endX;
+      assert.ok(distance > 0 && distance < 10, from + " to " + to);
+      assert.ok(xy.every((coordinate, i) => coordinate >= 0 && coordinate <= (i % 2 ? model.height : model.width)));
+    }
+  }
+});
+
+test("the live header is outside the camera and exports retain branding and legend", () => {
+  const header = html.match(/<header class="road-map-header"[^>]*>([\s\S]*?)<\/header>/)[1];
+  assert.match(header, /TestNeural LLM Academy[\s\S]*LLM Evaluation Engineering[\s\S]*Curriculum revision.*18 modules/);
+  assert.match(header, /id="road-legend"/);
+  const ui = setup("missing");
+  assert.match(ui.road("legend").markup, /Mandatory[\s\S]*Recommended[\s\S]*Conditional extension/);
+  assert.doesNotMatch(ui.viewport.markup, /TestNeural LLM Academy/);
+  const label = ui.road("graph-meta").textContent;
+  const camera = ui.camera();
+  ui.event(ui.road("zoom-in"), "click");
+  assert.notEqual(ui.camera(), camera);
+  assert.equal(ui.road("graph-meta").textContent, label);
+  const output = graph.graph(curriculum, {mode: "module", exporting: true});
+  assert.match(output.svg, /TestNeural LLM Academy[\s\S]*Curriculum revision.*18 modules[\s\S]*Mandatory[\s\S]*Conditional extension/);
+  const topic = graph.target(curriculum, "M17-T01");
+  const overview = graph.graph(curriculum, {mode: "module", selection: topic, focus: true});
+  assert.equal(Object.keys(cards(overview.svg)).length, 18, "topic selection keeps all modules on the overview");
+});
+
+test("fullscreen refits on viewport and fallback resize events without repainting unchanged dimensions", async () => {
+  for (const observer of [true, false]) {
+    const ui = setup("missing", observer);
+    ui.click(ui.viewport, {node: "M17"});
+    ui.size(1450, 650);
+    await ui.enter();
+    fittedGraphStaysInView(ui);
+    const enlarged = ui.viewport.firstElementChild;
+    await ui.resize(1450, 650);
+    assert.equal(ui.viewport.firstElementChild, enlarged);
+    await ui.resize(700, 440);
+    assert.notEqual(ui.viewport.firstElementChild, enlarged);
+    fittedGraphStaysInView(ui);
+    await ui.resize(320, 330);
+    fittedGraphStaysInView(ui);
+    assert.match(ui.viewport.markup, /aria-pressed="true" data-node="M17"/);
+    assert.equal(ui.road("focus").checked, true);
+    assert.equal(ui.road("mode").value, "module");
+    ui.event(ui.road("zoom-in"), "click");
+    const zoom = Number(ui.road("zoom").textContent.slice(0, -1));
+    await ui.resize(320, 430);
+    const resized = Number(ui.road("zoom").textContent.slice(0, -1));
+    assert.ok(Math.abs(resized - zoom) <= 1, "manual zoom survives a height-only resize");
+    ui.event(ui.road("reset"), "click");
+    fittedGraphStaysInView(ui);
+  }
+});
+
+test("M17 readiness uses stored progress for its first topic and separates later work", () => {
+  const ui = setup("native");
+  ui.click(ui.viewport, {node: "M17"});
+  const details = ui.road("details");
+  assert.equal(ui.road("readiness").textContent, "Complete 4 required topics before starting with M17-T01.");
+  const [required, content] = details.markup.split("Topics in this module");
+  const [beforeFirst, beforeLater] = required.split("Before later topics in this module");
+  assert.deepEqual(panelButtons(beforeFirst), ["M02-T01", "M02-T02", "M03-T02", "M05-T01"]);
+  assert.deepEqual(panelButtons(beforeLater), ["M07-T01", "M10-T01", "M10-T02"]);
+  assert.match(beforeFirst, /Required earlier in your learning path/);
+  const [topics, rest] = content.split("Optional preparation");
+  assert.deepEqual(panelButtons(topics), ["M17-T01", "M17-T02", "M17-T03"]);
+  assert.match(topics, /href="#m17-t01">Open M17-T01 lesson/);
+  assert.match(rest, /M04-T02[\s\S]*Helpful for M17-T01/);
+  assert.match(rest, /This module does not have a required next module/);
+  for (const id of panelButtons(beforeFirst).slice(1)) ui.page.getElementById("progress-" + id.toLowerCase()).value = "Completed";
+  ui.event(ui.page, "curriculum-progress");
+  assert.equal(ui.road("readiness").textContent, "Complete 1 required topic before starting with M17-T01.");
+  ui.page.getElementById("progress-m02-t01").value = "Completed";
+  ui.event(ui.page, "curriculum-progress");
+  assert.equal(ui.road("readiness").textContent, "Ready to start — all required preparation for M17-T01 is complete.");
+  assert.match(details.markup, /M10-T02[\s\S]*Not completed · Required for M17-T03/);
+  ui.click(ui.viewport, {node: "M01"});
+  assert.equal(ui.road("readiness").textContent, "You can start this module now.");
+  assert.match(details.markup, /No required preparation\. You can start this module\./);
+});
+
+test("exercise-only requirements remain separate and prerequisite navigation leaves fullscreen active", async () => {
+  const ui = setup("native");
+  ui.click(ui.viewport, {node: "M18"});
+  ui.size(1480, 700);
+  await ui.enter();
+  const details = ui.road("details");
+  const [, recommended, conditional] = details.markup.split(/Optional preparation|Required only for this exercise\/path/);
+  assert.ok(!panelButtons(recommended).includes("M13-T03"));
+  assert.ok(panelButtons(conditional).includes("M13-T03"));
+  assert.match(conditional, /M18-T02 — required for the live rollout governance extension/);
+  assert.match(details.markup, /<h4>How to read this learning path<\/h4>/);
+  ui.click(details, {select: "M13-T03"});
+  assert.equal(ui.page.fullscreenElement, ui.app);
+  assert.equal(ui.road("mode").value, "topic");
+  assert.match(ui.viewport.markup, /aria-pressed="true" data-node="M13-T03"/);
+  assert.match(details.markup, /Back to M18/);
+  ui.click(details, {back: ""});
+  assert.equal(ui.page.fullscreenElement, ui.app);
+  assert.equal(ui.road("mode").value, "module");
+  assert.match(ui.viewport.markup, /aria-pressed="true" data-node="M18"/);
+  ui.click(details, {select: "M13-T03"});
+  ui.size(760, 420);
+  await ui.close();
+  assert.equal(ui.road("mode").value, "topic");
+  assert.match(ui.viewport.markup, /aria-pressed="true" data-node="M13-T03"/);
 });
