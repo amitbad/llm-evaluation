@@ -419,6 +419,17 @@ test("multi-agent elective keeps navigation and progress across reading modes", 
   assert.equal(ui.el("m17-t03").querySelector("[data-progress]").value, "Completed");
 });
 
+test("advanced judge elective keeps navigation and progress across reading modes", () => {
+  const ui = start(lessonHash("G", "M18-T01"));
+  assert.equal(ui.el("guided-material").children[0], ui.el("material-m18-t01"));
+  assert.equal(ui.el("guided-previous").href, lessonHash("G", "M17-T03"));
+  assert.equal(ui.el("guided-next").href, lessonHash("G", "M18-T02"));
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+  ui.go("#m18-t01");
+  assert.equal(ui.el("m18-t01").open, true);
+  assert.equal(ui.el("m18-t01").querySelector("[data-progress]").value, "Completed");
+});
+
 test("model migration elective keeps navigation and progress across reading modes", () => {
   const ui = start(lessonHash("G", "M18-T02"));
   assert.equal(ui.el("guided-previous").href, lessonHash("G", "M18-T01"));
@@ -443,6 +454,8 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
   assert.equal(new Set(sources.map(([, id]) => id)).size, 53);
+  assert.equal(authoredLessons.size, 53);
+  assert.ok(sources.every(([, , markup]) => !markup.includes("Lesson outline.")));
   assert.equal([...html.matchAll(/id="module-objectives-m\d+"/g)].length, 18);
   for (const [, id, markup] of sources) {
     const topic = data.topics[id.toUpperCase()];
@@ -609,6 +622,21 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
         assert.ok(markup.includes('href="#' + target + '"'));
       }
       assert.match(markup, /href="test12\.html"/);
+    } else if (topic.id === "M18-T01") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /inter-rater agreement=0\.750/);
+      assert.match(markup, /position flips=1\/4/);
+      assert.match(markup, /ECE=0\.17375/);
+      assert.match(markup, /v2: 11\/12 scored,.*BLOCK/);
+      assert.match(markup, /repaired: 12\/12 scored,.*PASS/);
+      assert.match(markup, /reference-gap: 11\/11 scored, coverage=11\/12,.*REVIEW/);
+      assert.match(markup, /<caption>Northstar judge rubric and score anchors<\/caption>/);
+      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 4);
+      for (const target of ["m06-t02", "m06-t03", "m12-t03", "m18-t02"]) {
+        assert.ok(markup.includes('href="#' + target + '"'));
+      }
+      assert.match(markup, /href="test7\.html"/);
+      assert.match(markup, /href="test13\.html"/);
     } else if (topic.id === "M18-T02") {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.match(markup, /normalized exact duplicates=1\/4/);
