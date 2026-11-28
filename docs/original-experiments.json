@@ -704,6 +704,11 @@
           "id": "M15-T01",
           "relevance": "Supporting",
           "connection": "Use TC10's expected sequence and saved trace to review an agent suite's independent execution checks."
+        },
+        {
+          "id": "M17-T01",
+          "relevance": "Supporting",
+          "connection": "Compare TC10's correct account ID with its missed search step and failed aggregate argument check."
         }
       ]
     },

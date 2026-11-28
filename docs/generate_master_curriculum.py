@@ -366,6 +366,9 @@ def prose(markdown):
                 "Source": "Northstar starter evidence",
                 "Evidence or memory dimension": "Long-context evaluation dimensions",
                 "Memory lifecycle step": "Memory lifecycle audit",
+                "Routing label": "Northstar intake label definitions",
+                "Evidence situation": "Missing or ambiguous intake evidence",
+                "Extraction review criterion": "Structured intake annotation rubric",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS

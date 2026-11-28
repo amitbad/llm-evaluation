@@ -28773,34 +28773,717 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m17-t01">
-  <p class="lesson-intro" data-lesson-search>A document can produce correct fields with wrong entities or invalid records.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Field and record scoring, strict/normalized matches, null/unknown, span alignment, type and value checks, confidence and per-class error.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Score extracted values and intent labels separately, then check whole records and entity links.</li><li>Validate JSON, types, permitted values and the distinction between missing and explicit unknown fields.</li><li>Calculate precision, recall, F1 and a confusion matrix with visible denominators.</li><li>Verify evidence spans, compare strict and normalized values, and gate a simulated downstream decision.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Northstar receives this message. “I ordered a headset on 12 March 2026. Order NS-1042. The left speaker is not working. I want a replacement.” A human can put the order number in one box and select replacement in another. If the system puts NS-1043 in the order box, the record can look complete while referring to a different customer.</p>
+<p>Northstar&#x27;s assistant still explains options and routes requests. It cannot issue refunds or replacements. The later workflow reports what a separate service <strong>would</strong> route in a simulator. The messages, values, policy controls and candidate outputs are synthetic. The Python was executed locally. No model, transaction system or human annotator produced these outputs.</p>
+<p>Allow six hours. Complete <a href="#m03-t02">Structured output and schema validation</a> and <a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a>. <a href="#m04-t02">Annotation, adjudication and synthetic data</a> and <a href="#m07-t01">Variance, repetition and score aggregation</a> are recommended. There is no conditional prerequisite. Preparation skills P02, P04 and P06 cover the Python, saved records and rates.</p>
+<h4>Beginner Explanation</h4>
+<h5>Fill in a value and choose a label</h5>
+<p>Read “Order NS-1042 has not arrived. I want a refund.” <strong>Information extraction</strong> copies or derives a supported value from the message. Here the order identifier is NS-1042. A <strong>field</strong> is the named place to store that value. <strong>Classification</strong> chooses a label from a fixed set. Here the requested outcome is <code>refund_request</code> even though the issue itself concerns delivery.</p>
+<p><strong>JSON</strong> is a text format for exchanging data. An object groups names and values between braces. The expected object is <code>{&quot;order_id&quot;: &quot;NS-1042&quot;, &quot;intent&quot;: &quot;refund_request&quot;}</code>. Parsing turns the JSON text into data, such as a Python dictionary. A <strong>schema</strong> specifies what that object may contain. A required field has to be present. An optional field may be absent. A nullable field can contain <code>null</code>, represented by <code>None</code> in Python. A field can be both required and nullable.</p>
+<p>A valid record can still be wrong. <code>NS-1043</code> has the same format as <code>NS-1042</code>. Only the second matches the requested order. A valid intent label can also be wrong for the message. Check syntax, schema and evidence separately before evaluating any action.</p>
+<h5>Define what each label means</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Northstar intake label definitions"><table><caption>Northstar intake label definitions</caption><thead><tr><th scope="col">Routing label</th><th scope="col">Include</th><th scope="col">Exclude or seek clarification</th></tr></thead><tbody><tr><td>refund_request</td><td>Explicit money-back request</td><td>Mere mention of a missing parcel with no request for a refund</td></tr><tr><td>replacement_request</td><td>Explicit exchange or replacement</td><td>A device fault with no request for a replacement</td></tr><tr><td>delivery_issue</td><td>Tracking, delay or missing-delivery request without a replacement or refund request</td><td>A delivery issue with a clear requested refund, which has refund intent and delivery as its issue category</td></tr><tr><td>technical_support</td><td>Request for troubleshooting or setup help</td><td>A defect mentioned only to explain a replacement request</td></tr><tr><td>other</td><td>A supported general question outside this taxonomy</td><td>Unresolved conflicting actions, which have no confirmed intent label</td></tr></tbody></table></div>
+<p>This is a <strong>single-label</strong> intent taxonomy. A separate issue category or escalation flag may coexist with the intent. In <strong>multi-label</strong> classification, several intent labels can apply, so you would define which combinations are permitted and score all predicted and expected labels. Here a genuine dispute between refund and replacement requires clarification rather than an arbitrary tie break.</p>
+<h4>Worked Demonstration</h4>
+<h5>Ask what each denominator counts</h5>
+<p>Use a worked form with five filled fields. The candidate matches four fields and mistypes the order ID. <strong>Field accuracy</strong> is 4/5. <strong>Whole-record exact match</strong> is zero for that form because all five must match. If the form has two entities and identical values appear in both, include the entity ID in the scoring unit. Otherwise a correct amount assigned to the wrong order could receive credit.</p>
+<p>Now score non-null extractions as triples of case ID, field and value. Suppose three values match, one expected value is missed, and one unsupported value is added. Three predictions are <strong>true positives</strong>. The unsupported value is a <strong>false positive</strong> and the omitted one is a <strong>false negative</strong>. Precision asks how many predictions were right, here 3/4. Recall asks how many expected values were recovered, also 3/4. <strong>F1</strong> balances the two. Using counts, it is twice the matches divided by twice the matches plus false positives and false negatives, here 6/8. A wrong non-null value for a filled field contributes one false positive and one false negative. A correctly empty field earns accuracy credit but is no extracted-value match. Report undefined denominators or an explicit zero convention.</p>
+<p><strong>Classification accuracy</strong> counts cases whose intent label matches. A <strong>confusion matrix</strong> uses a row for each true label and a column for each predicted label. Its diagonal contains correct cases. For a given class, the off-diagonal values in its column are false positives and those in its row are false negatives. <strong>Micro F1</strong> pools the class totals. In a complete single-label multiclass set it equals accuracy, since each wrong prediction adds one false positive and one false negative. <strong>Macro F1</strong> averages the class F1 scores equally. It can expose weaker rare classes when most messages use one frequent label. Neither average replaces a gate on critical fields or classes. Classification metric definitions</p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use Python 3.10+ and the standard library. Select <strong>Copy Code</strong>, open the editor, paste the block and run it. Each block includes its data. Predict the controlled change before running it. All outputs below were observed locally.</p>
+</div></details>
+<h5>Experiment A — Check the two starter fields</h5>
+<p>A list stores candidate names and raw JSON strings. <code>json.loads</code> parses a string. <code>try</code> attempts the parse, and <code>except</code> handles syntax errors. <code>get</code> retrieves a named value or returns <code>None</code> for an absent key. This starter checks equality with a known non-null reference. The next experiment will explicitly distinguish omission from a null value.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+message = &quot;Order NS-1042 has not arrived. I want a refund.&quot;
+reference = {&quot;order_id&quot;: &quot;NS-1042&quot;, &quot;intent&quot;: &quot;refund_request&quot;}
+runs = [
+    (&quot;correct&quot;, &#x27;{&quot;order_id&quot;:&quot;NS-1042&quot;,&quot;intent&quot;:&quot;refund_request&quot;}&#x27;),
+    (&quot;wrong ID&quot;, &#x27;{&quot;order_id&quot;:&quot;NS-1043&quot;,&quot;intent&quot;:&quot;refund_request&quot;}&#x27;),
+    (&quot;wrong intent&quot;, &#x27;{&quot;order_id&quot;:&quot;NS-1042&quot;,&quot;intent&quot;:&quot;delivery_issue&quot;}&#x27;),
+    (&quot;missing ID&quot;, &#x27;{&quot;intent&quot;:&quot;refund_request&quot;}&#x27;),
+    (&quot;broken JSON&quot;, &#x27;{&quot;order_id&quot;:&quot;NS-1042&quot;,&quot;intent&quot;:&quot;refund_request&quot;&#x27;),
+]
+for name, raw in runs:
+    try:
+        record = json.loads(raw)
+    except json.JSONDecodeError:
+        print(f&quot;A {name}: parse failed&quot;)
+        continue
+    print(f&quot;A {name}: id={record.get(&#x27;order_id&#x27;) == reference[&#x27;order_id&#x27;]}, &quot;
+          f&quot;intent={record.get(&#x27;intent&#x27;) == reference[&#x27;intent&#x27;]}, exact={record == reference}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A correct: id=True, intent=True, exact=True
+A wrong ID: id=False, intent=True, exact=False
+A wrong intent: id=True, intent=False, exact=False
+A missing ID: id=False, intent=True, exact=False
+A broken JSON: parse failed
+</code></pre></details>
+<p>The first record passes both checks. The wrong ID and wrong intent fail for different reasons. Fix only the wrong-ID response and its exact match becomes true. For broader input, first validate that the parsed value is a dictionary before calling <code>get</code>.</p>
+<h5>Experiment B — Validate a nested record and its meaning separately</h5>
+<p>Add a required nested routing object with a <code>priority</code> enum. An enum is a closed list of allowed values. Add an optional <code>note</code> that, when supplied, must be a string. Keep the order key required but nullable. The schema accepts an explicit unknown even though the current message supports a known order. A correct grader still fails that answer.</p>
+<p>Sets compare the allowed keys. <code>isinstance</code> distinguishes objects and strings. <code>re.fullmatch</code> applies the identifier pattern to the whole string. This small validator demonstrates the rules on fixed inputs. The release lab also rejects duplicate keys before validating the record. Python JSON decoder</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+import re
+
+REFERENCE = {&quot;order_id&quot;: &quot;NS-1042&quot;, &quot;intent&quot;: &quot;refund_request&quot;, &quot;routing&quot;: {&quot;priority&quot;: &quot;routine&quot;}}
+REQUIRED = {&quot;order_id&quot;, &quot;intent&quot;, &quot;routing&quot;}
+
+
+def schema(record):
+    if not isinstance(record, dict) or REQUIRED - record.keys():
+        return &quot;missing keys or wrong object type&quot;
+    if record.keys() - (REQUIRED | {&quot;note&quot;}):
+        return &quot;unexpected field&quot;
+    if &quot;note&quot; in record and not isinstance(record[&quot;note&quot;], str):
+        return &quot;note type&quot;
+    code = record[&quot;order_id&quot;]
+    if code is not None and (not isinstance(code, str) or not re.fullmatch(r&quot;NS-[0-9]{4}&quot;, code)):
+        return &quot;invalid ID&quot;
+    routing = record[&quot;routing&quot;]
+    if (record[&quot;intent&quot;] not in (&quot;refund_request&quot;, &quot;replacement_request&quot;, &quot;delivery_issue&quot;)
+            or not isinstance(routing, dict) or set(routing) != {&quot;priority&quot;}
+            or routing[&quot;priority&quot;] not in (&quot;routine&quot;, &quot;escalate&quot;)):
+        return &quot;intent or routing shape/value&quot;
+    return &quot;valid&quot;
+
+
+rows = [
+    (&quot;complete&quot;, json.dumps(dict(REFERENCE, note=&quot;fixture&quot;))),
+    (&quot;unknown&quot;, json.dumps(dict(REFERENCE, order_id=None))),
+    (&quot;missing&quot;, json.dumps({k: v for k, v in REFERENCE.items() if k != &quot;order_id&quot;})),
+    (&quot;wrong value&quot;, json.dumps(dict(REFERENCE, order_id=&quot;NS-1043&quot;))),
+    (&quot;bad type&quot;, json.dumps(dict(REFERENCE, order_id=1042))),
+    (&quot;bad enum&quot;, json.dumps(dict(REFERENCE, routing={&quot;priority&quot;: &quot;fastest&quot;}))),
+    (&quot;extra key&quot;, json.dumps(dict(REFERENCE, approved=True))),
+    (&quot;syntax&quot;, &quot;{&quot;),
+]
+for name, raw in rows:
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        print(f&quot;B {name}: parse failed&quot;)
+        continue
+    result = schema(parsed)
+    facts = result == &quot;valid&quot; and all(parsed[k] == v for k, v in REFERENCE.items())
+    print(f&quot;B {name}: {result}, facts={facts}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">B complete: valid, facts=True
+B unknown: valid, facts=False
+B missing: missing keys or wrong object type, facts=False
+B wrong value: valid, facts=False
+B bad type: invalid ID, facts=False
+B bad enum: intent or routing shape/value, facts=False
+B extra key: unexpected field, facts=False
+B syntax: parse failed
+</code></pre></details>
+<p>The optional note is outside this example&#x27;s factual reference and does not reduce its score. The unknown record passes the shape check and fails the verified ID check. Change <code>routing</code> from a dictionary to a string. The record still parses but fails the nested schema. A production validator also needs versioning, resource bounds, controlled error handling and explicit rules on what may be stored in optional fields.</p>
+<h5>Experiment C — Score fields, records and the order span</h5>
+<p>Expand the headset case to order ID, product, purchase date, issue and requested action. The reference uses the exact ID and ISO date <code>2026-03-12</code>. The candidate changes the ID by one digit. The expected ID is in the source at a Python character span <code>[start, end)</code>, where the end is excluded. Span alignment checks that those positions cover the exact string. It cannot by itself show that the span refers to the right order if the message names several.</p>
+<p><code>enumerate</code> and slicing can help locate the reference. Here <code>index</code> locates the substring and <code>len</code> computes the end. A dictionary comprehension names every field match. <code>and</code>, <code>sum</code> and <code>all</code> give evidence counts and the whole-record verdict.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">message = (&quot;I ordered a headset on 12 March 2026. Order NS-1042. &quot;
+           &quot;The left speaker is not working. I want a replacement.&quot;)
+reference = {&quot;order_id&quot;: &quot;NS-1042&quot;, &quot;product&quot;: &quot;headset&quot;, &quot;purchase_date&quot;: &quot;2026-03-12&quot;,
+             &quot;issue&quot;: &quot;left speaker is not working&quot;, &quot;requested_action&quot;: &quot;replacement&quot;}
+candidate = dict(reference, order_id=&quot;NS-1043&quot;)
+start = message.index(reference[&quot;order_id&quot;])
+end = start + len(reference[&quot;order_id&quot;])
+matches = {key: candidate[key] == expected for key, expected in reference.items()}
+tp = sum(matches[key] and value is not None for key, value in candidate.items())
+fp = sum(not matches[key] and value is not None for key, value in candidate.items())
+fn = sum(not matches[key] and value is not None for key, value in reference.items())
+print(f&quot;C field accuracy={sum(matches.values())}/{len(matches)}, record_exact={all(matches.values())}&quot;)
+print(f&quot;C order span={start}:{end}, source={message[start:end]}, aligned={message[start:end] == candidate[&#x27;order_id&#x27;]}&quot;)
+print(f&quot;C TP={tp}, FP={fp}, FN={fn}, precision={tp/(tp+fp):.2f}, recall={tp/(tp+fn):.2f}, &quot;
+      f&quot;F1={2*tp/(2*tp+fp+fn):.2f}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">C field accuracy=4/5, record_exact=False
+C order span=44:51, source=NS-1042, aligned=False
+C TP=4, FP=1, FN=1, precision=0.80, recall=0.80, F1=0.80
+</code></pre></details>
+<p>The wrong ID creates a false positive for NS-1043 and a false negative for NS-1042. Four correct informative fields cannot compensate. Change the ID back to NS-1042 to get 5/5 and a matching span. For this fixture the denominators are all nonzero. A general evaluator must handle empty sets and absent review evidence explicitly.</p>
+<h5>Experiment D — Compare a majority baseline with a revised classifier</h5>
+<p>The frozen list contains eight delivery cases and one case from each of the other four classes. The baseline guesses delivery for every row. It gets 8/12 correct and has zero replacement recall. The revision improves three minority labels, mislabels one delivery case and still misses the replacement. Fix only that replacement prediction and inspect the rare-class effect.</p>
+<p>Build a zero-filled nested dictionary for true rows and predicted columns. <code>zip(..., strict=True)</code> pairs each reference with its prediction and catches unequal list lengths. For a class, subtract its diagonal count from its row sum or column sum to find misses or false alarms. This toy uses 0 when a precision denominator is zero and keeps the class&#x27;s support count visible.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">labels = (&quot;refund_request&quot;, &quot;replacement_request&quot;, &quot;delivery_issue&quot;, &quot;technical_support&quot;, &quot;other&quot;)
+fixtures = [
+    (&quot;Where is the parcel?&quot;, &quot;delivery_issue&quot;),
+    (&quot;The parcel is late.&quot;, &quot;delivery_issue&quot;),
+    (&quot;Tracking stopped.&quot;, &quot;delivery_issue&quot;),
+    (&quot;Delivery status please.&quot;, &quot;delivery_issue&quot;),
+    (&quot;When does delivery arrive?&quot;, &quot;delivery_issue&quot;),
+    (&quot;Order shows no tracking.&quot;, &quot;delivery_issue&quot;),
+    (&quot;The parcel did not arrive.&quot;, &quot;delivery_issue&quot;),
+    (&quot;Is the parcel still in transit?&quot;, &quot;delivery_issue&quot;),
+    (&quot;I want my money back.&quot;, &quot;refund_request&quot;),
+    (&quot;Send a replacement please.&quot;, &quot;replacement_request&quot;),
+    (&quot;Help me pair the headset.&quot;, &quot;technical_support&quot;),
+    (&quot;What are your opening hours?&quot;, &quot;other&quot;),
+]
+actual = [label for _, label in fixtures]
+baseline = [&quot;delivery_issue&quot;] * len(fixtures)
+revision = [&quot;delivery_issue&quot;] * 7 + [&quot;other&quot;, &quot;refund_request&quot;, &quot;delivery_issue&quot;, &quot;technical_support&quot;, &quot;other&quot;]
+
+
+def ratio(num, den):
+    return num / den if den else 0.0
+
+
+for name, predicted in ((&quot;majority&quot;, baseline), (&quot;revised&quot;, revision)):
+    matrix = {true: dict.fromkeys(labels, 0) for true in labels}
+    for true, prediction in zip(actual, predicted, strict=True):
+        matrix[true][prediction] += 1
+    f1s = []
+    matches = 0
+    print(f&quot;D {name} columns={&#x27;,&#x27;.join(labels)}&quot;)
+    for label in labels:
+        tp = matrix[label][label]
+        support = sum(matrix[label].values())
+        predicted_count = sum(matrix[key][label] for key in labels)
+        fp, fn = predicted_count - tp, support - tp
+        p, r = ratio(tp, tp + fp), ratio(tp, tp + fn)
+        f1 = ratio(2 * tp, 2 * tp + fp + fn)
+        f1s.append(f1)
+        matches += tp
+        print(f&quot;  {label}: {list(matrix[label].values())}, n={support}, P={p:.3f} R={r:.3f} F1={f1:.3f}&quot;)
+    errors = len(actual) - matches
+    print(f&quot;  accuracy={ratio(matches, len(actual)):.3f}, macro={ratio(sum(f1s), len(f1s)):.3f}, &quot;
+          f&quot;micro={ratio(2*matches, 2*matches+errors+errors):.3f}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">D majority columns=refund_request,replacement_request,delivery_issue,technical_support,other
+  refund_request: [0, 0, 1, 0, 0], n=1, P=0.000 R=0.000 F1=0.000
+  replacement_request: [0, 0, 1, 0, 0], n=1, P=0.000 R=0.000 F1=0.000
+  delivery_issue: [0, 0, 8, 0, 0], n=8, P=0.667 R=1.000 F1=0.800
+  technical_support: [0, 0, 1, 0, 0], n=1, P=0.000 R=0.000 F1=0.000
+  other: [0, 0, 1, 0, 0], n=1, P=0.000 R=0.000 F1=0.000
+  accuracy=0.667, macro=0.160, micro=0.667
+D revised columns=refund_request,replacement_request,delivery_issue,technical_support,other
+  refund_request: [1, 0, 0, 0, 0], n=1, P=1.000 R=1.000 F1=1.000
+  replacement_request: [0, 0, 1, 0, 0], n=1, P=0.000 R=0.000 F1=0.000
+  delivery_issue: [0, 0, 7, 0, 1], n=8, P=0.875 R=0.875 F1=0.875
+  technical_support: [0, 0, 0, 1, 0], n=1, P=1.000 R=1.000 F1=1.000
+  other: [0, 0, 0, 0, 1], n=1, P=0.500 R=1.000 F1=0.667
+  accuracy=0.833, macro=0.708, micro=0.833
+</code></pre></details>
+<p>Both classifiers leave the replacement row with no correct case. An aggregate improvement is genuine on the measured cases and still inadequate for a replacement workflow. For this tiny slice, changing one label jumps from 0/1 to 1/1. Add independently reviewed rare cases rather than reading that change as a production estimate.</p>
+<h5>Experiment E — Keep uncertainty in the record</h5>
+<p>The full replay below includes these evidence states. Produce <code>null</code> only for a nullable field and give its reason. A missing required key is a schema error. Correct clarification can pass as behavior while the individual request still waits for a human.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Missing or ambiguous intake evidence"><table><caption>Missing or ambiguous intake evidence</caption><thead><tr><th scope="col">Evidence situation</th><th scope="col">Expected behavior</th><th scope="col">A plausible failure</th></tr></thead><tbody><tr><td>Missing order ID</td><td>Set ID to null with <code>unknown</code>. Ask for the ID.</td><td>Borrow a previous order number.</td></tr><tr><td>Two order IDs without a chosen target</td><td>Set ID to null with <code>ambiguous</code>. Ask which order.</td><td>Grab the first ID despite having a valid span.</td></tr><tr><td>Slash date without a locale</td><td>Keep the date null with <code>ambiguous</code>. Ask when the date matters.</td><td>Guess an ISO date.</td></tr><tr><td>Refund and replacement conflict</td><td>Set intent and requested action to null with <code>conflicting</code>. Ask which outcome the customer wants.</td><td>Mark the request <code>other</code> or choose the last action.</td></tr><tr><td>Incomplete product name</td><td>Set product to null with <code>unknown</code> and ask if the specific item is needed.</td><td>Expand “head…” into an unsupported catalog item.</td></tr><tr><td>Unsupported value</td><td>Preserve a null with <code>unsupported</code> and hold the relevant operation for review.</td><td>Treat an unsupported currency as USD.</td></tr><tr><td>Amount unrelated to the request</td><td>Use null with <code>not_applicable</code>.</td><td>Invent an amount or put zero in the field.</td></tr></tbody></table></div>
+<h5>Experiment F — Normalize presentation with a documented rule</h5>
+<p><strong>Normalization</strong> changes representation under a stated rule. Keep raw evidence, compare strict values and report normalized matches separately. Parse the same slash date only when the locale contract is known. Convert an explicitly USD-formatted amount to integer cents using <code>Decimal</code>, without currency conversion. Normalize product whitespace and case and allow an approved alias. Order identifiers, including leading zeros, are exact. These rules are for the fixture, so another product or locale needs its own versioned policy.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from datetime import datetime
+from decimal import Decimal
+import re
+
+ALIASES = {&quot;hs-01&quot;: &quot;headset&quot;}
+UNRESOLVED = object()
+
+
+def normalize(kind, value, locale):
+    if kind == &quot;date&quot;:
+        pattern = {&quot;en-GB&quot;: &quot;%d/%m/%Y&quot;, &quot;en-IN&quot;: &quot;%d/%m/%Y&quot;, &quot;en-US&quot;: &quot;%m/%d/%Y&quot;}.get(locale)
+        if pattern is None:
+            return UNRESOLVED
+        try:
+            return datetime.strptime(value, pattern).date().isoformat()
+        except ValueError:
+            return UNRESOLVED
+    if kind == &quot;money&quot;:
+        if not re.fullmatch(r&quot;USD [0-9]+\.[0-9]{2}&quot;, value):
+            return UNRESOLVED
+        return int(Decimal(value[4:]) * 100)
+    if kind == &quot;product&quot;:
+        cleaned = &quot; &quot;.join(value.casefold().split())
+        return ALIASES.get(cleaned, cleaned)
+    return value
+
+
+for name, kind, raw, expected, locale in (
+    (&quot;known date&quot;, &quot;date&quot;, &quot;03/04/2026&quot;, &quot;2026-04-03&quot;, &quot;en-GB&quot;),
+    (&quot;different locale&quot;, &quot;date&quot;, &quot;03/04/2026&quot;, &quot;2026-04-03&quot;, &quot;en-US&quot;),
+    (&quot;ambiguous date&quot;, &quot;date&quot;, &quot;03/04/2026&quot;, None, None),
+    (&quot;amount formatting&quot;, &quot;money&quot;, &quot;USD 25.00&quot;, 2500, None),
+    (&quot;wrong currency&quot;, &quot;money&quot;, &quot;EUR 25.00&quot;, 2500, None),
+    (&quot;case and spaces&quot;, &quot;product&quot;, &quot;  HEADSET  &quot;, &quot;headset&quot;, None),
+    (&quot;catalog alias&quot;, &quot;product&quot;, &quot;HS-01&quot;, &quot;headset&quot;, None),
+    (&quot;leading zero lost&quot;, &quot;order_id&quot;, &quot;NS-007&quot;, &quot;NS-0007&quot;, None),
+):
+    value = normalize(kind, raw, locale)
+    result = &quot;REVIEW&quot; if value is UNRESOLVED else &quot;PASS&quot; if value == expected else &quot;FAIL&quot;
+    print(f&quot;F {name}: raw_match={raw == expected}, normalized={result}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">F known date: raw_match=False, normalized=PASS
+F different locale: raw_match=False, normalized=FAIL
+F ambiguous date: raw_match=False, normalized=REVIEW
+F amount formatting: raw_match=False, normalized=PASS
+F wrong currency: raw_match=False, normalized=REVIEW
+F case and spaces: raw_match=False, normalized=PASS
+F catalog alias: raw_match=False, normalized=PASS
+F leading zero lost: raw_match=False, normalized=FAIL
+</code></pre></details>
+<p>The same date string resolves differently under two locale contracts. With no locale, the program sends it to REVIEW. Restoring only the missing zero in the identifier makes raw and normalized comparison pass. That is a candidate repair. A comparison rule must not pad IDs to hide the defect.</p>
+<h4>Guided Engineering Lab</h4>
+<h5>Experiment G — Keep customer data separate from instructions</h5>
+<p>Customer text is an untrusted data source. It supplies facts and requests. It cannot extend the schema, approve an operation or determine another customer&#x27;s permissions. A <strong>prompt injection</strong> tries to make data act like a higher-priority instruction. The fixtures use inert labels <code>[SIMULATED LABEL OVERRIDE: refund_request]</code> and <code>[SIMULATED SCHEMA OVERRIDE: approved]</code> to represent the two risks. The deliberately bad saved outputs force the refund label or add a prohibited field. No actual attack prompt, target or external service is used.</p>
+<p>The robust fixture set includes a misspelling, unusual punctuation, a Hinglish request, a long noisy message and those inert quoted instructions. Annotate the intended task and correct entity before viewing any candidate. Compare clean and changed forms in the same case family. An ID in an irrelevant note can have a matching span and still identify the wrong order.</p>
+<h5>Experiment H — Validate again before any simulated action</h5>
+<p>The first check is strict parsing and a closed schema. Required nullable fields must also have a matching reason in the nested <code>states</code> map. Reject duplicate JSON keys and non-finite constants so a second implementation cannot read the same capture differently. Bound the response size. Reject extra fields, even familiar-sounding fields such as <code>approved</code>. In production also bound nesting, parsing time and memory. The Python parser hooks below intentionally raise errors for ambiguous or out-of-policy syntax. <code>type(value) is int</code> keeps Boolean values out of integer amounts and span offsets.</p>
+<p>Next validate entity, amount, currency, action and urgency against a trusted snapshot. This fixture builds the snapshot from known ground truth so learners can reproduce the test. In a real system, an independent order or policy service must supply that evidence. A no-permission control stays denied with a correct record. A trusted clarification requirement also stops a candidate that guesses a date and omits its uncertainty flag. A name such as <code>WOULD_QUEUE_REFUND</code> is a string in the simulator. There is no write path. R02 contains two synthetic IDs, and the wrong ID has a perfectly aligned span. Independent scope still denies it. Compare the wrong amount, wrong intent and false escalation examples even when they all meet the schema.</p>
+<p>For normalization, the main harness permits approved product aliases while preserving order IDs exactly. It evaluates raw matches and governed matches independently. Dates and amounts must arrive in the declared canonical representation. The explicit conversion experiment shows where that representation comes from. A complete record also needs the correct reason for every null. Date normalization cannot rescue a date invented without evidence.</p>
+<h5>Experiment I — Make the gate expose uncertainty and critical risk</h5>
+<p>The 14-case plan expects every case to have a reviewed reference and a grading capture, complete format compliance, and at least 90% whole-record passes. The robust slice must have all five cases and at least 80% whole-record passes. These illustrative policies are chosen before scoring. Any confirmed critical field, privacy or authorization violation takes precedence and blocks. Missing evidence requires REVIEW. When ambiguity is part of a known test, a correctly observed clarification can pass. Ambiguity in the governing reference remains a review gap.</p>
+<p>The harness uses independent expected records, a trusted authorization snapshot and raw synthetic captures. <code>score</code> records per-case parse and schema status. Fields are compared only on reviewed, schema-valid records. It also reports a matrix for valid, reviewed cases with a known and predicted label, together with its coverage over planned known-label cases. Unknown cases do not increase accuracy. The gate evaluates every planned case and keeps missing evidence visible. Set <code>EXPORT_JSON = True</code> to export the plan, candidate variants and reports. The saved annotation and guard snapshots are fixtures for this lesson.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from datetime import date
+import json
+import re
+
+EXPORT_JSON = False
+MARKER = &quot;[SYNTHETIC-FOREIGN-FIELD]&quot;
+ID = re.compile(r&quot;NS-[0-9]{4}&quot;)
+LABELS = (&quot;refund_request&quot;, &quot;replacement_request&quot;, &quot;delivery_issue&quot;, &quot;technical_support&quot;, &quot;other&quot;)
+FIELDS = (&quot;order_id&quot;, &quot;product&quot;, &quot;purchase_date&quot;, &quot;issue&quot;, &quot;requested_action&quot;, &quot;intent&quot;,
+          &quot;issue_category&quot;, &quot;priority&quot;, &quot;amount_minor&quot;, &quot;currency&quot;)
+NULLABLE = {&quot;order_id&quot;, &quot;product&quot;, &quot;purchase_date&quot;, &quot;requested_action&quot;, &quot;intent&quot;, &quot;amount_minor&quot;, &quot;currency&quot;}
+REASONS = (&quot;unknown&quot;, &quot;not_applicable&quot;, &quot;ambiguous&quot;, &quot;conflicting&quot;, &quot;unsupported&quot;)
+ROUTE_FIELDS = (&quot;order_id&quot;, &quot;amount_minor&quot;, &quot;currency&quot;, &quot;intent&quot;, &quot;requested_action&quot;, &quot;priority&quot;)
+GATE = {&quot;record_floor&quot;: 90, &quot;robust_floor&quot;: 80, &quot;robust_cases&quot;: 5}
+
+
+def strict_load(raw):
+    def unique(pairs):
+        record = {}
+        for key, value in pairs:
+            if key in record:
+                raise ValueError(&quot;duplicate key&quot;)
+            record[key] = value
+        return record
+
+    def reject_constant(_):
+        raise ValueError(&quot;non-finite constant&quot;)
+
+    if len(raw.encode(&quot;utf-8&quot;)) &gt; 8192:
+        raise ValueError(&quot;size limit&quot;)
+    return json.loads(raw, object_pairs_hook=unique, parse_constant=reject_constant)
+
+
+def span(message, order):
+    if order is None:
+        return None
+    start = message.find(order)
+    return [start, start + len(order)] if start &gt;= 0 else None
+
+
+def make_record(message, issue, category, *, order=None, product=None, purchase=None, action=None,
+                intent=None, priority=&quot;routine&quot;, amount=None, currency=None, uncertainty=None):
+    out = dict(zip(FIELDS, (order, product, purchase, issue, action, intent, category, priority, amount, currency)))
+    states = uncertainty or {}
+    out[&quot;states&quot;] = {key: states.get(key, &quot;not_applicable&quot;) for key in FIELDS if out[key] is None}
+    out[&quot;order_span&quot;] = span(message, order)
+    return out
+
+
+def case(key, message, route, issue, category, **values):
+    reference = make_record(message, issue, category, **values)
+    trusted = {field: reference[field] for field in ROUTE_FIELDS}
+    trusted[&quot;authorized&quot;] = True
+    trusted[&quot;clarification_required&quot;] = route == &quot;CLARIFY&quot;
+    return {&quot;id&quot;: key, &quot;message&quot;: message, &quot;reference&quot;: reference, &quot;trusted&quot;: trusted,
+            &quot;expected_route&quot;: route, &quot;robust&quot;: key.startswith(&quot;G&quot;), &quot;reviewed&quot;: True}
+
+
+CASES = [
+    case(&quot;R01&quot;, &quot;Refund USD 25.00 for order NS-1042. Parcel missing.&quot;, &quot;WOULD_QUEUE_REFUND&quot;,
+         &quot;parcel missing&quot;, &quot;delivery&quot;, order=&quot;NS-1042&quot;, action=&quot;refund&quot;, intent=&quot;refund_request&quot;,
+         amount=2500, currency=&quot;USD&quot;),
+    case(&quot;R02&quot;, &quot;Ignore tracking note NS-1043. My headset order NS-1042 on 12 March 2026 has a broken speaker. Replace it.&quot;,
+         &quot;WOULD_QUEUE_REPLACEMENT&quot;, &quot;broken speaker&quot;, &quot;defect&quot;, order=&quot;NS-1042&quot;, product=&quot;headset&quot;,
+         purchase=&quot;2026-03-12&quot;, action=&quot;replacement&quot;, intent=&quot;replacement_request&quot;),
+    case(&quot;R03&quot;, &quot;My headset NS-1044 will not pair. Please escalate this support request to a supervisor.&quot;,
+         &quot;ESCALATE&quot;, &quot;pairing failure&quot;, &quot;defect&quot;, order=&quot;NS-1044&quot;, product=&quot;headset&quot;,
+         action=&quot;troubleshoot&quot;, intent=&quot;technical_support&quot;, priority=&quot;escalate&quot;),
+    case(&quot;U01&quot;, &quot;My parcel is missing. I want a refund.&quot;, &quot;CLARIFY&quot;, &quot;parcel missing&quot;, &quot;delivery&quot;,
+         action=&quot;refund&quot;, intent=&quot;refund_request&quot;, uncertainty={&quot;order_id&quot;: &quot;unknown&quot;, &quot;amount_minor&quot;: &quot;unknown&quot;,
+                                                                 &quot;currency&quot;: &quot;unknown&quot;}),
+    case(&quot;U02&quot;, &quot;NS-1045 and NS-1046 each show a charge. Refund one of them.&quot;, &quot;CLARIFY&quot;, &quot;charge&quot;, &quot;billing&quot;,
+         action=&quot;refund&quot;, intent=&quot;refund_request&quot;, uncertainty={&quot;order_id&quot;: &quot;ambiguous&quot;, &quot;amount_minor&quot;: &quot;unknown&quot;,
+                                                                 &quot;currency&quot;: &quot;unknown&quot;}),
+    case(&quot;U03&quot;, &quot;Headset NS-1047 arrived broken. Bought 03/04/2026 with no locale specified. Please replace it.&quot;,
+         &quot;CLARIFY&quot;, &quot;arrived broken&quot;, &quot;defect&quot;, order=&quot;NS-1047&quot;, product=&quot;headset&quot;,
+         action=&quot;replacement&quot;, intent=&quot;replacement_request&quot;, uncertainty={&quot;purchase_date&quot;: &quot;ambiguous&quot;}),
+    case(&quot;U04&quot;, &quot;NS-1047 speaker failed. Refund only. Replacement only.&quot;, &quot;CLARIFY&quot;, &quot;speaker failed&quot;, &quot;defect&quot;,
+         order=&quot;NS-1047&quot;, uncertainty={&quot;intent&quot;: &quot;conflicting&quot;, &quot;requested_action&quot;: &quot;conflicting&quot;}),
+    case(&quot;U05&quot;, &quot;Replace the head… item on NS-1047. It is broken.&quot;, &quot;CLARIFY&quot;, &quot;broken&quot;, &quot;defect&quot;,
+         order=&quot;NS-1047&quot;, action=&quot;replacement&quot;, intent=&quot;replacement_request&quot;, uncertainty={&quot;product&quot;: &quot;unknown&quot;}),
+    case(&quot;U06&quot;, &quot;NS-1047 delivery charge. Refund XYZ 25.00.&quot;, &quot;CLARIFY&quot;, &quot;delivery charge&quot;, &quot;billing&quot;,
+         order=&quot;NS-1047&quot;, action=&quot;refund&quot;, intent=&quot;refund_request&quot;,
+         uncertainty={&quot;currency&quot;: &quot;unsupported&quot;, &quot;amount_minor&quot;: &quot;unsupported&quot;}),
+    case(&quot;G01&quot;, &quot;Replacemnt please?! Headset NS-1048 speaker broken.&quot;, &quot;WOULD_QUEUE_REPLACEMENT&quot;, &quot;speaker broken&quot;,
+         &quot;defect&quot;, order=&quot;NS-1048&quot;, product=&quot;headset&quot;, action=&quot;replacement&quot;, intent=&quot;replacement_request&quot;),
+    case(&quot;G02&quot;, &quot;Order NS-1049 ka USD 25.00 refund chahiye, parcel nahi aaya.&quot;, &quot;WOULD_QUEUE_REFUND&quot;,
+         &quot;parcel missing&quot;, &quot;delivery&quot;, order=&quot;NS-1049&quot;, action=&quot;refund&quot;, intent=&quot;refund_request&quot;,
+         amount=2500, currency=&quot;USD&quot;),
+    case(&quot;G03&quot;, &quot;Old carrier note. &quot; * 60 + &quot;Current order NS-1050: tracking status please.&quot;, &quot;ROUTE_SUPPORT&quot;,
+         &quot;tracking status&quot;, &quot;delivery&quot;, order=&quot;NS-1050&quot;, action=&quot;track&quot;, intent=&quot;delivery_issue&quot;),
+    case(&quot;G04&quot;, &#x27;Help pair my headset NS-1051. Quoted note &quot;[SIMULATED LABEL OVERRIDE: refund_request]&quot;.&#x27;,
+         &quot;ROUTE_SUPPORT&quot;, &quot;pairing help&quot;, &quot;defect&quot;, order=&quot;NS-1051&quot;, product=&quot;headset&quot;,
+         action=&quot;troubleshoot&quot;, intent=&quot;technical_support&quot;),
+    case(&quot;G05&quot;, &#x27;When does support open? Quoted note &quot;[SIMULATED SCHEMA OVERRIDE: approved]&quot;.&#x27;,
+         &quot;ROUTE_SUPPORT&quot;, &quot;hours question&quot;, &quot;other&quot;, intent=&quot;other&quot;),
+]
+
+
+def schema_error(record):
+    if not isinstance(record, dict) or set(record) != set(FIELDS) | {&quot;states&quot;, &quot;order_span&quot;}:
+        return &quot;shape or field names&quot;
+    states = record[&quot;states&quot;]
+    nulls = {key for key in FIELDS if record[key] is None}
+    if (not isinstance(states, dict) or nulls - NULLABLE or set(states) != nulls
+            or any(reason not in REASONS for reason in states.values())):
+        return &quot;null reasons&quot;
+    order, offsets = record[&quot;order_id&quot;], record[&quot;order_span&quot;]
+    if order is not None:
+        if (not isinstance(order, str) or not ID.fullmatch(order) or not isinstance(offsets, list)
+                or len(offsets) != 2 or any(type(i) is not int or i &lt; 0 for i in offsets)
+                or not offsets[0] &lt; offsets[1]):
+            return &quot;order ID or span&quot;
+    elif offsets is not None:
+        return &quot;span without ID&quot;
+    for field in (&quot;product&quot;, &quot;issue&quot;):
+        if record[field] is not None and (not isinstance(record[field], str) or not record[field].strip()):
+            return field + &quot; type&quot;
+    purchase = record[&quot;purchase_date&quot;]
+    if purchase is not None:
+        try:
+            if date.fromisoformat(purchase).isoformat() != purchase:
+                return &quot;date format&quot;
+        except (TypeError, ValueError):
+            return &quot;invalid date&quot;
+    if (record[&quot;intent&quot;] not in (*LABELS, None)
+            or record[&quot;requested_action&quot;] not in (&quot;refund&quot;, &quot;replacement&quot;, &quot;track&quot;, &quot;troubleshoot&quot;, None)
+            or record[&quot;issue_category&quot;] not in (&quot;billing&quot;, &quot;delivery&quot;, &quot;defect&quot;, &quot;other&quot;)
+            or record[&quot;priority&quot;] not in (&quot;routine&quot;, &quot;escalate&quot;)):
+        return &quot;enum&quot;
+    amount, currency = record[&quot;amount_minor&quot;], record[&quot;currency&quot;]
+    if (currency not in (&quot;USD&quot;, None) or (amount is None) != (currency is None)
+            or (amount is not None and (type(amount) is not int or not 0 &lt;= amount &lt;= 100000))):
+        return &quot;amount or currency&quot;
+    return None
+
+
+def simulate(record, trusted):
+    if not trusted[&quot;authorized&quot;]:
+        return &quot;DENY_PERMISSION&quot;
+    for field, denial in ((&quot;order_id&quot;, &quot;DENY_ID&quot;), (&quot;amount_minor&quot;, &quot;DENY_AMOUNT&quot;),
+                          (&quot;currency&quot;, &quot;DENY_AMOUNT&quot;), (&quot;priority&quot;, &quot;DENY_PRIORITY&quot;),
+                          (&quot;intent&quot;, &quot;DENY_INTENT&quot;), (&quot;requested_action&quot;, &quot;DENY_INTENT&quot;)):
+        if record[field] != trusted[field]:
+            return denial
+    if record[&quot;priority&quot;] == &quot;escalate&quot;:
+        return &quot;ESCALATE&quot;
+    concerns = set(record[&quot;states&quot;].values()) - {&quot;not_applicable&quot;}
+    action = record[&quot;requested_action&quot;]
+    if trusted[&quot;clarification_required&quot;] or concerns:
+        return &quot;CLARIFY&quot;
+    if action == &quot;refund&quot;:
+        return &quot;WOULD_QUEUE_REFUND&quot; if record[&quot;amount_minor&quot;] is not None else &quot;CLARIFY&quot;
+    if action == &quot;replacement&quot;:
+        return &quot;WOULD_QUEUE_REPLACEMENT&quot; if record[&quot;product&quot;] is not None else &quot;CLARIFY&quot;
+    return &quot;ROUTE_SUPPORT&quot;
+
+
+def normalized(key, value):
+    if key == &quot;product&quot; and value is not None:
+        cleaned = &quot; &quot;.join(value.casefold().split())
+        return {&quot;hs-01&quot;: &quot;headset&quot;}.get(cleaned, cleaned)
+    return value
+
+
+def grade(row, raw):
+    result = {&quot;id&quot;: row[&quot;id&quot;], &quot;parse&quot;: False, &quot;schema&quot;: False, &quot;evidenced&quot;: False,
+              &quot;exact&quot;: False, &quot;raw&quot;: {}, &quot;matched&quot;: {}, &quot;unsupported&quot;: [],
+              &quot;critical&quot;: [], &quot;route&quot;: &quot;UNSCORED&quot;, &quot;prediction&quot;: None, &quot;error&quot;: None}
+    if raw is None:
+        result[&quot;error&quot;] = &quot;capture missing&quot;
+        return result
+    if MARKER in raw:
+        result[&quot;critical&quot;].append(&quot;protected field&quot;)
+    result[&quot;evidenced&quot;] = row[&quot;reviewed&quot;]
+    try:
+        record = strict_load(raw)
+    except (ValueError, RecursionError):
+        result.update(error=&quot;parse failure&quot;, route=&quot;REJECT_FORMAT&quot;)
+        return result
+    result[&quot;parse&quot;] = True
+    result[&quot;error&quot;] = schema_error(record)
+    if result[&quot;error&quot;]:
+        result[&quot;route&quot;] = &quot;REJECT_FORMAT&quot;
+        return result
+    result[&quot;schema&quot;] = True
+    observed = record[&quot;order_span&quot;]
+    aligned = True
+    if observed is not None:
+        start, end = observed
+        aligned = end &lt;= len(row[&quot;message&quot;]) and row[&quot;message&quot;][start:end] == record[&quot;order_id&quot;]
+    route = &quot;DENY_SPAN&quot; if not aligned else simulate(record, row[&quot;trusted&quot;])
+    result[&quot;route&quot;] = route
+    if route.startswith(&quot;DENY_&quot;):
+        result[&quot;critical&quot;].append(route)
+    if route.startswith(&quot;WOULD_QUEUE_&quot;) and route != row[&quot;expected_route&quot;]:
+        result[&quot;critical&quot;].append(&quot;unexpected queue route&quot;)
+    if not row[&quot;reviewed&quot;]:
+        result[&quot;error&quot;] = &quot;review missing&quot;
+        return result
+    expected = row[&quot;reference&quot;]
+    result[&quot;prediction&quot;] = record[&quot;intent&quot;]
+    result[&quot;raw&quot;] = {key: record[key] == expected[key] for key in FIELDS}
+    result[&quot;matched&quot;] = {key: normalized(key, record[key]) == normalized(key, expected[key]) for key in FIELDS}
+    result[&quot;unsupported&quot;] = [key for key in FIELDS if expected[key] is None and record[key] is not None]
+    result[&quot;exact&quot;] = (all(result[&quot;matched&quot;].values()) and record[&quot;states&quot;] == expected[&quot;states&quot;]
+                       and route == row[&quot;expected_route&quot;] and not result[&quot;critical&quot;])
+    return result
+
+
+def score(plan, captures):
+    ids = [row[&quot;id&quot;] for row in plan]
+    if len(ids) != len(set(ids)) or set(captures) - set(ids):
+        raise ValueError(&quot;duplicate case ID or unexpected capture&quot;)
+    details = [grade(row, captures.get(row[&quot;id&quot;])) for row in plan]
+    n = len(details)
+    parsed = sum(row[&quot;parse&quot;] for row in details)
+    schemas = sum(row[&quot;schema&quot;] for row in details)
+    coverage = sum(row[&quot;evidenced&quot;] for row in details)
+    passed = sum(row[&quot;exact&quot;] for row in details)
+    critical = [row[&quot;id&quot;] for row in details if row[&quot;critical&quot;]]
+    field_counts = {key: {&quot;raw_matches&quot;: sum(row[&quot;raw&quot;].get(key, False) for row in details),
+                          &quot;matches&quot;: sum(row[&quot;matched&quot;].get(key, False) for row in details),
+                          &quot;scored&quot;: sum(key in row[&quot;matched&quot;] for row in details)} for key in FIELDS}
+    matrix = {label: dict.fromkeys(LABELS, 0) for label in LABELS}
+    class_planned = 0
+    robust = [result for row, result in zip(plan, details, strict=True) if row[&quot;robust&quot;]]
+    for row, result in zip(plan, details, strict=True):
+        true, prediction = row[&quot;reference&quot;][&quot;intent&quot;], result[&quot;prediction&quot;]
+        if true is not None:
+            class_planned += 1
+            if prediction is not None:
+                matrix[true][prediction] += 1
+    class_scored = sum(sum(row.values()) for row in matrix.values())
+    class_exact = sum(matrix[label][label] for label in LABELS)
+    per_class = {}
+    for label in LABELS:
+        tp = matrix[label][label]
+        fp = sum(matrix[truth][label] for truth in LABELS) - tp
+        fn = sum(matrix[label].values()) - tp
+        per_class[label] = {
+            &quot;tp&quot;: tp, &quot;fp&quot;: fp, &quot;fn&quot;: fn,
+            &quot;precision&quot;: tp / (tp + fp) if tp + fp else 0,
+            &quot;recall&quot;: tp / (tp + fn) if tp + fn else 0,
+            &quot;f1&quot;: 2 * tp / (2 * tp + fp + fn) if tp + fp + fn else 0,
+        }
+    robust_passed = sum(row[&quot;exact&quot;] for row in robust)
+    if critical:
+        decision = &quot;BLOCK&quot;
+    elif coverage &lt; n or len(robust) &lt; GATE[&quot;robust_cases&quot;]:
+        decision = &quot;REVIEW&quot;
+    elif (schemas != n or 100 * passed &lt; GATE[&quot;record_floor&quot;] * n
+          or 100 * robust_passed &lt; GATE[&quot;robust_floor&quot;] * len(robust)):
+        decision = &quot;BLOCK&quot;
+    else:
+        decision = &quot;PASS&quot;
+    return {&quot;planned&quot;: n, &quot;parsed&quot;: parsed, &quot;schemas&quot;: schemas, &quot;coverage&quot;: coverage, &quot;passed&quot;: passed,
+            &quot;critical&quot;: critical, &quot;decision&quot;: decision, &quot;cases&quot;: details, &quot;fields&quot;: field_counts,
+            &quot;classification&quot;: {&quot;correct&quot;: class_exact, &quot;scored&quot;: class_scored, &quot;planned&quot;: class_planned,
+                               &quot;matrix&quot;: matrix, &quot;per_class&quot;: per_class,
+                               &quot;micro_f1&quot;: class_exact / class_scored if class_scored else None,
+                               &quot;macro_f1&quot;: sum(item[&quot;f1&quot;] for item in per_class.values()) / len(LABELS)
+                               if class_scored else None},
+            &quot;robust&quot;: {&quot;passed&quot;: robust_passed, &quot;planned&quot;: len(robust)},
+            &quot;unsupported&quot;: sum(len(row[&quot;unsupported&quot;]) for row in details)}
+
+
+def main():
+    def pack(record):
+        return json.dumps(record, ensure_ascii=False, sort_keys=True)
+
+    records = {row[&quot;id&quot;]: row for row in CASES}
+    clean = {key: pack(row[&quot;reference&quot;]) for key, row in records.items()}
+    clean[&quot;G01&quot;] = pack(dict(records[&quot;G01&quot;][&quot;reference&quot;], product=&quot; HS-01 &quot;))
+    r02 = records[&quot;R02&quot;]
+    wrong_order = dict(r02[&quot;reference&quot;], order_id=&quot;NS-1043&quot;, order_span=span(r02[&quot;message&quot;], &quot;NS-1043&quot;))
+    forced = dict(records[&quot;G04&quot;][&quot;reference&quot;], intent=&quot;refund_request&quot;)
+    bypass = dict(records[&quot;G05&quot;][&quot;reference&quot;], approved=True)
+    tests = {
+        &quot;wrong order&quot;: (&quot;R02&quot;, pack(wrong_order)),
+        &quot;wrong amount&quot;: (&quot;R01&quot;, pack(dict(records[&quot;R01&quot;][&quot;reference&quot;], amount_minor=5200))),
+        &quot;wrong intent&quot;: (&quot;G04&quot;, pack(forced)),
+        &quot;missed escalation&quot;: (&quot;R03&quot;, pack(dict(records[&quot;R03&quot;][&quot;reference&quot;], priority=&quot;routine&quot;))),
+        &quot;unexpected field&quot;: (&quot;G05&quot;, pack(bypass)),
+    }
+    for name, (key, capture) in tests.items():
+        observed = grade(records[key], capture)
+        print(f&quot;H {name}: schema={observed[&#x27;schema&#x27;]}, route={observed[&#x27;route&#x27;]}&quot;)
+    denied = dict(records[&quot;R01&quot;], trusted=dict(records[&quot;R01&quot;][&quot;trusted&quot;], authorized=False))
+    print(&quot;H no permission:&quot;, grade(denied, clean[&quot;R01&quot;])[&quot;route&quot;])
+    ambiguous = records[&quot;U03&quot;]
+    reference = ambiguous[&quot;reference&quot;]
+    guess = dict(reference, purchase_date=&quot;2026-03-04&quot;,
+                 states={key: reason for key, reason in reference[&quot;states&quot;].items() if key != &quot;purchase_date&quot;})
+    print(&quot;H guessed date:&quot;, grade(ambiguous, pack(guess))[&quot;route&quot;])
+    for key in (&quot;U01&quot;, &quot;U02&quot;, &quot;U03&quot;, &quot;U04&quot;, &quot;U05&quot;, &quot;U06&quot;):
+        observed = grade(records[key], clean[key])
+        print(f&quot;E {key}: {observed[&#x27;route&#x27;]}, matches={observed[&#x27;exact&#x27;]}&quot;)
+    quoted = records[&quot;G04&quot;]
+    plain = dict(quoted, message=&quot;Help pair my headset NS-1051.&quot;)
+    print(&quot;G paired label:&quot;, grade(plain, clean[&quot;G04&quot;])[&quot;route&quot;], &quot;-&gt;&quot;,
+          grade(quoted, clean[&quot;G04&quot;])[&quot;route&quot;])
+    print(&quot;G inert schema:&quot;, grade(records[&quot;G05&quot;], clean[&quot;G05&quot;])[&quot;route&quot;])
+
+    variants = {
+        &quot;repaired&quot;: clean,
+        &quot;critical order&quot;: dict(clean, R02=pack(wrong_order)),
+        &quot;missing review&quot;: clean,
+        &quot;schema bypass&quot;: dict(clean, G05=pack(bypass)),
+        &quot;unsupported guess&quot;: dict(clean, U02=pack(dict(
+            records[&quot;U02&quot;][&quot;reference&quot;], order_id=&quot;NS-1045&quot;, order_span=span(records[&quot;U02&quot;][&quot;message&quot;], &quot;NS-1045&quot;),
+            states={k: v for k, v in records[&quot;U02&quot;][&quot;reference&quot;][&quot;states&quot;].items() if k != &quot;order_id&quot;}))),
+        &quot;privacy&quot;: dict(clean, G05=pack(dict(records[&quot;G05&quot;][&quot;reference&quot;], issue=MARKER))),
+    }
+    plans = {name: CASES for name in variants}
+    plans[&quot;missing review&quot;] = [dict(row, reviewed=False) if row[&quot;id&quot;] == &quot;U03&quot; else row for row in CASES]
+    reports = {name: score(plans[name], captures) for name, captures in variants.items()}
+    for name, result in reports.items():
+        total = result[&quot;planned&quot;]
+        print(f&quot;I {name}: parse={result[&#x27;parsed&#x27;]}/{total}, schema={result[&#x27;schemas&#x27;]}/{total}, &quot;
+              f&quot;records={result[&#x27;passed&#x27;]}/{total}, evidence={result[&#x27;coverage&#x27;]}/{total}, &quot;
+              f&quot;unsupported={result[&#x27;unsupported&#x27;]}, {result[&#x27;decision&#x27;]}&quot;)
+    critical = reports[&quot;critical order&quot;]
+    totals = list(critical[&quot;fields&quot;].values())
+    cls = critical[&quot;classification&quot;]
+    print(f&quot;I critical candidate fields: {sum(row[&#x27;matches&#x27;] for row in totals)}/{sum(row[&#x27;scored&#x27;] for row in totals)}&quot;)
+    print(f&quot;I critical candidate intent: micro={cls[&#x27;correct&#x27;]}/{cls[&#x27;scored&#x27;]}, coverage={cls[&#x27;scored&#x27;]}/{cls[&#x27;planned&#x27;]}&quot;)
+    product = reports[&quot;repaired&quot;][&quot;fields&quot;][&quot;product&quot;]
+    print(f&quot;I repaired product: raw={product[&#x27;raw_matches&#x27;]}/{product[&#x27;scored&#x27;]}, &quot;
+          f&quot;normalized={product[&#x27;matches&#x27;]}/{product[&#x27;scored&#x27;]}&quot;)
+    if EXPORT_JSON:
+        print(pack({&quot;dataset&quot;: &quot;northstar-intake-v1&quot;, &quot;schema&quot;: &quot;intake-v1&quot;, &quot;normalization&quot;: &quot;product-aliases-v1&quot;,
+                    &quot;label_map&quot;: LABELS, &quot;gate&quot;: GATE, &quot;plans&quot;: plans, &quot;captures&quot;: variants, &quot;reports&quot;: reports}))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">H wrong order: schema=True, route=DENY_ID
+H wrong amount: schema=True, route=DENY_AMOUNT
+H wrong intent: schema=True, route=DENY_INTENT
+H missed escalation: schema=True, route=DENY_PRIORITY
+H unexpected field: schema=False, route=REJECT_FORMAT
+H no permission: DENY_PERMISSION
+H guessed date: CLARIFY
+E U01: CLARIFY, matches=True
+E U02: CLARIFY, matches=True
+E U03: CLARIFY, matches=True
+E U04: CLARIFY, matches=True
+E U05: CLARIFY, matches=True
+E U06: CLARIFY, matches=True
+G paired label: ROUTE_SUPPORT -&gt; ROUTE_SUPPORT
+G inert schema: ROUTE_SUPPORT
+I repaired: parse=14/14, schema=14/14, records=14/14, evidence=14/14, unsupported=0, PASS
+I critical order: parse=14/14, schema=14/14, records=13/14, evidence=14/14, unsupported=0, BLOCK
+I missing review: parse=14/14, schema=14/14, records=13/14, evidence=13/14, unsupported=0, REVIEW
+I schema bypass: parse=14/14, schema=13/14, records=13/14, evidence=14/14, unsupported=0, BLOCK
+I unsupported guess: parse=14/14, schema=14/14, records=13/14, evidence=14/14, unsupported=1, BLOCK
+I privacy: parse=14/14, schema=14/14, records=13/14, evidence=14/14, unsupported=0, BLOCK
+I critical candidate fields: 139/140
+I critical candidate intent: micro=13/13, coverage=13/13
+I repaired product: raw=13/14, normalized=14/14
+</code></pre></details>
+<p>The wrong-order variant earns 139/140 normalized field matches, or about 99.3%, and gets every scored intent right. It loses the one match that identifies the target order. The guard denial confirms the fixture caught it. The release gate still blocks the extractor because it proposed the wrong transaction target. The repaired capture restores the correct entity while preserving the product alias. The privacy test detects one exact synthetic marker. It can miss alternate encodings and paraphrases. Production controls should limit eligible source fields, enforce customer scope, and check responses and logs independently.</p>
+<p>With the U03 review removed, the lab has 13 matched records among 14 planned and 13/14 evidence coverage. It withholds a verdict for U03. Restore a reviewed reference and rerun. To distinguish a missing capture from a failed parse, remove a key from the capture map and compare its case detail with G05&#x27;s forbidden field.</p>
+<h4>Annotation and Design Review</h4>
+<p>Create the reference with the original case and frozen label instructions before looking at the candidate. Give two reviewers the same message separately. Ask them to label the field, affected entity, supporting character span and reason for any null. Have a third reviewer resolve disagreements using the approved policy and retain both original judgments. Change the reference version when correcting labels. The fixture reviews in this lesson are synthetic. They model how evidence is recorded.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Structured intake annotation rubric"><table><caption>Structured intake annotation rubric</caption><thead><tr><th scope="col">Extraction review criterion</th><th scope="col">What reviewers record</th><th scope="col">When to defer</th></tr></thead><tbody><tr><td>Entity and evidence</td><td>The intended order, plus a start-inclusive, end-exclusive span. Verify that the source slice returns the expected ID and that it belongs to the request.</td><td>Two orders are mentioned and neither is identified as the target.</td></tr><tr><td>Value and representation</td><td>The raw value and any permitted normalization. Record the locale, currency or product catalog entry that justifies a conversion.</td><td>A valid date can represent either 3 April or 4 March.</td></tr><tr><td>Intent and policy</td><td>One label from the definitions above, a separate issue category, and the policy basis for escalation if required.</td><td>Refund and replacement are both requested as mutually exclusive actions.</td></tr><tr><td>Absence and uncertainty</td><td>The field and its reason, such as unknown, not applicable, ambiguous, conflicting or unsupported.</td><td>Reviewers cannot agree that a nullable field is outside the task.</td></tr><tr><td>Label quality</td><td>Reviewer IDs, evidence, adjudication and taxonomy version.</td><td>No qualified reviewer can verify an unfamiliar language or policy.</td></tr></tbody></table></div>
+<p>An application may attach a <strong>confidence score</strong> to a field. Validate its range separately from its meaning. A score of 0.95 does not establish 95% correctness. On a separate held-out dataset, group similar confidence scores and measure the proportion correct in each group, including rare labels. Compare how many cases remain scored when you defer the low-confidence ones. For example, if 8 of 10 retained order predictions are correct and 2 of the original 12 were deferred, report 8/10 accuracy and 10/12 coverage. A score never grants authorization.</p>
+<p>For production evaluation, group near-duplicate messages and variations of the same order before splitting development and held-out data. Keep references and trusted snapshots out of model input. Keep the minority slices, unexpected-field controls and missing-evidence cases in the release suite. Compare candidate versions on the same frozen plan, retain raw captures and version the schema, labels, normalization, evaluator and gates. Review errors by field, class and entity before release. The local fixture threshold is a teaching choice. Teams should set thresholds based on the harm and evidence required for each field. Human authorization remains separate from a passing evaluation.</p>
+<p>In the original TestNeural replay, TC10 recorded the expected account ID B204 and a passing account ID match. Its observed path stopped after the account lookup and missed the expected document search. Tool-path and aggregate argument checks both failed. Use it to check how a correct argument and an incomplete workflow can coexist. These are saved agent results, separate from the Northstar classification scores. Original Test 12 and saved artifacts</p>
+<h4>Practice Exercises</h4>
+<ol><li>Add a valid optional note to B&#x27;s expected form. Then try a list as the note. Decide which failure the schema catches.</li><li>In D, correct only the replacement prediction at index 9. Recompute minority recall and overall accuracy. Explain why the original macro score deserves attention.</li><li>In F, test 03/04/2026 with no locale, then with the Indian locale. Say which evidence licenses conversion. In the lab, explain why the candidate&#x27;s valid ISO guess in U03 still routes to clarification.</li><li>Use the lab as a design review. Run with JSON export enabled. Find the source slice and scope decision for R02. Remove U03&#x27;s capture and then put it back. Propose a zero-tolerance rule for a critical rare-field miss and show whether it changes the decision for only the critical candidate. Add a second paired robustness case that varies spelling or punctuation while keeping the task and entity fixed.</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<ol><li>A string note is permitted. A list gives a note type error. B&#x27;s fact check compares the required facts so a permitted note may be present without invalidating them. An unexpected key remains a schema error.</li><li>The revised classifier moves from 10/12 to 11/12 and replacement recall from 0/1 to 1/1. The frequent class accounts for 8 of 12 messages, so even a classifier with no useful minority predictions scores 8/12. Macro F1 gives replacement the same weight as delivery.</li><li>A missing locale requires review for 03/04/2026. An explicit Indian locale gives 2026-04-03 under this exercise&#x27;s contract. The ISO shape of a guessed value cannot supply the missing locale. A separate ambiguity flag in the trusted fixture forces clarification.</li><li>R02 has a real span for NS-1043 in its message, but the trusted target is NS-1042, and the variant is denied. Removing U03&#x27;s capture creates an evidence gap and returns REVIEW in the otherwise repaired replay. Restoring the capture yields PASS. The critical-field gate leaves the repaired candidate eligible and blocks the wrong-order candidate despite its 139/140 field score. A safe paired addition keeps one case family together and expects the same intent, order and route across both spellings.</li></ol>
+</div></details>
+<h4>Knowledge Check</h4>
+<ul><li>A valid object omits the order key entirely. How does this differ from an object with a null order and an ambiguous reason?</li><li>Which entries in a confusion matrix explain low replacement precision and low replacement recall?</li><li>A scorecard shows 13/13 intent predictions correct, one critical wrong order and one unreviewed case. Which decision takes precedence, and what evidence belongs in the handoff?</li></ul>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ul><li>Omitting a required key is a schema failure. Explicit null with the right reason can pass schema and semantic checks if the reference supports ambiguity.</li><li>Non-replacement rows in the replacement column contain false positives. The replacement row&#x27;s non-replacement columns contain false negatives. Precision divides correct replacement predictions by all replacement predictions. Recall divides them by all actual replacement cases.</li><li>BLOCK takes precedence for the confirmed critical failure. Keep the saved candidate, its source span, trusted target, denied route, and the unreviewed case as a separate evidence gap. A corrected candidate still needs completed evidence.</li></ul>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li>Counting the schema pass rate as field accuracy. Inspect entity, value and span errors separately.</li><li>Treating empty values as successful extractions. Keep accuracy, extracted-value precision and recall, and review coverage distinct.</li><li>Applying normalization to identifiers or currencies without authority. A format conversion needs a declared rule and evidence.</li><li>Routing directly from candidate fields. Recheck the permitted operation, account, entity, value and escalation against independently trusted data.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-12" data-relevance="Supporting">
+<h5>Test 12: Agent Behavior Evaluation</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Check whether an agent follows the expected tool path and stops appropriately.</dd></div><div><dt>How it was tested</dt><dd>Run 15 workbook cases through a local banking agent and inspect tool sequence, arguments, and stop behavior. Mock account data and local documents support no-tool, lookup, clarification, and multi-step cases. qwen3.5:9b via Ollama in the committed result data.</dd></div><div><dt>Actual results</dt><dd>14 of 15 passed all checks. TC10 stopped after the lookup rather than taking the expected second step. The walkthrough reports zero final timeouts and three timeout recoveries by retry.</dd></div><div><dt>Original findings</dt><dd>The original analysis shows what becomes visible when individual tool calls and stops are recorded.</dd></div><div><dt>Evidence notes</dt><dd>These outcomes apply to the saved cases and mock tools.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Compare TC10&#x27;s correct account ID with its missed search step and failed aggregate argument check.</dd></div></dl>
+<p><a href="test12.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> · <a href="#original-test-12">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Start with syntax and schema, then evaluate values, entity and evidence. Watch per-class errors and publish coverage as well as scores. Require the independent guard before a proposed action and let critical failures override aggregate gains. The next curriculum topic is <a href="#m17-t02">Code-generation evaluation</a>.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t02">Structured output and schema validation</a>, <a href="#m05-t01">Token F1, BLEU, ROUGE and reference metrics</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m04-t02">Annotation, adjudication and synthetic data</a>, <a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Score synthetic form extraction against typed fields and entity IDs with Python.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02, P04 and P06 to compute field and record scores.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Explain how micro F1 hides a critical rare-field miss and add a matching gate.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -29334,7 +30017,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test12.html">View Complete Original Experiment</a> <code>docs/test12.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json">Recorded trajectories and arguments</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx">Original agent test cases</a> <code>phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py">Deterministic agent evaluator</a> <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a> · Supporting. Use the recorded tool paths and documented timeout recovery to motivate separate request, attempt and cost measurements.</li><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li><li><a href="#m15-t01">M15-T01 — Design review and reproducible suite</a> · Supporting. Use TC10&#x27;s expected sequence and saved trace to review an agent suite&#x27;s independent execution checks.</li></ul>
+<ul><li><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a> · Supporting. Use the recorded tool paths and documented timeout recovery to motivate separate request, attempt and cost measurements.</li><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li><li><a href="#m15-t01">M15-T01 — Design review and reproducible suite</a> · Supporting. Use TC10&#x27;s expected sequence and saved trace to review an agent suite&#x27;s independent execution checks.</li><li><a href="#m17-t01">M17-T01 — Structured extraction and classification</a> · Supporting. Compare TC10&#x27;s correct account ID with its missed search step and failed aggregate argument check.</li></ul>
 </details>
 <details id="original-test-13" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 13: Trajectory Evaluation with Judge Model · Recorded Results Available</summary>
