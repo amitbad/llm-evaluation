@@ -169,6 +169,7 @@ def roadmap_data(stages, learning_paths, source):
             code, fields = module["id"], module["fields"]
             modules[code] = {
                 "id": code, "title": module["title"], "stage": stage_index, "hours": module["hours"][4],
+                "difficulty": fields["Difficulty"],
                 "track": fields["Track"], "description": fields["Description"], "outcome": fields["Competencies"],
                 "topics": [topic["id"] for topic in module["topics"]],
             }
@@ -601,7 +602,7 @@ def roadmap_view(data):
       <span aria-hidden="true">×</span> Close
     </button>
   </div>
-  <p>Select a module or topic to see the required study and its estimated hours. Dotted links apply to the exercise named in the selection panel.</p>
+  <p>Select a module to highlight its prerequisites and dependents. Arrows point from prerequisite to dependent. Open the topic study route for the exact lessons and study order.</p>
   <div class="road-controls">
     <div class="road-search">
       <label for="road-search">Find a module or topic</label>
@@ -625,12 +626,12 @@ def roadmap_view(data):
             <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>
           </svg> Fullscreen
         </button>
-        <label><input id="road-focus" type="checkbox" disabled> Focus on selection</label>
-        <label><input id="road-optional" type="checkbox"> Show optional links</label>
+        <label><input id="road-focus" type="checkbox" aria-describedby="road-help" disabled> Focus on selection</label>
+        <label><input id="road-optional" type="checkbox"> Show all optional links</label>
         <a href="#road-inspector" id="road-jump" hidden>Selection details</a>
       </div>
       <div id="road-viewport" tabindex="0" role="region" aria-label="Learning dependency graph" aria-describedby="road-help"></div>
-      <p id="road-help">Drag the background or use arrow keys while the graph has focus. Use the zoom buttons or + and −. Search can take you directly to a node.</p>
+      <p id="road-help">Module focus emphasizes the selection’s links, including its optional links. Turn off focus to see the full map at normal contrast. Drag to pan, or focus the map and use arrow keys and + or −.</p>
     </div>
     <aside id="road-inspector" class="road-inspector" aria-label="Selected target">
       <div class="road-inspector-head"><h3 id="road-title">Choose a target</h3><button type="button" id="road-clear" hidden>Clear</button></div>
@@ -1284,6 +1285,7 @@ ROADMAP_CSS = """
 .road-edge-key { width:1.45rem; border-top:2px solid #254f71; }
 .road-edge-recommended { border-top-style:dashed; border-color:#66448c; }
 .road-edge-conditional { border-top-style:dotted; border-color:#8a4715; }
+.road-edge-downstream { border-color:#12634e; }
 .road-workspace { display:grid; grid-template-columns:minmax(0, 2.7fr) minmax(17rem,1fr); gap:.75rem; }
 .road-workspace:has(#road-clear[hidden]) { grid-template-columns:1fr; }
 .road-board, .road-inspector { min-width:0; background:#fff; border:1px solid var(--line); border-radius:.65rem; }
@@ -1298,12 +1300,18 @@ ROADMAP_CSS = """
 #road-viewport.panning { cursor:grabbing; user-select:none; }
 #road-viewport > svg { position:absolute; top:0; left:0; max-width:none; transform-origin:0 0; }
 #road-viewport [data-node] { cursor:pointer; text-decoration:none; }
-#road-viewport [data-node]:hover rect, #road-viewport [data-node]:focus-visible rect { stroke:#086f9c; stroke-width:3.5; }
+#road-viewport [data-node]:hover rect, #road-viewport [data-node]:focus-visible rect,
+#road-viewport [data-node].road-reference rect { stroke:#086f9c; stroke-width:4; }
 #road-help { font-size:.86rem; color:var(--muted); margin:.45rem .72rem .6rem; }
 .road-inspector { padding:.8rem; max-height:calc(clamp(23rem,58vh,40rem) + 6rem); overflow:auto; }
 .road-inspector-head { display:flex; gap:.65rem; align-items:start; justify-content:space-between; }
 .road-inspector h3 { margin:0; line-height:1.3; }
 .road-inspector h4 { margin-top:.95rem; font-size:.92rem; }
+.road-inspector h5 { margin:.65rem 0 .28rem; font-size:.84rem; }
+.road-dependency { border-inline-start:3px solid #254f71; margin:.55rem 0; padding:.12rem .48rem .35rem; }
+.road-downstream { border-inline-start-color:#12634e; }
+.road-dependency h5 .road-edge-key { display:inline-block; margin-inline-end:.38rem; vertical-align:middle; }
+.road-inspector .road-current { background:#eaf2fd; color:#102c4a; padding:.35rem .55rem; font-weight:700; border-radius:.3rem; }
 .road-inspector p { margin:.36rem 0; font-size:.89rem; }
 #road-estimate { font-weight:700; color:#19553a; }
 .road-list { margin:.25rem 0; padding:0; list-style:none; }
@@ -1311,6 +1319,7 @@ ROADMAP_CSS = """
 .road-item { display:flex; align-items:baseline; gap:.45rem; width:100%; padding:.3rem .4rem; border:0; text-align:left;
   font-size:.86rem; font-weight:500; line-height:1.4; }
 .road-item strong { color:#245377; white-space:nowrap; }
+.road-item:focus-visible, [data-back]:focus-visible { outline:2px solid #086f9c; outline-offset:1px; }
 .road-inspector .road-condition { margin:.15rem .4rem .45rem; color:#784113; }
 .road-empty { color:var(--muted); }
 .road-route { margin-top:.9rem; }
@@ -1344,8 +1353,8 @@ html.roadmap-fullscreen, html.roadmap-fullscreen body { overflow:hidden; overscr
   .road-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .road-workspace { grid-template-columns:1fr; }
   .road-inspector { max-height:none; }
-  #roadmap-app.is-fullscreen .road-workspace { flex-basis:20rem; grid-template-rows:minmax(0,1fr) auto; }
-  #roadmap-app.is-fullscreen .road-inspector { max-height:min(12rem, 24vh); }
+  #roadmap-app.is-fullscreen .road-workspace { flex:none; grid-template-rows:clamp(20rem, 62dvh, 38rem) auto; }
+  #roadmap-app.is-fullscreen .road-inspector { overflow:visible; }
 }
 @media (max-width:440px) {
   .road-controls { grid-template-columns:1fr; }

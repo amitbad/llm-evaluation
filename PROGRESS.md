@@ -9,6 +9,7 @@ Last updated **2026-11-28**. The last verified live release is `aa01ca7`. Fifty 
 | Repository audit and master curriculum | The audit and authoritative curriculum are in the repository. The curriculum has 18 modules, 53 topics, and seven learning paths. Estimates are 238 core hours, 54.5 elective hours, and 7 separate optional preparation hours. |
 | Learning paths and roadmap | Quick Learning and Complete Course share the curriculum data and browser-local progress. The roadmap supports dependency views and diagram and plan downloads. |
 | Learning Roadmap fullscreen | The toolbar opens the existing roadmap in native fullscreen or a CSS fallback. Close, Escape and browser-native exit restore the page and focus. Diagram zoom, pan and selection persist. |
+| Learning Roadmap module selection | Module focus highlights prerequisites and dependents within the complete map. The inspector separates module links and syllabus topics from the detailed topic study route and saved-progress availability. Keyboard-operable module references connect the two views and offer Back. |
 | Academy redesign and deployment preparation | Approved branding, the dashboard, legacy example-page navigation, and static validation are in the repository. The production script, NGINX files, and runbook are maintained outside the public checkout. |
 | Layout and progress refinements | Responsive layout rules, formatted duration displays, Continue Learning, and JSON progress export and import are implemented. |
 | Navigation and project tracking | The five primary destinations are consistent across the homepage and curriculum. Learning Paths is inside Quick Learning. Instructor Resources now groups Existing Repository Coverage and Teaching Plan. Project tracking and its maintenance rules are documented. |
@@ -91,6 +92,8 @@ Last updated **2026-11-28**. The last verified live release is `aa01ca7`. Fifty 
 | M17-T03, Multi-agent coordination | **Rewritten — Awaiting Human Teaching Review.** Five standalone Python programs cover handoffs, role and tool checks, shared-state conflicts, retry limits, duplicate effects, cost accounting and release gates. The 18-case lab exports traces, results and coordination metrics as reproducible JSON. |
 
 ## Tested
+
+- The roadmap selection update passed five new selection tests, all seven fullscreen tests and the full 64-test Node suite in the working tree. The tests traced all 110 module links to the authoritative topic rows across all 18 modules. Generator synchronization and static validation of 85 public files passed. All 56 generated pages reproduced byte for byte. Manual arrow legibility, keyboard focus and compact fullscreen checks remain pending.
 
 - The Learning Roadmap passed seven focused fullscreen tests and all 53 Node tests, with zero failures or skips. Generator synchronization and static validation of 84 public files passed. The checked-in presentation update left the embedded graph data and Complete Course content byte-identical. Manual browser, touch, orientation and screen-reader checks remain pending.
 - Non-browser checks passed for deterministic HTML synchronization, the 29 public files, and Bash syntax for the private deployment script and manual command blocks.
