@@ -359,6 +359,11 @@
           "id": "M06-T02",
           "relevance": "Supporting",
           "connection": "Compare the manual TC001 review with the automated verdict."
+        },
+        {
+          "id": "M16-T02",
+          "relevance": "Supporting",
+          "connection": "Use the text-only TC001 evidence and its judge limitations when designing a separate region-grounding review."
         }
       ]
     },

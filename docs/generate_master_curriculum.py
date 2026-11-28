@@ -359,6 +359,10 @@ def prose(markdown):
                 "ID": "Preparation skills",
                 "Dimension and purpose": "Localization evaluation dimensions",
                 "Review criterion": "Localized support review rubric",
+                "Multimodal dimension": "Multimodal evaluation dimensions",
+                "Evidence region": "Northstar receipt and fee chart text equivalent",
+                "Evaluation stage": "Where to attribute a multimodal failure",
+                "Multimodal review criterion": "Multimodal support review rubric",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS
@@ -431,6 +435,13 @@ def authored_lesson(topic_id, difficulty, experiment_disclosure):
                 else:
                     rendered.append(markup)
             elif block:
+                image = re.fullmatch(r"!\[([^\]\n]+)\]\((docs/assets/[a-z0-9/_-]+\.png)\)", block)
+                if image:
+                    alt, source_path = image.groups()
+                    asset = posixpath.relpath(source_path, "docs")
+                    rendered.append(f'<p><img src="{escape(asset)}" alt="{escape(alt)}" loading="lazy" '
+                                    'style="max-width:100%;height:auto"></p>')
+                    continue
                 evidence = re.fullmatch(r"\*\*(.+?)\*\* (.+)", block)
                 if evidence and evidence[1] in evidence_labels:
                     label, value = evidence.groups()

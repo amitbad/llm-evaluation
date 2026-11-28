@@ -15,7 +15,7 @@ PUBLIC_ASSETS = (
     "academy.css", "academy.js", "analytics.js", "lesson-reader.js", "branding/academy-logo-banner.png",
     "branding/academy-logo-banner.svg", "branding/academy-icon.svg",
     "branding/icon-48.png", "branding/favicon.ico", "branding/icon-32.png",
-    "branding/icon-180.png",
+    "branding/icon-180.png", "m16-t02-receipt-fees.png",
 )
 EXERCISES = (
     "phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx",
