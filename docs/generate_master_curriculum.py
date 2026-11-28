@@ -372,6 +372,9 @@ def prose(markdown):
                 "Local implementation": "Observed order-list runtime and allocations",
                 "Code quality dimension": "Code-generation evaluation dimensions",
                 "Code review criterion": "Generated patch review rubric",
+                "Coordination measure": "Multi-agent coordination metric denominators",
+                "Evaluation dimension": "Northstar coordination checks",
+                "Coordination review criterion": "Multi-agent human review rubric",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS

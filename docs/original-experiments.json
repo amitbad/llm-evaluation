@@ -714,6 +714,11 @@
           "id": "M17-T01",
           "relevance": "Supporting",
           "connection": "Compare TC10's correct account ID with its missed search step and failed aggregate argument check."
+        },
+        {
+          "id": "M17-T03",
+          "relevance": "Supporting",
+          "connection": "Use single-agent TC10 as a historical example of a correct local observation with an incomplete path before evaluating synthetic team handoffs."
         }
       ]
     },

@@ -409,6 +409,16 @@ test("code evaluation elective keeps navigation and progress across reading mode
   assert.equal(ui.el("m17-t02").querySelector("[data-progress]").value, "Completed");
 });
 
+test("multi-agent elective keeps navigation and progress across reading modes", () => {
+  const ui = start(lessonHash("G", "M17-T03"));
+  assert.equal(ui.el("guided-previous").href, lessonHash("G", "M17-T02"));
+  assert.equal(ui.el("guided-next").href, lessonHash("G", "M18-T01"));
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+  ui.go("#m17-t03");
+  assert.equal(ui.el("m17-t03").open, true);
+  assert.equal(ui.el("m17-t03").querySelector("[data-progress]").value, "Completed");
+});
+
 test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
@@ -567,6 +577,18 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
         assert.ok(markup.includes('href="#' + target + '"'));
       }
       assert.match(markup, /href="test11\.html"/);
+    } else if (topic.id === "M17-T03") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /CLEAN: PASS/);
+      assert.match(markup, /SKIPPED: BLOCK, final=True/);
+      assert.match(markup, /TRACE-GAP: REVIEW, final=True/);
+      assert.match(markup, /final task matches: 18\/18[\s\S]*end-to-end passes: 3\/18/);
+      assert.match(markup, /<caption>Multi-agent human review rubric<\/caption>/);
+      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 5);
+      for (const target of ["m10-t02", "m10-t03", "m11-t03", "m18-t01"]) {
+        assert.ok(markup.includes('href="#' + target + '"'));
+      }
+      assert.match(markup, /href="test12\.html"/);
     } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
