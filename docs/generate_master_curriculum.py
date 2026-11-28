@@ -572,6 +572,12 @@ def roadmap_view(data):
     stages = "".join(f'<option value="{index}">{escape(stage)}</option>' for index, stage in enumerate(data["stages"]))
     return f'''<noscript><p>The interactive roadmap uses JavaScript. Learning Paths under Quick Learning and the Complete Course list the same prerequisites and estimates.</p></noscript>
 <div id="roadmap-app" hidden>
+  <div id="road-fullscreen-header" class="road-fullscreen-header" hidden>
+    <strong id="road-fullscreen-title">Learning Roadmap</strong>
+    <button type="button" id="road-fullscreen-close" aria-label="Close fullscreen roadmap">
+      <span aria-hidden="true">×</span> Close
+    </button>
+  </div>
   <p>Select a module or topic to see the required study and its estimated hours. Dotted links apply to the exercise named in the selection panel.</p>
   <div class="road-controls">
     <div class="road-search">
@@ -591,6 +597,11 @@ def roadmap_view(data):
         <output id="road-zoom" aria-label="Zoom level"></output>
         <button type="button" id="road-zoom-in" aria-label="Zoom in">+</button>
         <button type="button" id="road-reset">Reset view</button>
+        <button type="button" id="road-fullscreen-open" aria-haspopup="dialog" aria-controls="roadmap-app">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>
+          </svg> Fullscreen
+        </button>
         <label><input id="road-focus" type="checkbox" disabled> Focus on selection</label>
         <label><input id="road-optional" type="checkbox"> Show optional links</label>
         <a href="#road-inspector" id="road-jump" hidden>Selection details</a>
@@ -1285,15 +1296,39 @@ ROADMAP_CSS = """
 .road-route-hours { margin-left:.4rem; color:var(--muted); }
 .road-downloads { display:flex; flex-wrap:wrap; align-items:end; gap:.55rem; margin-top:.85rem; }
 .road-downloads output { flex:1 1 100%; font-size:.87rem; color:var(--muted); }
+#road-fullscreen-open, #road-fullscreen-close { display:inline-flex; align-items:center; gap:.35rem; min-height:2.75rem; }
+#road-fullscreen-open svg { flex:none; }
+.road-fullscreen-header { display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  position:sticky; top:0; z-index:3; background:var(--page); }
+.road-fullscreen-header button span { font-size:1.25em; line-height:1; }
+html.roadmap-fullscreen, html.roadmap-fullscreen body { overflow:hidden; overscroll-behavior:none; }
+#roadmap-app.is-fullscreen {
+  display:flex; flex-direction:column; gap:.65rem; margin:0; border:0; max-width:none; max-height:none;
+  width:100%; height:100%; overflow:auto; overscroll-behavior:contain; background:var(--page); color:var(--text);
+  padding:max(.65rem, env(safe-area-inset-top)) max(.65rem, env(safe-area-inset-right))
+    max(.65rem, env(safe-area-inset-bottom)) max(.65rem, env(safe-area-inset-left));
+}
+#roadmap-app.is-fullscreen-fallback { position:fixed; inset:0; z-index:100; height:100vh; height:100dvh; }
+#roadmap-app.is-fullscreen > * { flex-shrink:0; }
+#roadmap-app.is-fullscreen > p, #roadmap-app.is-fullscreen #road-fullscreen-open { display:none; }
+#roadmap-app.is-fullscreen .road-legend, #roadmap-app.is-fullscreen .road-downloads { margin:0; }
+#roadmap-app.is-fullscreen .road-workspace { flex:1 0 16rem; grid-template-rows:minmax(0,1fr); }
+#roadmap-app.is-fullscreen .road-workspace:has(#road-clear[hidden]) .road-inspector { display:none; }
+#roadmap-app.is-fullscreen .road-board { display:flex; flex-direction:column; min-height:0; }
+#roadmap-app.is-fullscreen #road-viewport { flex:1 1 0; min-height:7rem; height:auto; }
+#roadmap-app.is-fullscreen .road-inspector { max-height:none; }
 @media (max-width:850px) {
   .road-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .road-workspace { grid-template-columns:1fr; }
   .road-inspector { max-height:none; }
+  #roadmap-app.is-fullscreen .road-workspace { flex-basis:20rem; grid-template-rows:minmax(0,1fr) auto; }
+  #roadmap-app.is-fullscreen .road-inspector { max-height:min(12rem, 24vh); }
 }
 @media (max-width:440px) {
   .road-controls { grid-template-columns:1fr; }
   .road-results { width:100%; }
   #road-viewport { height:22rem; }
+  #roadmap-app.is-fullscreen .road-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media print {
   #roadmap { display:none !important; }

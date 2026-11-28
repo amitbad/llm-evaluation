@@ -308,7 +308,127 @@ const CurriculumRoadmap = (() => {
     return source.replace(/<html\b[^>]*>/i, '<html lang="en" data-initial-tab="' + xml(view) + '">');
   }
 
-  return {stageColors, linkStyles, xml, target, find, unlocked, edges, graph, rasterSize, pngBlob, saveBlob, standaloneHTML};
+  function bindFullscreen(surface, header, opener, closer, page, browser) {
+    let session = null;
+
+    function restore() {
+      const previous = session;
+      if (!previous) return;
+      session = null;
+      page.removeEventListener("fullscreenchange", fullscreenChanged);
+      page.removeEventListener("keydown", fullscreenKeys, {capture: true});
+      for (const sibling of previous.outside) sibling.inert = false;
+      surface.classList.remove("is-fullscreen", "is-fullscreen-fallback");
+      surface.removeAttribute("role");
+      surface.removeAttribute("aria-modal");
+      surface.removeAttribute("aria-labelledby");
+      page.documentElement.classList.remove("roadmap-fullscreen");
+      header.hidden = true;
+      if (previous.restoreView) {
+        opener.focus({preventScroll: true});
+        browser.scrollTo({left: previous.x, top: previous.y, behavior: "instant"});
+      }
+    }
+
+    function show(mode) {
+      if (session.mode !== "pending") return;
+      session.mode = mode;
+      surface.classList.add("is-fullscreen");
+      if (mode === "fallback") {
+        surface.classList.add("is-fullscreen-fallback");
+        for (let node = surface; node !== page.body; node = node.parentElement) {
+          for (const sibling of node.parentElement.children) {
+            if (sibling !== node && !sibling.inert) {
+              sibling.inert = true;
+              session.outside.push(sibling);
+            }
+          }
+        }
+      }
+      surface.setAttribute("role", "dialog");
+      surface.setAttribute("aria-modal", "true");
+      surface.setAttribute("aria-labelledby", "road-fullscreen-title");
+      page.documentElement.classList.add("roadmap-fullscreen");
+      header.hidden = false;
+      page.addEventListener("keydown", fullscreenKeys, {capture: true});
+      closer.focus({preventScroll: true});
+    }
+
+    function fullscreenChanged() {
+      if (!session) return;
+      if (page.fullscreenElement === surface) {
+        if (session.restoreView) show("native");
+        else {
+          session.mode = "native";
+          close(false);
+        }
+      } else if (session.mode === "native") restore();
+    }
+
+    async function close(restoreView = true) {
+      if (!session) return;
+      if (!restoreView) session.restoreView = false;
+      if (session.mode === "pending" || session.closing) return;
+      if (page.fullscreenElement === surface) {
+        const current = session;
+        current.closing = true;
+        try {
+          await page.exitFullscreen();
+        } catch {
+          // Leave the Close button and the browser's native exit available.
+        }
+        if (session !== current) return;
+        current.closing = false;
+        if (page.fullscreenElement === surface) return;
+      }
+      restore();
+    }
+
+    function fullscreenKeys(event) {
+      if (event.key === "Escape" && session.mode === "fallback") {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+        return;
+      }
+      if (event.key !== "Tab" || event.altKey || event.ctrlKey || event.metaKey) return;
+      const stops = Array.from(surface.querySelectorAll("a[href], button, input, select, summary, [tabindex]"))
+        .filter(item => item.tabIndex >= 0 && !item.matches(":disabled") && item.getClientRects().length);
+      const current = page.activeElement;
+      const edge = event.shiftKey ? stops[0] : stops[stops.length - 1];
+      if (!stops.includes(current) || current === edge) {
+        event.preventDefault();
+        (event.shiftKey ? stops[stops.length - 1] : stops[0])?.focus();
+      }
+    }
+
+    opener.addEventListener("click", async () => {
+      if (session) return;
+      const current = {mode: "pending", restoreView: true, x: browser.scrollX, y: browser.scrollY, outside: []};
+      session = current;
+      if (page.fullscreenEnabled && !page.fullscreenElement && typeof surface.requestFullscreen === "function") {
+        page.addEventListener("fullscreenchange", fullscreenChanged);
+        try {
+          await surface.requestFullscreen();
+          if (session === current) {
+            if (page.fullscreenElement === surface) fullscreenChanged();
+            else restore();
+          }
+          return;
+        } catch {
+          if (session !== current) return;
+          page.removeEventListener("fullscreenchange", fullscreenChanged);
+        }
+      }
+      if (current.restoreView) show("fallback");
+      else restore();
+    });
+    closer.addEventListener("click", () => close());
+    return {close, active: () => Boolean(session && session.mode !== "pending")};
+  }
+
+  return {stageColors, linkStyles, xml, target, find, unlocked, edges, graph, rasterSize, pngBlob, saveBlob,
+    standaloneHTML, bindFullscreen};
 })();
 
 if (typeof module === "object" && module.exports) module.exports = CurriculumRoadmap;
@@ -320,6 +440,9 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     const road = CurriculumRoadmap;
     const data = JSON.parse(document.getElementById("roadmap-data").textContent);
     const el = id => document.getElementById("road-" + id);
+    const app = document.getElementById("roadmap-app");
+    const fullscreen = road.bindFullscreen(app, el("fullscreen-header"), el("fullscreen-open"),
+      el("fullscreen-close"), document, window);
     const viewport = el("viewport");
     const pathMenu = el("path");
     const modeMenu = el("mode");
@@ -503,7 +626,7 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
         event.preventDefault();
         results.querySelector("[data-select]")?.click();
       }
-      if (event.key === "Escape") results.hidden = true;
+      if (event.key === "Escape" && !fullscreen.active()) results.hidden = true;
       if (event.key === "ArrowDown" && !results.hidden) {
         event.preventDefault();
         results.querySelector("[data-select]")?.focus();
@@ -631,11 +754,12 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     function enterRoadmap() {
       if (initialized) return;
       initialized = true;
-      document.getElementById("roadmap-app").hidden = false;
+      app.hidden = false;
       draw(true);
     }
     document.addEventListener("curriculum-tab", event => {
       if (event.detail === "#roadmap") enterRoadmap();
+      else fullscreen.close(false);
     });
     function openRoute(hash) {
       const route = /^#roadmap-([a-g]|full)$/.exec(hash);

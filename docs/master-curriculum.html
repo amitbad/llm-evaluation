@@ -166,15 +166,39 @@ summary:hover { background:#edf5f3; border-radius:.55rem; }
 .road-route-hours { margin-left:.4rem; color:var(--muted); }
 .road-downloads { display:flex; flex-wrap:wrap; align-items:end; gap:.55rem; margin-top:.85rem; }
 .road-downloads output { flex:1 1 100%; font-size:.87rem; color:var(--muted); }
+#road-fullscreen-open, #road-fullscreen-close { display:inline-flex; align-items:center; gap:.35rem; min-height:2.75rem; }
+#road-fullscreen-open svg { flex:none; }
+.road-fullscreen-header { display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  position:sticky; top:0; z-index:3; background:var(--page); }
+.road-fullscreen-header button span { font-size:1.25em; line-height:1; }
+html.roadmap-fullscreen, html.roadmap-fullscreen body { overflow:hidden; overscroll-behavior:none; }
+#roadmap-app.is-fullscreen {
+  display:flex; flex-direction:column; gap:.65rem; margin:0; border:0; max-width:none; max-height:none;
+  width:100%; height:100%; overflow:auto; overscroll-behavior:contain; background:var(--page); color:var(--text);
+  padding:max(.65rem, env(safe-area-inset-top)) max(.65rem, env(safe-area-inset-right))
+    max(.65rem, env(safe-area-inset-bottom)) max(.65rem, env(safe-area-inset-left));
+}
+#roadmap-app.is-fullscreen-fallback { position:fixed; inset:0; z-index:100; height:100vh; height:100dvh; }
+#roadmap-app.is-fullscreen > * { flex-shrink:0; }
+#roadmap-app.is-fullscreen > p, #roadmap-app.is-fullscreen #road-fullscreen-open { display:none; }
+#roadmap-app.is-fullscreen .road-legend, #roadmap-app.is-fullscreen .road-downloads { margin:0; }
+#roadmap-app.is-fullscreen .road-workspace { flex:1 0 16rem; grid-template-rows:minmax(0,1fr); }
+#roadmap-app.is-fullscreen .road-workspace:has(#road-clear[hidden]) .road-inspector { display:none; }
+#roadmap-app.is-fullscreen .road-board { display:flex; flex-direction:column; min-height:0; }
+#roadmap-app.is-fullscreen #road-viewport { flex:1 1 0; min-height:7rem; height:auto; }
+#roadmap-app.is-fullscreen .road-inspector { max-height:none; }
 @media (max-width:850px) {
   .road-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .road-workspace { grid-template-columns:1fr; }
   .road-inspector { max-height:none; }
+  #roadmap-app.is-fullscreen .road-workspace { flex-basis:20rem; grid-template-rows:minmax(0,1fr) auto; }
+  #roadmap-app.is-fullscreen .road-inspector { max-height:min(12rem, 24vh); }
 }
 @media (max-width:440px) {
   .road-controls { grid-template-columns:1fr; }
   .road-results { width:100%; }
   #road-viewport { height:22rem; }
+  #roadmap-app.is-fullscreen .road-controls { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media print {
   #roadmap { display:none !important; }
@@ -28117,6 +28141,12 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <section class="panel" id="roadmap"><h2>Learning Roadmap</h2>
 <noscript><p>The interactive roadmap uses JavaScript. Learning Paths under Quick Learning and the Complete Course list the same prerequisites and estimates.</p></noscript>
 <div id="roadmap-app" hidden>
+  <div id="road-fullscreen-header" class="road-fullscreen-header" hidden>
+    <strong id="road-fullscreen-title">Learning Roadmap</strong>
+    <button type="button" id="road-fullscreen-close" aria-label="Close fullscreen roadmap">
+      <span aria-hidden="true">×</span> Close
+    </button>
+  </div>
   <p>Select a module or topic to see the required study and its estimated hours. Dotted links apply to the exercise named in the selection panel.</p>
   <div class="road-controls">
     <div class="road-search">
@@ -28136,6 +28166,11 @@ data-subject="Specialization" data-status="New" data-track="Elective">
         <output id="road-zoom" aria-label="Zoom level"></output>
         <button type="button" id="road-zoom-in" aria-label="Zoom in">+</button>
         <button type="button" id="road-reset">Reset view</button>
+        <button type="button" id="road-fullscreen-open" aria-haspopup="dialog" aria-controls="roadmap-app">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>
+          </svg> Fullscreen
+        </button>
         <label><input id="road-focus" type="checkbox" disabled> Focus on selection</label>
         <label><input id="road-optional" type="checkbox"> Show optional links</label>
         <a href="#road-inspector" id="road-jump" hidden>Selection details</a>
@@ -29167,7 +29202,127 @@ const CurriculumRoadmap = (() => {
     return source.replace(/<html\b[^>]*>/i, '<html lang="en" data-initial-tab="' + xml(view) + '">');
   }
 
-  return {stageColors, linkStyles, xml, target, find, unlocked, edges, graph, rasterSize, pngBlob, saveBlob, standaloneHTML};
+  function bindFullscreen(surface, header, opener, closer, page, browser) {
+    let session = null;
+
+    function restore() {
+      const previous = session;
+      if (!previous) return;
+      session = null;
+      page.removeEventListener("fullscreenchange", fullscreenChanged);
+      page.removeEventListener("keydown", fullscreenKeys, {capture: true});
+      for (const sibling of previous.outside) sibling.inert = false;
+      surface.classList.remove("is-fullscreen", "is-fullscreen-fallback");
+      surface.removeAttribute("role");
+      surface.removeAttribute("aria-modal");
+      surface.removeAttribute("aria-labelledby");
+      page.documentElement.classList.remove("roadmap-fullscreen");
+      header.hidden = true;
+      if (previous.restoreView) {
+        opener.focus({preventScroll: true});
+        browser.scrollTo({left: previous.x, top: previous.y, behavior: "instant"});
+      }
+    }
+
+    function show(mode) {
+      if (session.mode !== "pending") return;
+      session.mode = mode;
+      surface.classList.add("is-fullscreen");
+      if (mode === "fallback") {
+        surface.classList.add("is-fullscreen-fallback");
+        for (let node = surface; node !== page.body; node = node.parentElement) {
+          for (const sibling of node.parentElement.children) {
+            if (sibling !== node && !sibling.inert) {
+              sibling.inert = true;
+              session.outside.push(sibling);
+            }
+          }
+        }
+      }
+      surface.setAttribute("role", "dialog");
+      surface.setAttribute("aria-modal", "true");
+      surface.setAttribute("aria-labelledby", "road-fullscreen-title");
+      page.documentElement.classList.add("roadmap-fullscreen");
+      header.hidden = false;
+      page.addEventListener("keydown", fullscreenKeys, {capture: true});
+      closer.focus({preventScroll: true});
+    }
+
+    function fullscreenChanged() {
+      if (!session) return;
+      if (page.fullscreenElement === surface) {
+        if (session.restoreView) show("native");
+        else {
+          session.mode = "native";
+          close(false);
+        }
+      } else if (session.mode === "native") restore();
+    }
+
+    async function close(restoreView = true) {
+      if (!session) return;
+      if (!restoreView) session.restoreView = false;
+      if (session.mode === "pending" || session.closing) return;
+      if (page.fullscreenElement === surface) {
+        const current = session;
+        current.closing = true;
+        try {
+          await page.exitFullscreen();
+        } catch {
+          // Leave the Close button and the browser's native exit available.
+        }
+        if (session !== current) return;
+        current.closing = false;
+        if (page.fullscreenElement === surface) return;
+      }
+      restore();
+    }
+
+    function fullscreenKeys(event) {
+      if (event.key === "Escape" && session.mode === "fallback") {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+        return;
+      }
+      if (event.key !== "Tab" || event.altKey || event.ctrlKey || event.metaKey) return;
+      const stops = Array.from(surface.querySelectorAll("a[href], button, input, select, summary, [tabindex]"))
+        .filter(item => item.tabIndex >= 0 && !item.matches(":disabled") && item.getClientRects().length);
+      const current = page.activeElement;
+      const edge = event.shiftKey ? stops[0] : stops[stops.length - 1];
+      if (!stops.includes(current) || current === edge) {
+        event.preventDefault();
+        (event.shiftKey ? stops[stops.length - 1] : stops[0])?.focus();
+      }
+    }
+
+    opener.addEventListener("click", async () => {
+      if (session) return;
+      const current = {mode: "pending", restoreView: true, x: browser.scrollX, y: browser.scrollY, outside: []};
+      session = current;
+      if (page.fullscreenEnabled && !page.fullscreenElement && typeof surface.requestFullscreen === "function") {
+        page.addEventListener("fullscreenchange", fullscreenChanged);
+        try {
+          await surface.requestFullscreen();
+          if (session === current) {
+            if (page.fullscreenElement === surface) fullscreenChanged();
+            else restore();
+          }
+          return;
+        } catch {
+          if (session !== current) return;
+          page.removeEventListener("fullscreenchange", fullscreenChanged);
+        }
+      }
+      if (current.restoreView) show("fallback");
+      else restore();
+    });
+    closer.addEventListener("click", () => close());
+    return {close, active: () => Boolean(session && session.mode !== "pending")};
+  }
+
+  return {stageColors, linkStyles, xml, target, find, unlocked, edges, graph, rasterSize, pngBlob, saveBlob,
+    standaloneHTML, bindFullscreen};
 })();
 
 if (typeof module === "object" && module.exports) module.exports = CurriculumRoadmap;
@@ -29179,6 +29334,9 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     const road = CurriculumRoadmap;
     const data = JSON.parse(document.getElementById("roadmap-data").textContent);
     const el = id => document.getElementById("road-" + id);
+    const app = document.getElementById("roadmap-app");
+    const fullscreen = road.bindFullscreen(app, el("fullscreen-header"), el("fullscreen-open"),
+      el("fullscreen-close"), document, window);
     const viewport = el("viewport");
     const pathMenu = el("path");
     const modeMenu = el("mode");
@@ -29362,7 +29520,7 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
         event.preventDefault();
         results.querySelector("[data-select]")?.click();
       }
-      if (event.key === "Escape") results.hidden = true;
+      if (event.key === "Escape" && !fullscreen.active()) results.hidden = true;
       if (event.key === "ArrowDown" && !results.hidden) {
         event.preventDefault();
         results.querySelector("[data-select]")?.focus();
@@ -29490,11 +29648,12 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     function enterRoadmap() {
       if (initialized) return;
       initialized = true;
-      document.getElementById("roadmap-app").hidden = false;
+      app.hidden = false;
       draw(true);
     }
     document.addEventListener("curriculum-tab", event => {
       if (event.detail === "#roadmap") enterRoadmap();
+      else fullscreen.close(false);
     });
     function openRoute(hash) {
       const route = /^#roadmap-([a-g]|full)$/.exec(hash);

@@ -8,6 +8,7 @@ Last updated **2026-11-28**. The last verified live release is `aa01ca7`. Forty-
 | --- | --- |
 | Repository audit and master curriculum | The audit and authoritative curriculum are in the repository. The curriculum has 18 modules, 53 topics, and seven learning paths. Estimates are 238 core hours, 54.5 elective hours, and 7 separate optional preparation hours. |
 | Learning paths and roadmap | Quick Learning and Complete Course share the curriculum data and browser-local progress. The roadmap supports dependency views and diagram and plan downloads. |
+| Learning Roadmap fullscreen | The toolbar opens the existing roadmap in native fullscreen or a CSS fallback. Close, Escape and browser-native exit restore the page and focus. Diagram zoom, pan and selection persist. |
 | Academy redesign and deployment preparation | Approved branding, the dashboard, legacy example-page navigation, and static validation are in the repository. The production script, NGINX files, and runbook are maintained outside the public checkout. |
 | Layout and progress refinements | Responsive layout rules, formatted duration displays, Continue Learning, and JSON progress export and import are implemented. |
 | Navigation and project tracking | The five primary destinations are consistent across the homepage and curriculum. Learning Paths is inside Quick Learning. Instructor Resources now groups Existing Repository Coverage and Teaching Plan. Project tracking and its maintenance rules are documented. |
@@ -86,6 +87,7 @@ Last updated **2026-11-28**. The last verified live release is `aa01ca7`. Forty-
 
 ## Tested
 
+- The Learning Roadmap passed seven focused fullscreen tests and all 53 Node tests, with zero failures or skips. Generator synchronization and static validation of 84 public files passed. The checked-in presentation update left the embedded graph data and Complete Course content byte-identical. Manual browser, touch, orientation and screen-reader checks remain pending.
 - Non-browser checks passed for deterministic HTML synchronization, the 29 public files, and Bash syntax for the private deployment script and manual command blocks.
 - Static vhost route checks covered the public files and checked that internal paths are excluded. An isolated Git fixture confirmed that the external script rejects an unreviewed SHA and dirty checkout, and fast-forwards to the validated commit.
 - Static checks confirmed the primary navigation order, destinations, and Resources grouping. The generated curriculum data matches the pre-change payload, including all path totals and dependencies.
