@@ -25809,34 +25809,421 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m14-t03">
-  <p class="lesson-intro" data-lesson-search>Per-call averages can hide long waits, retry spend and the cost of an evaluation pipeline itself.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>TTFT, TPOT, duration, latency percentiles, tokens, cost per valid case, concurrency, error budget, SLOs and degradation modes.</p>
-  </section>
-  <details class="lesson-disclosure" data-reading-skip>
-    <summary>Prerequisites</summary>
-    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a>, <a href="#m14-t01">Traces, monitoring and Langfuse</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m10-t03">Recovery, reliability and efficiency</a></dd></div></dl></div>
-  </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Compute p50/p95 and cost per valid outcome from a trace export that includes warm-ups, retries and judge calls.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 for percentiles and per-outcome costs. All timings and rates are supplied.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Defend a cost and latency budget and diagnose an incident where quality improved but reliability worsened.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section><details class="lesson-disclosure original-experiments" data-reading-skip>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Measure queue time, request latency, model and tool work, and evaluation time separately.</li><li>Account for retries, failed attempts, judge calls and unknown verdicts when reporting cost and reliability.</li><li>Keep quality fixed while testing a change to retry policy and compare matched workloads.</li><li>Use saved stage evidence to decide whether a local improvement is ready for broader evaluation.</li></ul>
+<h4>Start With the Saved Incident Evidence</h4>
+<p><a href="test12.html">Test 12, Agent Behavior Evaluation</a> records 15 cases for qwen3.5:9b on Ollama. In the checked-in result JSON, all 15 ended with a final answer and 14 matched the expected tool path. TC10 answered before the required document search. A completed response and a correct tool path are different outcomes.</p>
+<p>The historical walkthrough reports three recoveries after timeouts. The implementation in <code>phase-5-production-eval/agent-evaluation/agent.py</code> waits ten seconds and retries once on a timeout. The saved JSON and report support inspection of final states and action sequences. The JSON provides no per-attempt timestamps, token usage, cost, or structured record of which requests recovered. You cannot compute a historical tail percentile or retry bill from it. <a href="test11.html">Test 11</a> also documents evaluator timeouts. Some reported zeroes came from timeout defaults. Keep judge failures visible separately from a failed answer.</p>
+<p>The engineering question for the new experiment is whether filtering nonretryable responses can reduce the tail and fixture spend while preserving the requests that recovered. This training workload executes real local component waits and measures them. It uses deterministic model, tool and judge fixtures. It makes no hosted model calls.</p>
+<p>First complete <a href="#m07-t01">Variance, repetition and score aggregation</a> and <a href="#m14-t01">Traces, monitoring and Langfuse</a>. <a href="#m10-t03">Recovery, reliability and efficiency</a> is recommended. There is no conditional prerequisite. Use preparation skills P02 and P06 for Python and rates.</p>
+<h4>Optimize an LLM Application Under Cost, Latency and Reliability Constraints</h4>
+<h5>Define the comparison before measuring</h5>
+<p>Send the same burst of 40 Northstar requests to each profile. Baseline retries every failed model result up to two times. The selective profile retries only a transient failure or a timeout. Both have four workers, the same request order, 30 ms model-attempt deadline, synthetic token ledger and bounded jitter. A one-worker profile applies the selective rule to the same burst so you can see queueing under lower concurrency. It is a separate load comparison. Each profile runs and logs one warm-up before the burst.</p>
+<p>Use these lab gates. Require at least 95% of all requests within 400 ms, at least 90% operational success and at least 85% confirmed task success across all submitted requests. Require strictly lower p95, fewer retries and lower fixture cost per confirmed task success. Compare every case’s operational result and quality verdict, and verify that the repeated write with an idempotency key leaves one ledger entry. A gate failure calls for investigation. The evidence supports only this fixture and load.</p>
+<h5>Know what the clock measures</h5>
+<ul><li><strong>End-to-end latency</strong> starts at submission and ends when the application has a result or a terminal failure. Queue time ends when a worker starts. Retrieval, model attempts, retry waits and tool execution have their own measured durations.</li><li><strong>Evaluation time</strong> is recorded separately. The worker does the fixture judge work after the response is ready, so it can still delay queued requests. The dataset also retains elapsed time including evaluation.</li><li><strong>Elapsed time</strong> comes from <code>monotonic_ns</code>, a clock suited to measuring intervals. A timed wait may resume after its requested deadline under scheduling pressure. Keep the requested budget and the actual duration separate.</li><li><strong>Streaming metrics</strong> need actual token or chunk arrivals. Time to first token starts at the declared request boundary and ends at the first usable token. An average time per output token after the first can be calculated as time from first to last token divided by remaining output tokens. These fixtures do not stream. TTFT, TPOT and network overhead are unavailable here. The model-call span measures the component wait, not decoder throughput.</li></ul>
+<h5>Run the lab</h5>
+<p>Use a local terminal from the repository root with Python 3.11 or newer. The benchmark and report use the standard library. Copy the Python block into <code>operational_lab.py</code> in a temporary directory. The code uses <code>ThreadPoolExecutor</code> to run requests in a bounded worker pool. Read the returned stage lists in sequence. <code>Decimal</code> computes fixture charges without binary floating-point rounding. <code>--write</code> measures and creates a new JSON file. <code>--read</code> reproduces the report from saved measurements. The new-file mode refuses to overwrite an existing record.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import argparse
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
+from decimal import Decimal
+import json
+import math
+import os
+from pathlib import Path
+import platform
+from random import Random
+from threading import Event, Lock
+from time import monotonic_ns
+from urllib.parse import urlsplit
+
+PRICING = {
+    &quot;version&quot;: &quot;teaching-usd-per-million-v1&quot;,
+    &quot;unit_tokens&quot;: 1_000_000,
+    &quot;rates&quot;: {&quot;fixture-agent-v1&quot;: (&quot;1&quot;, &quot;4&quot;), &quot;fixture-judge-v1&quot;: (&quot;2&quot;, &quot;8&quot;)},
+    &quot;infra_per_request&quot;: &quot;0.000050&quot;,
+}
+APP = &quot;northstar-component-fixture-v1&quot;
+TIMEOUT_MS = 30
+MAX_ATTEMPTS = 3
+FAMILY = [(&quot;normal&quot;, 24), (&quot;slow&quot;, 4), (&quot;transient&quot;, 3), (&quot;timeout-once&quot;, 3),
+          (&quot;permanent&quot;, 2), (&quot;exhausted&quot;, 2), (&quot;unknown&quot;, 1), (&quot;wrong&quot;, 1)]
+RETRYABLE = {&quot;transient&quot;, &quot;timeout&quot;}
+SLO_MS = 400
+FLOOR = {&quot;operational&quot;: 0.90, &quot;task&quot;: 0.85}
+SCHEMA = &quot;northstar-measurements-v1&quot;
+
+
+def charge(model, pricing, input_tokens, output_tokens, *, calls=1, retries=0, infrastructure=&quot;0&quot;):
+    &quot;&quot;&quot;Token arguments are totals across all calls, including any retries.&quot;&quot;&quot;
+    values = (input_tokens, output_tokens, calls, retries, pricing[&quot;unit_tokens&quot;])
+    if (any(type(n) is not int or n &lt; 0 for n in values) or not pricing[&quot;unit_tokens&quot;]
+            or retries &gt; max(0, calls - 1) or (not calls and (input_tokens or output_tokens))
+            or not pricing.get(&quot;version&quot;)):
+        raise ValueError(&quot;Invalid usage or call counts&quot;)
+    rates = list(map(Decimal, pricing[&quot;rates&quot;][model]))
+    extra = Decimal(infrastructure)
+    if any(not n.is_finite() or n &lt; 0 for n in (*rates, extra)):
+        raise ValueError(&quot;Costs must be finite and nonnegative&quot;)
+    return (input_tokens * rates[0] + output_tokens * rates[1]) / pricing[&quot;unit_tokens&quot;] + extra
+
+
+def ms(start, end=None):
+    return ((monotonic_ns() if end is None else end) - start) / 1_000_000
+
+
+def wait(milliseconds):
+    Event().wait(milliseconds / 1000)
+
+
+def stage(name, work_ms, **details):
+    started = monotonic_ns()
+    wait(work_ms)
+    return {&quot;stage&quot;: name, &quot;ms&quot;: ms(started), **details}
+
+
+def model_attempt(fault, number):
+    status, work, tokens = &quot;ok&quot;, 7, (400, 80)
+    if fault == &quot;slow&quot;:
+        work = 24
+    elif fault == &quot;transient&quot; and number == 1:
+        status, work, tokens = &quot;transient&quot;, 3, (0, 0)
+    elif fault == &quot;exhausted&quot; or (fault == &quot;timeout-once&quot; and number == 1):
+        status, work, tokens = &quot;timeout&quot;, 50, (400, 10)
+    elif fault == &quot;permanent&quot;:
+        status, work, tokens = &quot;invalid-output&quot;, 23, (400, 80)
+    # The local component stops waiting at its deadline. No background write continues.
+    return stage(&quot;model&quot;, min(work, TIMEOUT_MS), status=status, attempt=number,
+                 model=&quot;fixture-agent-v1&quot;, input_tokens=tokens[0], output_tokens=tokens[1])
+
+
+def request(request_id, fault, submitted, selective):
+    started = monotonic_ns()
+    stages = [stage(&quot;retrieval&quot;, 3, version=&quot;documents-fixture-v1&quot;)]
+    rng = Random(request_id)
+    for number in range(1, MAX_ATTEMPTS + 1):
+        attempt = model_attempt(fault, number)
+        stages.append(attempt)
+        if attempt[&quot;status&quot;] == &quot;ok&quot;:
+            stages.append(stage(&quot;tool&quot;, 2, version=&quot;read-only-tool-fixture-v1&quot;))
+            break
+        if number == MAX_ATTEMPTS or (selective and attempt[&quot;status&quot;] not in RETRYABLE):
+            break
+        delay = 8 * 2 ** (number - 1) + rng.randrange(0, 4)
+        stages.append(stage(&quot;backoff&quot;, delay, requested_ms=delay, after=number))
+    finished = monotonic_ns()
+    operational_ok = attempt[&quot;status&quot;] == &quot;ok&quot;
+    quality = None
+    if operational_ok:
+        stages.append(stage(&quot;evaluation&quot;, 3, model=&quot;fixture-judge-v1&quot;, input_tokens=240, output_tokens=20))
+        if fault != &quot;unknown&quot;:
+            quality = fault != &quot;wrong&quot;
+    return {&quot;id&quot;: request_id, &quot;fault&quot;: fault, &quot;stages&quot;: stages, &quot;queue_ms&quot;: ms(submitted, started),
+            &quot;e2e_ms&quot;: ms(submitted, finished), &quot;including_evaluation_ms&quot;: ms(submitted),
+            &quot;operational_ok&quot;: operational_ok, &quot;task_pass&quot;: quality,
+            &quot;quality_status&quot;: &quot;unknown&quot; if operational_ok and quality is None else
+                              &quot;not-evaluated&quot; if not operational_ok else &quot;scored&quot;,
+            &quot;final_status&quot;: attempt[&quot;status&quot;], &quot;terminal_timeout&quot;: attempt[&quot;status&quot;] == &quot;timeout&quot;,
+            &quot;retries&quot;: number - 1}
+
+
+def suite():
+    items = [fault for fault, count in FAMILY for _ in range(count)]
+    Random(143).shuffle(items)
+    return [(f&quot;R{i:02}&quot;, fault) for i, fault in enumerate(items, 1)]
+
+
+def run_batch(name, workers, selective):
+    warmups = [request(&quot;warmup&quot;, &quot;normal&quot;, monotonic_ns(), selective)]
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        pending = [pool.submit(request, case, fault, monotonic_ns(), selective) for case, fault in suite()]
+        rows = [future.result() for future in pending]
+    return {&quot;name&quot;: name, &quot;workers&quot;: workers, &quot;selective_retries&quot;: selective,
+            &quot;warmups&quot;: warmups, &quot;requests&quot;: rows}
+
+
+def nearest_rank(values, percentile):
+    if not values or not 0 &lt; percentile &lt;= 100:
+        raise ValueError(&quot;Need observations and a percentile in (0, 100]&quot;)
+    ordered = sorted(values)
+    return ordered[math.ceil(percentile * len(ordered) / 100) - 1]
+
+
+def request_cost(row, pricing):
+    by_model = {}
+    for component in row[&quot;stages&quot;]:
+        if &quot;model&quot; in component:
+            total = by_model.setdefault(component[&quot;model&quot;], {&quot;input&quot;: 0, &quot;output&quot;: 0, &quot;calls&quot;: 0})
+            total[&quot;input&quot;] += component[&quot;input_tokens&quot;]
+            total[&quot;output&quot;] += component[&quot;output_tokens&quot;]
+            total[&quot;calls&quot;] += 1
+    return Decimal(pricing[&quot;infra_per_request&quot;]) + sum(
+        charge(model, pricing, tokens[&quot;input&quot;], tokens[&quot;output&quot;], calls=tokens[&quot;calls&quot;],
+               retries=row[&quot;retries&quot;] if model == &quot;fixture-agent-v1&quot; else 0)
+        for model, tokens in by_model.items()
+    )
+
+
+def metrics(batch, pricing):
+    rows = batch[&quot;requests&quot;]
+    n = len(rows)
+    latency = [row[&quot;e2e_ms&quot;] for row in rows]
+    succeeded = sum(row[&quot;operational_ok&quot;] for row in rows)
+    passed = sum(row[&quot;task_pass&quot;] is True for row in rows)
+    scored = sum(row[&quot;task_pass&quot;] is not None for row in rows)
+    retried = [row for row in rows if row[&quot;retries&quot;]]
+    total = sum(request_cost(row, pricing) for row in rows)
+    return {
+        &quot;n&quot;: n, &quot;operational&quot;: succeeded, &quot;task_pass&quot;: passed, &quot;scored&quot;: scored,
+        &quot;unknown&quot;: sum(row[&quot;quality_status&quot;] == &quot;unknown&quot; for row in rows),
+        &quot;mean&quot;: sum(latency) / n, &quot;tail&quot;: [nearest_rank(latency, p) for p in (50, 90, 95, 99)],
+        &quot;slo_met&quot;: sum(value &lt;= SLO_MS for value in latency),
+        &quot;p95_queue&quot;: nearest_rank([row[&quot;queue_ms&quot;] for row in rows], 95),
+        &quot;retry_requests&quot;: len(retried), &quot;retries&quot;: sum(row[&quot;retries&quot;] for row in rows),
+        &quot;recovered&quot;: sum(row[&quot;operational_ok&quot;] for row in retried),
+        &quot;timeout_attempts&quot;: sum(step.get(&quot;status&quot;) == &quot;timeout&quot; for row in rows for step in row[&quot;stages&quot;]),
+        &quot;terminal_timeouts&quot;: sum(row[&quot;terminal_timeout&quot;] for row in rows),
+        &quot;successful_tool_calls&quot;: sum(step[&quot;stage&quot;] == &quot;tool&quot; for row in rows for step in row[&quot;stages&quot;]),
+        &quot;total&quot;: total, &quot;per_request&quot;: total / n,
+        &quot;per_operational_success&quot;: total / succeeded if succeeded else None,
+        &quot;per_success&quot;: total / passed if passed else None,
+        &quot;per_evaluated&quot;: total / scored if scored else None,
+        &quot;warmup_cost&quot;: sum(request_cost(row, pricing) for row in batch[&quot;warmups&quot;]),
+        &quot;failures&quot;: dict(Counter(row[&quot;final_status&quot;] for row in rows if not row[&quot;operational_ok&quot;])),
+    }
+
+
+def repeat_write(use_key):
+    ledger = []
+    lock = Lock()
+    recorded = {}
+
+    def apply(key):
+        with lock:
+            if key is not None and key in recorded:
+                return recorded[key]
+            receipt = len(ledger) + 1
+            ledger.append(receipt)
+            if key is not None:
+                recorded[key] = receipt
+            return receipt
+
+    key = &quot;same-operation&quot; if use_key else None
+    apply(key)  # First call committed, but its acknowledgement was lost in the fixture.
+    second = apply(key)
+    return len(ledger), second
+
+
+def decision(baseline, optimized, stats, candidate):
+    left = {row[&quot;id&quot;]: (row[&quot;fault&quot;], row[&quot;operational_ok&quot;], row[&quot;task_pass&quot;]) for row in baseline[&quot;requests&quot;]}
+    right = {row[&quot;id&quot;]: (row[&quot;fault&quot;], row[&quot;operational_ok&quot;], row[&quot;task_pass&quot;]) for row in optimized[&quot;requests&quot;]}
+    if (baseline[&quot;workers&quot;] != optimized[&quot;workers&quot;]
+            or {key: values[0] for key, values in left.items()} !=
+               {key: values[0] for key, values in right.items()}):
+        return &quot;COLLECT MORE EVIDENCE&quot;
+    if left != right:
+        return &quot;REJECT CHANGE&quot;
+    if (candidate[&quot;tail&quot;][2] &gt; SLO_MS or candidate[&quot;tail&quot;][2] &gt;= stats[&quot;tail&quot;][2]
+            or candidate[&quot;operational&quot;] / candidate[&quot;n&quot;] &lt; FLOOR[&quot;operational&quot;]
+            or candidate[&quot;task_pass&quot;] / candidate[&quot;n&quot;] &lt; FLOOR[&quot;task&quot;]
+            or candidate[&quot;per_success&quot;] is None or stats[&quot;per_success&quot;] is None
+            or candidate[&quot;per_success&quot;] &gt;= stats[&quot;per_success&quot;]
+            or candidate[&quot;retries&quot;] &gt;= stats[&quot;retries&quot;] or repeat_write(True) != (1, 1)):
+        return &quot;INVESTIGATE FURTHER&quot;
+    return &quot;ACCEPT CHANGE IN THIS FIXTURE&quot;
+
+
+def report(packet):
+    if packet[&quot;schema&quot;] != SCHEMA or packet[&quot;application&quot;] != APP:
+        raise ValueError(&quot;Unsupported measurement dataset&quot;)
+    print(&quot;Environment:&quot;, packet[&quot;environment&quot;])
+    print(&quot;Pricing fixture:&quot;, packet[&quot;pricing&quot;][&quot;version&quot;], &quot;| one warm-up excluded per profile&quot;)
+    stats = []
+    for batch in packet[&quot;batches&quot;]:
+        row = metrics(batch, packet[&quot;pricing&quot;])
+        stats.append(row)
+        print(f&quot;{batch[&#x27;name&#x27;]} (workers={batch[&#x27;workers&#x27;]}): {row[&#x27;n&#x27;]} requests; mean {row[&#x27;mean&#x27;]:.1f} ms; &quot;
+              f&quot;nearest-rank p50/p90/p95/p99 {&#x27;/&#x27;.join(f&#x27;{x:.1f}&#x27; for x in row[&#x27;tail&#x27;])} ms; &quot;
+              f&quot;queue p95 {row[&#x27;p95_queue&#x27;]:.1f} ms; within SLO {row[&#x27;slo_met&#x27;]}/{row[&#x27;n&#x27;]}&quot;)
+        print(f&quot;  Operational {row[&#x27;operational&#x27;]}; task pass {row[&#x27;task_pass&#x27;]}; scored {row[&#x27;scored&#x27;]}; &quot;
+              f&quot;unknown {row[&#x27;unknown&#x27;]}; successful tool calls {row[&#x27;successful_tool_calls&#x27;]}; &quot;
+              f&quot;retried {row[&#x27;retry_requests&#x27;]}; retries {row[&#x27;retries&#x27;]}; recovered {row[&#x27;recovered&#x27;]}; &quot;
+              f&quot;timeouts {row[&#x27;timeout_attempts&#x27;]} attempts / {row[&#x27;terminal_timeouts&#x27;]} terminal&quot;)
+        monetary = (row[&quot;total&quot;], row[&quot;per_request&quot;], row[&quot;per_operational_success&quot;],
+                    row[&quot;per_success&quot;], row[&quot;per_evaluated&quot;], row[&quot;warmup_cost&quot;])
+        print(&quot;  Fixture USD total/request/operational success/task success/evaluated/warm-up:&quot;,
+              &quot; / &quot;.join(f&quot;{value:.6f}&quot; if value is not None else &quot;n/a&quot; for value in monetary),
+              &quot;| final failures:&quot;, json.dumps(row[&quot;failures&quot;], sort_keys=True))
+    print(&quot;Lost acknowledgement without / with idempotency (writes, last receipt):&quot;,
+          repeat_write(False), &quot;/&quot;, repeat_write(True))
+    print(&quot;Decision:&quot;, decision(*packet[&quot;batches&quot;][:2], *stats[:2]))
+
+
+def measure():
+    return {&quot;schema&quot;: SCHEMA, &quot;application&quot;: APP, &quot;pricing&quot;: deepcopy(PRICING),
+            &quot;environment&quot;: f&quot;{platform.system()} {platform.machine()}, Python {platform.python_version()}&quot;,
+            &quot;clock&quot;: &quot;monotonic_ns&quot;, &quot;attempt_timeout_ms&quot;: TIMEOUT_MS,
+            &quot;batches&quot;: [run_batch(&quot;baseline&quot;, 4, False), run_batch(&quot;selective&quot;, 4, True),
+                        run_batch(&quot;serial workers&quot;, 1, True)]}
+
+
+def export(packet):
+    origin = urlsplit(os.environ.get(&quot;LANGFUSE_BASE_URL&quot;, &quot;&quot;))
+    if (origin.scheme != &quot;http&quot; or origin.hostname not in (&quot;127.0.0.1&quot;, &quot;localhost&quot;, &quot;::1&quot;)
+            or origin.username or origin.password or origin.path not in (&quot;&quot;, &quot;/&quot;)
+            or origin.query or origin.fragment
+            or not all(os.environ.get(key) for key in (&quot;LANGFUSE_PUBLIC_KEY&quot;, &quot;LANGFUSE_SECRET_KEY&quot;))):
+        raise ValueError(&quot;Use the configured loopback Langfuse Lite lab&quot;)
+    from langfuse import get_client
+
+    client = get_client()
+    try:
+        for batch in packet[&quot;batches&quot;][:2]:
+            selected = (&quot;normal&quot;, &quot;timeout-once&quot;, &quot;permanent&quot;, &quot;exhausted&quot;, &quot;wrong&quot;)
+            for fault in selected:
+                row = next(item for item in batch[&quot;requests&quot;] if item[&quot;fault&quot;] == fault)
+                with client.start_as_current_observation(name=&quot;northstar-operational-replay&quot;,
+                        input={&quot;request_id&quot;: row[&quot;id&quot;]}, metadata={&quot;profile&quot;: batch[&quot;name&quot;],
+                        &quot;environment&quot;: packet[&quot;environment&quot;], &quot;application&quot;: packet[&quot;application&quot;],
+                        &quot;measured_e2e_ms&quot;: row[&quot;e2e_ms&quot;], &quot;measured_queue_ms&quot;: row[&quot;queue_ms&quot;],
+                        &quot;pricing&quot;: packet[&quot;pricing&quot;][&quot;version&quot;], &quot;provenance&quot;: &quot;local-fixture-replay&quot;}) as root:
+                    for step in row[&quot;stages&quot;]:
+                        kind = {&quot;model&quot;: &quot;generation&quot;, &quot;evaluation&quot;: &quot;evaluator&quot;,
+                                &quot;retrieval&quot;: &quot;retriever&quot;, &quot;tool&quot;: &quot;tool&quot;, &quot;backoff&quot;: &quot;span&quot;}[step[&quot;stage&quot;]]
+                        extra = {}
+                        if kind == &quot;generation&quot;:
+                            extra = {&quot;model&quot;: step[&quot;model&quot;], &quot;usage_details&quot;: {&quot;input&quot;: step[&quot;input_tokens&quot;],
+                                      &quot;output&quot;: step[&quot;output_tokens&quot;]}}
+                        metadata = {key: value for key, value in step.items() if key != &quot;stage&quot;}
+                        with client.start_as_current_observation(name=step[&quot;stage&quot;], as_type=kind,
+                                level=&quot;ERROR&quot; if step.get(&quot;status&quot;, &quot;ok&quot;) != &quot;ok&quot; else &quot;DEFAULT&quot;,
+                                metadata=metadata, **extra):
+                            pass
+                    if row[&quot;task_pass&quot;] is not None:
+                        client.score_current_trace(name=&quot;fixture_task_pass&quot;, value=float(row[&quot;task_pass&quot;]),
+                                                   data_type=&quot;NUMERIC&quot;)
+                    root.update(output={&quot;operational_ok&quot;: row[&quot;operational_ok&quot;], &quot;retries&quot;: row[&quot;retries&quot;],
+                                &quot;task_pass&quot;: row[&quot;task_pass&quot;], &quot;fixture_usd&quot;: str(request_cost(row, packet[&quot;pricing&quot;]))})
+                    print(&quot;Trace to verify after flush:&quot;, batch[&quot;name&quot;], row[&quot;id&quot;], client.get_current_trace_id())
+    finally:
+        client.flush()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument(&quot;--write&quot;, type=Path, help=&quot;Measure and save to a new JSON file&quot;)
+    mode.add_argument(&quot;--read&quot;, type=Path, help=&quot;Recompute the report from saved measurements&quot;)
+    parser.add_argument(&quot;--export-langfuse&quot;, action=&quot;store_true&quot;, help=&quot;Replay selected traces to loopback Lite&quot;)
+    args = parser.parse_args()
+    if args.write:
+        with args.write.open(&quot;x&quot;, encoding=&quot;utf-8&quot;) as handle:
+            packet = measure()
+            json.dump(packet, handle, separators=(&quot;,&quot;, &quot;:&quot;), allow_nan=False)
+    else:
+        packet = json.loads(args.read.read_text(encoding=&quot;utf-8&quot;))
+    report(packet)
+    if args.export_langfuse:
+        export(packet)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+</div>
+<h5>Save your run and reproduce the recorded one</h5>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">LAB_DIR=&quot;$(mktemp -d)&quot;
+# Save the copied program as operational_lab.py in LAB_DIR, then run from the repository root.
+python3 &quot;$LAB_DIR/operational_lab.py&quot; --write &quot;$LAB_DIR/my-measurements.json&quot;
+python3 &quot;$LAB_DIR/operational_lab.py&quot; --read scripts/fixtures/m14-t03-measurements.json
+</code></pre>
+</div>
+<p>The second command reproduces the captured measurement dataset below. The first command measures your machine, so its timings can differ. The JSON retains each request ID, queue and elapsed times, stage durations, token fixture, attempt ordinal, status, quality verdict and warm-up record. Keep both the original JSON and the report when comparing reruns.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">Environment: Darwin arm64, Python 3.12.7
+Pricing fixture: teaching-usd-per-million-v1 | one warm-up excluded per profile
+baseline (workers=4): 40 requests; mean 196.6 ms; nearest-rank p50/p90/p95/p99 190.7/345.2/346.8/362.6 ms; queue p95 332.4 ms; within SLO 40/40
+  Operational 36; task pass 34; scored 35; unknown 1; successful tool calls 36; retried 10; retries 14; recovered 6; timeouts 9 attempts / 2 terminal
+  Fixture USD total/request/operational success/task success/evaluated/warm-up: 0.059240 / 0.001481 / 0.001646 / 0.001742 / 0.001693 / 0.001410 | final failures: {&quot;invalid-output&quot;: 2, &quot;timeout&quot;: 2}
+selective (workers=4): 40 requests; mean 179.1 ms; nearest-rank p50/p90/p95/p99 191.0/298.5/308.5/316.3 ms; queue p95 284.2 ms; within SLO 40/40
+  Operational 36; task pass 34; scored 35; unknown 1; successful tool calls 36; retried 8; retries 10; recovered 6; timeouts 9 attempts / 2 terminal
+  Fixture USD total/request/operational success/task success/evaluated/warm-up: 0.056360 / 0.001409 / 0.001566 / 0.001658 / 0.001610 / 0.001410 | final failures: {&quot;invalid-output&quot;: 2, &quot;timeout&quot;: 2}
+serial workers (workers=1): 40 requests; mean 717.1 ms; nearest-rank p50/p90/p95/p99 771.4/1194.7/1233.0/1270.9 ms; queue p95 1217.7 ms; within SLO 9/40
+  Operational 36; task pass 34; scored 35; unknown 1; successful tool calls 36; retried 8; retries 10; recovered 6; timeouts 9 attempts / 2 terminal
+  Fixture USD total/request/operational success/task success/evaluated/warm-up: 0.056360 / 0.001409 / 0.001566 / 0.001658 / 0.001610 / 0.001410 | final failures: {&quot;invalid-output&quot;: 2, &quot;timeout&quot;: 2}
+Lost acknowledgement without / with idempotency (writes, last receipt): (2, 2) / (1, 1)
+Decision: ACCEPT CHANGE IN THIS FIXTURE
+</code></pre></details>
+<h5>Follow the slow requests</h5>
+<p>Nearest-rank p95 sorts the times and selects the value at rank <code>ceil(0.95 × n)</code>, starting at rank 1. With 40 requests, p95 is rank 38 and p99 is the maximum. The p99 is an observed order statistic in this small burst. It says little about rare delays in production.</p>
+<p>The selective mean was 179.1 ms, while p95 was 308.5 ms. Queue p95 was 284.2 ms. Look up a complete request before blaming the model. Selective R20 spent 170.1 ms queued and finished in 201.3 ms. Baseline R20 retried the same permanent malformed output twice and finished in 294.9 ms. The median moved from 190.7 ms to 191.0 ms, so the improvement showed up mainly in the tail of this run. The one-worker burst used the same selective rule and work but reached just 9/40 within the time objective. Measure queue depth and wait before increasing concurrency. A local fixture that mostly waits is cheaper to run in parallel than a real service contending for limited inference resources.</p>
+<h5>Trace the failure and the retry decision</h5>
+<p>The faults are part of the frozen request schedule. Use each named case to verify the policy in your saved JSON. To run only the comparison, leave the workload constant. To test the response to a different failure, change one class count in <code>FAMILY</code> in a scratch copy, write to a new file, and keep that experiment separate from the recorded comparison.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Course hours by track"><table><caption>Course hours by track</caption><thead><tr><th scope="col">Inspect</th><th scope="col">Fault and observed result</th></tr></thead><tbody><tr><td>R11</td><td>The first model attempt fails transiently before any tokens are counted. A bounded wait precedes a successful retry</td></tr><tr><td>R13</td><td>The first attempt hits the cooperative deadline. The second completes. The trace retains both attempts</td></tr><tr><td>R20</td><td>Both profiles still fail on malformed output. Selective avoids two attempts and two waits</td></tr><tr><td>R08</td><td>The timeout persists through all three attempts. The request ends with a terminal timeout</td></tr><tr><td>R01 and R27</td><td>Both are operational successes. R01 fails evaluation. R27 has no final correctness label</td></tr></tbody></table></div>
+<p>The exercise’s retry waits are 8–11 ms, then 16–19 ms, using a seed per request. Exponential backoff increases the wait, jitter spreads competing retries, and the attempt cap prevents unbounded work. The injected timeout cancels waiting inside this fixture. A real client deadline does not establish cancellation at a remote provider.</p>
+<p>For a real request, retry a known transient network problem only within a shared deadline and budget. Treat rate limits according to provider instructions, including Retry-After where present. Preserve and classify partial responses or ambiguous tool acknowledgements. Correct invalid parameters, incompatible context length, permission failures or malformed output before resubmitting. For an unavailable tool, consider a safe fallback and an operator alert. Bound concurrency and total retries so one slow dependency does not fill the queue and amplify failure across services.</p>
+<p>For the write demonstration, the first action commits but the acknowledgement is treated as lost. Repeating without a key creates a second ledger entry. An atomic check and write under the same key returns the first receipt and leaves one entry. In a real backend, use a durable operation key scoped to the caller and operation, bind it to the payload, and verify the final state. This demonstration exercises only an in-memory ledger.</p>
+<h5>Account for all the work</h5>
+<p>The pricing record <code>teaching-usd-per-million-v1</code> is fictional. It charges the fixture agent $1 per million input tokens and $4 per million output tokens, the fixture judge $2 and $8, and adds $0.000050 per request. The model and evaluation token counts here are inputs to the fixture. Actual APIs may return per-attempt usage. An unreported count after a timeout is unknown and needs reconciliation. Local inference may have no API token invoice, but compute, energy, hosting and review still cost money.</p>
+<p>A normal request costs <code>(400 × 1 + 80 × 4) / 1,000,000 = $0.000720</code> for the agent and <code>(240 × 2 + 20 × 8) / 1,000,000 = $0.000640</code> for the judge. Add infrastructure for <code>$0.001410</code>. On a timeout-then-success case, the failed attempt adds <code>(400 × 1 + 10 × 4) / 1,000,000 = $0.000440</code>. Include both calls even though only one returned a usable result. To price another recorded model, use its model ID, pricing version, unit, and measured tokens over all its calls. The retry count describes those calls. It does not multiply token totals a second time. Keep cached tokens, batch rates and provider tool charges separate if your approved price sheet distinguishes them.</p>
+<p>The report divides all measured requests’ fixture spend by 40 for cost per request, 36 for cost per operational success, 34 for cost per confirmed successful task and 35 for cost per evaluated request. Evaluation spend and failed work stay in every numerator. Warm-up cost is reported separately. In a multistep agent, sum each generation and judge call plus verified tool or infrastructure charges. A shorter prompt or a smaller model is a new comparison that must retain quality and safety gates.</p>
+<h5>Read the reliability denominators, then decide</h5>
+<p>An operational success is a usable response from the application. A scored failure can still return successfully at the transport layer. Of 40 requests, 36 succeeded operationally and 34 passed the task. The scored pass rate is 34/35. One usable response is unscored, so it stays unknown in the audit. The lab uses 34/40 confirmed task passes for its guardrail. There are 36 successful tool calls out of 36 attempted, because the fixture skips the tool on model failure. The terminal timeout rate is 2/40, separate from nine timed-out attempts. Retry-request rate moves from 10/40 to 8/40, and six retried requests recover in each profile.</p>
+<p>A service-level indicator is a measured rate, such as all requests finishing in 400 ms or less. A service-level objective states its target. A 95% latency SLO permits two misses in this 40-case batch, an error budget separate from the operational failure budget. The saved selective run met the latency, operational and task floors. It preserved every case outcome, cut four retries, reduced p95 from 346.8 to 308.5 ms, and reduced fixture spend by $0.002880. <strong>Accept the selective rule for this fixture.</strong> Collect repeated load runs and measured provider usage before a wider deployment. If the quality guard fails or useful recoveries disappear, investigate or reject the change. A deployed regression needs the release policy and evidence from <a href="#m13-t03">Release decisions, rollback and governance</a>.</p>
+<h4>Inspect Operational Evidence in Langfuse</h4>
+<p>Reuse the loopback Langfuse Lite setup from <a href="#m14-t01">Traces, monitoring and Langfuse</a>. Use Python SDK 5.2.0 and Lite 0.1.1, the same three Langfuse environment variables, and a fresh local database. In the first terminal activate the environment and install the optional dependencies. In the second terminal set <code>LAB_DIR</code> to the printed path and start Lite with the documented local placeholders from the tracing lesson. Use the captured fixture inputs only.</p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">python3 -m venv &quot;$LAB_DIR/venv&quot;
+. &quot;$LAB_DIR/venv/bin/activate&quot;
+python -m pip install &#x27;langfuse==5.2.0&#x27; &#x27;langfuse-lite==0.1.1&#x27;
+</code></pre>
+</div>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">. &quot;$LAB_DIR/venv/bin/activate&quot;
+TELEMETRY_ENABLED=false langfuse-lite serve --host 127.0.0.1 --port 3000 --db &quot;$LAB_DIR/operational.db&quot;
+</code></pre>
+</div>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-bash">export LANGFUSE_BASE_URL=http://127.0.0.1:3000
+export LANGFUSE_PUBLIC_KEY=pk-lf-local
+export LANGFUSE_SECRET_KEY=sk-lf-local
+python &quot;$LAB_DIR/operational_lab.py&quot; --read scripts/fixtures/m14-t03-measurements.json --export-langfuse
+langfuse-lite tree TRACE_ID --db &quot;$LAB_DIR/operational.db&quot; --io
+langfuse-lite export --db &quot;$LAB_DIR/operational.db&quot; --out &quot;$LAB_DIR/operational-viewer.html&quot;
+</code></pre>
+</div>
+<p>Use the printed ID for the R20 trace in each profile. Compare the generation attempts, tool or judge spans where present, status, total fixture cost and original stage timings. The SDK attaches the measured durations as metadata. The viewer’s native observation durations reflect the import and cannot substitute for those elapsed measurements. Generation usage is explicitly set from the fixture, and fixture cost is in root output. The integration does not supply provider invoices or model-generated text. Local verification stored 10 trace trees, 58 observations and six fixture quality scores. The baseline R20 trace has three failed generation attempts and the selective trace has one. Full Langfuse dashboards and live hosted generation remain unverified. See <code>https://python.reference.langfuse.com/langfuse</code>, <code>https://langfuse.com/docs/langfuse-lite</code> and <code>https://langfuse.com/docs/observability/features/token-and-cost-tracking</code>.</p>
+<h4>Investigation Worksheet</h4>
+<p>Use the saved JSON to decide whether to accept selective retries and whether to reduce the worker pool to one. Report p95, the latency SLO count, operational successes, confirmed task passes, unknown verdicts, retries, recoveries, and fixture cost per successful task. Identify the request that distinguishes the permanent-failure behaviors and the evidence you would need before deploying.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<p>The selective rule keeps six recoveries and all per-case outcomes while lowering p95 and confirmed-task cost from $0.001742 to $0.001658. R20 shows exactly why. Its repeated malformed results are eliminated without changing the failure verdict. Accept selective retries for this fixture. The one-worker burst preserves the quality and cost results, but p95 reaches 1233.0 ms and 31/40 requests miss the SLO. Reject that capacity configuration for this burst. Retest under representative arrivals with real inference, usage and timeout data. Check p95 over multiple batches before trusting the observed difference.</p>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li>If the report cannot find the fixture, run from the repository root. Recompute the supplied JSON before comparing your machine’s timing.</li><li>If <code>--write</code> says the file exists, choose a new name. Keep the previous run and its environment metadata.</li><li>If Lite does not show a trace, verify the URL, database and trace ID after flush. Compare the measured elapsed metadata instead of the exporter’s wall-clock duration.</li><li>Stop the Lite server with Ctrl+C. Keep your scratch directory and viewer only as long as needed. Unset the three Langfuse variables when finished.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
 <summary>Original TestNeural Experiment</summary>
 <div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
 <article data-original-experiment="TEST-11" data-relevance="Supporting">
@@ -25845,12 +26232,24 @@ data-subject="Production Engineering" data-status="Needs Improvement" data-track
 <dl class="field-list"><div><dt>What was tested</dt><dd>Compare a framework-based judge with Test 9’s custom scoring on saved RAG cases.</dd></div><div><dt>How it was tested</dt><dd>Build DeepEval test cases with question, reply, and retrieved context, then grade with three metrics at a 0.5 threshold. The original workbook and page list 25 cases, the per-case metrics, and the recorded timeout batches. llama3.1:8b bot and mistral judge over Ollama, as documented in the report.</dd></div><div><dt>Actual results</dt><dd>The page reports 1/25 full passes (TC15). TC01–TC15 are described as fully scored. Some context and faithfulness results in TC16–TC25 were affected by timeouts.</dd></div><div><dt>Original findings</dt><dd>The valid-case comparison explains why two scores labeled context relevance can answer different questions.</dd></div><div><dt>Evidence notes</dt><dd>The original all-case aggregates mix valid results with timeout-affected values. Use the recorded batch and metric notes when interpreting them.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the recorded timeout batches to consider operational reliability.</dd></div></dl>
 <p><a href="test11.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html">Original per-case report</a> · <a href="#original-test-11">Evidence files and related lessons</a></p>
 </article>
+<article data-original-experiment="TEST-12" data-relevance="Supporting">
+<h5>Test 12: Agent Behavior Evaluation</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Check whether an agent follows the expected tool path and stops appropriately.</dd></div><div><dt>How it was tested</dt><dd>Run 15 workbook cases through a local banking agent and inspect tool sequence, arguments, and stop behavior. Mock account data and local documents support no-tool, lookup, clarification, and multi-step cases. qwen3.5:9b via Ollama in the committed result data.</dd></div><div><dt>Actual results</dt><dd>14 of 15 passed all checks. TC10 stopped after the lookup rather than taking the expected second step. The walkthrough reports zero final timeouts and three timeout recoveries by retry.</dd></div><div><dt>Original findings</dt><dd>The original analysis shows what becomes visible when individual tool calls and stops are recorded.</dd></div><div><dt>Evidence notes</dt><dd>These outcomes apply to the saved cases and mock tools.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the recorded tool paths and documented timeout recovery to motivate separate request, attempt and cost measurements.</dd></div></dl>
+<p><a href="test12.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> · <a href="#original-test-12">Evidence files and related lessons</a></p>
+</article>
 <article data-original-experiment="TEST-14" data-relevance="Related">
 <h5>Test 14: Langfuse Observability</h5>
 <p>Methodology Available — Results Missing</p>
 <dl class="field-list"><div><dt>What was tested</dt><dd>Instrument a banking bot evaluation so traces, latency, and scores can be inspected in Langfuse.</dd></div><div><dt>How it was tested</dt><dd>Create a local Langfuse setup and log evaluation traces, spans, tags, and keyword-pass scores. The original workbook contains 20 cases across six banking categories. The page shows the instrumentation and what to inspect. The checked-in configuration names llama3.1:8b. The original walkthrough describes a local Docker and Langfuse setup.</dd></div><div><dt>Actual results</dt><dd>Original methodology is available. No recorded results were found.</dd></div><div><dt>Original findings</dt><dd>The walkthrough explains how a trace connects the input, model call, evaluator, and latency for inspection.</dd></div><div><dt>Evidence notes</dt><dd>The results directory contains only a placeholder. No recorded trace export, dashboard screenshot, or run summary was found.</dd></div><div><dt>Connection to this lesson</dt><dd>Related. See where the instrumentation records latency before designing a measured comparison.</dd></div></dl>
 <p><a href="test14.html">View Complete Original Experiment</a> · <a href="#original-test-14">Evidence files and related lessons</a></p>
 </article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Keep per-attempt timings, charges and outcomes together. Compare like workloads, separate latency from quality, and accept a local result only for the conditions you measured. Next is <a href="#m15-t01">Design review and reproducible suite</a>.</p></div>
+  <details class="lesson-disclosure" data-reading-skip>
+    <summary>Prerequisites</summary>
+    <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m07-t01">Variance, repetition and score aggregation</a>, <a href="#m14-t01">Traces, monitoring and Langfuse</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m10-t03">Recovery, reliability and efficiency</a></dd></div></dl></div>
+  </details>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -26724,7 +27123,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test12.html">View Complete Original Experiment</a> <code>docs/test12.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html">Original agent results report</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json">Recorded trajectories and arguments</a> <code>phase-5-production-eval/agent-evaluation/results/sample_agent_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx">Original agent test cases</a> <code>phase-5-production-eval/agent-evaluation/agent_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py">Deterministic agent evaluator</a> <code>phase-5-production-eval/agent-evaluation/test12_agent_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li></ul>
+<ul><li><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a> · Supporting. Use the recorded tool paths and documented timeout recovery to motivate separate request, attempt and cost measurements.</li><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the saved TC10 tool-path mismatch to identify the action evidence that belongs beside a release recommendation.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use TC10&#x27;s saved one-step-early trace to see why a targeted behavior check can matter even when most cases pass.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Use TC10 to practice writing a finding with saved action evidence and a reproducible stop criterion.</li><li><a href="#m03-t02">M03-T02 — Structured output and schema validation</a> · Supporting. Review how structured action parsing affects whether the trace can be evaluated.</li><li><a href="#m10-t01">M10-T01 — Execution model, structured calls and tool contracts</a> · Primary. Inspect recorded calls, expected tool arguments, and stop behavior.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Supporting. Compare the early stop in TC10 with the expected two-step trajectory.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Inspect observed tool steps separately from the final reply before evaluating a claimed outcome.</li><li><a href="#m10-t03">M10-T03 — Recovery, reliability and efficiency</a> · Primary. Distinguish retry recovery from the unresolved early-stop failure.</li></ul>
 </details>
 <details id="original-test-13" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 13: Trajectory Evaluation with Judge Model · Recorded Results Available</summary>

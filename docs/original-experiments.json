@@ -631,6 +631,11 @@
       ],
       "topics": [
         {
+          "id": "M14-T03",
+          "relevance": "Supporting",
+          "connection": "Use the recorded tool paths and documented timeout recovery to motivate separate request, attempt and cost measurements."
+        },
+        {
           "id": "M14-T01",
           "relevance": "Supporting",
           "connection": "Import the genuine TC10 action and tool-result records, then compare them with new observations from a local repair."

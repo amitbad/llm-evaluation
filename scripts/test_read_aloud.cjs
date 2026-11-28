@@ -632,7 +632,7 @@ test("generator includes the shared reader for the standalone curriculum and all
   assert.equal(count(/data-reading-hint/g), 0);
   // The terminal monitoring labs have one folded worksheet answer each. Earlier chapters have two.
   const expectedAnswerDisclosures = authoredLessonIds.reduce(
-    (total, id) => total + (["M14-T01", "M14-T02"].includes(id) ? 1 : 2), 0);
+    (total, id) => total + (["M14-T01", "M14-T02", "M14-T03"].includes(id) ? 1 : 2), 0);
   assert.equal(count(/class="lesson-disclosure lesson-supplement" data-reading-skip/g), expectedAnswerDisclosures);
   for (const file of readdirSync(resolve(__dirname, "../docs")).filter(name => /^test\d+\.html$/.test(name))) {
     assert.match(read("docs/" + file), /<script src="assets\/lesson-reader.js" defer><\/script>/, file);
