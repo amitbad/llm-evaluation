@@ -178,7 +178,7 @@ const guidedLearning = (() => {
       ? "Copy a link to this exact path or download an offline copy."
       : "Share the downloaded HTML file. This local file address only works on your device.";
     share.addEventListener("click", async () => {
-      const url = new URL(location.pathname, location.origin);
+      const url = new URL("master-curriculum.html", location.href);
       url.hash = fragment;
       const field = plan.querySelector("[data-plan-url]");
       try {

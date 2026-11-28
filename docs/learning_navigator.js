@@ -213,8 +213,7 @@
     if (!route?.path.closure.includes(id)) return;
     const hash = guidedLearning.lessonHash(route.path.id, id);
     dismiss(false);
-    if (location.hash === hash) followHash(true);
-    else location.hash = hash;
+    navigateCurriculum(hash);
   });
 
   document.addEventListener("curriculum-route", event => {

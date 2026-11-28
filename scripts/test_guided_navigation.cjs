@@ -24,6 +24,7 @@ class Element extends EventTarget {
     this.classList = {toggle() {}};
   }
   getAttribute(key) { return this.attributes[key]; }
+  hasAttribute(key) { return Object.hasOwn(this.attributes, key); }
   setAttribute(key, value) { this.attributes[key] = value; }
   removeAttribute(key) { delete this.attributes[key]; }
   querySelector(key) { return this.queries[key] || null; }
@@ -59,7 +60,7 @@ class Element extends EventTarget {
 
 const lessonHash = (path, topic) => "#quick-" + path.toLowerCase() + "/" + topic.toLowerCase();
 
-function start(hash, storage = new Map()) {
+function start(hash, storage = new Map(), hosted = false) {
   const ids = new Map();
   const add = (id, props) => {
     const node = new Element({id, ...props});
@@ -128,13 +129,29 @@ function start(hash, storage = new Map()) {
   });
   document.querySelector = selector => el(selector.slice(1));
   const window = new EventTarget();
+  const origin = hosted ? "https://llmacademy.testneural.in" : "null";
+  let address = new URL(hosted ? origin + "/master-curriculum.html" : "file:///master-curriculum.html");
+  address.hash = hash;
   const location = {
-    protocol: "file:",
-    get hash() { return hash; },
+    origin,
+    get protocol() { return address.protocol; },
+    get pathname() { return address.pathname; },
+    get search() { return address.search; },
+    get href() { return address.href; },
+    get hash() { return address.hash; },
     set hash(value) {
-      if (hash === value) return;
-      hash = value;
+      if (address.hash === value) return;
+      address.hash = value;
       window.dispatchEvent(new Event("hashchange"));
+    },
+  };
+  const pushes = [];
+  const history = {
+    state: null,
+    replaceState(_, __, href) { address = new URL(href); },
+    pushState(_, __, href) {
+      pushes.push(href);
+      address = new URL(href);
     },
   };
   const localStorage = {
@@ -145,10 +162,19 @@ function start(hash, storage = new Map()) {
   class CustomEvent extends Event {
     constructor(name, {detail}) { super(name); this.detail = detail; }
   }
-  const context = vm.createContext({document, location, window, localStorage, Event, CustomEvent});
+  const context = vm.createContext({document, location, window, history, localStorage, Event, CustomEvent, URL});
   vm.runInContext(script, context);
   return {
-    el, storage, planActions, overviewAction, completeAction, window, location, dock,
+    el, storage, planActions, overviewAction, completeAction, window, location, dock, pushes,
+    click: (target, {metaKey = false} = {}) => {
+      const event = new Event("click", {cancelable: true});
+      Object.defineProperties(event, {target: {value: target}, button: {value: 0}, metaKey: {value: metaKey}});
+      return document.dispatchEvent(event);
+    },
+    back: href => {
+      address = new URL(href);
+      window.dispatchEvent(new Event("hashchange"));
+    },
     run: code => vm.runInContext(code, context),
     go: next => {
       if (location.hash === next) window.dispatchEvent(new Event("hashchange"));
@@ -156,6 +182,44 @@ function start(hash, storage = new Map()) {
     },
   };
 }
+
+test("academy lesson visits use distinct static addresses without remounting the curriculum document", () => {
+  const [first, second] = data.paths.B.closure.map(id => id.toLowerCase());
+  const initial = lessonHash("B", first);
+  const ui = start(initial, new Map(), true);
+  const firstAddress = ui.location.href;
+  assert.equal(ui.location.pathname, "/lesson-" + first + ".html");
+  assert.equal(ui.location.hash, initial);
+  assert.equal(ui.pushes.length, 0);
+  const material = ui.el("material-" + second);
+  const next = lessonHash("B", second);
+  const link = new Element({hash: next});
+  link.closest = selector => selector === 'a[href^="#"]' ? link : null;
+  assert.equal(ui.click(link, {metaKey: true}), true);
+  assert.equal(ui.pushes.length, 0);
+  assert.equal(ui.click(link), false);
+  assert.equal(ui.location.pathname, "/lesson-" + second + ".html");
+  assert.equal(ui.location.hash, next);
+  assert.deepEqual(ui.pushes, [ui.location.href]);
+  assert.equal(ui.el("guided-material").children[0], material);
+  ui.run("navigateCurriculum(" + JSON.stringify(next) + ")");
+  assert.equal(ui.pushes.length, 1);
+  ui.run("navigateCurriculum('#detail')");
+  assert.equal(ui.location.pathname, "/master-curriculum.html");
+  const topic = ui.el(second);
+  const summary = topic.querySelector("summary");
+  summary.parentElement = topic;
+  summary.closest = selector => selector === ".topic > summary" ? summary : null;
+  assert.equal(ui.click(summary), false);
+  assert.equal(ui.location.pathname, "/lesson-" + second + ".html");
+  assert.equal(ui.el(second).open, true);
+  ui.back(firstAddress);
+  assert.equal(ui.location.pathname, "/lesson-" + first + ".html");
+  assert.equal(ui.el("guided-material").children[0], ui.el("material-" + first));
+  const offline = start(initial);
+  assert.equal(offline.location.pathname, "/master-curriculum.html");
+  assert.equal(offline.pushes.length, 0);
+});
 
 test("compact mode selector follows lesson links and preserves progress across modes", () => {
   const topic = data.paths.B.closure[0];

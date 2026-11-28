@@ -165,6 +165,8 @@ Develop from local `main`, which tracks clean GitHub `origin/main`. The initial 
 
 Keep the learning site static and publicly readable without accounts, API keys, a backend, or required remote assets. Preserve stable topic IDs, approved brand assets, and the distinction between published examples and planned lessons. Use non-browser validation for current work. The repository owner performs manual browser checks. Keep curriculum, experiment, and deployment changes within the authorized task scope. Deployment and Git staging, commits, or pushes require owner authorization.
 
+Cloudflare Web Analytics is optional at runtime. The Academy's shared loader honors per-browser exclusion before loading the beacon. The generator gives each lesson a static address for path-level reporting, using the existing guided and complete reader. Publish those addresses and the loader through the existing allowlist, and keep Cloudflare automatic injection disabled. See the [analytics deployment and verification checklist](docs/DEPLOYMENT.md#cloudflare-web-analytics).
+
 ## Required documentation maintenance
 
 - Read this file and [PROGRESS.md](PROGRESS.md) before starting development.

@@ -12,15 +12,16 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 PAGE_DIR = ROOT / "docs"
 PUBLIC_ASSETS = (
-    "academy.css", "academy.js", "lesson-reader.js", "branding/academy-logo-banner.png",
+    "academy.css", "academy.js", "analytics.js", "lesson-reader.js", "branding/academy-logo-banner.png",
     "branding/academy-logo-banner.svg", "branding/academy-icon.svg",
     "branding/icon-48.png", "branding/favicon.ico", "branding/icon-32.png",
     "branding/icon-180.png",
 )
 EXERCISES = (
-    "phase-1-first-experiments/results/full_results.html",
     "phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx",
 )
+PUBLIC_PAGES = ("index.html", "home.html", "master-curriculum.html", "concepts.html", "full-results.html")
+GENERATED_OR_EXPERIMENT_PAGE = re.compile(r"(?:lesson-m\d{2}-t\d{2}|test\d+)\.html")
 VIRTUAL_ROUTES = re.compile(r"roadmap-(?:[a-g]|full)$")
 
 
@@ -54,8 +55,8 @@ class Page(HTMLParser):
 
 
 def public_files():
-    pages = ["index.html", "home.html", "master-curriculum.html", "concepts.html"] + [
-        path.name for path in sorted(PAGE_DIR.glob("test*.html")) if re.fullmatch(r"test\d+\.html", path.name)
+    pages = list(PUBLIC_PAGES) + [
+        path.name for path in PAGE_DIR.glob("*.html") if GENERATED_OR_EXPERIMENT_PAGE.fullmatch(path.name)
     ]
     return sorted(
         [Path("docs") / name for name in pages]
@@ -75,6 +76,8 @@ def validate():
         if path.suffix == ".html":
             page = Page()
             page.feed(path.read_text(encoding="utf-8"))
+            if page.dependencies.count("assets/analytics.js") != 1:
+                raise ValueError(f"Expected one shared analytics loader in {relative}")
             pages[relative] = page
 
     for relative, page in pages.items():

@@ -128,7 +128,7 @@ def source_url(path, revision):
     if re.fullmatch(r"docs/test\d+\.html", path):
         return PurePosixPath(path).name
     if path == "phase-1-first-experiments/results/full_results.html":
-        return "../" + path
+        return "full-results.html"
     return ARCHIVE + revision + "/" + quote(path, safe="/")
 
 
