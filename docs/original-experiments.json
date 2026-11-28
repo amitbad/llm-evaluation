@@ -798,6 +798,11 @@
           "connection": "Use the separate judge and deterministic verdicts to examine evaluator robustness."
         },
         {
+          "id": "M18-T03",
+          "relevance": "Supporting",
+          "connection": "Use the saved trajectory judgment and separate trace mismatch to ask which evidence measures workflow completion."
+        },
+        {
           "id": "M15-T01",
           "relevance": "Supporting",
           "connection": "Review the passing TC10 judgment beside Test 12's deterministic mismatch before approving the rubric."

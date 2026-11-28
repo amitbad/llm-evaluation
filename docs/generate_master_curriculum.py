@@ -379,6 +379,9 @@ def prose(markdown):
                 "Integrity risk": "Benchmark contamination and leakage checks",
                 "Migration check": "Northstar model migration checklist",
                 "Migration review criterion": "Human review for model migration",
+                "Paper reading pass": "Three-pass research reading worksheet",
+                "Method family": "Emerging evaluation methods and evidence checks",
+                "Evidence worksheet field": "Research evidence checklist",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS

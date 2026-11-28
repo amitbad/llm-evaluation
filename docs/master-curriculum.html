@@ -31344,34 +31344,469 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m18-t03">
-  <p class="lesson-intro" data-lesson-search>Evaluation methods need a testable hypothesis and comparisons against simpler baselines.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Active evaluation and adaptive sampling, preference modeling, redacted behavioral simulations, living benchmarks, measure validity and reproducible method reviews.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Turn a research claim into a testable question and distinguish supported results from missing evidence.</li><li>Compare a new evaluation method with a simple baseline, including paired uncertainty and critical failures.</li><li>Evaluate adaptive sampling, generated cases, and controlled changes to authorization evidence.</li><li>Reproduce a result, test it on independent cases, and write a method card that defends a pilot, block or review.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Northstar already checks replies with golden cases, scoped tool and authorization rules, human review, and an LLM judge. Its team sees a new claim. “Judge B grades refund replies more accurately and costs less to operate.” The summary shows a higher score. Would you let the judge approve a new release? First ask which cases it improved, what the team counted as cost, and whether it still catches a reply that discloses another customer&#x27;s data.</p>
+<p>Allow six and a half hours. Complete <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> and <a href="#m07-t02">Confidence intervals, significance and sample size</a>. <a href="#m06-t03">Pairwise comparisons and ranking</a> and <a href="#m14-t02">Production sampling, human feedback, drift and alerts</a> are recommended. Complete the pairwise lesson for the preference-ranking review variant. Use P02 and P06 for the simulated sample and rate calculations. Northstar&#x27;s claims, records, costs and approvals below are synthetic. The reported computations were executed locally. No live judge, customer data, human adjudication or production rollout was used.</p>
+<h4>Beginner Explanation</h4>
+<p>A <strong>research question</strong> identifies what to learn. For Northstar, it is whether B grades answers more accurately than the current A on justified refund decisions. A <strong>hypothesis</strong> predicts a measurable result, such as “B will improve agreement with adjudicated labels without adding critical false approvals.” A <strong>method</strong> defines how to do the comparison. An <strong>experiment</strong> applies that method under recorded conditions. A <strong>dataset</strong> is the set of cases and labels. A <strong>baseline</strong> is the reference approach, such as the approved judge or a simpler deterministic check. A <strong>metric</strong> is a defined measurement, such as correct verdicts divided by all paired cases with verified labels.</p>
+<p>A <strong>result</strong> is what was measured. A <strong>conclusion</strong> interprets the result under the experiment&#x27;s assumptions. A <strong>limitation</strong> sets a boundary on that interpretation. <strong>Statistical uncertainty</strong> concerns how estimates could vary across samples or runs. <strong>External validity</strong> asks whether the result transfers to another population or environment. For example, one refund-policy slice gives little evidence about multilingual refusals, agent tool decisions or newer policies. New modalities, workflows, policies, model behaviors and operating costs change what evaluations need to measure.</p>
+<p>This lesson uses <strong>reproduction</strong> for recomputing a result from the original inputs and procedure, and <strong>replication</strong> for testing the same question with new data. Terms vary across fields, so declare how you use them. A <strong>preprint</strong> is a publicly circulated manuscript that may precede formal review. <strong>Peer review</strong> is scrutiny by other experts before publication. It provides feedback and a record of review. Independent implementation and evidence checks still matter. National Academies, Reproducibility and Replicability in Science, 2019</p>
+<h4>Worked Demonstration</h4>
+<h5>Experiments A through C — Audit a claim against paired evidence</h5>
+<p>The fictional report gives A five correct verdicts and B seven on the same eight cases. It claims lower operating cost and suitability for release. It omits cost records, sampling and applicability details, and the effect on critical cases. The capture below preserves independent reference labels. PASS is the positive class: approving a prohibited reply is a false positive. Accuracy counts all matches, precision asks how often approved replies deserved approval, recall asks how many acceptable replies were approved, and F1 balances precision and recall.</p>
+<p>A single verdict in eight moves accuracy by 12.5 percentage points. For uncertainty use the exact two-sided paired test on the cases where only one judge is correct. If under the null each independent discordant pair is equally likely to favor A or B, one or zero B wins among four has probability 5/16. Symmetrically three or four B wins has another 5/16. The result is 0.625. This test is appropriate for the stated paired null and independence assumption. Related families should be grouped or analyzed differently, and the stress fixture cannot support population inference. A p-value cannot set the operational value of an effect. Fay, Two-sided Exact Tests and Matching Confidence Intervals for Discrete Data, 2010</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import comb
+
+# Case, type, reference, Judge A, Judge B, critical if falsely approved.
+rows = [
+    (&quot;R01&quot;, &quot;refund&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    (&quot;R02&quot;, &quot;replacement&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    (&quot;R03&quot;, &quot;clarification&quot;, &quot;PASS&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, False),
+    (&quot;R04&quot;, &quot;valid refusal&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    (&quot;R05&quot;, &quot;unsupported amount&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, False),
+    (&quot;R06&quot;, &quot;missing disclosure&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, &quot;BLOCK&quot;, False),
+    (&quot;R07&quot;, &quot;foreign field&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, True),
+    (&quot;R08&quot;, &quot;wrong ordinary deadline&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, &quot;BLOCK&quot;, False),
+]
+
+
+def metrics(index):
+    tp = fp = tn = fn = 0
+    critical = []
+    for case in rows:
+        case_id, _, gold, _, _, severe = case
+        verdict = case[index]
+        tp += gold == verdict == &quot;PASS&quot;
+        tn += gold == verdict == &quot;BLOCK&quot;
+        fp += gold == &quot;BLOCK&quot; and verdict == &quot;PASS&quot;
+        fn += gold == &quot;PASS&quot; and verdict == &quot;BLOCK&quot;
+        if severe and gold == &quot;BLOCK&quot; and verdict == &quot;PASS&quot;:
+            critical.append(case_id)
+    return tp, fp, tn, fn, critical
+
+
+for judge, index in ((&quot;A&quot;, 3), (&quot;B&quot;, 4)):
+    tp, fp, tn, fn, critical = metrics(index)
+    print(f&quot;{judge}: {tp+tn}/{len(rows)}, precision={tp/(tp+fp):.3f}, recall={tp/(tp+fn):.3f}, &quot;
+          f&quot;F1={2*tp/(2*tp+fp+fn):.3f}, critical={critical}&quot;)
+
+gains = sum(gold == b and gold != a for _, _, gold, a, b, _ in rows)
+losses = sum(gold == a and gold != b for _, _, gold, a, b, _ in rows)
+discordant = gains + losses
+tail = sum(comb(discordant, k) for k in range(min(gains, losses) + 1))
+p = min(1, 2 * tail / 2**discordant)
+print(f&quot;paired: +{gains}/-{losses}, delta={(gains-losses)/len(rows):+.1%}, exact p={p:.3f}&quot;)
+print(&quot;cost claim: unverified&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A: 5/8, precision=0.600, recall=0.750, F1=0.667, critical=[]
+B: 7/8, precision=0.800, recall=1.000, F1=0.889, critical=[&#x27;R07&#x27;]
+paired: +3/-1, delta=+25.0%, exact p=0.625
+cost claim: unverified
+</code></pre></details>
+<p>B improves by two net matches but falsely approves R07. The reported accuracy is reproducible from the rows. The cost claim has no denominator or measurements, and release approval would violate a mandatory check. Change B&#x27;s R07 verdict to BLOCK and inspect both the paired and critical results. A claim can be arithmetically correct and operationally insufficient.</p>
+<h5>Read a paper in three passes</h5>
+<p>Start with the decision you need to make, such as whether a smaller review queue can retain useful estimates. Search by the problem and terms such as “active testing” and “evaluation sampling bias.” Prefer the paper and code or data release for claims. Follow citations forward to corrections and independent tests, and back to baselines. Record the version and publication date you read.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Three-pass research reading worksheet"><table><caption>Three-pass research reading worksheet</caption><thead><tr><th scope="col">Paper reading pass</th><th scope="col">What to read</th><th scope="col">What to write down</th></tr></thead><tbody><tr><td>First pass</td><td>Title, abstract, introduction, contribution and conclusion</td><td>The research question, central claim, intended users and expected benefit in one sentence</td></tr><tr><td>Second pass</td><td>Methods, datasets, baselines, metrics, setup and assumptions</td><td>Case selection, versions, comparator, label provenance, budgets and which variables changed</td></tr><tr><td>Third pass</td><td>Results, ablations, error analysis, uncertainty, limitations and ethics</td><td>What the evidence supports, where it fails, what is missing and a concrete independent test</td></tr></tbody></table></div>
+<p>Try the worksheet on *Active Testing: Sample-Efficient Model Evaluation* by Jannik Kossen, Sebastian Farquhar, Yarin Gal and Tom Rainforth (ICML 2021). It motivates carefully selecting cases to label and correcting selection bias for estimation. Its demonstrations include Fashion-MNIST and CIFAR-100. Before transferring the claim to support evaluation, ask whether you can record selection probabilities and obtain independent human labels for the new task. The classroom program below does not reproduce that paper&#x27;s estimator. Kossen et al., Active Testing: Sample-Efficient Model Evaluation</p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Choose <strong>Copy Code</strong>, open the linked editor, paste the whole block and run it. Every program is standalone and uses the Python 3.10 or newer standard library. Keep the baseline output when changing a fixture.</p>
+</div></details>
+<h5>Experiment D — Remove one guard at a time</h5>
+<p>An <strong>ablation</strong> compares a full method with a variant having one part removed. Predict what happens when only authorization is removed. Then remove both policy evidence and authorization to see whether a case depends on either of two guards. Each Boolean below is the result of a separate synthetic check. The policy labels and criticality come from an independent reference.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">checks = (&quot;correctness&quot;, &quot;evidence&quot;, &quot;authorization&quot;, &quot;structure&quot;)
+# Case, failed checks, accepted by reference, critical if wrongly accepted.
+cases = [
+    (&quot;D01&quot;, (), True, False),
+    (&quot;D02&quot;, (&quot;correctness&quot;,), False, False),
+    (&quot;D03&quot;, (&quot;evidence&quot;,), False, False),
+    (&quot;D04&quot;, (&quot;authorization&quot;,), False, True),
+    (&quot;D05&quot;, (&quot;structure&quot;,), False, False),
+    (&quot;D06&quot;, (&quot;evidence&quot;, &quot;authorization&quot;), False, True),
+]
+variants = [(&quot;full&quot;, ())] + [(name, (name,)) for name in checks]
+variants.append((&quot;evidence + authorization&quot;, (&quot;evidence&quot;, &quot;authorization&quot;)))
+
+for name, removed in variants:
+    active = set(checks) - set(removed)
+    outcomes = [(case_id, active.isdisjoint(fails), gold, critical)
+                for case_id, fails, gold, critical in cases]
+    matches = sum(accepted == gold for _, accepted, gold, _ in outcomes)
+    critical_misses = [key for key, accepted, gold, critical in outcomes if accepted and not gold and critical]
+    label = f&quot;removed {name}&quot; if removed else &quot;full&quot;
+    print(f&quot;{label}: {matches}/{len(cases)}, critical misses={critical_misses}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">full: 6/6, critical misses=[]
+removed correctness: 5/6, critical misses=[]
+removed evidence: 5/6, critical misses=[]
+removed authorization: 5/6, critical misses=[&#x27;D04&#x27;]
+removed structure: 5/6, critical misses=[]
+removed evidence + authorization: 3/6, critical misses=[&#x27;D04&#x27;, &#x27;D06&#x27;]
+</code></pre></details>
+<p>Removing authorization exposes D04. D06 still has another guard until both are removed. The joint comparison exposes that interaction. An ablation isolates a change in this fixture. In a model pipeline, the removed step can change inputs or downstream routing, so record what stayed fixed and inspect the intermediate evidence.</p>
+<h5>Experiment E — Compare discovery, estimates and effort</h5>
+<p>A <strong>static benchmark</strong> fixes test selection in advance. <strong>Active evaluation</strong> chooses which cases to label to answer a goal under a budget. A difficulty or risk score can prioritize hard cases. An uncertainty estimate can point to cases on which a judge is least confident. A coverage rule can reserve some budget for otherwise neglected areas.</p>
+<p>Here twelve cases are divided into high-risk and ordinary strata. Predict which strategy exposes more critical errors within four labels. The uniform sampler draws four cases from the whole pool. The risk-weighted sampler draws three high-risk rows and one ordinary row randomly within strata. Estimate a population failure rate for that design by weighting each stratum&#x27;s sample rate by its population share. A stratum is a group set before sampling. The adaptive policy uses stored uncertainty plus an observed prior failure to choose the next row. It reports discoveries but no population estimate. The synthetic label minutes reflect review effort. An equal label count need not imply equal cost.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from random import Random
+
+SEED = 17
+# ID, stratum, uncertainty before labeling, failure, critical, synthetic minutes
+pool = [
+    (&quot;E01&quot;, &quot;high&quot;, .44, True, True), (&quot;E02&quot;, &quot;high&quot;, .33, True, True),
+    (&quot;E03&quot;, &quot;high&quot;, .29, True, False), (&quot;E04&quot;, &quot;high&quot;, .21, False, False),
+    (&quot;E05&quot;, &quot;ordinary&quot;, .49, True, False), (&quot;E06&quot;, &quot;ordinary&quot;, .48, False, False),
+    (&quot;E07&quot;, &quot;ordinary&quot;, .42, False, False), (&quot;E08&quot;, &quot;ordinary&quot;, .25, False, False),
+    (&quot;E09&quot;, &quot;ordinary&quot;, .17, False, False), (&quot;E10&quot;, &quot;ordinary&quot;, .16, False, False),
+    (&quot;E11&quot;, &quot;ordinary&quot;, .10, False, False), (&quot;E12&quot;, &quot;ordinary&quot;, .07, False, False),
+]
+# The review-time convention is three minutes for high-risk and one otherwise.
+pool = [(*row, 3 if row[1] == &quot;high&quot; else 1) for row in pool]
+groups = {group: [row for row in pool if row[1] == group] for group in (&quot;high&quot;, &quot;ordinary&quot;)}
+rng = Random(SEED)
+uniform = rng.sample(pool, 4)
+rng = Random(SEED)
+risk_weighted = rng.sample(groups[&quot;high&quot;], 3) + rng.sample(groups[&quot;ordinary&quot;], 1)
+
+
+def adaptive(pool, budget):
+    remaining = list(pool)
+    selected = []
+    boost = set()
+    for _ in range(budget):
+        chosen = max(remaining, key=lambda row: row[2] + (.12 if row[1] in boost else 0))
+        remaining.remove(chosen)
+        selected.append(chosen)
+        if chosen[3]:
+            boost.add(chosen[1])
+    return selected
+
+
+weighted = 0
+for group, population in groups.items():
+    sample = [row for row in risk_weighted if row[1] == group]
+    weighted += len(population) / len(pool) * sum(row[3] for row in sample) / len(sample)
+for name, rows, estimate in ((&quot;uniform&quot;, uniform, sum(row[3] for row in uniform) / len(uniform)),
+                             (&quot;risk-weighted&quot;, risk_weighted, weighted),
+                             (&quot;adaptive uncertainty&quot;, adaptive(pool, 4), None)):
+    ids = [row[0] for row in rows]
+    display = f&quot;{estimate:.3f}&quot; if estimate is not None else &quot;not estimated&quot;
+    print(f&quot;{name}: {ids}, critical={sum(row[4] for row in rows)}, &quot;
+          f&quot;coverage={len(set(row[1] for row in rows))}/2 strata, labels={len(rows)}, &quot;
+          f&quot;minutes={sum(row[5] for row in rows)}, observed failures={sum(row[3] for row in rows)}, estimate={display}&quot;)
+print(f&quot;simulator population failure rate={sum(row[3] for row in pool)}/{len(pool)}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">uniform: [&#x27;E09&#x27;, &#x27;E07&#x27;, &#x27;E05&#x27;, &#x27;E06&#x27;], critical=0, coverage=1/2 strata, labels=4, minutes=4, observed failures=1, estimate=0.250
+risk-weighted: [&#x27;E04&#x27;, &#x27;E02&#x27;, &#x27;E03&#x27;, &#x27;E09&#x27;], critical=1, coverage=2/2 strata, labels=4, minutes=10, observed failures=2, estimate=0.222
+adaptive uncertainty: [&#x27;E05&#x27;, &#x27;E06&#x27;, &#x27;E07&#x27;, &#x27;E01&#x27;], critical=1, coverage=2/2 strata, labels=4, minutes=6, observed failures=2, estimate=not estimated
+simulator population failure rate=4/12
+</code></pre></details>
+<p>The label at a drawn row is read after selection. The uncertainty scores are fictional ranks. The adaptive bonus uses previously observed failures. It can spend more of its budget in one stratum. Try removing the bonus and compare coverage. The simulator knows the full-pool rate, which live sampling generally does not. Stratified weighting corrects unequal planned sampling fractions in expectation when draws are random within strata. One sample can still be far from the population rate. A deterministic adaptive queue has no valid population estimator by default. Keep a probability sample for estimation and a separate targeted stream for finding serious failures.</p>
+<h5>Experiments F and G — Validate generated cases and controlled changes</h5>
+<p>Synthetic test generation can expand wording, language and boundary coverage. A generator can also change a material fact while labeling the case as equivalent. Start with a redacted behavioral simulation. It retains policy facts needed for grading and replaces identifiers with fictional values. In a real replay, check for remaining sensitive content and spurious cues from redaction before using a case.</p>
+<p>A <strong>counterfactual pair</strong> changes one relevant fact while keeping the others fixed. Here the reference expects a verification request when ownership is unknown, a denial when the account is different, and a different eligibility decision beyond 30 days. A wording or language change should preserve the decision. If a wording variation also changes ownership, you cannot tell which caused the result. That is <strong>confounding</strong>. <strong>Sensitivity analysis</strong> probes whether your conclusion survives reasonable changes to assumptions or cases.</p>
+<p>The reference below represents the synthetic policy. The candidate uses age alone, so expect it to mishandle some variants. Before scoring, validate the promised edit and the expected answer. The evaluator must never update authorization or issue a refund here.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">base = {&quot;order&quot;: &quot;NS-0042&quot;, &quot;scope&quot;: &quot;same&quot;, &quot;age_days&quot;: 15,
+        &quot;conflict&quot;: False, &quot;message&quot;: &quot;Can I get a refund?&quot;, &quot;locale&quot;: &quot;en&quot;}
+# ID, proposed change, permitted fields for this variant, claimed reference.
+variants = [
+    (&quot;F01&quot;, {&quot;message&quot;: &quot;May I request my money back?&quot;}, {&quot;message&quot;}, &quot;ELIGIBLE&quot;),
+    (&quot;F02&quot;, {&quot;order&quot;: None}, {&quot;order&quot;}, &quot;VERIFY&quot;),
+    (&quot;F03&quot;, {&quot;conflict&quot;: True}, {&quot;conflict&quot;}, &quot;REVIEW&quot;),
+    (&quot;F04&quot;, {&quot;scope&quot;: &quot;other&quot;}, {&quot;scope&quot;}, &quot;DENY&quot;),
+    (&quot;F05&quot;, {&quot;message&quot;: &quot;क्या रिफंड मिल सकता है?&quot;, &quot;locale&quot;: &quot;hi&quot;}, {&quot;message&quot;, &quot;locale&quot;}, &quot;ELIGIBLE&quot;),
+    (&quot;G01&quot;, {&quot;scope&quot;: &quot;unknown&quot;}, {&quot;scope&quot;}, &quot;VERIFY&quot;),
+    (&quot;G02&quot;, {&quot;age_days&quot;: 31}, {&quot;age_days&quot;}, &quot;DENY&quot;),
+    (&quot;bad-family&quot;, {&quot;message&quot;: &quot;Refund please.&quot;, &quot;scope&quot;: &quot;other&quot;}, {&quot;message&quot;}, &quot;ELIGIBLE&quot;),
+    (&quot;bad-label&quot;, {&quot;order&quot;: None}, {&quot;order&quot;}, &quot;ELIGIBLE&quot;),
+]
+
+
+def reference(row):
+    if row[&quot;scope&quot;] == &quot;other&quot;:
+        return &quot;DENY&quot;
+    if row[&quot;order&quot;] is None or row[&quot;scope&quot;] != &quot;same&quot;:
+        return &quot;VERIFY&quot;
+    if row[&quot;conflict&quot;]:
+        return &quot;REVIEW&quot;
+    return &quot;ELIGIBLE&quot; if row[&quot;age_days&quot;] &lt;= 30 else &quot;DENY&quot;
+
+
+def candidate(row):
+    return &quot;ELIGIBLE&quot; if row[&quot;age_days&quot;] &lt;= 30 else &quot;DENY&quot;
+
+
+valid = correct = 0
+for key, change, allowed, expected in variants:
+    row = dict(base, **change)
+    changed = {field for field in row if row[field] != base.get(field)}
+    gold = reference(row)
+    if changed != allowed or gold != expected:
+        print(f&quot;{key}: REJECT GENERATED CASE&quot;)
+        continue
+    verdict = candidate(row)
+    valid += 1
+    correct += verdict == gold
+    print(f&quot;{key}: expected={gold}, actual={verdict}, &quot;
+          f&quot;reference changed={gold != reference(base)}, candidate changed={verdict != candidate(base)}&quot;)
+print(f&quot;candidate={correct}/{valid} validated variants&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">F01: expected=ELIGIBLE, actual=ELIGIBLE, reference changed=False, candidate changed=False
+F02: expected=VERIFY, actual=ELIGIBLE, reference changed=True, candidate changed=False
+F03: expected=REVIEW, actual=ELIGIBLE, reference changed=True, candidate changed=False
+F04: expected=DENY, actual=ELIGIBLE, reference changed=True, candidate changed=False
+F05: expected=ELIGIBLE, actual=ELIGIBLE, reference changed=False, candidate changed=False
+G01: expected=VERIFY, actual=ELIGIBLE, reference changed=True, candidate changed=False
+G02: expected=DENY, actual=DENY, reference changed=True, candidate changed=True
+bad-family: REJECT GENERATED CASE
+bad-label: REJECT GENERATED CASE
+candidate=3/7 validated variants
+</code></pre></details>
+<p>The fixture rejects two generated variants before judging any candidate. The age-only evaluator correctly changes at the deadline but ignores ownership and evidence conflicts. A good test includes both invariants that should stay fixed and rules that should react to the change. Try setting G02&#x27;s age to 30 and expected verdict to ELIGIBLE. This independently programmed reference captures only the rules shown. A generated Hindi variant also needs a qualified human to verify the translation and preservation of intent before production use.</p>
+<h4>Guided Engineering Lab</h4>
+<h5>Experiments H and I — Reproduce the old result and replicate on new cases</h5>
+<p>Reproduction checks whether the reported result can be reconstructed from fixed inputs and a declared procedure. Pin case and rubric versions, method versions, settings, seeds where relevant, exact runtime and dependency versions. Record expected and actual outputs with an integrity hash. A hash can reveal a changed artifact. It cannot show whether the methodology was sound. The program uses the same eight original observations and recalculates them through a separate function, then applies the same paired approach to six fresh synthetic cases.</p>
+<p>The six cases were authored separately as another test of the question. Judge B&#x27;s gain may differ. Keep them outside any tuning and compare fixed conditions before speculating about the cause. The guarded variant has an independent rule against falsely approving a severe case. Here the guard represents a verified contract check in the simulator. A real guard must use authorized records and be validated separately. The receipt and the review-time and latency figures are synthetic inputs.</p>
+<h5>Experiment J — Decide whether to fund a controlled pilot</h5>
+<p>Require a complete and reproducible packet, no critical false approval, and the independent test of the proposed method. Check cost, latency, approvals and a verified stop plan. In this lab a passing decision authorizes consideration of a shadow-only pilot with no write authority. A confirmed critical failure or mismatched reproduction is BLOCK. Missing evidence, uncertainty for a stronger superiority claim, or pending human approval is REVIEW. The cost fixture allows 15 label minutes and 1,200 ms as example budgets. The lab intentionally keeps statistical superiority separate from a bounded trial: a neutral or inconclusive quality result cannot justify claiming a win.</p>
+<p>Set EXPORT_JSON to True to inspect source data, case IDs, experiment and judge versions, metric definitions, ablations, expected and actual values, and verdicts.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from hashlib import sha256
+from itertools import product
+import json
+import platform
+
+EXPORT_JSON = False
+CLAIM = &quot;NS-CLAIM-01&quot;
+# ID, independent reference, baseline verdict, candidate verdict, severe false-PASS risk
+ORIGINAL = [
+    (&quot;R01&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False), (&quot;R02&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    (&quot;R03&quot;, &quot;PASS&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, False), (&quot;R04&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    (&quot;R05&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, False), (&quot;R06&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, &quot;BLOCK&quot;, False),
+    (&quot;R07&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, True), (&quot;R08&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, &quot;BLOCK&quot;, False),
+]
+NEW = [
+    (&quot;N01&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False), (&quot;N02&quot;, &quot;PASS&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, False),
+    (&quot;N03&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, True), (&quot;N04&quot;, &quot;BLOCK&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False),
+    (&quot;N05&quot;, &quot;PASS&quot;, &quot;PASS&quot;, &quot;PASS&quot;, False), (&quot;N06&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, &quot;BLOCK&quot;, True),
+]
+# Trusted policy fixture records supplying the separate authorization/privacy check.
+DENY_RECORDS = {&quot;R07&quot;: &quot;foreign account field&quot;, &quot;N03&quot;: &quot;ownership denied&quot;, &quot;N06&quot;: &quot;private detail&quot;}
+PUBLISHED = {&quot;raw&quot;: {&quot;a&quot;: 5, &quot;b&quot;: 7, &quot;n&quot;: 8}, &quot;guarded&quot;: {&quot;a&quot;: 5, &quot;b&quot;: 8, &quot;n&quot;: 8}}
+MANIFEST = {
+    &quot;experiment&quot;: &quot;NS-REPRO-01&quot;, &quot;claim&quot;: CLAIM,
+    &quot;dataset&quot;: &quot;northstar-research-original-v1&quot;, &quot;replication_dataset&quot;: &quot;northstar-fresh-families-v1&quot;,
+    &quot;version&quot;: &quot;northstar-research-runner-v1&quot;, &quot;rubric&quot;: &quot;northstar-policy-v1&quot;,
+    &quot;baseline&quot;: &quot;judge-a-v1&quot;, &quot;candidate&quot;: &quot;judge-b-v1&quot;, &quot;variant&quot;: &quot;guard-v1&quot;,
+    &quot;metric&quot;: &quot;count exact verdict matches over all verified pairs&quot;,
+    &quot;config&quot;: {&quot;pair_key&quot;: &quot;case_id&quot;, &quot;seed&quot;: None, &quot;mode&quot;: &quot;frozen deterministic capture&quot;},
+    &quot;dependencies&quot;: {&quot;python&quot;: platform.python_version(), &quot;packages&quot;: &quot;standard library only&quot;},
+}
+APPROVAL = {&quot;scope&quot;: &quot;shadow-only&quot;, &quot;variant&quot;: &quot;guard-v1&quot;, &quot;receipt&quot;: &quot;synthetic approval&quot;}
+BASE_COST = {&quot;minutes&quot;: 18, &quot;latency&quot;: 1300}
+
+
+def guarded(rows):
+    return [(key, gold, a, &quot;BLOCK&quot; if key in DENY_RECORDS else b, severe)
+            for key, gold, a, b, severe in rows]
+
+
+def compare(rows, method=&quot;judge-b-v1&quot;):
+    if not rows or len({row[0] for row in rows}) != len(rows):
+        raise ValueError(&quot;use a nonempty set with unique case IDs&quot;)
+    groups = {&quot;both&quot;: [], &quot;only_a&quot;: [], &quot;only_b&quot;: [], &quot;neither&quot;: []}
+    outcomes = {(True, True): &quot;both&quot;, (True, False): &quot;only_a&quot;, (False, True): &quot;only_b&quot;, (False, False): &quot;neither&quot;}
+    critical = []
+    for key, gold, a, b, severe in rows:
+        if any(verdict not in (&quot;PASS&quot;, &quot;BLOCK&quot;) for verdict in (gold, a, b)):
+            raise ValueError(&quot;resolve missing or invalid verdicts before comparison&quot;)
+        groups[outcomes[(a == gold, b == gold)]].append(key)
+        if severe and gold == &quot;BLOCK&quot; and b == &quot;PASS&quot;:
+            critical.append(key)
+    losses, gains = len(groups[&quot;only_a&quot;]), len(groups[&quot;only_b&quot;])
+    # The lab fixtures are tiny. Enumerate possible independent directions under H0.
+    discordant = losses + gains
+    equally_likely = product((0, 1), repeat=discordant)
+    observed = abs(gains - losses)
+    extreme = sum(abs(2 * sum(trial) - len(trial)) &gt;= observed for trial in equally_likely)
+    return {&quot;method&quot;: method, &quot;case_ids&quot;: sorted(row[0] for row in rows),
+            &quot;summary&quot;: {&quot;a&quot;: len(groups[&quot;both&quot;]) + losses, &quot;b&quot;: len(groups[&quot;both&quot;]) + gains,
+                                          &quot;n&quot;: len(rows)},
+            &quot;paired&quot;: groups, &quot;exact_p&quot;: extreme / 2**discordant, &quot;critical&quot;: critical}
+
+
+def checksum(value):
+    data = json.dumps(value, sort_keys=True, separators=(&quot;,&quot;, &quot;:&quot;)).encode(&quot;utf-8&quot;)
+    return sha256(data).hexdigest()
+
+
+def reproduce(original, manifest, expected):
+    actual = original[&quot;summary&quot;]
+    required = {&quot;experiment&quot;, &quot;claim&quot;, &quot;dataset&quot;, &quot;replication_dataset&quot;, &quot;version&quot;, &quot;rubric&quot;, &quot;baseline&quot;,
+                &quot;candidate&quot;, &quot;variant&quot;, &quot;metric&quot;, &quot;config&quot;, &quot;dependencies&quot;}
+    complete = required &lt;= manifest.keys() and all(manifest[key] for key in required)
+    if complete:
+        complete = ({&quot;pair_key&quot;, &quot;seed&quot;, &quot;mode&quot;} &lt;= manifest[&quot;config&quot;].keys()
+                    and {&quot;python&quot;, &quot;packages&quot;} &lt;= manifest[&quot;dependencies&quot;].keys()
+                    and original[&quot;method&quot;] in (manifest[&quot;candidate&quot;], manifest[&quot;variant&quot;]))
+    decision = (&quot;REVIEW&quot; if not complete else &quot;PASS&quot; if checksum(actual) == checksum(expected) else &quot;BLOCK&quot;)
+    return {&quot;status&quot;: decision, &quot;method&quot;: original[&quot;method&quot;], &quot;expected&quot;: expected, &quot;actual&quot;: actual,
+            &quot;expected_hash&quot;: checksum(expected), &quot;actual_hash&quot;: checksum(actual), &quot;paired_artifact_hash&quot;: checksum(original)}
+
+
+def adoption(original, fresh, audit, *, approval=None, minutes=None, latency=None,
+             stop_plan=False, superiority_required=False):
+    if original[&quot;critical&quot;] or fresh[&quot;critical&quot;] or audit[&quot;status&quot;] == &quot;BLOCK&quot;:
+        return &quot;BLOCK&quot;
+    if (audit[&quot;status&quot;] == &quot;REVIEW&quot; or original[&quot;method&quot;] != fresh[&quot;method&quot;] or audit[&quot;method&quot;] != fresh[&quot;method&quot;]
+            or fresh[&quot;case_ids&quot;] != sorted(row[0] for row in NEW) or minutes is None or latency is None
+            or not approval or approval.get(&quot;scope&quot;) != &quot;shadow-only&quot; or approval.get(&quot;variant&quot;) != fresh[&quot;method&quot;]
+            or not approval.get(&quot;receipt&quot;) or not stop_plan):
+        return &quot;REVIEW&quot;
+    if minutes &gt; 15 or latency &gt; 1200 or fresh[&quot;summary&quot;][&quot;b&quot;] &lt; fresh[&quot;summary&quot;][&quot;a&quot;]:
+        return &quot;BLOCK&quot;
+    if superiority_required and (fresh[&quot;exact_p&quot;] &gt;= .05 or fresh[&quot;summary&quot;][&quot;b&quot;] &lt;= fresh[&quot;summary&quot;][&quot;a&quot;]):
+        return &quot;REVIEW&quot;
+    return &quot;PASS&quot;
+
+
+if __name__ == &quot;__main__&quot;:
+    original = compare(ORIGINAL)
+    fresh = compare(NEW)
+    protected_original = compare(guarded(ORIGINAL), &quot;guard-v1&quot;)
+    protected_fresh = compare(guarded(NEW), &quot;guard-v1&quot;)
+    audit = reproduce(original, MANIFEST, PUBLISHED[&quot;raw&quot;])
+    protected_audit = reproduce(protected_original, MANIFEST, PUBLISHED[&quot;guarded&quot;])
+    incomplete = reproduce(protected_original, {k: v for k, v in MANIFEST.items() if k != &quot;config&quot;},
+                           PUBLISHED[&quot;guarded&quot;])
+    bad_checksum = reproduce(protected_original, MANIFEST, dict(PUBLISHED[&quot;guarded&quot;], b=7))
+    rich = {&quot;approval&quot;: APPROVAL, &quot;minutes&quot;: 12, &quot;latency&quot;: 1100, &quot;stop_plan&quot;: True}
+    print(f&quot;reproduce: expected={audit[&#x27;expected&#x27;]}, actual={audit[&#x27;actual&#x27;]}, &quot;
+          f&quot;hash match={audit[&#x27;actual_hash&#x27;]==audit[&#x27;expected_hash&#x27;]}, {audit[&#x27;status&#x27;]}&quot;)
+    for name, report in ((&quot;replicate raw&quot;, fresh), (&quot;replicate guarded&quot;, protected_fresh)):
+        summary = report[&quot;summary&quot;]
+        print(f&quot;{name}: A={summary[&#x27;a&#x27;]}/{summary[&#x27;n&#x27;]}, B={summary[&#x27;b&#x27;]}/{summary[&#x27;n&#x27;]}, &quot;
+              f&quot;p={report[&#x27;exact_p&#x27;]:.3f}, critical={report[&#x27;critical&#x27;]}&quot;)
+    print(f&quot;synthetic effort: baseline={BASE_COST[&#x27;minutes&#x27;]} minutes, guarded={rich[&#x27;minutes&#x27;]} minutes, &quot;
+          f&quot;latency={BASE_COST[&#x27;latency&#x27;]}→{rich[&#x27;latency&#x27;]} ms&quot;)
+    decisions = {
+        &quot;raw&quot;: adoption(original, fresh, audit, **rich),
+        &quot;guarded shadow&quot;: adoption(protected_original, protected_fresh, protected_audit, **rich),
+        &quot;missing config&quot;: adoption(protected_original, protected_fresh, incomplete, **rich),
+        &quot;mismatched reproduction&quot;: adoption(protected_original, protected_fresh, bad_checksum, **rich),
+        &quot;superiority unresolved&quot;: adoption(protected_original, protected_fresh, protected_audit,
+                                           superiority_required=True, **rich),
+        &quot;human approval pending&quot;: adoption(protected_original, protected_fresh, protected_audit,
+                                           **dict(rich, approval=None)),
+    }
+    for label, verdict in decisions.items():
+        print(f&quot;{label}: {verdict}&quot;)
+    if EXPORT_JSON:
+        data = {&quot;manifest&quot;: MANIFEST, &quot;dataset_hashes&quot;: {&quot;original&quot;: checksum(ORIGINAL), &quot;fresh&quot;: checksum(NEW)},
+                &quot;inputs&quot;: {&quot;original&quot;: ORIGINAL, &quot;fresh&quot;: NEW, &quot;deny_records&quot;: DENY_RECORDS},
+                &quot;ablation_configurations&quot;: {&quot;raw&quot;: [], &quot;guarded&quot;: [&quot;independent scope guard&quot;]},
+                &quot;results&quot;: {&quot;original&quot;: original, &quot;fresh&quot;: fresh, &quot;guarded_original&quot;: protected_original,
+                            &quot;guarded_fresh&quot;: protected_fresh},
+                &quot;coverage&quot;: {&quot;paired_replication&quot;: len(NEW), &quot;planned_replication&quot;: 6},
+                &quot;limits&quot;: [&quot;synthetic captures&quot;, &quot;small samples&quot;, &quot;no production evidence&quot;],
+                &quot;baseline_operating_fixture&quot;: BASE_COST, &quot;pilot_evidence&quot;: rich,
+                &quot;audits&quot;: [audit, protected_audit, incomplete, bad_checksum],
+                &quot;decisions&quot;: decisions}
+        print(json.dumps(data, sort_keys=True, ensure_ascii=False))
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">reproduce: expected={&#x27;a&#x27;: 5, &#x27;b&#x27;: 7, &#x27;n&#x27;: 8}, actual={&#x27;a&#x27;: 5, &#x27;b&#x27;: 7, &#x27;n&#x27;: 8}, hash match=True, PASS
+replicate raw: A=4/6, B=4/6, p=1.000, critical=[&#x27;N03&#x27;]
+replicate guarded: A=4/6, B=5/6, p=1.000, critical=[]
+synthetic effort: baseline=18 minutes, guarded=12 minutes, latency=1300→1100 ms
+raw: BLOCK
+guarded shadow: PASS
+missing config: REVIEW
+mismatched reproduction: BLOCK
+superiority unresolved: REVIEW
+human approval pending: REVIEW
+</code></pre></details>
+<p>The original numbers reproduce exactly. On the new cases, unguarded B falls to 4/6, ties the baseline, and falsely approves N03. The guarded method reaches 5/6 without a known critical error in the supplied cases. The result supports a shadow-only pilot under the fictional receipt. A large p-value and six pairs leave substantial uncertainty. A statistical superiority claim stays in REVIEW. Missing configuration and pending approval also require REVIEW. A complete packet with a mismatched expected result blocks. Try raising the recorded review time beyond 15 minutes without changing the results.</p>
+<h4>Compare Emerging Methods</h4>
+<p><strong>Measure validity</strong> asks whether a test measures the intended construct, the property you care about. If you want to measure authorized support outcomes, an evaluator that mainly rewards fluency has poor validity for that task, even if it is consistent. A measure can work well for one purpose and fail when reused for another.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Emerging evaluation methods and evidence checks"><table><caption>Emerging evaluation methods and evidence checks</caption><thead><tr><th scope="col">Method family</th><th scope="col">What it can improve</th><th scope="col">What still needs an independent check</th></tr></thead><tbody><tr><td>Advanced LLM judges</td><td>Rubrics and evidence can make pointwise decisions inspectable. Pairwise judgments compare two outputs. Reference-free judges can help triage open-ended work.</td><td>Check calibration, judge bias and shared errors. Multi-judge agreement can reflect the same flawed evidence. Reference-free quality ratings cannot establish authorization.</td></tr><tr><td>Preference modeling</td><td>A learned preference model can approximate rankings from human comparisons.</td><td>Blind source identity, reverse orders, check ties and preserve coverage. A preferred answer can still breach policy. Separate preferences from required facts and safety.</td></tr><tr><td>Process and trajectory evaluation</td><td>Inspect intermediate decisions, scoped tool calls, receipts and shared state. Outcome-only scoring is simpler. Process supervision uses intermediate labels, while outcome supervision labels final results.</td><td>Check which step actually caused failure. This is credit assignment. A correct reply with an extra write can fail the workflow. Trace gaps limit attribution.</td></tr><tr><td>Adaptive evaluation</td><td>Use recorded risk, uncertainty, difficulty and coverage for targeted labeling.</td><td>For population estimates, keep a representative sample or use a justified probability-based estimator. Retain the sampling design and report discovery separately.</td></tr><tr><td>Adversarial and stress evaluation</td><td>Probe defensive assumptions on authorized threat cases such as instruction conflicts, refusal robustness and untrusted tool outputs. Include distribution shifts and rare failures.</td><td>Use inert fixtures and scope checks. Finding a weakness in a stress set says little about its frequency in ordinary traffic.</td></tr><tr><td>Synthetic and redacted replays</td><td>Expand edge case and wording coverage while keeping sensitive values out of test records.</td><td>Validate diversity, intent and labels against independent evidence. Watch generator bias, cue leakage, duplicates and reidentification risk. Use qualified adjudication for disputed labels.</td></tr><tr><td>Multimodal and long-context evaluation</td><td>Check images, attached documents, audio and speech against independent observations. Test cross-modal fact consistency and whether long-context evidence is retrieved, located and attributed.</td><td>Perturb evidence position, track citation support and verify whose memory was used. A fluent summary cannot establish that all evidence was read or combined appropriately.</td></tr><tr><td>Controlled and counterfactual evaluation</td><td>Change one fact, pair cases and test stable and responsive behavior.</td><td>Correlation cannot identify the cause of a score change. Blended interventions, shared examples and altered labels confound causal conclusions. Test sensitivity to assumptions.</td></tr><tr><td>Continuous evaluation and living benchmarks</td><td>Replay anchors, refresh held-out cases, and turn redacted incident evidence into regression tests.</td><td>Track changes in traffic, policy, model and judge separately. Version every benchmark refresh and keep old results. A moving dataset can make raw scores incomparable.</td></tr></tbody></table></div>
+<p>For a paper-based judge example, Lianmin Zheng and colleagues study LLM judges against human preferences and report position, verbosity and self-enhancement biases. Use it to ask what the comparison measures and whether a proposed deployment needs stricter evidence than preference agreement. Zheng et al., Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena, NeurIPS 2023</p>
+<p>Original Test 13 reports 15/15 passing trajectory-judge verdicts. On TC10, the saved Test 12 trace includes the account lookup and omits the expected document search. This historical comparison gives learners a measure-validity question. Which observations can support the claim that the full workflow ran? It does not validate Northstar&#x27;s new method. Original Test 13 trajectory evaluation</p>
+<h4>Research Evidence Checklist</h4>
+<p>Use source type as a clue about what to verify. A peer-reviewed paper has a review record. A preprint may be earlier and easier to revise. Technical reports often give implementation details, while vendor documentation establishes intended interfaces and versions. A leaderboard reports scores under its published protocol. Blogs can surface hypotheses and failure reports, and code repositories can reveal implementation or licensing details. Independent replications test whether conclusions hold under other conditions. Check artifacts, labels, assumptions and incentives for each source.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Research evidence checklist"><table><caption>Research evidence checklist</caption><thead><tr><th scope="col">Evidence worksheet field</th><th scope="col">Record before relying on a claim</th></tr></thead><tbody><tr><td>Citation and provenance</td><td>Exact title, authors, affiliations, venue or source, publication date, version, disclosures and conflicts of interest</td></tr><tr><td>Target and construct</td><td>Research question, hypothesis, intended users, outcome definition, metric and operational value</td></tr><tr><td>Comparison and controls</td><td>Current and simple baselines, shared cases, selection protocol, budgets, hyperparameter tuning and confound checks</td></tr><tr><td>Data and code availability</td><td>Dataset and code versions or access limits, expected outputs, runtime, license and holdout safeguards</td></tr><tr><td>Results and uncertainty</td><td>Counts and denominators, effect size, uncertainty, ablations, severe errors and slice coverage</td></tr><tr><td>Reproduction and later evidence</td><td>Your reproduction status, independent replication, errata, subsequent corrections and unresolved questions</td></tr><tr><td>Safety, ethics and applicability</td><td>Known limitations, affected people, authorization and privacy safeguards, and scope of any proposed pilot</td></tr></tbody></table></div>
+<h4>From Research to a Production Decision</h4>
+<p>Start with a problem you can measure, such as costly human review or missed high-severity errors. Find credible methods, record their claims and baselines, then reproduce one small result. Validate the new method on frozen local cases and compare it with the current baseline and a simpler alternative. Check rare, severe and multilingual cases. Ask what breaks when a dependency is delayed, a policy changes or the method disagrees with the baseline.</p>
+<p>Record expected cost, latency, dependencies, staffing and how much review the method adds or saves. <strong>Promising research</strong> motivates a test. <strong>Reproduced evidence</strong> confirms the computations for the original scope. <strong>Validated local improvement</strong> requires independent local cases and a fair baseline. <strong>Production readiness</strong> requires release controls, human ownership and monitoring evidence. In this lab PASS is a shadow-only recommendation. Review a pinned, redacted sample while the approved evaluator serves production. Keep the candidate without write authority. Monitor queue size, cost, latency, verified severe errors and drift. Pause after a critical miss or when evidence becomes untrustworthy. Restore the old routing if needed and add validated incident cases to the next version. <a href="#m13-t03">Release decisions, rollback and governance</a></p>
+<p>Keep a research backlog grouped by problems such as judge validity, label cost, trajectory verification and drift. Record source, claim, decision owner, evidence status and a next review date. Look periodically at venue proceedings, project releases and replication reports relevant to that backlog. Prioritize high-impact gaps and small independent experiments. Revisit unresolved claims when evidence changes. Retire assumptions that no longer match current policies and document each method change.</p>
+<h4>Practice Exercises</h4>
+<ol><li>Change Judge B&#x27;s R07 verdict to BLOCK in the first program. Recompute the paired gain and explain whether cost is now verified.</li><li>Inspect the ablation and sampling programs. Explain why joint removal reveals D06, and why the risk sample&#x27;s unweighted failure fraction differs from its weighted estimate.</li><li>Remove the adaptive uncertainty bonus. Compare the four reviewed IDs, strata and critical discoveries. Explain which findings generalize to the pool.</li><li>Export the research packet. Change the guard variant in the approval and raise label minutes above budget in separate runs. Explain what each change means for adoption.</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<ol><li>B gets 8/8 versus A&#x27;s 5/8. There are three gains and no losses, a 37.5-point increase and an exact p-value of 0.25. Cost remains unverified because the report still has no cost observations.</li><li>Either independent guard keeps D06 from passing. Remove both and it becomes a critical false approval. In the risk sample 2/4 observed cases fail, but high-risk cases represent only 4/12 of the pool. The weighted estimate is (4/12 × 2/3) + (8/12 × 0/1) = 2/9, about 0.222.</li><li>The fixed uncertainty order picks E05, E06, E01 and E07. This retains both strata and finds the same one critical case in this fixture, in a different order. The outcome illustrates risk discovery. Neither deterministic queue produces a valid population estimate.</li><li>A receipt tied to a different guard needs REVIEW. Measured minutes beyond the budget cause BLOCK in the sample gate. Restore comparable evidence, run the approved configuration and get a matching shadow scope before proceeding.</li></ol>
+</div></details>
+<h4>Assignment</h4>
+<p>Write a short <strong>method card</strong> for active evaluation or for the guarded judge. Define the construct and intended deployment, evidence sources, metric and baseline, independent sampling assumptions, safety gates, limitations, estimated review cost and replication plan. Include the exact calculation for one observation from the lab. For the preference-ranking variant, complete the prerequisite first and add a swapped-order control and an independent test of a critical requirement. Give a recommendation and name the evidence that could change it.</p>
+<h4>Knowledge Check</h4>
+<ul><li>Why can a reproduced result fail to replicate?</li><li>If adaptive testing finds more privacy failures, what can you conclude about ordinary traffic?</li><li>When do you report REVIEW instead of PASS for a shadow pilot?</li></ul>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ul><li>The original artifacts may reconstruct the numbers precisely while the effect changes on fresh cases. Examine differences in population, policy, label protocol and scope before attributing the result.</li><li>It found more failures under the particular selection and budget. Estimate ordinary prevalence from a suitable probability-based sample with a justified analysis.</li><li>Use REVIEW when a required observation, configuration, independent test, owner approval or validated stop plan is incomplete. A confirmed critical failure or an essential reproduction mismatch takes precedence and blocks.</li></ul>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li>Treating peer review or a leaderboard as sufficient production evidence. Recheck the construct, baseline and intended deployment.</li><li>Treating correlated labels or synthetic variants as independent samples. Track case families and apply the design&#x27;s assumptions.</li><li>Reporting only gains. Include regressions, missing evidence, severe cases, budgets and the decision scope.</li><li>Equating a passed reproduction or approved pilot with broad deployment readiness. Require independent local evidence and staged monitoring.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-13" data-relevance="Supporting">
+<h5>Test 13: Trajectory Evaluation with Judge Model</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Judge the quality of saved agent trajectories on four dimensions.</dd></div><div><dt>How it was tested</dt><dd>Read Test 12 traces and score tool selection, argument quality, answer grounding, and stopping behavior. The bundled input is a committed copy of 15 saved Test 12 trajectories. The original page documents the judge prompt. mistral judge via Ollama, grading qwen3.5:9b trajectories.</dd></div><div><dt>Actual results</dt><dd>The committed judge-results JSON records 15 pass verdicts out of 15. Test 12 separately recorded a deterministic mismatch for TC10.</dd></div><div><dt>Original findings</dt><dd>The walkthrough explains why fixed tool-path checks and judge-scored reasoning have different roles.</dd></div><div><dt>Evidence notes</dt><dd>The 15 judge verdicts are historical outputs. They do not overturn the separate recorded deterministic mismatch.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the saved trajectory judgment and separate trace mismatch to ask which evidence measures workflow completion.</dd></div></dl>
+<p><a href="test13.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json">Original judge outputs and scores</a> · <a href="#original-test-13">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>This is the final curriculum topic. Use the method card and frozen evidence to evaluate one claim against a simpler baseline. Preserve the unresolved questions and choose a defensible adoption scope before changing any production evaluator.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t02">Confidence intervals, significance and sample size</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m06-t03">Pairwise comparisons and ranking</a>, <a href="#m14-t02">Production sampling, human feedback, drift and alerts</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m06-t03">Pairwise comparisons and ranking</a> — required for a preference-ranking method review</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Simulate risk-aware active case selection, then compare estimates and label costs with uniform sampling.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P06 for a simulated adaptive sampling comparison.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Write a method card with construct, assumptions, evidence limits and a replication plan.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>2h</dd></div><div><dt>Guided (hrs)</dt><dd>1h 30m</dd></div><div><dt>Experiment (hrs)</dt><dd>2h</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h 30m</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -31624,7 +32059,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test13.html">View Complete Original Experiment</a> <code>docs/test13.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json">Original judge outputs and scores</a> <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_report.html">Trajectory evaluation report</a> <code>phase-5-production-eval/trajectory-evaluation/results/sample_trajectory_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json">Frozen Test 12 trace input</a> <code>phase-5-production-eval/trajectory-evaluation/sample_agent_evaluation_results.json</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py">Trajectory judge evaluator</a> <code>phase-5-production-eval/trajectory-evaluation/test13_trajectory_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Compare the saved judge pass on TC10 with Test 12’s tool-path mismatch. Identify what a trace and a score each establish.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Compare the saved passing judge verdict for TC10 with Test 12’s separate deterministic mismatch before signing off on execution behavior.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Contrast TC10&#x27;s recorded judge pass with its separate deterministic mismatch before treating scorers as interchangeable.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Reconcile TC10&#x27;s passing judge verdict with the separate deterministic mismatch before assigning confidence.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Compare a deterministic mismatch with a passing judge result on the same trajectory.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Primary. Inspect the four saved trajectory ratings alongside the original action sequence.</li><li><a href="#m18-t01">M18-T01 — Advanced judge design and evaluator robustness</a> · Supporting. Use the separate judge and deterministic verdicts to examine evaluator robustness.</li><li><a href="#m15-t01">M15-T01 — Design review and reproducible suite</a> · Supporting. Review the passing TC10 judgment beside Test 12&#x27;s deterministic mismatch before approving the rubric.</li></ul>
+<ul><li><a href="#m14-t01">M14-T01 — Traces, monitoring and Langfuse</a> · Supporting. Compare the saved judge pass on TC10 with Test 12’s tool-path mismatch. Identify what a trace and a score each establish.</li><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Compare the saved passing judge verdict for TC10 with Test 12’s separate deterministic mismatch before signing off on execution behavior.</li><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Contrast TC10&#x27;s recorded judge pass with its separate deterministic mismatch before treating scorers as interchangeable.</li><li><a href="#m12-t03">M12-T03 — Mitigation verification, reporting and defensive tooling</a> · Supporting. Reconcile TC10&#x27;s passing judge verdict with the separate deterministic mismatch before assigning confidence.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Compare a deterministic mismatch with a passing judge result on the same trajectory.</li><li><a href="#m10-t02">M10-T02 — Trajectories, planning outcomes and final state</a> · Primary. Inspect the four saved trajectory ratings alongside the original action sequence.</li><li><a href="#m18-t01">M18-T01 — Advanced judge design and evaluator robustness</a> · Supporting. Use the separate judge and deterministic verdicts to examine evaluator robustness.</li><li><a href="#m18-t03">M18-T03 — Emerging evaluation methods and research literacy</a> · Supporting. Use the saved trajectory judgment and separate trace mismatch to ask which evidence measures workflow completion.</li><li><a href="#m15-t01">M15-T01 — Design review and reproducible suite</a> · Supporting. Review the passing TC10 judgment beside Test 12&#x27;s deterministic mismatch before approving the rubric.</li></ul>
 </details>
 <details id="original-test-14" class="course-reference original-test" data-evidence="methodology">
 <summary>Test 14: Langfuse Observability · Methodology Available — Results Missing</summary>

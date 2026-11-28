@@ -429,6 +429,16 @@ test("model migration elective keeps navigation and progress across reading mode
   assert.equal(ui.el("m18-t02").querySelector("[data-progress]").value, "Completed");
 });
 
+test("final authored topic preserves the learning path boundary and shared progress", () => {
+  const ui = start(lessonHash("G", "M18-T03"));
+  assert.equal(ui.el("guided-previous").href, lessonHash("G", "M18-T02"));
+  assert.equal(ui.el("guided-next").hidden, true);
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+  ui.go("#m18-t03");
+  assert.equal(ui.el("m18-t03").open, true);
+  assert.equal(ui.el("m18-t03").querySelector("[data-progress]").value, "Completed");
+});
+
 test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
@@ -613,6 +623,18 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
         assert.ok(markup.includes('href="#' + target + '"'));
       }
       assert.match(markup, /href="test8\.html"/);
+    } else if (topic.id === "M18-T03") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /paired: \+3\/-1, delta=\+25\.0%, exact p=0\.625/);
+      assert.match(markup, /risk-weighted: .*critical=1, coverage=2\/2 strata/);
+      assert.match(markup, /replicate raw: A=4\/6, B=4\/6/);
+      assert.match(markup, /raw: BLOCK[\s\S]*guarded shadow: PASS[\s\S]*missing config: REVIEW/);
+      assert.match(markup, /<caption>Three-pass research reading worksheet<\/caption>/);
+      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 5);
+      for (const target of ["m04-t03", "m07-t02", "m06-t03", "m14-t02"]) {
+        assert.ok(markup.includes('href="#' + target + '"'));
+      }
+      assert.match(markup, /href="test13\.html"/);
     } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
