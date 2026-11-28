@@ -354,8 +354,12 @@ def prose(markdown):
             parts.append(f"<h3>{inline(block[4:])}</h3>")
         elif block.startswith("|"):
             header, *rows = table_rows(block)
-            caption = {"Path": "Learning path goals" if header[1] == "Audience" else "Learning path estimates",
-                       "ID": "Preparation skills"}.get(header[0], "Course hours by track")
+            caption = {
+                "Path": "Learning path goals" if header[1] == "Audience" else "Learning path estimates",
+                "ID": "Preparation skills",
+                "Dimension and purpose": "Localization evaluation dimensions",
+                "Review criterion": "Localized support review rubric",
+            }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS
                 rows = [row[:3] + [duration(value) for value in row[3:]] for row in rows]

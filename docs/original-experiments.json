@@ -307,6 +307,11 @@
           "id": "M05-T03",
           "relevance": "Supporting",
           "connection": "Find a borderline score and identify the evidence a reviewer would need."
+        },
+        {
+          "id": "M16-T01",
+          "relevance": "Supporting",
+          "connection": "Read the original similarity thresholds in context before designing an independent cross-language calibration."
         }
       ]
     },

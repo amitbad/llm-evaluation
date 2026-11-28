@@ -355,6 +355,20 @@ test("capstone progression preserves progress across guided and complete course 
   assert.equal(ui.el("m15-t02").open, true);
 });
 
+test("localized elective supports guided navigation and complete-course progress", () => {
+  const topic = "M16-T01";
+  const plan = data.paths.G;
+  const index = plan.closure.indexOf(topic);
+  assert.ok(index > 0);
+  const ui = start(lessonHash("G", topic));
+  assert.equal(ui.el("guided-previous").href, lessonHash("G", plan.closure[index - 1]));
+  assert.equal(ui.el("guided-next").href, lessonHash("G", "M16-T02"));
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+  ui.go("#m16-t01");
+  assert.equal(ui.el("m16-t01").open, true);
+  assert.equal(ui.el("m16-t01").querySelector("[data-progress]").value, "Completed");
+});
+
 test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
@@ -447,6 +461,20 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
         assert.ok(markup.includes('href="#' + id + '"'));
       }
       assert.match(markup, /href="test11\.html"/);
+    } else if (topic.id === "M16-T01") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /Experiment A[\s\S]*Experiment B[\s\S]*Experiment C[\s\S]*Experiment D[\s\S]*Experiment E[\s\S]*Experiment F/);
+      assert.match(markup, /मेरा रिफंड कब आएगा/);
+      assert.match(markup, /Compré el producto hace quince días/);
+      assert.match(markup, /₹1,23,456\.50/);
+      assert.match(markup, /<caption>Localization evaluation dimensions<\/caption>/);
+      assert.match(markup, /<caption>Localized support review rubric<\/caption>/);
+      assert.match(markup, /F candidate: 13\/14 pass, 14\/14 evidence, BLOCK/);
+      assert.match(markup, /F missing review: 13\/13 pass, 13\/14 evidence, REVIEW/);
+      for (const id of ["m04-t03", "m07-t02", "m05-t02", "m16-t02"]) {
+        assert.ok(markup.includes('href="#' + id + '"'));
+      }
+      assert.match(markup, /href="test6\.html"/);
     } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
