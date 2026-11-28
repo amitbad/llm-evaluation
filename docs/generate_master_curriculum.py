@@ -376,6 +376,9 @@ def prose(markdown):
                 "Coordination measure": "Multi-agent coordination metric denominators",
                 "Evaluation dimension": "Northstar coordination checks",
                 "Coordination review criterion": "Multi-agent human review rubric",
+                "Integrity risk": "Benchmark contamination and leakage checks",
+                "Migration check": "Northstar model migration checklist",
+                "Migration review criterion": "Human review for model migration",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS

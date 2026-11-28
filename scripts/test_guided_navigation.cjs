@@ -419,6 +419,16 @@ test("multi-agent elective keeps navigation and progress across reading modes", 
   assert.equal(ui.el("m17-t03").querySelector("[data-progress]").value, "Completed");
 });
 
+test("model migration elective keeps navigation and progress across reading modes", () => {
+  const ui = start(lessonHash("G", "M18-T02"));
+  assert.equal(ui.el("guided-previous").href, lessonHash("G", "M18-T01"));
+  assert.equal(ui.el("guided-next").href, lessonHash("G", "M18-T03"));
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+  ui.go("#m18-t02");
+  assert.equal(ui.el("m18-t02").open, true);
+  assert.equal(ui.el("m18-t02").querySelector("[data-progress]").value, "Completed");
+});
+
 test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
@@ -589,6 +599,20 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
         assert.ok(markup.includes('href="#' + target + '"'));
       }
       assert.match(markup, /href="test12\.html"/);
+    } else if (topic.id === "M18-T02") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /normalized exact duplicates=1\/4/);
+      assert.match(markup, /investigation coverage=7\/8; resolved=5\/8/);
+      assert.match(markup, /auth-regression: A=8\/12, B=10\/12,.*BLOCK/);
+      assert.match(markup, /clean-repair: A=8\/12, B=11\/12,.*PASS/);
+      assert.match(markup, /unknown-exposure:.*REVIEW/);
+      assert.match(markup, /critical: canary-5 -&gt; BLOCK, restore Model A and contain/);
+      assert.match(markup, /<caption>Northstar model migration checklist<\/caption>/);
+      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 4);
+      for (const target of ["m04-t03", "m07-t03", "m13-t03", "m18-t03"]) {
+        assert.ok(markup.includes('href="#' + target + '"'));
+      }
+      assert.match(markup, /href="test8\.html"/);
     } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);

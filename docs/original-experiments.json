@@ -423,6 +423,11 @@
           "connection": "Review a controlled configuration comparison on the same inputs."
         },
         {
+          "id": "M18-T02",
+          "relevance": "Supporting",
+          "connection": "Use the saved matched cases across temperatures and models to distinguish configuration changes from model changes."
+        },
+        {
           "id": "M11-T03",
           "relevance": "Supporting",
           "connection": "Inspect sensitivity across saved configurations and compare case-level results with the aggregate."

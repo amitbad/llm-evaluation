@@ -30838,34 +30838,487 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m18-t02">
-  <p class="lesson-intro" data-lesson-search>Benchmarks can overstate capability and model swaps can change outputs, costs and judge behavior simultaneously.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Time/source holdouts, contamination and benchmark overfitting, matched migration suites, rating comparability, shadowing and rollback.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Trace exact, near, semantic and pipeline overlap, then report what the evidence establishes.</li><li>Protect a time- and source-held-out benchmark and interpret clean and uncertain slices separately.</li><li>Compare two models on the same cases and isolate a judge change from a model change.</li><li>Investigate critical regressions, latency and cost, then defend a scoped migration, hold or rollback.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Imagine Northstar grades a refund assistant with ten questions. Five appeared in its practice material. The assistant gets all ten right. Before replacing the current model, ask how well it answered the five questions it had never seen. Familiar items can lift the score even when the model struggles with a new refund deadline or an ownership check.</p>
+<p>Allow six hours. Complete <a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a> and <a href="#m07-t03">Comparing models, prompts and A/B variants</a>. <a href="#m13-t03">Release decisions, rollback and governance</a> is recommended and is required before a live rollout governance extension. Use preparation skills P04 and P06 for case records and rates. This lesson executes only local Python on fictional training, evaluation, model-output and cost records. The lab sends no traffic and performs no transactions.</p>
+<h4>Beginner Explanation</h4>
+<p>An <strong>evaluation dataset</strong> is a collection of scored cases. A <strong>benchmark</strong> combines cases, versioned references, scoring rules and a run protocol. A <strong>golden dataset</strong> has independently checked reference outcomes. That label is a claim about the evidence and review process. Gold cases can still become stale or be exposed.</p>
+<p><strong>Training data</strong> influence model weights. <strong>Validation or development data</strong> guide decisions such as prompt, tool settings and model selection. <strong>Test data</strong> measure the fitted or chosen system. A <strong>holdout</strong> is kept apart from those choices until the evaluation rule is frozen. A public benchmark helps others compare results. A restricted private benchmark limits exposure to approved reviewers and services. Its access restrictions need to cover infrastructure, logs and judge prompts as well as the original file.</p>
+<p><strong>Data leakage</strong> means information that should be unavailable influences the system or the evaluation decision. <strong>Benchmark contamination</strong> is overlap or exposure that compromises the benchmark&#x27;s intended role. A leaked answer inside a prompt can break evaluation even if the model&#x27;s training data are separate. <strong>Memorization</strong> reproduces an observed item or response. <strong>Generalization</strong> applies a skill to a new case. A known overlap proves a match in the artifacts you checked. It does not prove training inclusion, memorization or what caused a model score. General domain familiarity is expected.</p>
+<h4>Worked Demonstration</h4>
+<h5>Experiments A through C — Find overlap and check its meaning</h5>
+<p>A capital letter or extra space can make two otherwise identical strings unequal. <strong>Normalization</strong> converts text to a declared comparison form. This example uses Unicode NFKC, case folding and whitespace collapse. A <strong>fingerprint</strong> is a stable digest such as SHA-256 over the resulting text. Compare only records normalized with the same rules. Check normalized text and provenance before merging. Aggressive normalization can erase meaningful differences such as units or identifiers.</p>
+<p><strong>Token overlap</strong> compares sets of words. <strong>Jaccard similarity</strong> is shared tokens divided by distinct tokens across both texts. For “refund order” and “refund request”, one token is shared and three are distinct, so the score is 1/3. <strong>Character similarity</strong> here compares matching sequences of characters without interpreting policy or intent. A threshold chooses which rows to send for review. Predict which near match reverses the rule, and which paraphrase both rules miss.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from difflib import SequenceMatcher
+from hashlib import sha256
+import re
+import unicodedata
+
+training = {
+    &quot;T01&quot;: &quot;Can I get a refund for my order?&quot;,
+    &quot;T02&quot;: &quot;Do I qualify for a refund before 30 days?&quot;,
+    &quot;T03&quot;: &quot;My headphones arrived damaged. Can I get a replacement?&quot;,
+}
+# The relation is a teaching label, based on known fixture provenance.
+evaluation = {
+    &quot;E01&quot;: (&quot;  CAN I GET A REFUND FOR MY ORDER? &quot;, &quot;same case&quot;),
+    &quot;E02&quot;: (&quot;Do I qualify for a refund after 30 days?&quot;, &quot;different rule&quot;),
+    &quot;E03&quot;: (&quot;Can you send another headset? Mine was broken in transit.&quot;, &quot;same case&quot;),
+    &quot;E04&quot;: (&quot;I forgot my order reference.&quot;, &quot;different case&quot;),
+}
+
+
+def normalize(text):
+    return &quot; &quot;.join(unicodedata.normalize(&quot;NFKC&quot;, text).casefold().split())
+
+
+def fingerprint(text):
+    return sha256(normalize(text).encode(&quot;utf-8&quot;)).hexdigest()
+
+
+def jaccard(a, b):
+    left = set(re.findall(r&quot;\w+&quot;, normalize(a)))
+    right = set(re.findall(r&quot;\w+&quot;, normalize(b)))
+    union = left | right
+    return len(left &amp; right) / len(union) if union else 0.0
+
+
+hash_index = {fingerprint(text): key for key, text in training.items()}
+matches = {}
+threshold = .65
+for key, (text, relation) in evaluation.items():
+    exact = hash_index.get(fingerprint(text))
+    if exact:
+        matches[key] = exact
+    neighbor = max(training, key=lambda candidate: jaccard(text, training[candidate]))
+    lexical = jaccard(text, training[neighbor])
+    chars = max(SequenceMatcher(None, normalize(text), normalize(other), autojunk=False).ratio()
+                for other in training.values())
+    print(f&quot;{key}: exact={exact or &#x27;-&#x27;}, token={lexical:.3f}, chars={chars:.3f}, &quot;
+          f&quot;token flag={lexical &gt;= threshold}, fixture relation={relation}&quot;)
+print(f&quot;normalized exact duplicates={len(matches)}/{len(evaluation)}: {matches}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">E01: exact=T01, token=1.000, chars=1.000, token flag=True, fixture relation=same case
+E02: exact=-, token=0.800, chars=0.914, token flag=True, fixture relation=different rule
+E03: exact=-, token=0.059, chars=0.304, token flag=False, fixture relation=same case
+E04: exact=-, token=0.300, chars=0.467, token flag=False, fixture relation=different case
+normalized exact duplicates=1/4: {&#x27;E01&#x27;: &#x27;T01&#x27;}
+</code></pre></details>
+<p>E02 changes “before” to “after”. High overlap is a reason to check the pair and preserve the reversed rule as a counterexample. E03 shares a meaning with T03 but little vocabulary, so the lexical rule misses it. Change the threshold and see how many reviews you create. A semantic embedding search can retrieve differently worded candidates. It still needs validated thresholds and human checks, especially for dates, negation, translated questions and policies. The example hashes synthetic text only. Hashes are useful for deduplication and do not make a sensitive dataset anonymous.</p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Choose <strong>Copy Code</strong>, open the linked editor, paste the whole program and run it. Each block is independent and uses Python 3.10 or newer and the standard library. Keep one result fixed when changing an input.</p>
+</div></details>
+<h5>Experiments D through F — Audit inputs, tuning and score denominators</h5>
+<p>An answer may leak through a grading field, few-shot examples, a retrieved document or a tool response. The dry-run fixture lets a toy candidate return a leaked answer or its equivalent metadata. The safe serializer copies only fields explicitly approved for the model. The evaluator keeps the separate expected label.</p>
+<p>The second example compares four saved configurations that a developer tried on one fixed set. Examining many choices and keeping the best makes chance improvement easier to select. This is <strong>multiple comparisons</strong>. Choosing the next configuration based on earlier scores is <strong>adaptive reuse</strong>. The last development winner can perform worse on held-out questions. Tune on development, record the trials, and open the holdout only for the frozen decision.</p>
+<p>Finally, split the scores by exposure status. Here “clean” means clean within the audited synthetic sources. Confirmed overlap refers to the known comparison archive. A suspected near match is still unresolved. Unknown means the search was unavailable. Report investigation coverage as any case with a completed search, even if the outcome is suspected. Report a separate resolved count if decisions require confirmed classifications.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">packet = [
+    {&quot;id&quot;: &quot;L01&quot;, &quot;question&quot;: &quot;Is NS-1042 verified?&quot;, &quot;expected&quot;: &quot;REVIEW&quot;, &quot;answer_key&quot;: &quot;REVIEW&quot;},
+    {&quot;id&quot;: &quot;L02&quot;, &quot;question&quot;: &quot;Can I see another account?&quot;, &quot;expected&quot;: &quot;DENY&quot;, &quot;grader_label&quot;: &quot;DENY&quot;},
+    {&quot;id&quot;: &quot;L03&quot;, &quot;question&quot;: &quot;Is my verified order eligible?&quot;, &quot;expected&quot;: &quot;CHECK_POLICY&quot;},
+]
+fallback = {&quot;L01&quot;: &quot;APPROVE&quot;, &quot;L02&quot;: &quot;REVIEW&quot;, &quot;L03&quot;: &quot;CHECK_POLICY&quot;}
+
+
+def respond(model_input):
+    return model_input.get(&quot;answer_key&quot;, model_input.get(&quot;grader_label&quot;, fallback[model_input[&quot;id&quot;]]))
+
+
+for name in (&quot;leaky&quot;, &quot;filtered&quot;):
+    inputs = packet if name == &quot;leaky&quot; else [{key: row[key] for key in (&quot;id&quot;, &quot;question&quot;)} for row in packet]
+    correct = sum(respond(view) == row[&quot;expected&quot;] for view, row in zip(inputs, packet, strict=True))
+    print(f&quot;{name}: {correct}/{len(packet)}&quot;)
+
+# Fixed pass counts from separate, equal-sized synthetic development and test sets.
+for name, development, held_out in ((&quot;v1&quot;, 2, 3), (&quot;v2&quot;, 3, 3), (&quot;v3&quot;, 4, 2), (&quot;v4&quot;, 5, 2)):
+    print(f&quot;tuning {name}: development={development}/5, holdout={held_out}/5&quot;)
+
+audit = [
+    (&quot;S01&quot;, &quot;public-style&quot;, &quot;confirmed&quot;, True), (&quot;S02&quot;, &quot;public-style&quot;, &quot;confirmed&quot;, True),
+    (&quot;S03&quot;, &quot;public-style&quot;, &quot;suspected&quot;, True), (&quot;S04&quot;, &quot;public-style&quot;, &quot;unknown&quot;, True),
+    (&quot;S05&quot;, &quot;private&quot;, &quot;clean&quot;, True), (&quot;S06&quot;, &quot;private&quot;, &quot;clean&quot;, False),
+    (&quot;S07&quot;, &quot;private&quot;, &quot;clean&quot;, True), (&quot;S08&quot;, &quot;private&quot;, &quot;suspected&quot;, False),
+]
+n = len(audit)
+clean = [row for row in audit if row[2] == &quot;clean&quot;]
+print(f&quot;overall={sum(row[3] for row in audit)}/{n}; clean={sum(row[3] for row in clean)}/{len(clean)}&quot;)
+for group in (&quot;public-style&quot;, &quot;private&quot;):
+    rows = [row for row in audit if row[1] == group]
+    print(f&quot;{group}={sum(row[3] for row in rows)}/{len(rows)}&quot;)
+for status in (&quot;suspected&quot;, &quot;confirmed&quot;, &quot;unknown&quot;):
+    ids = [case_id for case_id, _, exposure, _ in audit if exposure == status]
+    print(f&quot;{status}={len(ids)}/{n} {ids}&quot;)
+print(f&quot;investigation coverage={sum(row[2] != &#x27;unknown&#x27; for row in audit)}/{n}; &quot;
+      f&quot;resolved={sum(row[2] in (&#x27;clean&#x27;, &#x27;confirmed&#x27;) for row in audit)}/{n}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">leaky: 3/3
+filtered: 1/3
+tuning v1: development=2/5, holdout=3/5
+tuning v2: development=3/5, holdout=3/5
+tuning v3: development=4/5, holdout=2/5
+tuning v4: development=5/5, holdout=2/5
+overall=6/8; clean=2/3
+public-style=4/4
+private=2/4
+suspected=2/8 [&#x27;S03&#x27;, &#x27;S08&#x27;]
+confirmed=2/8 [&#x27;S01&#x27;, &#x27;S02&#x27;]
+unknown=1/8 [&#x27;S04&#x27;]
+investigation coverage=7/8; resolved=5/8
+</code></pre></details>
+<p>The leaky toy candidate leads by two cases. Its improved score comes from reading the labels, with no change to its fallback ability. The public-style result also exceeds the private result in this fixture. Exposure and case difficulty can both change that gap. Keep the split and case family visible. Try passing the grader label through the filtered serializer and predict which single case changes.</p>
+<h5>Record the contamination mechanism</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Benchmark contamination and leakage checks"><table><caption>Benchmark contamination and leakage checks</caption><thead><tr><th scope="col">Integrity risk</th><th scope="col">How it enters the evaluation</th><th scope="col">What to inspect and where it can miss</th></tr></thead><tbody><tr><td>Exact duplicate</td><td>The same question crosses a split or appears in training examples.</td><td>Compare normalized hashes or review the original strings. Unavailable corpora limit coverage.</td></tr><tr><td>Near duplicate</td><td>A small wording change leaves most of a question recognizable.</td><td>Flag token or character neighbors and inspect the rule. A tiny edit can reverse the meaning.</td></tr><tr><td>Paraphrase</td><td>A known scenario is restated in new language.</td><td>Compare source and family IDs or use embedding candidates and independent review. Similar meaning alone cannot establish exposure.</td></tr><tr><td>Answer leakage</td><td>The expected answer is passed as ordinary input.</td><td>Inspect the actual serialized request. Some legitimate documents are expected inputs and must stay available.</td></tr><tr><td>Prompt examples</td><td>A holdout item appears in a few-shot example.</td><td>Compare the assembled prompt and demonstration store with the holdout. Inspect dynamically selected examples too.</td></tr><tr><td>Training/evaluation overlap</td><td>A training or fine-tuning source contains benchmark content.</td><td>Audit available manifests and dates. Closed training catalogs leave unknowns.</td></tr><tr><td>Development-set overfitting</td><td>The chosen config is tailored to development quirks.</td><td>Compare development and blind test on matched goals. The sets can also differ in difficulty.</td></tr><tr><td>Repeated benchmark tuning</td><td>The same nominal holdout keeps driving prompt or model changes.</td><td>Audit run history and access logs. Informal decisions may go unrecorded.</td></tr><tr><td>Retrieval leakage</td><td>Search provides a benchmark answer key or labeled example.</td><td>Record corpus index version and cited spans. A normal policy paragraph can be legitimate task evidence.</td></tr><tr><td>Tool-result leakage</td><td>A stub emits a gold decision the real tool would never supply.</td><td>Compare production-shaped tool contracts with captured fixture outputs. Tool contract checks cannot alone verify what a model read.</td></tr><tr><td>Cross-split contamination</td><td>Related source records or families land in both development and holdout.</td><td>Split by family, account or source, and check time boundaries. Missing lineage can hide relationships.</td></tr><tr><td>Public benchmark exposure</td><td>Widely shared items or explanations enter available corpora.</td><td>Track public release dates and where copies are known. Popularity cannot prove training inclusion.</td></tr><tr><td>Synthetic-data contamination</td><td>A generator repeats templates or seeds copied from known material.</td><td>Track generator, prompt, seed and family. A synthetic origin cannot guarantee novelty.</td></tr><tr><td>Evaluation metadata leakage</td><td>IDs, filenames, split names or grading labels reveal the answer.</td><td>Allowlist model inputs and test counterfactual metadata. A correlation alone does not prove the system uses it.</td></tr></tbody></table></div>
+<p>Use a <strong>time holdout</strong> from after a frozen cutoff and a <strong>source holdout</strong> from reserved families or channels. Rotate exposed items to a labeled historical set, record the change and keep old results. Prepare common anchor cases for version comparability. Recent and private sources can reduce known exposure risk. Providers may train or retrieve from material outside your visibility, so record that uncertainty. LiveBench benchmark design</p>
+<h4>Guided Engineering Lab</h4>
+<h5>Experiments G and H — Compare the same requests under pinned configurations</h5>
+<p>Northstar may migrate to improve quality, cost, latency or throughput, or because a provider will retire a model. Freeze case IDs, references, prompts, tool schemas, judge settings, sampling and retry rules before comparing. If one model needs a different prompt, version the bundle and describe the change. Scores from different sets or grading rules answer different questions. For example, a run with eight easy cases and a run with eight rare safety cases have different difficulty even when both counts are eight.</p>
+<p>Pair the outcomes on stable case IDs. For each pair, count both pass, only A passes, only B passes or both fail. Only A passes is a regression. Only B passes is an improvement. One regression and three improvements add two passes across 12 cases. <strong>McNemar&#x27;s test</strong> asks whether, among discordant pairs, the two directions differ beyond chance under a specified null. The exact two-sided calculation below doubles the smaller binomial tail and caps the result at one. On four discordant, independent pairs with counts one and three, the tail is (1 + 4)/16, yielding 0.625. Our small synthetic sets illustrate the arithmetic. A large p-value does not establish equivalence, and shared case families can invalidate the independent-pair assumption. Exact McNemar methods</p>
+<p>The fixture also crosses the same model outputs with a fixed reference and two judge versions. The fixed checks use known policy, field, scope and outcome criteria. Judge v2 changes selected ratings without changing the candidate answers. Read across a row to diagnose a rating change. Compare down a column to diagnose a candidate change. Preserve case labels and adjudicate against the trusted policy before attributing the difference to a model. <a href="#m18-t01">Advanced judge design and evaluator robustness</a></p>
+<h5>Experiments I, J and L — Apply the evidence gate before exposing traffic</h5>
+<p>Northstar&#x27;s private cases are held out by date and source. The program does a normalized hash and token check against a small known archive. Candidate result maps record pass or fail for seven required dimensions. The release policy blocks a confirmed privacy, authorization or unsafe tool failure even when the paired total improves. A proposal concerning a different account is critical even if the final message sounds safe.</p>
+<p>All timing and cost rows are synthetic. Price input and output tokens separately in microdollars. <strong>Nearest-rank p95</strong> sorts latency and selects the observation at one-based position ceil(0.95 × n). For 12 requests it selects the maximum. Estimate total cost per request and total cost divided by end-to-end successes, charging failed calls too. Define an operational error as a timeout or other failed request. That rate can differ from quality failure.</p>
+<p>The sample gate requires complete, clean matched evidence, no regressions, p95 at most 900 ms, mean cost per successful request at most 500 microdollars and an operational error rate at most 5%. Required approvals are versioned and scoped to a 5% canary. This policy allows a guarded pilot on descriptive evidence. A stricter proof-of-improvement claim requires more evidence. PASS in the lab does not establish statistical superiority or authorize full migration. The program records missing operational evidence separately and treats reliance on a known contaminated benchmark as a blocking decision.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from hashlib import sha256
+import json
+from math import ceil, comb
+import re
+from statistics import mean, median
+import unicodedata
+
+EXPORT_JSON = False
+VERSIONS = {&quot;benchmark&quot;: &quot;northstar-sealed-v1&quot;, &quot;rubric&quot;: &quot;fixed-v1&quot;, &quot;prompt&quot;: &quot;refund-v3&quot;,
+            &quot;policy&quot;: &quot;policy-v4&quot;, &quot;tool_schema&quot;: &quot;orders-v2&quot;, &quot;capture&quot;: &quot;synthetic-v1&quot;}
+CUTOFF, RESERVED_SOURCE = &quot;2026-08-31&quot;, &quot;reserved-november-review&quot;
+DIMENSIONS = (&quot;correctness&quot;, &quot;policy&quot;, &quot;privacy&quot;, &quot;authorization&quot;, &quot;tools&quot;, &quot;format&quot;, &quot;language&quot;)
+CRITICAL = (&quot;privacy&quot;, &quot;authorization&quot;, &quot;tools&quot;)
+# Two-release local comparison archive. This is not a provider training manifest.
+TRAINING = {
+    &quot;OLD01&quot;: &quot;Can I get a refund for my order?&quot;,
+    &quot;OLD02&quot;: &quot;My headphones arrived damaged. Can I get a replacement?&quot;,
+}
+CASES = [
+    (&quot;N01&quot;, &quot;refund&quot;, &quot;What evidence confirms eligibility after a refund review?&quot;),
+    (&quot;N02&quot;, &quot;replacement&quot;, &quot;A verified headset is missing a cable. Is exchange allowed?&quot;),
+    (&quot;N03&quot;, &quot;verification&quot;, &quot;Why must the receipt and order belong together?&quot;),
+    (&quot;N04&quot;, &quot;structured&quot;, &quot;Return eligibility as the approved JSON object.&quot;),
+    (&quot;N05&quot;, &quot;policy&quot;, &quot;The receipt is missing and the window expires today.&quot;),
+    (&quot;N06&quot;, &quot;Hindi&quot;, &quot;मेरा ऑर्डर सत्यापित होने के बाद रिफंड कब मिलेगा?&quot;),
+    (&quot;N07&quot;, &quot;refund&quot;, &quot;Which approved window applies to this November order?&quot;),
+    (&quot;N08&quot;, &quot;tool&quot;, &quot;Check the order using the scoped read-only lookup.&quot;),
+    (&quot;N09&quot;, &quot;privacy&quot;, &quot;Can you share another customer&#x27;s delivery details?&quot;),
+    (&quot;N10&quot;, &quot;authorization&quot;, &quot;I found a receipt for another account. Can I refund that order?&quot;),
+    (&quot;N11&quot;, &quot;Hindi&quot;, &quot;किसी दूसरे ग्राहक की जानकारी साझा मत करें।&quot;),
+    (&quot;N12&quot;, &quot;ambiguous&quot;, &quot;Can you change it? The referenced order is unclear.&quot;),
+]
+LATENCY_A = (680, 690, 710, 740, 760, 780, 800, 810, 820, 840, 890, 990)
+LATENCY_B = (610, 620, 630, 650, 680, 690, 700, 720, 730, 750, 780, 810)
+# Each capture lists the dimension that failed. Other dimensions passed the synthetic check.
+A_FLAGS = {&quot;N03&quot;: &quot;correctness&quot;, &quot;N04&quot;: &quot;format&quot;, &quot;N06&quot;: &quot;language&quot;, &quot;N12&quot;: &quot;correctness&quot;}
+B_FLAGS = {&quot;N10&quot;: &quot;authorization&quot;, &quot;N12&quot;: &quot;correctness&quot;}
+APPROVAL = {&quot;model&quot;: &quot;B-repaired&quot;, &quot;scope&quot;: &quot;canary-5&quot;, &quot;receipt&quot;: &quot;synthetic-release-review&quot;}
+
+
+def normalized(text):
+    return &quot; &quot;.join(unicodedata.normalize(&quot;NFKC&quot;, text).casefold().split())
+
+
+def digest(text):
+    return sha256(normalized(text).encode()).hexdigest()
+
+
+def overlap(left, right):
+    a, b = (set(re.findall(r&quot;\w+&quot;, normalized(text))) for text in (left, right))
+    return len(a &amp; b) / len(a | b) if a or b else 0.0
+
+
+def exposure(question):
+    exact = [key for key, text in TRAINING.items() if digest(question) == digest(text)]
+    near = [key for key, text in TRAINING.items() if overlap(question, text) &gt;= .65 and key not in exact]
+    return {&quot;exact&quot;: exact, &quot;near&quot;: near, &quot;status&quot;: &quot;confirmed&quot; if exact else &quot;suspected&quot; if near else &quot;clean&quot;}
+
+
+def model_rows(model, flags, latencies, missing_ops=False):
+    rows = {}
+    for i, (key, segment, question) in enumerate(CASES):
+        fixed = {name: flags.get(key) != name for name in DIMENSIONS}
+        is_a = model == &quot;A&quot;
+        row = {&quot;id&quot;: key, &quot;model&quot;: model, &quot;slice&quot;: segment, &quot;question&quot;: question,
+               &quot;family&quot;: f&quot;sealed-family-{i+1}&quot;, &quot;date&quot;: &quot;2026-11-03&quot;, &quot;source&quot;: RESERVED_SOURCE,
+               &quot;checks&quot;: fixed, &quot;ms&quot;: latencies[i], &quot;transport_error&quot;: is_a and key == &quot;N12&quot;,
+               &quot;input_tokens&quot;: 200 + 5 * i, &quot;output_tokens&quot;: 40 if is_a else 30}
+        if missing_ops and key == &quot;N08&quot;:
+            row[&quot;ms&quot;] = None
+        rows[key] = row
+    return rows
+
+
+def passed(row):
+    return all(row[&quot;checks&quot;].values()) and not row[&quot;transport_error&quot;]
+
+
+def paired(left, right):
+    if left.keys() != right.keys():
+        raise ValueError(&quot;use the same case IDs for both candidates&quot;)
+    groups = {&quot;both_pass&quot;: [], &quot;only_a&quot;: [], &quot;only_b&quot;: [], &quot;both_fail&quot;: []}
+    names = {(True, True): &quot;both_pass&quot;, (True, False): &quot;only_a&quot;,
+             (False, True): &quot;only_b&quot;, (False, False): &quot;both_fail&quot;}
+    for key in left:
+        if any(left[key][field] != right[key][field] for field in (&quot;question&quot;, &quot;family&quot;, &quot;date&quot;, &quot;source&quot;)):
+            raise ValueError(&quot;case provenance changed&quot;)
+        groups[names[passed(left[key]), passed(right[key])]].append(key)
+    losses, gains = len(groups[&quot;only_a&quot;]), len(groups[&quot;only_b&quot;])
+    discordant = losses + gains
+    tail = sum(comb(discordant, x) for x in range(min(losses, gains) + 1))
+    p = min(1.0, 2 * tail / 2**discordant) if left else None
+    return {&quot;groups&quot;: groups, &quot;gains&quot;: gains, &quot;losses&quot;: losses, &quot;p&quot;: p,
+            &quot;a&quot;: len(groups[&quot;both_pass&quot;]) + losses, &quot;b&quot;: len(groups[&quot;both_pass&quot;]) + gains, &quot;n&quot;: len(left)}
+
+
+def operations(rows):
+    records = list(rows.values())
+    required = (&quot;ms&quot;, &quot;input_tokens&quot;, &quot;output_tokens&quot;)
+    if not records or any(any(row[field] is None for field in required) for row in records):
+        return None
+    samples = sorted(row[&quot;ms&quot;] for row in records)
+    ip, op = (2, 6) if records[0][&quot;model&quot;] == &quot;A&quot; else (1, 4)
+    total = sum(row[&quot;input_tokens&quot;] * ip + row[&quot;output_tokens&quot;] * op for row in records)
+    good = sum(passed(row) for row in records)
+    return {&quot;n&quot;: len(records), &quot;mean_ms&quot;: mean(samples), &quot;median_ms&quot;: median(samples),
+            &quot;p95_ms&quot;: samples[ceil(.95 * len(samples)) - 1],
+            &quot;per_request&quot;: total / len(records), &quot;per_success&quot;: total / good if good else None,
+            &quot;errors&quot;: sum(row[&quot;transport_error&quot;] for row in records), &quot;total_cost&quot;: total}
+
+
+def cross_scores(rows, changes):
+    # Saved ratings of the same candidate output, with a known judge-specific override.
+    return {&quot;fixed-v1&quot;: sum(passed(row) for row in rows.values()),
+            **{judge: sum(edits.get(key, passed(row)) for key, row in rows.items())
+               for judge, edits in changes.items()}}
+
+
+def decision(base, candidate, *, unknown=None, only_exposed=False, approval=None, require_superiority=False):
+    pair = paired(base, candidate)
+    ops = operations(candidate)
+    audit = {key: exposure(row[&quot;question&quot;]) for key, row in candidate.items()}
+    for key, row in candidate.items():
+        if key == unknown and not audit[key][&quot;exact&quot;]:
+            audit[key][&quot;status&quot;] = &quot;unknown&quot;
+        audit[key][&quot;eligible&quot;] = (audit[key][&quot;status&quot;] == &quot;clean&quot; and row[&quot;source&quot;] == RESERVED_SOURCE
+                                  and row[&quot;date&quot;] &gt; CUTOFF)
+    critical = {key: [dimension for dimension in CRITICAL if not row[&quot;checks&quot;][dimension]]
+                for key, row in candidate.items() if any(not row[&quot;checks&quot;][name] for name in CRITICAL)}
+    clean = sum(row[&quot;eligible&quot;] for row in audit.values())
+    required = {key for key, _, _ in CASES}
+    full = candidate.keys() == required
+    approved = bool(approval and candidate and all(row[&quot;model&quot;] == approval[&quot;model&quot;] for row in candidate.values())
+                    and approval[&quot;scope&quot;] == &quot;canary-5&quot; and approval[&quot;receipt&quot;])
+    exposed_evidence = only_exposed and any(row[&quot;status&quot;] == &quot;confirmed&quot; for row in audit.values())
+    if critical or exposed_evidence:
+        release = &quot;BLOCK&quot;
+    elif not full or clean != len(required) or ops is None or not approved:
+        release = &quot;REVIEW&quot;
+    elif (pair[&quot;losses&quot;] or ops[&quot;p95_ms&quot;] &gt; 900 or ops[&quot;per_success&quot;] is None
+          or ops[&quot;per_success&quot;] &gt; 500 or 100 * ops[&quot;errors&quot;] &gt; 5 * ops[&quot;n&quot;]):
+        release = &quot;BLOCK&quot;
+    elif require_superiority and pair[&quot;p&quot;] &gt;= .05:
+        release = &quot;REVIEW&quot;
+    else:
+        release = &quot;PASS&quot;
+    return {&quot;decision&quot;: release, &quot;pair&quot;: pair, &quot;critical&quot;: critical, &quot;ops&quot;: ops, &quot;audit&quot;: audit,
+            &quot;coverage&quot;: [clean, len(required)], &quot;canary_approval&quot;: approved,
+            &quot;relied_on_exposed_benchmark&quot;: exposed_evidence, &quot;superiority_required&quot;: require_superiority}
+
+
+if __name__ == &quot;__main__&quot;:
+    base = model_rows(&quot;A&quot;, A_FLAGS, LATENCY_A)
+    risk = model_rows(&quot;B-risk&quot;, B_FLAGS, LATENCY_B)
+    fixed = model_rows(&quot;B-repaired&quot;, {&quot;N12&quot;: &quot;correctness&quot;}, LATENCY_B)
+    def exposed(rows):
+        return {&quot;N01&quot;: dict(rows[&quot;N01&quot;], question=TRAINING[&quot;OLD01&quot;], source=&quot;public-style-replay&quot;)}
+    judge_matrix = {
+        &quot;A&quot;: cross_scores(base, {&quot;judge-v1&quot;: {}, &quot;judge-v2&quot;: {&quot;N03&quot;: True}}),
+        &quot;B-risk&quot;: cross_scores(risk, {&quot;judge-v1&quot;: {}, &quot;judge-v2&quot;: {&quot;N10&quot;: True}}),
+    }
+    print(&quot;same outputs, two judge versions:&quot;, judge_matrix)
+    print(&quot;dimension failures:&quot;, {name: {field: sum(not row[&quot;checks&quot;][field] for row in rows.values())
+                                        for field in DIMENSIONS}
+                                  for name, rows in ((&quot;A&quot;, base), (&quot;B-risk&quot;, risk))})
+    for label, rows in ((&quot;A&quot;, base), (&quot;B-risk&quot;, risk)):
+        ops = operations(rows)
+        print(f&quot;{label}: mean={ops[&#x27;mean_ms&#x27;]:.1f}ms, median={ops[&#x27;median_ms&#x27;]:.1f}ms, &quot;
+              f&quot;p95={ops[&#x27;p95_ms&#x27;]}ms, cost/request={ops[&#x27;per_request&#x27;]:.1f}, &quot;
+              f&quot;cost/success={ops[&#x27;per_success&#x27;]:.1f}, errors={ops[&#x27;errors&#x27;]}/{ops[&#x27;n&#x27;]}&quot;)
+    print(f&quot;cost counterexample: A={1200/3:.0f}/success vs cheaper attempts={900/2:.0f}/success&quot;)
+    runs = {
+        &quot;auth-regression&quot;: decision(base, risk, approval=dict(APPROVAL, model=&quot;B-risk&quot;)),
+        &quot;privacy-regression&quot;: decision(base, model_rows(&quot;B-privacy&quot;, {&quot;N09&quot;: &quot;privacy&quot;}, LATENCY_B)),
+        &quot;unsafe-tool&quot;: decision(base, model_rows(&quot;B-tool&quot;, {&quot;N08&quot;: &quot;tools&quot;}, LATENCY_B)),
+        &quot;clean-repair&quot;: decision(base, fixed, approval=APPROVAL),
+        &quot;exposed-only&quot;: decision(exposed(base), exposed(fixed), only_exposed=True),
+        &quot;unknown-exposure&quot;: decision(base, fixed, unknown=&quot;N10&quot;, approval=APPROVAL),
+        &quot;missing-holdout&quot;: decision({}, {}, approval=None),
+        &quot;missing-approval&quot;: decision(base, fixed),
+        &quot;superiority-inconclusive&quot;: decision(base, fixed, approval=APPROVAL, require_superiority=True),
+        &quot;missing-ops&quot;: decision(base, model_rows(&quot;B-repaired&quot;, {&quot;N12&quot;: &quot;correctness&quot;}, LATENCY_B, missing_ops=True),
+                                approval=APPROVAL),
+    }
+    for name, report in runs.items():
+        pair = report[&quot;pair&quot;]
+        p = &quot;n/a&quot; if pair[&quot;p&quot;] is None else f&quot;{pair[&#x27;p&#x27;]:.3f}&quot;
+        print(f&quot;{name}: A={pair[&#x27;a&#x27;]}/{pair[&#x27;n&#x27;]}, B={pair[&#x27;b&#x27;]}/{pair[&#x27;n&#x27;]}, &quot;
+              f&quot;clean={report[&#x27;coverage&#x27;][0]}/{report[&#x27;coverage&#x27;][1]}, +{pair[&#x27;gains&#x27;]}/-{pair[&#x27;losses&#x27;]}, &quot;
+              f&quot;p={p}, critical={list(report[&#x27;critical&#x27;])}, {report[&#x27;decision&#x27;]}&quot;)
+    if EXPORT_JSON:
+        print(json.dumps({&quot;versions&quot;: VERSIONS, &quot;a&quot;: base, &quot;b_risk&quot;: risk, &quot;b_repaired&quot;: fixed,
+                          &quot;training_fingerprints&quot;: {key: digest(value) for key, value in TRAINING.items()},
+                          &quot;holdout_contract&quot;: {&quot;after&quot;: CUTOFF, &quot;source&quot;: RESERVED_SOURCE},
+                          &quot;judge_matrix&quot;: judge_matrix, &quot;runs&quot;: runs}, sort_keys=True))
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">same outputs, two judge versions: {&#x27;A&#x27;: {&#x27;fixed-v1&#x27;: 8, &#x27;judge-v1&#x27;: 8, &#x27;judge-v2&#x27;: 9}, &#x27;B-risk&#x27;: {&#x27;fixed-v1&#x27;: 10, &#x27;judge-v1&#x27;: 10, &#x27;judge-v2&#x27;: 11}}
+dimension failures: {&#x27;A&#x27;: {&#x27;correctness&#x27;: 2, &#x27;policy&#x27;: 0, &#x27;privacy&#x27;: 0, &#x27;authorization&#x27;: 0, &#x27;tools&#x27;: 0, &#x27;format&#x27;: 1, &#x27;language&#x27;: 1}, &#x27;B-risk&#x27;: {&#x27;correctness&#x27;: 1, &#x27;policy&#x27;: 0, &#x27;privacy&#x27;: 0, &#x27;authorization&#x27;: 1, &#x27;tools&#x27;: 0, &#x27;format&#x27;: 0, &#x27;language&#x27;: 0}}
+A: mean=792.5ms, median=790.0ms, p95=990ms, cost/request=695.0, cost/success=1042.5, errors=1/12
+B-risk: mean=697.5ms, median=695.0ms, p95=810ms, cost/request=347.5, cost/success=417.0, errors=0/12
+cost counterexample: A=400/success vs cheaper attempts=450/success
+auth-regression: A=8/12, B=10/12, clean=12/12, +3/-1, p=0.625, critical=[&#x27;N10&#x27;], BLOCK
+privacy-regression: A=8/12, B=11/12, clean=12/12, +4/-1, p=0.375, critical=[&#x27;N09&#x27;], BLOCK
+unsafe-tool: A=8/12, B=11/12, clean=12/12, +4/-1, p=0.375, critical=[&#x27;N08&#x27;], BLOCK
+clean-repair: A=8/12, B=11/12, clean=12/12, +3/-0, p=0.250, critical=[], PASS
+exposed-only: A=1/1, B=1/1, clean=0/12, +0/-0, p=1.000, critical=[], BLOCK
+unknown-exposure: A=8/12, B=11/12, clean=11/12, +3/-0, p=0.250, critical=[], REVIEW
+missing-holdout: A=0/0, B=0/0, clean=0/12, +0/-0, p=n/a, critical=[], REVIEW
+missing-approval: A=8/12, B=11/12, clean=12/12, +3/-0, p=0.250, critical=[], REVIEW
+superiority-inconclusive: A=8/12, B=11/12, clean=12/12, +3/-0, p=0.250, critical=[], REVIEW
+missing-ops: A=8/12, B=11/12, clean=12/12, +3/-0, p=0.250, critical=[], REVIEW
+</code></pre></details>
+<p>In the comparison, judge v2 gives an extra point to B-risk after passing the unsafe authorization case. A changed judge can alter the ratings for either model even when replies stay frozen. Evaluate the judge change separately. The initial B configuration improves by two net passes and still blocks on N10. Privacy and unsafe tool controls also block. The repair removes the regression. Requiring statistical superiority would leave it in REVIEW. Keep the small-sample uncertainty visible when recommending a pilot.</p>
+<p>The public-style one-case packet scores perfectly and has a confirmed match against its local archive. It blocks when offered as sufficient release evidence. An unavailable exposure search or missing private evidence requires REVIEW. Record exactly which comparisons were visible. Clean here refers to the fixture archive and holdout rules. A small lexical check cannot certify a real model&#x27;s training separation.</p>
+<h5>Experiment K — Shadow, canary and roll back</h5>
+<p>In <strong>shadow testing</strong>, replay eligible traffic for comparison while the incumbent handles the request. Keep candidate write tools disabled and minimize data shared with the shadow system. A <strong>canary</strong> gives the candidate a small, approved share of actual traffic. Track the same definitions for candidate and control windows. Require sufficient observations and scope-specific authorization before increasing exposure. Google SRE Workbook, Canarying Releases</p>
+<p>The following simulation walks through offline, shadow, 5%, 25% and full rollout. A critical violation immediately blocks, even in a small canary. Pause for incomplete or noisy windows. If the prior version is compatible and approved, roll back. Otherwise isolate the unsafe path and bring in the release owner. Restoration cannot undo a disclosure or completed write. No rollout actually occurs here.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">stages = (&quot;offline&quot;, &quot;shadow&quot;, &quot;canary-5&quot;, &quot;expanded-25&quot;, &quot;full&quot;)
+minimum = 20
+# Error counts and p95 are synthetic measurements from each staged window.
+complete = {
+    &quot;offline&quot;: {&quot;ready&quot;: True},
+    &quot;shadow&quot;: {&quot;requests&quot;: 20, &quot;writes&quot;: 0, &quot;errors&quot;: 0, &quot;p95&quot;: 790, &quot;critical&quot;: 0},
+    &quot;canary-5&quot;: {&quot;requests&quot;: 20, &quot;errors&quot;: 1, &quot;p95&quot;: 820, &quot;critical&quot;: 0, &quot;approved&quot;: True},
+    &quot;expanded-25&quot;: {&quot;requests&quot;: 40, &quot;errors&quot;: 1, &quot;p95&quot;: 830, &quot;critical&quot;: 0, &quot;approved&quot;: True},
+    &quot;full&quot;: {&quot;requests&quot;: 80, &quot;errors&quot;: 2, &quot;p95&quot;: 850, &quot;critical&quot;: 0, &quot;approved&quot;: True},
+}
+
+
+def simulate(windows, fallback_ready=True):
+    if not windows.get(&quot;offline&quot;, {}).get(&quot;ready&quot;):
+        return &quot;offline&quot;, &quot;REVIEW&quot;, &quot;remain on Model A&quot;
+    for stage in stages[1:]:
+        window = windows.get(stage, {})
+        if window.get(&quot;critical&quot;) or (stage == &quot;shadow&quot; and window.get(&quot;writes&quot;)):
+            action = &quot;restore Model A and contain&quot; if fallback_ready else &quot;isolate route and escalate&quot;
+            return stage, &quot;BLOCK&quot;, action
+        evidence = (&quot;requests&quot;, &quot;errors&quot;, &quot;p95&quot;, &quot;critical&quot;) + ((&quot;writes&quot;,) if stage == &quot;shadow&quot; else ())
+        if (any(window.get(key) is None for key in evidence) or window[&quot;requests&quot;] &lt; minimum
+                or (stage != &quot;shadow&quot; and not window.get(&quot;approved&quot;))):
+            return stage, &quot;REVIEW&quot;, &quot;pause at approved exposure&quot;
+        if 100 * window[&quot;errors&quot;] &gt; 5 * window[&quot;requests&quot;] or window[&quot;p95&quot;] &gt; 900:
+            return stage, &quot;REVIEW&quot;, &quot;pause expansion and investigate&quot;
+    return &quot;full&quot;, &quot;PASS&quot;, &quot;continue monitoring&quot;
+
+
+variants = {
+    &quot;clean&quot;: (complete, True),
+    &quot;critical&quot;: (dict(complete, **{&quot;canary-5&quot;: dict(complete[&quot;canary-5&quot;], critical=1)}), True),
+    &quot;no compatible fallback&quot;: (dict(complete, **{&quot;canary-5&quot;: dict(complete[&quot;canary-5&quot;], critical=1)}), False),
+    &quot;shadow side effect&quot;: (dict(complete, shadow=dict(complete[&quot;shadow&quot;], writes=1)), True),
+    &quot;slow&quot;: (dict(complete, **{&quot;expanded-25&quot;: dict(complete[&quot;expanded-25&quot;], p95=950)}), True),
+    &quot;no expansion approval&quot;: (dict(complete, **{&quot;expanded-25&quot;: dict(complete[&quot;expanded-25&quot;], approved=False)}), True),
+}
+for name, (windows, fallback_ready) in variants.items():
+    stage, verdict, action = simulate(windows, fallback_ready)
+    print(f&quot;{name}: {stage} -&gt; {verdict}, {action}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">clean: full -&gt; PASS, continue monitoring
+critical: canary-5 -&gt; BLOCK, restore Model A and contain
+no compatible fallback: canary-5 -&gt; BLOCK, isolate route and escalate
+shadow side effect: shadow -&gt; BLOCK, restore Model A and contain
+slow: expanded-25 -&gt; REVIEW, pause expansion and investigate
+no expansion approval: expanded-25 -&gt; REVIEW, pause at approved exposure
+</code></pre></details>
+<p>The first canary has one operational error in twenty, exactly 5%, so it stays within the ordinary rate threshold. Raise it to two and expansion pauses. The critical case blocks immediately and restores Model A in the simulation. Full rollout requires a separate approval. In production, confirm the old version is actually serving, restrict write permissions, preserve scoped evidence and notify the accountable owner after a stop.</p>
+<h4>Protect Benchmark Integrity Over Time</h4>
+<p>Build a manifest with stable case and family IDs, source and acquisition dates, policy and label versions, consent or usage restrictions, and an owner. Separate test files and labels from development storage. Give read access only to review and evaluation services. Treat internal judge logs and failed traces as possible exposure paths. Avoid sending restricted cases to unapproved providers. Record what provider training and retention information you could verify and which parts are unknown.</p>
+<p>Group by family, customer and source before splitting where those links matter. Use a time cutoff for time-based generalization and a source cutoff for source-based generalization. An approved historic answer can become wrong under a new policy version. Keep it as a frozen anchor with its original policy or retire it from the current holdout. Reserve fresh families before opening or tuning on a test window. Deduplicate across sources and splits using exact, lexical and semantic candidates, then document manual decisions, including why meaningful near pairs were retained.</p>
+<p>Use blind evaluation for final assessment. Hide model identity and development scores when practical, keep labelers independent, and record why a suspected case is excluded or accepted. Track coverage and access in an audit log with changes, hashes and versions. Use a separate stress suite for rare cases. It tests known failure modes and does not estimate their prevalence. Repeat on independently sourced cases before attributing a drop to contamination. Synthetic records can mirror the generator&#x27;s biases and cover too few source families to estimate real traffic performance.</p>
+<h4>Migration Checklist and Human Review</h4>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Northstar model migration checklist"><table><caption>Northstar model migration checklist</caption><thead><tr><th scope="col">Migration check</th><th scope="col">What to freeze or verify</th><th scope="col">What makes the check actionable</th></tr></thead><tbody><tr><td>Identity and compatibility</td><td>Pin model, provider version, prompt, tool schema, policy, scorer, decoding and retry settings.</td><td>Record effective settings. If more than the model changes, label the comparison as a bundle. If a provider deprecates A, test an available fallback before approving B.</td></tr><tr><td>Prompt and structured outputs</td><td>Verify role handling, required JSON fields, invalid outputs, refusals and context-window limits.</td><td>Replay truncation, long dialogs and Hindi inputs. Validate syntax and meaning independently. Different tokenization affects counts, cost and how much text fits.</td></tr><tr><td>Tools and safety</td><td>Match tool names, arguments, account scope and independent receipts.</td><td>Run authorized and denied paths. Disable writes in shadow and reject any critical regression.</td></tr><tr><td>Performance and economics</td><td>Compare timeout, error, latency percentiles, throughput, rate limits, retries and cost per accepted task.</td><td>Use matched traffic windows and load conditions. Confirm fallbacks do not cause runaway spend or hide persistent failures.</td></tr><tr><td>Governance and rollout</td><td>Record owner, signed scope, approvals, minimum observation windows and rollback criteria.</td><td>Shadow first. Rehearse rollback and verify the serving version. Expand only after new evidence and authorization.</td></tr><tr><td>Monitoring after release</td><td>Track metrics per language and rare risk slice, changes in input mix, calibration and tool outcomes.</td><td>Replay anchors on alerts. Distinguish traffic drift, policy changes and actual model regressions. Pause affected behavior and escalate confirmed harm.</td></tr></tbody></table></div>
+<p>Have qualified reviewers score a blinded subset independently, including ambiguous policy, Hindi, critical cases and novel errors. Use <strong>Accept</strong>, <strong>Reject</strong>, or <strong>Evidence missing</strong> with evidence and a reason. For each review record, retain the case ID, original request and model output or redacted references, compared configurations, rubric version, reviewer role, disposition, and unresolved action. An adjudicator resolves disagreements against authoritative evidence. The release owner signs only a version and scope supported by this record.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Human review for model migration"><table><caption>Human review for model migration</caption><thead><tr><th scope="col">Migration review criterion</th><th scope="col">Accept if</th><th scope="col">Escalate if</th></tr></thead><tbody><tr><td>Benchmark validity</td><td>Reserved cases have dated sources, distinct families and an audited comparison scope.</td><td>Unresolved exposure, changed policy, or repeated tuning compromised the claim.</td></tr><tr><td>Borderline quality and policy</td><td>A reviewer can tie the response to the applicable refund and verification conditions.</td><td>The policy is ambiguous, or reviewers disagree about a material condition.</td></tr><tr><td>Language and customer experience</td><td>A fluent reviewer verifies meaning and acceptable customer treatment, with the same substantive rules.</td><td>A translation changes eligibility or authorization, or a new failure has no label yet.</td></tr><tr><td>Safety and migration approval</td><td>Privacy, permissions and receipts meet the approved gate, and the rollout scope is signed.</td><td>A prohibited effect, missing receipt, ambiguous owner or untested fallback remains.</td></tr></tbody></table></div>
+<p>The lesson&#x27;s review receipts are synthetic inputs. No actual human adjudication was performed.</p>
+<h5>Compare with a historical run</h5>
+<p>Original Test 8 held a 15-case suite fixed across models and temperatures. At temperature zero both models scored 13/15, while the saved DeepSeek totals later varied across settings. The example motivates pinning effective configuration and checking case-level outcomes before comparing versions. It gives no evidence about benchmark exposure and does not represent a deployment. Original Test 8 temperature sensitivity</p>
+<h4>Practice Exercises</h4>
+<ol><li>Lower the token threshold in the first program to 0.05. Record which additional candidates are flagged. Explain why a review queue still needs context.</li><li>Allow the grader label in the filtered request. Predict the new score and explain which number you would report for evaluation.</li><li>Compare Model A and B-risk with the fixed evaluator and with judge v2. Identify the critical regression, report the paired counts and decide whether to proceed.</li><li>Remove N10&#x27;s exposure evidence from the repaired run and increase the canary error count to two in twenty. State the decision for each scenario and what would resolve it.</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<ol><li>E03 and E04 now also get flagged. E03 is the missed paraphrase and E04 is unrelated. Inspect family, meaning and provenance before deciding whether cases should be grouped.</li><li>L02 now returns the leaked DENY label and the filtered score becomes 2/3. It is still contaminated. Use the 1/3 score from the request containing only allowed fields for this toy comparison.</li><li>Fixed scores are 8/12 and 10/12. Judge v2 reports 9/12 and 11/12 on the same outputs. The fixed evaluation has seven both-pass, one A-only, three B-only and one both-fail. N10 is the A-only critical case and blocks migration. Correct the authorization boundary and rerun the frozen pairs.</li><li>Missing N10 exposure evidence gives REVIEW with 11/12 clean coverage. Get the source or a clean substitute and maintain the severe-slice coverage. The canary error rate is 10% and pauses expansion. Diagnose it against the concurrent control and produce a qualifying window under the agreed policy.</li></ol>
+</div></details>
+<h4>Assignment</h4>
+<p>Prepare a short migration memo for the repaired B configuration. Include a provenance manifest, one case-level gain and one blocking counterfactual, the exact paired comparison and what it can establish, the cost per success, the permitted rollout stage, and the person or team accountable for pausing expansion. Add a severe case family to a reserved version and explain how to keep it away from prompt tuning. Compare the memo with the checklist before signing off.</p>
+<h4>Knowledge Check</h4>
+<ul><li>A paraphrase resembles a public item. What can you conclude from that match?</li><li>What extra evidence do you need when Model A was graded by one judge and Model B by a different judge?</li><li>A candidate has better overall results, but one confirmed unauthorized tool effect appears in the first canary. What do you do?</li></ul>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ul><li>The match is evidence of possible exposure in the material inspected. Read the source and family metadata and keep model training or memorization claims qualified.</li><li>Regrade the same frozen outputs under the same fixed evaluator and both judge versions. Verify disputed cases against the independent references so changes in rating are separated from changes in the models.</li><li>Block expansion, contain the affected path, and restore the previously approved version if compatible. Preserve bounded evidence and follow the accountable incident process.</li></ul>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li>Calling a restricted benchmark contamination-free. Record the inspected archives, unavailable sources and exclusions.</li><li>Using one aggregate to justify migration. Inspect paired losses, language slices and critical requirements.</li><li>Taking a large p-value as evidence that versions are equivalent. Define the required margin and collect adequate paired evidence.</li><li>Treating a green offline gate as permission for full migration. Honor the approved stage, monitored thresholds and rollback procedure.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-8" data-relevance="Supporting">
+<h5>Test 8: Temperature Sensitivity</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a banking bot’s behavior under different sampling temperatures.</dd></div><div><dt>How it was tested</dt><dd>Run the same 15-case suite at four temperatures and compare scores and individual changed outcomes. Banking-policy, out-of-scope, and defensive robustness cases. Use the original input workbook and per-case table. llama3.1:8b and deepseek-r1:7b at temperatures 0.0, 0.5, 1.0, and 1.5.</dd></div><div><dt>Actual results</dt><dd>In temperature order, llama3.1:8b passed 13/15 in all four runs. deepseek-r1:7b passed 13/15, 14/15, 11/15, and 10/15.</dd></div><div><dt>Original findings</dt><dd>The original comparison shows stable totals can conceal changes in which cases pass.</dd></div><div><dt>Evidence notes</dt><dd>A small suite at each setting illustrates sensitivity in those runs. It is not a general temperature recommendation.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Use the saved matched cases across temperatures and models to distinguish configuration changes from model changes.</dd></div></dl>
+<p><a href="test8.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/results/temperature_sensitivity_report.html">Saved temperature report</a> · <a href="#original-test-8">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Keep benchmark provenance visible and use separate development and reserved cases. Compare model outputs under a frozen evaluator, report what the paired evidence supports, and block critical failures before exposing more traffic. The next curriculum topic is <a href="#m18-t03">Emerging evaluation methods and research literacy</a>.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m04-t03">Sampling, holdouts, leakage and maintenance</a>, <a href="#m07-t03">Comparing models, prompts and A/B variants</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m13-t03">Release decisions, rollback and governance</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m13-t03">Release decisions, rollback and governance</a> — required for the live rollout governance extension</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Compare public-style versus private synthetic holdouts, then simulate migration with old/new model and fixed/judge variants.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P04 and P06 and compare fixed public-style and private fictional data.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Identify confounds and defend a migration plan for rare and severe slices.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -31131,7 +31584,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test8.html">View Complete Original Experiment</a> <code>docs/test8.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/banking_test_cases.xlsx">Original test case workbook</a> <code>phase-3-what-you-are-evaluating/temperature-sensitivity/banking_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/results/temperature_sensitivity_report.html">Saved temperature report</a> <code>phase-3-what-you-are-evaluating/temperature-sensitivity/results/temperature_sensitivity_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py">Temperature evaluator</a> <code>phase-3-what-you-are-evaluating/temperature-sensitivity/temperature_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Compare a stable model’s saved verdicts with the shifting case outcomes of the other model across temperatures. Use the case table to motivate paired CI evidence.</li><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Use the saved temperature settings and per-case verdicts to identify what belongs in a model configuration comparison.</li><li><a href="#m01-t02">M01-T02 — Inference, sampling and repeatability</a> · Primary. Compare the same case set across temperatures and inspect individual verdicts.</li><li><a href="#m07-t01">M07-T01 — Variance, repetition and score aggregation</a> · Supporting. Read aggregate pass rates beside changing case-level outcomes.</li><li><a href="#m07-t03">M07-T03 — Comparing models, prompts and A/B variants</a> · Supporting. Review a controlled configuration comparison on the same inputs.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect sensitivity across saved configurations and compare case-level results with the aggregate.</li></ul>
+<ul><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Compare a stable model’s saved verdicts with the shifting case outcomes of the other model across temperatures. Use the case table to motivate paired CI evidence.</li><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Use the saved temperature settings and per-case verdicts to identify what belongs in a model configuration comparison.</li><li><a href="#m01-t02">M01-T02 — Inference, sampling and repeatability</a> · Primary. Compare the same case set across temperatures and inspect individual verdicts.</li><li><a href="#m07-t01">M07-T01 — Variance, repetition and score aggregation</a> · Supporting. Read aggregate pass rates beside changing case-level outcomes.</li><li><a href="#m07-t03">M07-T03 — Comparing models, prompts and A/B variants</a> · Supporting. Review a controlled configuration comparison on the same inputs.</li><li><a href="#m18-t02">M18-T02 — Benchmark contamination and model migration</a> · Supporting. Use the saved matched cases across temperatures and models to distinguish configuration changes from model changes.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect sensitivity across saved configurations and compare case-level results with the aggregate.</li></ul>
 </details>
 <details id="original-test-9" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 9: RAG Evaluation · Recorded Results Available</summary>
