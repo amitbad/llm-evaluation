@@ -9,8 +9,11 @@ const {authoredLessonIds} = require("./lesson_test_data.cjs");
 const read = path => readFileSync(resolve(__dirname, "..", path), "utf8");
 const script = read("docs/assets/lesson-reader.js");
 const html = read("docs/master-curriculum.html");
-const controls = ["section", "start", "pause", "stop", "speed", "status", "voice", "preview", "use-voice", "voice-info"];
+const controls = ["section", "start", "pause", "stop", "speed", "status", "voice", "preview", "use-voice", "voice-info", "tracking"];
 const preferenceKey = "testneural-academy-reading";
+const voiceChoice = voice => voice.name.toLowerCase() + "|" + voice.lang.toLowerCase();
+const longPassage = Array.from({length: 40}, (_, i) =>
+  `Sentence ${i + 1} explains a complete idea without stopping midway through the example.`).join(" ");
 const systemVoice = (name, lang, extra = {}) => ({name, lang, voiceURI: name, localService: true, ...extra});
 
 class Element extends EventTarget {
@@ -143,7 +146,7 @@ function holder(mark) {
   return view;
 }
 
-function fixture({available = true, legacy = false, storage = new Map(), voices = []} = {}) {
+function fixture({available = true, legacy = false, storage = new Map(), voices = [], highlights = true, boundaryRect} = {}) {
   const document = node("document");
   const window = new EventTarget();
   const wide = Object.assign(new EventTarget(), {matches: true});
@@ -162,6 +165,22 @@ function fixture({available = true, legacy = false, storage = new Map(), voices 
     window.SpeechSynthesisUtterance = Utterance;
   }
   document.createElement = tag => node(tag);
+  const registry = new Map();
+  const scrolls = [];
+  if (highlights) {
+    window.CSS = {highlights: registry};
+    // Model the native range's point pairs and geometry without modifying the text tree.
+    window.Highlight = class {
+      constructor(range) { this.range = range; }
+    };
+    document.createRange = () => ({
+      setStart(text, offset) { this.start = {text, offset}; },
+      setEnd(text, offset) { this.end = {text, offset}; },
+      getBoundingClientRect() { return boundaryRect?.(this) ?? {top: 220, bottom: 244, height: 24}; },
+    });
+  }
+  window.innerHeight = 800;
+  window.scrollBy = options => scrolls.push(options);
   const begin = node(legacy ? "h2" : "h4", "Introduction");
   const paragraph = node("p", "A question about the approved policy.");
   const exercises = node(legacy ? "h2" : "h4", "Exercises");
@@ -203,7 +222,7 @@ function fixture({available = true, legacy = false, storage = new Map(), voices 
   }
   const ui = view => Object.fromEntries(controls.map(key => [key, view.querySelector("[data-reading-" + key + "]")]));
   return {document, window, speaking, begin, paragraph, exercises, instruction, material, guided,
-    complete, second, secondMaterial, oldTopic, newTopic, panel, subtitle, event, load, ui,
+    complete, second, secondMaterial, oldTopic, newTopic, panel, subtitle, event, load, ui, registry, scrolls,
     resize: matches => {
       wide.matches = matches;
       wide.dispatchEvent(new Event("change"));
@@ -301,13 +320,13 @@ test("stops and resets and disregards end or error callbacks from older sessions
 
 test("restarts the current paragraph at the new speed and keeps a paused session paused", () => {
   const f = fixture();
-  f.paragraph.textContent = "Practice this idea. ".repeat(18).trim();
+  f.paragraph.textContent = longPassage;
   f.load();
   const {start, speed, pause, status} = f.ui(f.complete);
   click(start);
   f.speaking.finish();
   const first = f.speaking.current.text;
-  assert(first.length <= 220);
+  assert(first.length > 220 && first.length <= 1200);
   f.speaking.finish();
   assert.notEqual(f.speaking.current.text, first);
   speed.value = "1.5";
@@ -412,66 +431,73 @@ test("recovers from an active speech error and uses a later system English voice
   reading(f.begin, false);
   assert.match(status.textContent, /could not continue/);
   const voice = systemVoice("UK English", "en-GB", {default: true});
-  f.speaking.voices = [systemVoice("US English", "en-US", {localService: false, default: true}), voice];
+  f.speaking.voices = [systemVoice("US English", "en-US"), voice];
   f.speaking.dispatchEvent(new Event("voiceschanged"));
+  const ui = f.ui(f.complete);
+  assert(ui.voice.disabled);
+  assert.match(ui["voice-info"].textContent, /No approved voices/);
   click(start);
   assert.equal(f.speaking.current.voice, voice);
   assert.equal(f.speaking.current.lang, "en-GB");
 });
 
-test("groups every distinct browser English voice, without limiting the list to five", () => {
+test("only the seven exact approved name and locale pairs are shown in configured order", () => {
   const voices = [
-    systemVoice("India regular", "en-IN"),
-    systemVoice("India Natural", "en-IN"),
-    systemVoice("India Premium", "en-IN"),
-    systemVoice("India Natural", "en-IN"),
-    systemVoice("US regular", "en-US"),
-    systemVoice("US Neural", "en-US", {localService: false}),
-    systemVoice("UK regular", "en-GB"),
-    systemVoice("UK Enhanced", "en-GB"),
-    systemVoice("Canadian English", "en-CA", {voiceURI: ""}),
-    systemVoice("Canadian English", "en-CA", {voiceURI: ""}),
-    systemVoice("Irish English", "en-IE"),
-    systemVoice("French Natural", "fr-FR"),
+    systemVoice("Tessa", "en-ZA"),
+    systemVoice("Daniel Enhanced", "en-GB"),
+    systemVoice("Google UK English Male", "en-GB"),
+    systemVoice("Karen", "en-AU"),
+    systemVoice("karen", "EN_au", {voiceURI: "another-karen"}),
+    systemVoice("Google UK English Female", "en-GB"),
+    systemVoice("Daniel", "en-GB"),
+    systemVoice("Google_US-English", "EN_US"),
+    systemVoice(" Samantha ", "En_us"),
+    systemVoice("Samantha", "en-GB"),
+    systemVoice("Google US English Female", "en-US"),
+    systemVoice("Tessa", "en-ZA-x-custom"),
   ];
   const f = fixture({voices});
   f.load();
-  const list = f.ui(f.complete).voice;
-  assert.deepEqual(list.childNodes.map(group => [group.tagName, group.label, group.childNodes.map(option => option.textContent)]), [
-    ["OPTGROUP", "English (India)", ["India Natural · en-IN", "India Premium · en-IN", "India regular · en-IN"]],
-    ["OPTGROUP", "English (US)", ["US Neural · en-US", "US regular · en-US"]],
-    ["OPTGROUP", "English (UK)", ["UK Enhanced · en-GB", "UK regular · en-GB"]],
-    ["OPTGROUP", "Other English", ["Canadian English · en-CA", "Irish English · en-IE"]],
+  const ui = f.ui(f.complete);
+  assert.deepEqual(ui.voice.childNodes.map(option => option.textContent), [
+    "Samantha · en-US", "Google US English · en-US", "Daniel · en-GB",
+    "Google UK English Female · en-GB", "Google UK English Male · en-GB", "Karen · en-AU", "Tessa · en-ZA",
   ]);
-  assert.equal(list.disabled, false);
+  assert.equal(ui.voice.value, "samantha|en-us");
+  click(ui.start);
+  assert.equal(f.speaking.current.voice, voices[8]);
 });
 
-test("prefers quality hints before accent and favors India among comparably ranked voices", () => {
-  const india = systemVoice("India regular", "en-IN");
-  const us = systemVoice("US Neural", "en-US");
-  const f = fixture({voices: [india, us]});
+test("late-loading voices use the first available approval and preserve the in-flight choice", () => {
+  const f = fixture();
   f.load();
   const ui = f.ui(f.complete);
-  assert.equal(ui.voice.value, us.voiceURI);
-  const enhanced = systemVoice("India Enhanced", "en-IN");
-  f.speaking.voices = [india, us, enhanced];
+  const daniel = systemVoice("Daniel", "en-GB");
+  const google = systemVoice("Google US English", "en-US");
+  const samantha = systemVoice("Samantha", "en-US");
+  assert(ui.voice.disabled);
+  f.speaking.voices = [daniel, google];
   f.speaking.dispatchEvent(new Event("voiceschanged"));
-  assert.equal(ui.voice.value, enhanced.voiceURI);
-  f.speaking.voices = [india];
+  assert.equal(ui.voice.value, voiceChoice(google));
+  click(ui.start);
+  f.speaking.voices = [daniel, google, samantha];
   f.speaking.dispatchEvent(new Event("voiceschanged"));
-  assert.equal(ui.voice.value, india.voiceURI);
-  assert.deepEqual(ui.voice.childNodes.map(group => group.label), ["English (India)"]);
-  assert.match(ui["voice-info"].textContent, /Only basic system voices appear/);
+  assert.equal(ui.voice.value, voiceChoice(samantha));
+  f.speaking.finish();
+  assert.equal(f.speaking.current.voice, google);
+  click(ui.stop);
+  click(ui.start);
+  assert.equal(f.speaking.current.voice, samantha);
 });
 
 test("previews a different voice without saving it, highlighting it or interrupting narration", () => {
-  const readingVoice = systemVoice("India Enhanced", "en-IN");
-  const candidate = systemVoice("UK Natural", "en-GB");
+  const readingVoice = systemVoice("Samantha", "en-US");
+  const candidate = systemVoice("Daniel", "en-GB");
   const storage = new Map([[preferenceKey, JSON.stringify({voice: readingVoice.voiceURI, speed: "1"})]]);
   const f = fixture({voices: [readingVoice, candidate], storage});
   f.load();
   const {voice, preview, pause, stop, start, status, "voice-info": voiceInfo} = f.ui(f.complete);
-  voice.value = candidate.voiceURI;
+  voice.value = voiceChoice(candidate);
   change(voice);
   assert.match(voiceInfo.textContent, /Choose Use Voice/);
   assert.equal(f.speaking.current, null);
@@ -508,10 +534,10 @@ test("previews a different voice without saving it, highlighting it or interrupt
 });
 
 test("voice changes restart only the current paragraph and leave paused narration paused", () => {
-  const india = systemVoice("India Natural", "en-IN", {default: true});
-  const britain = systemVoice("UK Natural", "en-GB");
+  const india = systemVoice("Samantha", "en-US", {default: true});
+  const britain = systemVoice("Daniel", "en-GB");
   const f = fixture({voices: [india, britain]});
-  f.paragraph.textContent = "Practice this idea. ".repeat(18).trim();
+  f.paragraph.textContent = longPassage;
   f.load();
   const ui = f.ui(f.complete);
   click(ui.start);
@@ -520,7 +546,7 @@ test("voice changes restart only the current paragraph and leave paused narratio
   f.speaking.finish();
   assert.notEqual(f.speaking.current.text, firstChunk);
   const cancelled = f.speaking.current;
-  ui.voice.value = britain.voiceURI;
+  ui.voice.value = voiceChoice(britain);
   change(ui.voice);
   assert.equal(f.speaking.current, cancelled);
   click(ui["use-voice"]);
@@ -530,7 +556,7 @@ test("voice changes restart only the current paragraph and leave paused narratio
   assert.equal(f.speaking.current.text, firstChunk);
   reading(f.paragraph);
   click(ui.pause);
-  ui.voice.value = india.voiceURI;
+  ui.voice.value = voiceChoice(india);
   change(ui.voice);
   click(ui["use-voice"]);
   assert.equal(f.speaking.current, null);
@@ -542,34 +568,34 @@ test("voice changes restart only the current paragraph and leave paused narratio
 
 test("persists voice and speed, uses an available fallback, and restores the saved voice when it appears", () => {
   const storage = new Map();
-  const india = systemVoice("India Natural", "en-IN", {default: true});
-  const britain = systemVoice("UK Neural", "en-GB");
+  const india = systemVoice("Samantha", "en-US", {default: true});
+  const britain = systemVoice("Daniel", "en-GB");
   const f = fixture({storage, voices: [india, britain]});
   f.load();
   const ui = f.ui(f.complete);
-  ui.voice.value = britain.voiceURI;
+  ui.voice.value = voiceChoice(britain);
   change(ui.voice);
   click(ui["use-voice"]);
   ui.speed.value = "1.25";
   change(ui.speed);
-  assert.deepEqual(JSON.parse(storage.get(preferenceKey)), {voice: britain.voiceURI, speed: "1.25"});
-  assert.equal(f.ui(f.guided).voice.value, britain.voiceURI);
+  assert.deepEqual(JSON.parse(storage.get(preferenceKey)), {voice: voiceChoice(britain), speed: "1.25"});
+  assert.equal(f.ui(f.guided).voice.value, voiceChoice(britain));
   assert.equal(f.ui(f.guided).speed.value, "1.25");
 
   const reloaded = fixture({storage, voices: [india]});
   reloaded.load();
   const next = reloaded.ui(reloaded.complete);
-  assert.equal(next.voice.value, india.voiceURI);
+  assert.equal(next.voice.value, voiceChoice(india));
   assert.match(next["voice-info"].textContent, /saved voice is unavailable/);
   assert.equal(next.speed.value, "1.25");
-  assert.equal(JSON.parse(storage.get(preferenceKey)).voice, britain.voiceURI);
+  assert.equal(JSON.parse(storage.get(preferenceKey)).voice, voiceChoice(britain));
   click(next.preview);
   assert.equal(reloaded.speaking.current.voice, india);
   assert.equal(reloaded.speaking.current.rate, 1.25);
   reloaded.speaking.finish();
   reloaded.speaking.voices = [india, britain];
   reloaded.speaking.dispatchEvent(new Event("voiceschanged"));
-  assert.equal(next.voice.value, britain.voiceURI);
+  assert.equal(next.voice.value, voiceChoice(britain));
   assert.doesNotMatch(next["voice-info"].textContent, /saved voice is unavailable/);
   click(next.start);
   assert.equal(reloaded.speaking.current.voice, britain);
@@ -585,7 +611,7 @@ test("keeps Read Aloud usable with an empty English voice list and unavailable s
   speed.value = "0.75";
   change(speed);
   click(start);
-  assert.equal(f.speaking.current.lang, "en");
+  assert.equal(f.speaking.current.lang, "en-US");
   assert.equal(f.speaking.current.voice, undefined);
   assert.equal(f.speaking.current.rate, 0.75);
 });
@@ -637,4 +663,155 @@ test("generator includes the shared reader for the standalone curriculum and all
   for (const file of readdirSync(resolve(__dirname, "../docs")).filter(name => /^test\d+\.html$/.test(name))) {
     assert.match(read("docs/" + file), /<script src="assets\/lesson-reader.js" defer><\/script>/, file);
   }
+});
+
+test("long paragraphs keep complete sentences, punctuation, and every word in order", () => {
+  const f = fixture();
+  const continuous = "This is one long sentence " + "with enough useful words to fill the paragraph ".repeat(35) + "and a full stop.";
+  const second = node("p", longPassage);
+  f.paragraph.textContent = continuous;
+  f.exercises.after(second);
+  f.load();
+  click(f.ui(f.complete).start);
+  f.speaking.finish();
+  assert.equal(f.speaking.current.text, continuous, "even a long sentence stays intact");
+  f.speaking.finish();
+  assert.equal(f.speaking.current.text, "Exercises");
+  f.speaking.finish();
+  const chunks = [];
+  while (f.speaking.current?.text.startsWith("Sentence ")) {
+    chunks.push(f.speaking.current.text);
+    f.speaking.finish();
+  }
+  assert(chunks.length > 1);
+  assert(chunks.every(text => text.endsWith(".") && text.length <= 1200));
+  assert.equal(chunks.join(" "), longPassage);
+  assert.deepEqual(finishAll(f.speaking), ["Try the example."]);
+  assert(f.speaking.calls.every(([action]) => action === "speak"), "no timers, cancels or resumes are needed between utterances");
+});
+
+test("word ranges preserve links, emphasis, inline code, repeated text and newlines", () => {
+  const f = fixture();
+  const link = node("a", "word");
+  const emphasis = node("strong", "part");
+  const inline = node("code", "print()");
+  let clicked = 0;
+  link.addEventListener("click", () => clicked++);
+  f.paragraph.replaceChildren();
+  f.paragraph.append("  “word”,\n  ", link, node("br"), emphasis, "ial ", inline, " ₹5,000.");
+  const children = [...f.paragraph.childNodes];
+  f.load();
+  const ui = f.ui(f.complete);
+  click(ui.start);
+  f.speaking.finish();
+  const speech = f.speaking.current;
+  const activeRange = () => f.registry.get("academy-reading-word").range;
+  assert.equal(speech.text, "“word”, word partial print() ₹5,000.");
+  speech.onboundary({name: "word", charIndex: 0, charLength: 6});
+  assert.equal(activeRange().start.text, children[0]);
+  assert.equal(activeRange().start.offset, 3);
+  assert.equal(activeRange().end.offset, 7);
+  reading(f.paragraph, false);
+  speech.onboundary({name: "word", charIndex: speech.text.indexOf(",")});
+  assert.equal(activeRange().start.text, children[0], "punctuation without a word span leaves the last word in place");
+  speech.onboundary({name: "word", charIndex: speech.text.lastIndexOf("word"), charLength: 0});
+  assert.equal(activeRange().start.text, link.childNodes[0]);
+  assert.equal(activeRange().end.offset, 4);
+  speech.onboundary({name: "word", charIndex: speech.text.indexOf("partial"), charLength: 500});
+  assert.equal(activeRange().start.text, emphasis.childNodes[0]);
+  assert.equal(activeRange().end.text, children[4]);
+  assert.equal(activeRange().end.offset, 3);
+  speech.onboundary({name: "word", charIndex: speech.text.indexOf("print")});
+  assert.equal(activeRange().start.text, inline.childNodes[0]);
+  assert.equal(activeRange().end.offset, 5);
+  speech.onboundary({charIndex: speech.text.indexOf("5,000")});
+  assert.equal(activeRange().end.offset - activeRange().start.offset, 5);
+  assert.deepEqual(f.paragraph.childNodes, children);
+  link.dispatchEvent(new Event("click"));
+  assert.equal(clicked, 1);
+  assert.equal(f.scrolls.length, 0);
+  assert.match(ui.tracking.textContent, /Word highlight follows speech/);
+  finishAll(f.speaking);
+  assert.equal(f.registry.size, 0);
+  assert.equal(ui.tracking.textContent, "");
+});
+
+test("chunk-relative speech indices still map into the original long paragraph", () => {
+  const f = fixture();
+  f.paragraph.textContent = longPassage;
+  f.load();
+  click(f.ui(f.complete).start);
+  f.speaking.finish();
+  f.speaking.finish();
+  const utterance = f.speaking.current;
+  const offset = longPassage.indexOf(utterance.text);
+  assert(offset > 0);
+  utterance.onboundary({name: "word", charIndex: 0});
+  const range = f.registry.get("academy-reading-word").range;
+  assert.equal(range.start.offset, offset);
+  assert.equal(range.end.offset, offset + "Sentence".length);
+});
+
+test("word tracking stays still while paused and ignores stale boundaries after stop and restart", () => {
+  const f = fixture();
+  f.load();
+  const {start, pause, stop} = f.ui(f.complete);
+  click(start);
+  f.speaking.finish();
+  const old = f.speaking.current;
+  const activeRange = () => f.registry.get("academy-reading-word")?.range;
+  old.onboundary({name: "word", charIndex: 0});
+  assert.equal(activeRange().start.offset, 0);
+  click(pause);
+  old.onboundary({name: "word", charIndex: 2});
+  assert.equal(activeRange().start.offset, 0);
+  click(pause);
+  assert.equal(f.speaking.current, old);
+  old.onboundary({name: "word", charIndex: 2});
+  assert.equal(activeRange().start.offset, 2);
+  click(stop);
+  assert.equal(f.registry.size, 0);
+  click(start);
+  old.onboundary({name: "word", charIndex: 11});
+  assert.equal(f.registry.size, 0);
+  f.speaking.current.onboundary({name: "word", charIndex: 0});
+  f.event("curriculum-route");
+  assert.equal(f.registry.size, 0);
+});
+
+test("absent word events, sentence-only events and missing range support use paragraph fallback", () => {
+  for (const highlights of [true, false]) {
+    const f = fixture({highlights});
+    f.load();
+    const ui = f.ui(f.complete);
+    click(ui.start);
+    f.speaking.finish();
+    const current = f.speaking.current;
+    current.onboundary?.({name: "sentence", charIndex: 0, charLength: 35});
+    current.onboundary?.({name: "word", charIndex: -1, charLength: 4});
+    reading(f.paragraph);
+    assert.equal(f.registry.size, 0);
+    assert.match(ui.tracking.textContent, /Paragraph highlight/);
+    finishAll(f.speaking);
+    assert.equal(ui.tracking.textContent, "");
+    reading(f.paragraph, false);
+  }
+});
+
+test("only scrolls when a spoken word is outside the reading area", () => {
+  const f = fixture({boundaryRect: range => range.start.offset === 2
+    ? {top: 920, bottom: 948, height: 28}
+    : {top: 320, bottom: 348, height: 28}});
+  f.load();
+  click(f.ui(f.complete).start);
+  f.speaking.finish();
+  const utterance = f.speaking.current;
+  utterance.onboundary({name: "word", charIndex: 0});
+  assert.equal(f.scrolls.length, 0);
+  utterance.onboundary({name: "word", charIndex: 2});
+  assert.equal(f.scrolls.length, 1);
+  assert.equal(f.scrolls[0].behavior, "instant");
+  utterance.onboundary({name: "word", charIndex: 2});
+  utterance.onboundary({name: "word", charIndex: 11});
+  assert.equal(f.scrolls.length, 1);
 });

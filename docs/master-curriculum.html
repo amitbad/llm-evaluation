@@ -494,6 +494,9 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .lesson-reading .is-being-read,.academy-lesson .is-being-read {
   background:var(--blue-wash); color:var(--text); box-shadow:inset .15rem 0 var(--blue); border-radius:.2rem;
 }
+::highlight(academy-reading-word) {
+  background-color:#ffe07a; color:#202239;
+}
 @media print {
   .lesson-reader { display:none!important; }
 }
@@ -35260,13 +35263,14 @@ followCurrentRoute(false, initialRoute);
     '<button type="button" data-reading-pause disabled>Pause</button>' +
     '<button type="button" data-reading-stop disabled>Stop</button>' +
     '<label>Voice <select data-reading-voice disabled>' +
-    '<option value="" disabled>No English voices listed</option></select></label>' +
+    '<option value="" disabled>No approved voices available</option></select></label>' +
     '<button type="button" data-reading-preview disabled>Preview Voice</button>' +
     '<button type="button" data-reading-use-voice title="Save this voice for lessons. If reading, restart the current paragraph." disabled>Use Voice</button>' +
     '<label>Speed <select data-reading-speed title="Changing speed restarts the current paragraph.">' +
     '<option value="0.75">0.75×</option><option value="1" selected>1×</option>' +
     '<option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></label>' +
     '</div><p class="lesson-reader-status" data-reading-voice-info></p>' +
+    '<p class="lesson-reader-status" data-reading-tracking></p>' +
     '<p class="lesson-reader-status" data-reading-status role="status"></p></div></details>';
 
   const blocked = "[hidden], [aria-hidden=true], [data-reading-skip], details:not([open]), " +
@@ -35277,19 +35281,26 @@ followCurrentRoute(false, initialRoute);
   const command = /^(?:\$\s|(?:cd|python[\d.]*|py|pip[\d.]*|ollama|docker(?:-compose)?)\s+\S)/;
   const supported = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
   const speech = supported ? window.speechSynthesis : null;
+  const highlightName = "academy-reading-word";
+  const wordHighlight = window.CSS?.highlights && typeof window.Highlight === "function" &&
+    typeof document.createRange === "function";
   const storageKey = "testneural-academy-reading";
   const speeds = ["0.75", "1", "1.25", "1.5"];
-  const voiceGroups = [
-    ["in", "English (India)"], ["us", "English (US)"],
-    ["gb", "English (UK)"], ["", "Other English"],
+  const approvedVoices = [
+    ["Samantha", "en-US"], ["Google US English", "en-US"], ["Daniel", "en-GB"],
+    ["Google UK English Female", "en-GB"], ["Google UK English Male", "en-GB"],
+    ["Karen", "en-AU"], ["Tessa", "en-ZA"],
   ];
   const views = [];
   const preferences = {voice: "", speed: "1"};
   let active = null;
   let readingVoice = "";
   let audition = "";
-  let hasQualityHint = false;
+  let browserVoice;
+  let savedChoice = "";
   let choices = new Map();
+  const locale = value => (value || "").trim().toLowerCase().replaceAll("_", "-");
+  const voiceKey = (name, lang) => name.trim().toLowerCase().replace(/[\s_-]+/g, " ") + "|" + locale(lang);
 
   try {
     const saved = JSON.parse(window.localStorage.getItem(storageKey));
@@ -35302,15 +35313,37 @@ followCurrentRoute(false, initialRoute);
     catch { /* Keep the preference for this visit. */ }
   }
 
-  function collect(roots) {
+  function collect(roots, mapOffsets = false) {
     const entries = [];
     let owner;
-    let text = "";
+    let parts = [];
+    let positions = [];
+    let length = 0;
+    let pendingSpace = false;
 
     function flush() {
-      const phrase = text.replace(/\s+/g, " ").trim();
-      if (phrase) entries.push({node: owner, text: phrase});
-      text = "";
+      if (length) entries.push({node: owner, text: parts.join(""), positions});
+      parts = [];
+      positions = [];
+      length = 0;
+      pendingSpace = false;
+    }
+
+    function appendText(node) {
+      for (const {0: piece, index} of node.textContent.matchAll(/\s+|\S+/g)) {
+        if (/^\s/.test(piece)) {
+          pendingSpace = true;
+          continue;
+        }
+        if (pendingSpace && length) {
+          parts.push(" ");
+          length += 1;
+        }
+        pendingSpace = false;
+        parts.push(piece);
+        if (mapOffsets) positions.push({start: length, end: length + piece.length, node, offset: index});
+        length += piece.length;
+      }
     }
 
     function visit(node, block) {
@@ -35318,13 +35351,13 @@ followCurrentRoute(false, initialRoute);
         if (!block) return;
         if (owner !== block) flush();
         owner = block;
-        text += node.textContent;
+        appendText(node);
         return;
       }
       if (node.nodeType !== 1 || node.matches(blocked)) return;
       if (node.tagName === "CODE" && command.test(node.textContent.trim())) return;
       if (node.tagName === "BR" && block) {
-        if (owner === block) text += " ";
+        if (owner === block) pendingSpace = true;
         return;
       }
       const nextBlock = node.matches(blocks) ? node : block;
@@ -35340,17 +35373,23 @@ followCurrentRoute(false, initialRoute);
   }
 
   function speechChunks(entries) {
-    return entries.flatMap(({node, text}) => {
+    const sentences = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en", {granularity: "sentence"}) : null;
+    return entries.flatMap(entry => {
+      const {text} = entry;
+      const limit = 1200;
+      if (!sentences || text.length <= limit) return [{entry, offset: 0, text}];
       const chunks = [];
-      let remaining = text;
-      // Keep each utterance small. Split at a word boundary when possible.
-      while (remaining.length > 220) {
-        const boundary = remaining.lastIndexOf(" ", 220);
-        const end = boundary > 0 ? boundary : 220;
-        chunks.push({node, text: remaining.slice(0, end)});
-        remaining = remaining.slice(end).trimStart();
+      let start = 0;
+      // The limit is a batching hint. Never interrupt a single sentence to reach it.
+      function add(end) {
+        const slice = text.slice(start, end).trimEnd();
+        if (slice) chunks.push({entry, offset: start, text: slice});
+        start = end;
       }
-      if (remaining) chunks.push({node, text: remaining});
+      for (const {index, segment} of sentences.segment(text)) {
+        if (index > start && index + segment.length - start > limit) add(index);
+      }
+      add(text.length);
       return chunks;
     });
   }
@@ -35358,18 +35397,15 @@ followCurrentRoute(false, initialRoute);
   function showVoiceControls() {
     if (!supported) return;
     const selected = audition || readingVoice;
-    let message = "";
-    if (choices.size && !hasQualityHint) {
-      message = "Only basic system voices appear to be listed. Preview a voice to hear how it sounds.";
-    }
-    if (choices.size && preferences.voice && !choices.has(preferences.voice)) {
-      message += " The saved voice is unavailable. Read Aloud is using an available voice.";
+    let message = choices.size ? "" : "No approved voices are available. Read Aloud uses the browser’s English voice.";
+    if (choices.size && preferences.voice && !savedChoice) {
+      message = "The saved voice is unavailable. New playback uses the first available approved voice.";
     }
     if (choices.size && active && !active.preview) message += " Stop reading to preview a voice.";
     if (audition) message += " Choose Use Voice to save your selection for lessons.";
     for (const view of views) {
       view.preview.disabled = !selected || Boolean(active);
-      view.useVoice.disabled = !selected || selected === preferences.voice;
+      view.useVoice.disabled = !selected || selected === savedChoice;
       view.voiceInfo.textContent = message.trim();
     }
   }
@@ -35383,48 +35419,39 @@ followCurrentRoute(false, initialRoute);
   }
 
   function updateVoices() {
-    const locale = voice => voice.lang.toLowerCase().replaceAll("_", "-");
-    const region = voice => locale(voice).match(/^en(?:-[a-z]{4})?-(in|us|gb)(?:-|$)/)?.[1];
-    // Browsers do not expose a quality or gender rating. Use only voice-name quality hints.
-    const quality = voice => Number(/\b(natural|neural|premium|enhanced|studio)\b/i.test(voice.name));
-    const voices = speech.getVoices().filter(voice => voice.name && /^en(?:-|$)/.test(locale(voice)));
-    voices.sort((a, b) => quality(b) - quality(a) ||
-      Number(region(b) === "in") - Number(region(a) === "in") ||
-      Number(Boolean(b.localService)) - Number(Boolean(a.localService)) ||
-      Number(Boolean(b.default)) - Number(Boolean(a.default)));
+    const voices = speech.getVoices();
+    const english = voices.filter(voice => /^en(?:-|$)/.test(locale(voice.lang)));
+    browserVoice = english.find(voice => voice.default) || english[0];
     choices = new Map();
-    for (const voice of voices) {
-      const key = voice.voiceURI || voice.name + "|" + locale(voice);
-      if (!choices.has(key)) choices.set(key, voice);
+    const labels = new Map();
+    for (const [name, lang] of approvedVoices) {
+      const key = voiceKey(name, lang);
+      const matches = english.filter(voice => voice.name && voiceKey(voice.name, voice.lang) === key);
+      const voice = matches.find(item => item.voiceURI && item.voiceURI === preferences.voice) ||
+        matches.find(item => item.default) || matches[0];
+      if (voice) {
+        choices.set(key, voice);
+        labels.set(key, name + " · " + lang);
+      }
     }
-    hasQualityHint = [...choices.values()].some(quality);
-    readingVoice = choices.has(preferences.voice) ? preferences.voice : choices.keys().next().value ?? "";
+    savedChoice = choices.has(preferences.voice) ? preferences.voice :
+      [...choices].find(([, voice]) => preferences.voice &&
+        (voice.voiceURI === preferences.voice || voice.name + "|" + locale(voice.lang) === preferences.voice))?.[0] ?? "";
+    readingVoice = savedChoice || (choices.keys().next().value ?? "");
     if (!choices.has(audition) || audition === readingVoice) audition = "";
-
-    const groups = new Map(voiceGroups.map(([region, label]) => [region, {label, entries: []}]));
-    for (const [key, voice] of choices) {
-      const group = groups.get(region(voice)) || groups.get("");
-      group.entries.push([key, voice]);
-    }
 
     for (const view of views) {
       view.voice.replaceChildren();
-      for (const {label, entries} of groups.values()) {
-        if (!entries.length) continue;
-        const group = document.createElement("optgroup");
-        group.label = label;
-        for (const [key, voice] of entries) {
-          const option = document.createElement("option");
-          option.value = key;
-          option.textContent = voice.name + " · " + voice.lang;
-          group.append(option);
-        }
-        view.voice.append(group);
+      for (const [key, label] of labels) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = label;
+        view.voice.append(option);
       }
       if (!choices.size) {
         const option = document.createElement("option");
         option.value = "";
-        option.textContent = "No English voices listed";
+        option.textContent = "No approved voices available";
         option.disabled = true;
         view.voice.append(option);
       }
@@ -35440,9 +35467,10 @@ followCurrentRoute(false, initialRoute);
       stop("Voice preview stopped.");
       return;
     }
-    const node = session.queue[session.index]?.node;
-    while (session.index > 0 && session.queue[session.index - 1]?.node === node) session.index -= 1;
+    const entry = session.queue[session.index]?.entry;
+    while (session.index > 0 && session.queue[session.index - 1]?.entry === entry) session.index -= 1;
     session.utterance = null;
+    clearHighlight(session);
     speech.cancel();
     if (session.paused) showState(session.view, "Paused. Resume restarts this paragraph with your new settings.");
     else {
@@ -35481,6 +35509,57 @@ followCurrentRoute(false, initialRoute);
   function clearHighlight(session) {
     session.highlight?.classList.remove("is-being-read");
     session.highlight = null;
+    if (wordHighlight) window.CSS.highlights.delete(highlightName);
+    session.view.tracking.textContent = "";
+  }
+
+  // Both arrays are ordered by offset in the normalized utterance or paragraph.
+  function firstEndingAfter(ranges, offset) {
+    let from = 0;
+    let to = ranges.length;
+    while (from < to) {
+      const middle = (from + to) >>> 1;
+      if (ranges[middle].end <= offset) from = middle + 1;
+      else to = middle;
+    }
+    return ranges[from];
+  }
+
+  function wordAt(words, index, length, textLength) {
+    if (!Number.isInteger(index) || index < 0 || index >= textLength) return null;
+    const word = firstEndingAfter(words, index);
+    if (!word) return null;
+    if (word.start <= index) return word;
+    // Some engines include leading punctuation in a reported word span.
+    const end = index + length;
+    const next = firstEndingAfter(words, word.end);
+    if (Number.isInteger(length) && length > 0 && end <= textLength &&
+        word.end <= end && (!next || next.start >= end)) return word;
+    return null;
+  }
+
+  function rangeFor(entry, start, end) {
+    const first = firstEndingAfter(entry.positions, start);
+    const last = firstEndingAfter(entry.positions, end - 1);
+    if (!first || !last || start < first.start || end - 1 < last.start) return null;
+    const startOffset = first.offset + start - first.start;
+    const endOffset = last.offset + end - last.start;
+    if (startOffset > first.node.textContent.length || endOffset > last.node.textContent.length) return null;
+    const range = document.createRange();
+    range.setStart(first.node, startOffset);
+    range.setEnd(last.node, endOffset);
+    return range;
+  }
+
+  function keepVisible(rect) {
+    if (!rect || !rect.height || !window.innerHeight) return;
+    const height = window.innerHeight;
+    const topMargin = Math.min(72, height * .2);
+    const bottomMargin = Math.min(44, height * .15);
+    const visible = rect.height > height - topMargin - bottomMargin
+      ? rect.bottom > topMargin && rect.top < height - bottomMargin
+      : rect.top >= topMargin && rect.bottom <= height - bottomMargin;
+    if (!visible) window.scrollBy?.({top: rect.top - height / 2, behavior: "instant"});
   }
 
   function stop(message = "Reading stopped.") {
@@ -35504,19 +35583,43 @@ followCurrentRoute(false, initialRoute);
       showState(session.view, session.preview ? "Voice preview finished." : "Reading finished.");
       return;
     }
-    if (session.highlight !== chunk.node) {
-      clearHighlight(session);
-      session.highlight = chunk.node;
-      chunk.node.classList.add("is-being-read");
+    const node = chunk.entry?.node || null;
+    const sameBlock = session.highlight === node;
+    clearHighlight(session);
+    if (node) {
+      session.highlight = node;
+      node.classList.add("is-being-read");
+      session.view.tracking.textContent = "Paragraph highlight while word timing is unavailable.";
+      if (!sameBlock) keepVisible(node.getBoundingClientRect?.());
     }
     const utterance = new window.SpeechSynthesisUtterance(chunk.text);
-    const voice = session.preview ? session.voice : choices.get(readingVoice);
-    utterance.lang = voice?.lang || "en";
+    const voice = session.voice;
+    utterance.lang = voice?.lang?.trim().replaceAll("_", "-") || "en-US";
     if (voice) utterance.voice = voice;
     utterance.rate = Number(preferences.speed);
     session.utterance = utterance;
 
     const current = () => active === session && session.utterance === utterance;
+    if (node && wordHighlight) {
+      let words;
+      let lastWord = -1;
+      utterance.onboundary = event => {
+        if (!current() || session.paused || (event.name && event.name !== "word")) return;
+        words ??= Array.from(chunk.text.matchAll(/\p{N}+(?:[.,]\p{N}+)+|[\p{L}\p{M}\p{N}]+(?:['’\u2010-][\p{L}\p{M}\p{N}]+)*/gu),
+          match => ({start: match.index, end: match.index + match[0].length}));
+        const word = wordAt(words, event.charIndex, event.charLength, chunk.text.length);
+        if (!word || word.start <= lastWord) return;
+        const range = rangeFor(chunk.entry, chunk.offset + word.start, chunk.offset + word.end);
+        if (!range) return;
+        if (lastWord < 0) {
+          node.classList.remove("is-being-read");
+          session.view.tracking.textContent = "Word highlight follows speech.";
+        }
+        lastWord = word.start;
+        window.CSS.highlights.set(highlightName, new window.Highlight(range));
+        keepVisible(range.getBoundingClientRect());
+      };
+    }
     utterance.onend = () => {
       if (!current()) return;
       session.utterance = null;
@@ -35538,7 +35641,7 @@ followCurrentRoute(false, initialRoute);
 
   function start(view) {
     if (view.start.disabled || document.hidden || !isVisible(view)) return;
-    const entries = collect(view.source());
+    const entries = collect(view.source(), wordHighlight);
     const startSection = view.section.selectedIndex;
     const selected = view.headings[startSection - 1];
     const first = selected ? entries.findIndex(({node}) => node === selected) : 0;
@@ -35547,7 +35650,8 @@ followCurrentRoute(false, initialRoute);
     const queue = speechChunks(entries.slice(first, end < 0 ? undefined : end));
     if (!queue.length) return;
     stop();
-    const session = {view, startSection, queue, index: 0, paused: false, utterance: null, highlight: null};
+    const session = {view, startSection, queue, index: 0, paused: false, utterance: null, highlight: null,
+      voice: choices.get(readingVoice) || browserVoice};
     active = session;
     showState(view, "Reading.");
     speak(session);
@@ -35568,7 +35672,8 @@ followCurrentRoute(false, initialRoute);
     const find = name => holder.querySelector("[data-reading-" + name + "]");
     const view = {holder, source, heading, section: find("section"), start: find("start"),
       pause: find("pause"), stop: find("stop"), speed: find("speed"), status: find("status"),
-      voice: find("voice"), preview: find("preview"), useVoice: find("use-voice"), voiceInfo: find("voice-info")};
+      voice: find("voice"), preview: find("preview"), useVoice: find("use-voice"), voiceInfo: find("voice-info"),
+      tracking: find("tracking")};
     views.push(view);
     view.speed.value = preferences.speed;
     holder.hidden = false;
@@ -35604,18 +35709,22 @@ followCurrentRoute(false, initialRoute);
     view.useVoice.addEventListener("click", () => {
       const selected = audition || readingVoice;
       if (!choices.has(selected)) return;
-      const changed = readingVoice !== selected;
-      readingVoice = preferences.voice = selected;
+      const voice = choices.get(selected);
+      const changed = active && !active.preview ? active.voice !== voice : readingVoice !== selected;
+      readingVoice = savedChoice = preferences.voice = selected;
       audition = "";
       savePreferences();
       syncPreferences();
-      if (changed) restartParagraph();
+      if (changed) {
+        if (active && !active.preview) active.voice = voice;
+        restartParagraph();
+      }
       if (!active) showState(view, "Voice saved for reading.");
     });
     view.preview.addEventListener("click", () => {
       const voice = choices.get(audition || readingVoice);
       if (active || !voice || document.hidden || !isVisible(view)) return;
-      const queue = [{node: null, text: "Let's try a quick example. Read the question, then think about what a good answer would include."}];
+      const queue = [{text: "Let's try a quick example. Read the question, then think about what a good answer would include."}];
       const session = {view, preview: true, voice, queue, index: 0, paused: false, utterance: null, highlight: null};
       active = session;
       showState(view, "Playing voice preview.");

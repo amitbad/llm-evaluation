@@ -217,6 +217,9 @@ body.academy-lesson { font-family:system-ui,sans-serif!important; min-width:0; }
 .lesson-reading .is-being-read,.academy-lesson .is-being-read {
   background:var(--blue-wash); color:var(--text); box-shadow:inset .15rem 0 var(--blue); border-radius:.2rem;
 }
+::highlight(academy-reading-word) {
+  background-color:#ffe07a; color:#202239;
+}
 @media print {
   .lesson-reader { display:none!important; }
 }
