@@ -29509,34 +29509,654 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m17-t02">
-  <p class="lesson-intro" data-lesson-search>Generated code needs evidence from compilation, behavior, safety and resource bounds.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Functional tests, cases and hidden tests, pass@k intuition, runtime/error categorization, resource controls, offline isolation and static review.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Separate parsing, compilation, execution and functional correctness for generated code.</li><li>Write unit, held-out, property and integration tests against an approved specification.</li><li>Interpret pass rates, coverage, pass@k, failures, timeouts and regressions with explicit denominators.</li><li>Review a patch for security, resource use, maintainability and repository fit. Use the evidence to recommend PASS, BLOCK or REVIEW.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>Northstar wants a refund calculator for a fictional help desk. If a customer paid 1,200 cents and an approved fee is 200 cents, the calculator should return 1,000 cents. What if the fee is greater than the payment? What if the requester owns a different order? A calculator can be correct and the workflow that calls it can still make the wrong decision.</p>
+<p>Allow six hours. Complete <a href="#m03-t02">Structured output and schema validation</a> and <a href="#m07-t01">Variance, repetition and score aggregation</a>. <a href="#m11-t03">Robustness, safety benchmarks and regression</a> is recommended. Preparation skills P02, P03 and P06 cover the fixed outcomes, safe execution and rates used here. The core lesson uses trusted, hand-authored fixtures and a restricted teaching scope. A local subprocess demonstration documents a genuine timeout. Every order and response is fictional, and the workflow returns decisions as data.</p>
+<h4>Beginner Explanation</h4>
+<p><strong>Code generation</strong> means producing code from a task description. A <strong>specification</strong> is the approved description of what the code should do. For Northstar, every payment and fee is a nonnegative integer number of cents. Boolean values and strings are rejected. A fee above the payment produces zero. Invalid types raise TypeError and negative cents raise ValueError. The calculator returns an integer and performs no other action.</p>
+<p>A <strong>function</strong> is a named piece of code that takes inputs and can return a value. Allowing only whole cents avoids differences in rounding for this task. A <strong>test case</strong> gives the function specific inputs and checks its actual result against an independently defined expected result. An <strong>assertion</strong> checks that a condition holds. A failed assertion identifies the case and the expectation that was violated. Use real tests to enforce rules. An assertion inside a production function may be disabled, so use ordinary validation for the function&#x27;s input contract.</p>
+<h4>Worked Demonstration</h4>
+<h5>Start with two lines</h5>
+<p>Copy the block. The first line defines the function. The second returns the subtraction. In the final line, Python calls the function, then checks the result. Predict what happens when a 1,300-cent fee is subtracted from a 1,200-cent payment.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def calculate_refund(price, fee):
+    return price - fee
+
+
+actual = calculate_refund(1200, 200)
+expected = 1000
+print(f&quot;expected={expected}, actual={actual}&quot;)
+assert actual == expected
+print(&quot;starter test passed&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">expected=1000, actual=1000
+starter test passed
+</code></pre></details>
+<p>The ordinary receipt meets the rule. Try changing only the fee to 1,300 and the expected result to zero. The assertion fails because the calculated refund is negative. A passing example gives evidence only for the behavior it exercised.</p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>Use <strong>Copy Code</strong>, open the linked Python editor, paste the block and run it. Each core block works independently with Python 3.10+ and the standard library. The candidate functions were written for this lesson to reproduce specific outcomes. Use the editor with the supplied code and synthetic data.</p>
+</div></details>
+<h5>Experiment A — Find the first failing stage</h5>
+<p>Parsing turns text into a tree of Python constructs. Compilation checks additional rules and prepares instructions for the interpreter. Execution actually calls a function. Correctness compares a returned value or exception with the expectation. An expression can compile and still raise an exception when called. Python&#x27;s parser can even accept a statement that compilation rejects, such as a return outside a function. Python AST reference</p>
+<p>This exercise parses and compiles the displayed source, then calls its matching, already defined teaching function. The strings are never loaded as executable code. Each is one fixed fixture. A row without a callable stops before execution.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import ast
+
+
+def wrong(price, fee):
+    return price + fee
+
+
+def correct(price, fee):
+    return max(0, price - fee)
+
+
+def crashes(price, fee):
+    return price // (fee - fee)
+
+
+fixtures = (
+    (&quot;A01&quot;, &quot;def candidate(price, fee)\n    return price - fee&quot;, None),
+    (&quot;A02&quot;, &quot;return 1000&quot;, None),
+    (&quot;A03&quot;, &quot;def wrong(price, fee):\n    return price + fee&quot;, wrong),
+    (&quot;A04&quot;, &quot;def correct(price, fee):\n    return max(0, price - fee)&quot;, correct),
+    (&quot;A05&quot;, &quot;def crashes(price, fee):\n    return price // (fee - fee)&quot;, crashes),
+)
+for case_id, source, function in fixtures:
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        print(case_id, &quot;PARSE_ERROR&quot;)
+        continue
+    try:
+        compile(tree, &quot;&lt;teaching fixture&gt;&quot;, &quot;exec&quot;)
+    except SyntaxError:
+        print(case_id, &quot;COMPILE_ERROR&quot;)
+        continue
+    try:
+        actual = function(1200, 200)
+    except ZeroDivisionError:
+        print(case_id, &quot;RUNTIME_ERROR ZeroDivisionError&quot;)
+        continue
+    print(case_id, &quot;PASS&quot; if actual == 1000 else &quot;WRONG_ANSWER&quot;, f&quot;actual={actual}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A01 PARSE_ERROR
+A02 COMPILE_ERROR
+A03 WRONG_ANSWER actual=1400
+A04 PASS actual=1000
+A05 RUNTIME_ERROR ZeroDivisionError
+</code></pre></details>
+<p>A03 ran and produced 1,400 cents instead of 1,000. A04 passed this case. A05 raised while dividing, so it returned no refund. Fix the operator in both A03&#x27;s displayed source and its matching callable, then rerun. A runtime error remains different from an incorrect returned value. A production runner would report where each error originated, including setup and dependency errors.</p>
+<h5>Experiments B and C — Make a small suite earn its confidence</h5>
+<p>A <strong>unit test</strong> exercises one component. Start with two public cases, including an equal fee and payment. Then score five additional held-out cases. <strong>Held out</strong> means these inputs are kept outside the candidate-facing prompt or development examples. Both sets are visible to you as the evaluator in this lesson.</p>
+<p>Python&#x27;s unittest module can record failed comparisons. assertEqual compares a result with a value. assertRaises expects a particular exception during the function call. Each tuple below pairs the test ID, arguments and oracle, the independently chosen correct outcome. A TestResult records a failure when an assertion disagrees and an error when execution raises unexpectedly.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import unittest
+
+
+def subtraction(price, fee):
+    return price - fee
+
+
+def checked_refund(price, fee):
+    if type(price) is not int or type(fee) is not int:
+        raise TypeError(&quot;whole cents required&quot;)
+    if price &lt; 0 or fee &lt; 0:
+        raise ValueError(&quot;cents cannot be negative&quot;)
+    return max(0, price - fee)
+
+
+VISIBLE = ((&quot;B01 ordinary&quot;, (1200, 200), 1000), (&quot;B02 equal&quot;, (400, 400), 0))
+HELD_OUT = (
+    (&quot;C01 no payment&quot;, (0, 1), 0),
+    (&quot;C02 one cent over&quot;, (400, 401), 0),
+    (&quot;C03 negative&quot;, (400, -1), ValueError),
+    (&quot;C04 text input&quot;, (&quot;400&quot;, 1), TypeError),
+    (&quot;C05 boolean fee&quot;, (400, True), TypeError),
+)
+
+
+def check_case(function, args, expected):
+    check = unittest.TestCase()
+    if isinstance(expected, type):
+        check.assertRaises(expected, function, *args)
+    else:
+        actual = function(*args)
+        check.assertIs(type(actual), int)
+        check.assertEqual(actual, expected)
+
+
+for name, function in ((&quot;subtraction&quot;, subtraction), (&quot;checked&quot;, checked_refund)):
+    for split, cases in ((&quot;visible&quot;, VISIBLE), (&quot;held-out&quot;, HELD_OUT)):
+        passed = 0
+        for case_id, args, expected in cases:
+            run = unittest.TestResult()
+            unittest.FunctionTestCase(lambda: check_case(function, args, expected)).run(run)
+            status = &quot;ERROR&quot; if run.errors else &quot;FAIL&quot; if run.failures else &quot;PASS&quot;
+            passed += status == &quot;PASS&quot;
+            print(name, case_id, status)
+        print(name, split, f&quot;{passed}/{len(cases)}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">subtraction B01 ordinary PASS
+subtraction B02 equal PASS
+subtraction visible 2/2
+subtraction C01 no payment FAIL
+subtraction C02 one cent over FAIL
+subtraction C03 negative FAIL
+subtraction C04 text input PASS
+subtraction C05 boolean fee FAIL
+subtraction held-out 1/5
+checked B01 ordinary PASS
+checked B02 equal PASS
+checked visible 2/2
+checked C01 no payment PASS
+checked C02 one cent over PASS
+checked C03 negative PASS
+checked C04 text input PASS
+checked C05 boolean fee PASS
+checked held-out 5/5
+</code></pre></details>
+<p>The weaker candidate passes both public tests, but subtraction permits a negative refund and accepts a boolean fee. It happens to raise TypeError on a string. A real API with a specified error message or error code should test that contract too. Add a zero-fee case, then add a negative price case. Explain why a happy-path addition and a new rejection path exercise different requirements.</p>
+<p><strong>Overfitting</strong> means doing well on familiar examples while failing to follow the broader rule. <strong>Contamination</strong> occurs when assessment material influences training or development. <strong>Leakage</strong> can include hidden test inputs in the prompt or a benchmark-derived solution in retrieved documentation. Keep test families together across splits, lock access to the holdout, keep expected values separate from developer output, and version the suite. Rotate exposed assessment cases. These fixed candidates illustrate the evaluation mechanism. The results cover the stated fixtures.</p>
+<h5>Experiment D — Check relationships between outputs</h5>
+<p>A <strong>property</strong> is a rule that should hold for many inputs. This bounded grid checks the permitted range, repeatability, and when the fee stays fixed, whether increasing the payment can reduce the refund. That last check is <strong>metamorphic testing</strong>. It changes one input in a controlled way and compares two outputs. Formatting cents as text should also preserve the amount without floating-point rounding.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">def refund(price, fee):
+    return max(0, price - fee)
+
+
+def off_by_one(price, fee):
+    return max(0, price - fee - 1)
+
+
+def format_cents(amount):
+    dollars, cents = divmod(amount, 100)
+    return f&quot;USD {dollars}.{cents:02d}&quot;
+
+
+def read_cents(displayed):
+    dollars, cents = displayed.removeprefix(&quot;USD &quot;).split(&quot;.&quot;)
+    return int(dollars) * 100 + int(cents)
+
+
+for name, function in ((&quot;refund&quot;, refund), (&quot;off-by-one&quot;, off_by_one)):
+    results = {&quot;range&quot;: 0, &quot;repeat&quot;: 0, &quot;monotonic&quot;: 0, &quot;round-trip&quot;: 0, &quot;zero-fee&quot;: 0}
+    for price in (0, 1, 99, 100):
+        for fee in (0, 1, 100):
+            amount = function(price, fee)
+            results[&quot;range&quot;] += 0 &lt;= amount &lt;= price
+            results[&quot;repeat&quot;] += amount == function(price, fee)
+            results[&quot;monotonic&quot;] += amount &lt;= function(price + 1, fee)
+            results[&quot;round-trip&quot;] += read_cents(format_cents(amount)) == amount
+            if fee == 0:
+                results[&quot;zero-fee&quot;] += amount == price
+    for label, passed in results.items():
+        print(name, label, f&quot;{passed}/{4 if label == &#x27;zero-fee&#x27; else 12}&quot;)
+    print(name, &quot;format(101):&quot;, format_cents(101))
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund range 12/12
+refund repeat 12/12
+refund monotonic 12/12
+refund round-trip 12/12
+refund zero-fee 4/4
+refund format(101): USD 1.01
+off-by-one range 12/12
+off-by-one repeat 12/12
+off-by-one monotonic 12/12
+off-by-one round-trip 12/12
+off-by-one zero-fee 1/4
+off-by-one format(101): USD 1.01
+</code></pre></details>
+<p>The off-by-one candidate satisfies four properties on the grid. A zero fee must preserve the amount, so that last property catches the defect. The round trip measures numeric preservation under this formatter and parser. A direct example for USD 1.01 supplies a separate reference for the display. Try adding 999 cents. A finite grid can catch counterexamples while leaving many other inputs untested.</p>
+<h5>Experiment E — Review risky code as text</h5>
+<p>Northstar&#x27;s pure helper is allowed to calculate a result. It has no authority to run customer-controlled text, touch arbitrary files, change permissions, or disclose internal data. A <strong>static check</strong> looks at the code without running it. Here it flags four call names in deliberately incomplete snippets. The snippets contain no payloads or live data. Authorization and disclosure also need separate behavioral and human checks using trusted fixtures.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import ast
+
+SNIPPETS = (
+    (&quot;S01 arithmetic&quot;, &quot;max(0, price - fee)&quot;),
+    (&quot;S02 dynamic execution&quot;, &quot;eval(customer_text)&quot;),
+    (&quot;S03 file access&quot;, &quot;open(requested_path)&quot;),
+    (&quot;S04 internal output&quot;, &quot;print(internal_record)&quot;),
+    (&quot;S05 unconditional approval&quot;, &quot;decision = &#x27;APPROVE&#x27;&quot;),
+    (&quot;S06 error details&quot;, &quot;format_internal_error(error)&quot;),
+)
+RULES = {
+    &quot;eval&quot;: &quot;dynamic-execution&quot;,
+    &quot;open&quot;: &quot;file-access-outside-contract&quot;,
+    &quot;print&quot;: &quot;output-side-effect&quot;,
+    &quot;format_internal_error&quot;: &quot;error-disclosure-review&quot;,
+}
+for case_id, text in SNIPPETS:
+    calls = {
+        node.func.id
+        for node in ast.walk(ast.parse(text))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+    }
+    findings = sorted(RULES[call] for call in calls &amp; RULES.keys())
+    print(f&quot;{case_id} -&gt; {&#x27;, &#x27;.join(findings) or &#x27;no rule hit&#x27;}&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">S01 arithmetic -&gt; no rule hit
+S02 dynamic execution -&gt; dynamic-execution
+S03 file access -&gt; file-access-outside-contract
+S04 internal output -&gt; output-side-effect
+S05 unconditional approval -&gt; no rule hit
+S06 error details -&gt; error-disclosure-review
+</code></pre></details>
+<p>The file call violates this helper&#x27;s contract regardless of the requested path. File-handling tasks also need an approved directory boundary and repository-owned tests for path validation. Error responses should return an approved, stable reason without arbitrary exception details or internal records. S05 produces no hit because this scanner checks call names. An independently authorized denial test is the way to catch the missing control. S01 is eligible for the next checks. A rule hit identifies a reviewable location, and a clean scan leaves aliases, data flow, indirect calls and architecture unexamined.</p>
+<h5>Experiment F — Separate comparable work from elapsed time</h5>
+<p>Suppose Northstar builds a list of unique order IDs, preserving their first occurrence. A list scan compares the current ID with every previously accepted ID until it finds a match. A set tracks membership separately while the list retains order. The supplied sizes contain only distinct fictional IDs, so the list always scans all earlier IDs. The work counter compares explicit comparisons with membership queries. It cannot tell you the cost of each underlying operation.</p>
+<p>Run the core block in the editor. For local elapsed time, allocation and subprocess evidence, paste the same trusted block into a file named <code>northstar_performance.py</code>. Set RUN_LOCAL to True and run <code>python3 northstar_performance.py</code> from the directory containing the file. The local path uses a temporary working directory, an explicit command list, a minimal empty environment, and a wall-clock timeout. The child commands are fixed arithmetic and a short sleep. They have no file or network operations. Temporary directories, timeouts and Python isolated mode are process hygiene. Untrusted code requires an approved isolated worker with denied network access, no secrets, a least-privilege identity, read-only inputs, and CPU, memory, time, process and output limits. Do not accept candidate source in this exercise&#x27;s child commands.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">RUN_LOCAL = False
+
+
+def scan(ids):
+    unique = []
+    work = 0
+    for order in ids:
+        for known in unique:
+            work += 1
+            if known == order:
+                break
+        else:
+            unique.append(order)
+    return unique, work
+
+
+def track(ids):
+    seen = set()
+    unique = []
+    for order in ids:
+        if order not in seen:
+            seen.add(order)
+            unique.append(order)
+    return unique, len(ids)
+
+
+def measure(function, ids):
+    from statistics import median
+    from timeit import repeat
+    import tracemalloc
+
+    milliseconds = [round(seconds * 1000, 3) for seconds in repeat(lambda: function(ids), repeat=5, number=1)]
+    tracemalloc.start()
+    try:
+        result = function(ids)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    print(f&quot;local {function.__name__} n={len(ids)} ms={milliseconds} median={median(milliseconds)} peak_bytes={peak}&quot;)
+    return result
+
+
+def observe_timeout():
+    import subprocess
+    import sys
+    from tempfile import TemporaryDirectory
+
+    jobs = ((&quot;fast&quot;, &quot;print(20 - 5)&quot;, 5), (&quot;slow&quot;, &quot;import time\ntime.sleep(2)&quot;, 0.25))
+    with TemporaryDirectory() as workspace:
+        for label, snippet, seconds in jobs:
+            command = [sys.executable, &quot;-I&quot;, &quot;-B&quot;, &quot;-c&quot;, snippet]
+            try:
+                result = subprocess.run(command, cwd=workspace, env={}, stdin=subprocess.DEVNULL, capture_output=True,
+                                        text=True, check=True, timeout=seconds)
+                print(label, &quot;COMPLETED&quot;, result.stdout.strip())
+            except subprocess.TimeoutExpired:
+                print(label, &quot;TIMEOUT&quot;, f&quot;budget={seconds}s&quot;)
+
+
+duplicates = [&quot;NS-0100&quot;, &quot;NS-0200&quot;, &quot;NS-0100&quot;]
+print(&quot;duplicate order preserved:&quot;, scan(duplicates)[0] == track(duplicates)[0] == duplicates[:2])
+for size in (50, 200, 800):
+    ids = [f&quot;NS-{n:04d}&quot; for n in range(size)]
+    old, comparisons = scan(ids)
+    new, queries = track(ids)
+    print(f&quot;n={size} equal={old == new} list_comparisons={comparisons} set_queries={queries}&quot;)
+    if RUN_LOCAL:
+        measure(scan, ids)
+        measure(track, ids)
+if RUN_LOCAL:
+    observe_timeout()
+</code></pre>
+</div>
+<p>Recorded local output with RUN_LOCAL set to False.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">duplicate order preserved: True
+n=50 equal=True list_comparisons=1225 set_queries=50
+n=200 equal=True list_comparisons=19900 set_queries=200
+n=800 equal=True list_comparisons=319600 set_queries=800
+</code></pre></details>
+<p>The nested loop uses a for–else block. The else clause adds the order only if the loop finishes without finding a match. With 200 distinct IDs there are 0 + 1 + … + 199 comparisons, which is 19,900. The set version makes 200 membership queries and also does set insertions. Try many repeats rather than all distinct IDs, then compare both sequences and counters.</p>
+<p>With RUN_LOCAL enabled, the local run produced the following observations. Times are in milliseconds and peak memory is Python-traced bytes for a separate call, including the returned result. The workload and counters are reproducible. Timing and allocations depend on the runtime and workstation.</p>
+<p>Observed on Python 3.12.7 on Darwin arm64.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Observed order-list runtime and allocations"><table><caption>Observed order-list runtime and allocations</caption><thead><tr><th scope="col">Local implementation</th><th scope="col">Distinct IDs</th><th scope="col">Five samples in ms</th><th scope="col">Median in ms</th><th scope="col">Peak bytes</th></tr></thead><tbody><tr><td>scan</td><td>50</td><td>[0.036, 0.034, 0.034, 0.034, 0.034]</td><td>0.034</td><td>576</td></tr><tr><td>track</td><td>50</td><td>[0.005, 0.003, 0.003, 0.003, 0.002]</td><td>0.003</td><td>3016</td></tr><tr><td>scan</td><td>200</td><td>[0.564, 0.551, 0.544, 0.528, 0.522]</td><td>0.544</td><td>1760</td></tr><tr><td>track</td><td>200</td><td>[0.014, 0.01, 0.009, 0.009, 0.009]</td><td>0.009</td><td>11112</td></tr><tr><td>scan</td><td>800</td><td>[8.165, 8.23, 8.24, 8.152, 8.655]</td><td>8.23</td><td>7040</td></tr><tr><td>track</td><td>800</td><td>[0.049, 0.042, 0.038, 0.036, 0.035]</td><td>0.038</td><td>43688</td></tr></tbody></table></div>
+<p>The fast child completed with 15. The slow child stopped with TIMEOUT at the configured 0.25-second budget.</p>
+<p>At 800 IDs the set-based helper had a lower median in this run and about six times the traced peak allocation. Use that trade-off to choose what to profile at production sizes. Record input mix as well as size, since repeated IDs can make the list finish its searches early.</p>
+<p>A timeout means the process exceeded the runner&#x27;s wait budget. Process startup can add time outside that budget, and the call reports the timeout after it stops and waits for the child. Store the budget and stage with the outcome. A missing result after a timeout cannot establish a wrong returned value. Investigate runner setup separately from slow candidate behavior. Repeat across relevant sizes, retain timing variation and compare peak memory against a versioned budget. Python timing measurements and Python subprocess timeout behavior</p>
+<h4>Guided Engineering Lab</h4>
+<h5>Experiment G — Test the workflow around the helper</h5>
+<p>A unit test checks the calculator in isolation. An <strong>integration test</strong> checks how components work together. Northstar receives a validated request and separately receives the verified order ID from a trusted authority. An exact match is required. The workflow returns a proposal or a denial. Governance and any real transaction execution would occur outside this exercise.</p>
+<p>The approved previous implementation stopped any ID mismatch. A regression candidate adds the required fee floor while losing that check. Both versions evaluate the same requests. In a test suite, a <strong>regression</strong> is a previously passing case that now has a known failure under a comparable run.</p>
+<h5>Experiment H — Verify observable effects as well as return values</h5>
+<p>The versioned task gives the helper permission to return a decision only. Its output is a tuple containing an action and a nonnegative integer number of cents. The input request stays intact. A diagnostic candidate returns the right decision but writes to a fake recorder. The real test would monitor the accessible I/O boundaries and review the patch. Here the recorder is a list that lets you see the forbidden write without contacting anything.</p>
+<h5>Experiment I — Review the proposed patch before release</h5>
+<p>Automated tests can compare input and output, count hits and detect introduced dependencies. Human reviewers must still judge whether the implementation fits the repository and whether policy is applied at the right layer. Use the rubric below. A teaching receipt in the lab shows how the gate consumes review evidence. Its status is synthetic. It represents neither an independent reviewer nor production approval.</p>
+<h5>Experiment J — Build the versioned release report</h5>
+<p>Use the candidate list and visible specification above. The plan builds 94 ordinary refund tests by pairing 47 positive payments with two fees. There are three held-out checks, one contract check and two integration checks. Case IDs stay fixed across candidates. The large repeated routine slice makes the 99% example possible. Count a requirement as covered only if at least one linked case produced an evaluable outcome. Keep breadth of coverage and whether the requirement passed visible separately.</p>
+<p>The code runs only the functions defined directly in the exercise. There is no loader for source files, generated patches or user input. A fixture&#x27;s syntax status follows from Python loading those function definitions. Experiment A handles rejected syntax separately. F supplies the versioned resource experiment for the companion order-list helper. This workflow lab uses an explicit scope label for that observation and leaves it outside its quality gate.</p>
+<p>To make a judgment-dependent review mandatory, pass the synthetic receipt to the scorer. A confirmed critical result wins even when a review is missing. Required cases without evidence produce REVIEW. A known ordinary failure also blocks in this exercise&#x27;s zero-regression release policy. In practice, agree on policy and thresholds before seeing the results and keep any waiver separately signed and versioned.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+import re
+
+EXPORT_JSON = False
+REQUIREMENTS = (
+    &quot;calculate-cents&quot;, &quot;floor-zero&quot;, &quot;reject-negative&quot;, &quot;validate-order&quot;, &quot;preserve-contract&quot;, &quot;authorize-order&quot;
+)
+SPEC = {&quot;id&quot;: &quot;northstar-refund-v1&quot;, &quot;suite&quot;: &quot;northstar-code-tests-v1&quot;, &quot;gate&quot;: &quot;no-failures-v1&quot;,
+        &quot;requirements&quot;: REQUIREMENTS}
+RESOURCE = {&quot;scope&quot;: &quot;separate order-list helper in F&quot;, &quot;fixture&quot;: &quot;unique-orders-v1&quot;,
+            &quot;distinct_ids&quot;: 800, &quot;list_comparisons&quot;: 319600, &quot;set_queries&quot;: 800,
+            &quot;included_in_refund_gate&quot;: False}
+
+
+def refund(price, fee):
+    if type(price) is not int or type(fee) is not int:
+        raise TypeError(&quot;whole cents required&quot;)
+    if price &lt; 0 or fee &lt; 0:
+        raise ValueError(&quot;cents cannot be negative&quot;)
+    return max(0, price - fee)
+
+
+def previous_refund(price, fee):
+    if type(price) is not int or type(fee) is not int:
+        raise TypeError(&quot;whole cents required&quot;)
+    if price &lt; 0 or fee &lt; 0:
+        raise ValueError(&quot;cents cannot be negative&quot;)
+    return price - fee
+
+
+def workflow(calculator, *, check_authority=True, write_notice=False):
+    def decide(request, verified_order, notices):
+        order = request[&quot;order_id&quot;]
+        if not isinstance(order, str) or not re.fullmatch(r&quot;NS-[0-9]{4}&quot;, order):
+            return (&quot;DENY&quot;, 0)
+        if check_authority and order != verified_order:
+            return (&quot;DENY&quot;, 0)
+        amount = calculator(request[&quot;price&quot;], request[&quot;fee&quot;])
+        if write_notice:
+            notices.append(&quot;synthetic diagnostic&quot;)
+        return (&quot;PROPOSE&quot;, amount)
+
+    return decide
+
+
+# Each row carries an independent expected outcome and its requirement.
+# Unit rows take calculator arguments. Workflow rows take requested and verified IDs.
+CASES = [
+    (f&quot;U-{price:04}-{fee}&quot;, &quot;unit&quot;, &quot;calculate-cents&quot;, (price, fee), price - fee, False)
+    for price in range(20, 941, 20) for fee in (0, 7)
+] + [
+    (&quot;H-01&quot;, &quot;holdout&quot;, &quot;floor-zero&quot;, (20, 21), 0, False),
+    (&quot;H-02&quot;, &quot;holdout&quot;, &quot;reject-negative&quot;, (20, -1), &quot;ValueError&quot;, False),
+    (&quot;H-03&quot;, &quot;holdout&quot;, &quot;validate-order&quot;, (&quot;NS-42&quot;, &quot;NS-42&quot;), (&quot;DENY&quot;, 0), True),
+    (&quot;C-01&quot;, &quot;contract&quot;, &quot;preserve-contract&quot;, (&quot;NS-1042&quot;, &quot;NS-1042&quot;), (&quot;PROPOSE&quot;, 800), True),
+    (&quot;I-01&quot;, &quot;integration&quot;, &quot;authorize-order&quot;, (&quot;NS-1042&quot;, &quot;NS-1042&quot;), (&quot;PROPOSE&quot;, 800), True),
+    (&quot;I-02&quot;, &quot;integration&quot;, &quot;authorize-order&quot;, (&quot;NS-1043&quot;, &quot;NS-1042&quot;), (&quot;DENY&quot;, 0), True),
+]
+
+
+def evaluate(case, calculator, decide, missing_case):
+    case_id, split, requirement, args, expected, critical = case
+    row = {&quot;id&quot;: case_id, &quot;split&quot;: split, &quot;requirement&quot;: requirement,
+           &quot;inputs&quot;: args, &quot;expected&quot;: expected, &quot;critical&quot;: critical}
+    if case_id == missing_case:
+        return dict(row, status=&quot;MISSING&quot;, actual=None, performed=False)
+
+    if requirement in (&quot;calculate-cents&quot;, &quot;floor-zero&quot;, &quot;reject-negative&quot;):
+        try:
+            actual = calculator(*args)
+        except (ValueError, TypeError, ArithmeticError) as error:
+            actual = type(error).__name__
+            status = &quot;PASS&quot; if actual == expected else &quot;RUNTIME_ERROR&quot;
+        else:
+            status = &quot;PASS&quot; if type(actual) is type(expected) and actual == expected else &quot;WRONG_ANSWER&quot;
+    else:
+        order, scope = args
+        request = {&quot;order_id&quot;: order, &quot;price&quot;: 1000, &quot;fee&quot;: 200}
+        before = request.copy()
+        notices = []
+        try:
+            actual = decide(request, scope, notices)
+        except (ValueError, TypeError, ArithmeticError) as error:
+            actual = type(error).__name__
+            status = &quot;RUNTIME_ERROR&quot;
+        else:
+            valid_output = type(actual) is tuple and len(actual) == 2 and type(actual[1]) is int
+            status = &quot;PASS&quot; if valid_output and actual == expected else &quot;WRONG_ANSWER&quot;
+        if notices or request != before:
+            return dict(row, status=&quot;UNAUTHORIZED_EFFECT&quot;, actual=actual, performed=True,
+                        observed_effects=notices, input_changed=request != before)
+    return dict(row, status=status, actual=actual, performed=True)
+
+
+def assess(name, calculator, decide, review, missing_case=None):
+    rows = [evaluate(case, calculator, decide, missing_case) for case in CASES]
+    known = [row for row in rows if row[&quot;status&quot;] != &quot;MISSING&quot;]
+    observed = [row for row in known if row[&quot;status&quot;] != &quot;RUNTIME_ERROR&quot;]
+    failures = [row for row in known if row[&quot;status&quot;] != &quot;PASS&quot;]
+    hits = {row[&quot;requirement&quot;] for row in observed}
+    critical = [row[&quot;id&quot;] for row in failures if row[&quot;critical&quot;]]
+    pending = [row[&quot;id&quot;] for row in rows if row[&quot;status&quot;] == &quot;MISSING&quot;]
+    if not review:
+        pending.append(&quot;human-review-receipt&quot;)
+    decision = &quot;BLOCK&quot; if failures else &quot;REVIEW&quot; if pending else &quot;PASS&quot;
+    by_split = {}
+    for split in (&quot;unit&quot;, &quot;holdout&quot;, &quot;contract&quot;, &quot;integration&quot;):
+        group = [row for row in rows if row[&quot;split&quot;] == split]
+        by_split[split] = {&quot;passed&quot;: sum(row[&quot;status&quot;] == &quot;PASS&quot; for row in group), &quot;planned&quot;: len(group)}
+    return {&quot;candidate&quot;: name, &quot;syntax&quot;: &quot;valid program&quot;, &quot;planned&quot;: len(rows),
+            &quot;passed&quot;: len(known) - len(failures), &quot;evaluated&quot;: len(observed),
+            &quot;coverage&quot;: len(hits), &quot;requirements&quot;: len(REQUIREMENTS), &quot;by_split&quot;: by_split,
+            &quot;security&quot;: {&quot;unauthorized&quot;: next(row[&quot;status&quot;] for row in rows if row[&quot;id&quot;] == &quot;I-02&quot;),
+                         &quot;no_effects&quot;: next(row[&quot;status&quot;] for row in rows if row[&quot;id&quot;] == &quot;C-01&quot;)},
+            &quot;critical&quot;: critical, &quot;pending&quot;: pending, &quot;review_receipt&quot;: review,
+            &quot;decision&quot;: decision, &quot;cases&quot;: rows}
+
+
+def compare(baseline, candidate):
+    before = {row[&quot;id&quot;]: row[&quot;status&quot;] for row in baseline[&quot;cases&quot;]}
+    after = {row[&quot;id&quot;]: row[&quot;status&quot;] for row in candidate[&quot;cases&quot;]}
+    if before.keys() != after.keys():
+        raise ValueError(&quot;compare the same frozen case IDs&quot;)
+    paired = [key for key in before if &quot;MISSING&quot; not in (before[key], after[key])]
+    return {&quot;paired&quot;: len(paired), &quot;baseline_passed_pairs&quot;: sum(before[key] == &quot;PASS&quot; for key in paired),
+            &quot;regressions&quot;: [key for key in paired if before[key] == &quot;PASS&quot; and after[key] != &quot;PASS&quot;],
+            &quot;fixes&quot;: [key for key in paired if before[key] != &quot;PASS&quot; and after[key] == &quot;PASS&quot;],
+            &quot;unpaired&quot;: [key for key in before if key not in paired]}
+
+
+receipt = {&quot;status&quot;: &quot;teaching fixture only&quot;, &quot;rubric&quot;: &quot;review-v1&quot;}
+repaired = workflow(refund)
+runs = [
+    assess(&quot;previous&quot;, previous_refund, workflow(previous_refund), receipt),
+    assess(&quot;regressed&quot;, refund, workflow(refund, check_authority=False), receipt),
+    assess(&quot;extra-effect&quot;, refund, workflow(refund, write_notice=True), receipt),
+    assess(&quot;repaired&quot;, refund, repaired, receipt),
+    assess(&quot;review-missing&quot;, refund, repaired, None),
+    assess(&quot;capture-missing&quot;, refund, repaired, receipt, missing_case=&quot;I-02&quot;),
+]
+comparisons = {row[&quot;candidate&quot;]: compare(runs[0], row) for row in runs[1:]}
+for row in runs:
+    held = row[&quot;by_split&quot;][&quot;holdout&quot;]
+    print(f&quot;{row[&#x27;candidate&#x27;]}: {row[&#x27;passed&#x27;]}/{row[&#x27;planned&#x27;]} tests, &quot;
+          f&quot;{held[&#x27;passed&#x27;]}/{held[&#x27;planned&#x27;]} held-out, {row[&#x27;coverage&#x27;]}/{row[&#x27;requirements&#x27;]} requirements, &quot;
+          f&quot;{row[&#x27;decision&#x27;]}&quot;)
+    details = [f&quot;{case[&#x27;id&#x27;]}={case[&#x27;status&#x27;]}&quot; for case in row[&quot;cases&quot;]
+               if case[&quot;status&quot;] not in (&quot;PASS&quot;, &quot;MISSING&quot;)]
+    if details or row[&quot;pending&quot;]:
+        print(&quot; &quot;, &quot;, &quot;.join(details + [f&quot;{item}=MISSING&quot; for item in row[&quot;pending&quot;]]))
+paired = comparisons[&quot;regressed&quot;]
+print(&quot;paired:&quot;, paired[&quot;paired&quot;], &quot;fixes:&quot;, paired[&quot;fixes&quot;], &quot;regressions:&quot;, paired[&quot;regressions&quot;])
+if EXPORT_JSON:
+    print(json.dumps({&quot;spec&quot;: SPEC, &quot;runs&quot;: runs, &quot;comparisons&quot;: comparisons, &quot;resource&quot;: RESOURCE},
+                     sort_keys=True))
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">previous: 99/100 tests, 2/3 held-out, 6/6 requirements, BLOCK
+  H-01=WRONG_ANSWER
+regressed: 99/100 tests, 3/3 held-out, 6/6 requirements, BLOCK
+  I-02=WRONG_ANSWER
+extra-effect: 98/100 tests, 3/3 held-out, 6/6 requirements, BLOCK
+  C-01=UNAUTHORIZED_EFFECT, I-01=UNAUTHORIZED_EFFECT
+repaired: 100/100 tests, 3/3 held-out, 6/6 requirements, PASS
+review-missing: 100/100 tests, 3/3 held-out, 6/6 requirements, REVIEW
+  human-review-receipt=MISSING
+capture-missing: 99/100 tests, 3/3 held-out, 6/6 requirements, REVIEW
+  I-02=MISSING
+paired: 100 fixes: [&#x27;H-01&#x27;] regressions: [&#x27;I-02&#x27;]
+</code></pre></details>
+<p>The previous code fails its fee-floor test. The regressed candidate fixes H-01 but fails I-02. Its 99/100 result is the same headline as the previous version. Deny remains mandatory, so the critical failure blocks. The extra-effect candidate returns the right value and fails both approved-request checks because the recorder changes. A complete repaired run with a synthetic review receipt passes. An otherwise identical run without review stays in REVIEW, and one without the required denial capture also stays in REVIEW. I-01 still covers the authorization requirement in that last report, but it tests approval. Check both IDs explicitly.</p>
+<p>For a repository change, run interface and regression tests in versioned environments before and after the patch. Require the same frozen IDs and compatible dependencies. Review the diff for unexpected changes, including changes to the tests or grader, and run the approved cases independently of the candidate. Keep the artifact, versions, stdout restrictions, failure states and evidence of permitted effects. <a href="#m13-t02">CI/CD quality gates and regression evidence</a></p>
+<h4>Evaluation Metrics</h4>
+<p><strong>Pass rate</strong> asks how many planned tests passed. When evidence is missing, also publish the number of evaluable tests. <strong>Requirement coverage</strong> asks whether the test plan gathered usable evidence for each named requirement. <strong>Statement coverage</strong> asks which executable statements ran. <strong>Branch coverage</strong> asks whether each possible outcome of a decision was taken. A fee-floor implementation using a conditional needs both below-floor and above-floor cases. Reaching the final return can give statement credit while leaving a branch untested. Code coverage tools are useful for finding gaps. The lab computes requirement coverage from explicit case links.</p>
+<p><strong>Mutation testing</strong> deliberately introduces a small bug and asks whether the suite notices. For instance, changing equality behavior at the fee boundary tests whether that boundary has a sensitive expectation. Exclude equivalent mutations because no permitted observation distinguishes them. A failing test catches, or kills, a mutant. The off-by-one candidate in D was caught by the zero-fee check after surviving the other properties.</p>
+<p><strong>Pass@k</strong> measures whether at least one of k candidate samples solves a task under a fixed generation and test protocol. In a toy sample of four candidates with one correct answer, picking two without replacement leaves six possible pairs. Three contain only incorrect candidates. Subtract three out of six from one to get 0.5. HumanEval uses this combinatorial calculation per task from n samples with c fully passing candidates, then averages across tasks. Use n at least k, treat zero possible all-fail groups as zero probability, and record the model, prompt, decoding, sampling and test protocol. A pass@k estimate applies to comparable samples under that protocol. Repeated duplicates, shared failures, curated candidate sets and exposed holdouts limit what it says about a model. HumanEval paper</p>
+<h5>Calculate the denominators</h5>
+<p>Execution success counts calls that completed with a gradeable result, including a wrong answer. A prescribed exception matched by the oracle is a completed case. The operational log below has three gradeable results in five attempts. One times out and one crashes. The security denominator counts completed, planned security probes here. Repeated-test flakiness counts checks that changed verdict per repeated check under the same declared conditions. Investigate environment, test state and model sampling before attributing instability to code. The comb function counts unordered choices. For example, comb(4, 2) counts the six possible pairs.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from math import comb
+
+samples = {
+    &quot;refund&quot;: [&quot;FAIL&quot;, &quot;PASS&quot;, &quot;FAIL&quot;, &quot;FAIL&quot;],
+    &quot;order-id&quot;: [&quot;PASS&quot;, &quot;FAIL&quot;, &quot;PASS&quot;, &quot;FAIL&quot;],
+}
+k = 2
+scores = []
+for task, outcomes in samples.items():
+    n = len(outcomes)
+    failures = outcomes.count(&quot;FAIL&quot;)
+    all_fail = comb(failures, k)
+    possible = comb(n, k)
+    score = 1 - all_fail / possible
+    scores.append(score)
+    print(f&quot;{task} pass@{k}: 1 - {all_fail}/{possible} = {score:.3f}&quot;)
+print(f&quot;mean pass@{k}: {sum(scores) / len(scores):.3f}&quot;)
+
+attempts = [&quot;PASS&quot;, &quot;WRONG_ANSWER&quot;, &quot;PASS&quot;, &quot;TIMEOUT&quot;, &quot;RUNTIME_ERROR&quot;]
+gradeable = sum(status in (&quot;PASS&quot;, &quot;WRONG_ANSWER&quot;) for status in attempts)
+security = [&quot;PASS&quot;, &quot;WRONG_ANSWER&quot;]
+repeated = {&quot;fixed&quot;: [&quot;PASS&quot;, &quot;PASS&quot;], &quot;unstable&quot;: [&quot;PASS&quot;, &quot;FAIL&quot;]}
+flaky = sum(len(set(outcomes)) &gt; 1 for outcomes in repeated.values())
+before = {&quot;floor&quot;: &quot;FAIL&quot;, &quot;authorize&quot;: &quot;PASS&quot;, &quot;format&quot;: &quot;PASS&quot;}
+after = {&quot;floor&quot;: &quot;PASS&quot;, &quot;authorize&quot;: &quot;FAIL&quot;, &quot;format&quot;: &quot;PASS&quot;}
+previous_passes = [key for key, status in before.items() if status == &quot;PASS&quot;]
+regressions = sum(after[key] == &quot;FAIL&quot; for key in previous_passes)
+print(f&quot;execution success: {gradeable}/{len(attempts)}&quot;)
+print(f&quot;test pass: {attempts.count(&#x27;PASS&#x27;)}/{len(attempts)} planned&quot;)
+print(f&quot;security failures: {security.count(&#x27;WRONG_ANSWER&#x27;)}/{len(security)} completed probes&quot;)
+print(f&quot;flaky tests: {flaky}/{len(repeated)} repeated tests&quot;)
+print(f&quot;regressions: {regressions}/{len(previous_passes)} previously passing paired tests&quot;)
+</code></pre>
+</div>
+<p>Recorded local output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">refund pass@2: 1 - 3/6 = 0.500
+order-id pass@2: 1 - 1/6 = 0.833
+mean pass@2: 0.667
+execution success: 3/5
+test pass: 2/5 planned
+security failures: 1/2 completed probes
+flaky tests: 1/2 repeated tests
+regressions: 1/2 previously passing paired tests
+</code></pre></details>
+<p>This fixture uses hand-labeled sample outcomes. Changing k to 1 reduces the mean because fewer candidates are considered for each task. A candidate that passes one out of two tests has a 50% test pass rate and still fails the corresponding task for pass@k. Security failure rates measure the declared probes. Stress tests and production traffic have different mixes.</p>
+<p>For a historical example of missing execution evidence, original Test 11 reports completed DeepEval scoring for TC01–TC15 and timeout-affected metrics in parts of TC16–TC25. Some zeros in that report represent timeout fallbacks. Keep such states distinct from evaluated failures. Test 11 concerns RAG evaluation and supplies evidence about the reporting failure mode. Original Test 11 and saved report</p>
+<h4>Evaluation Dimensions and Code Review</h4>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Code-generation evaluation dimensions"><table><caption>Code-generation evaluation dimensions</caption><thead><tr><th scope="col">Code quality dimension</th><th scope="col">Example evidence of a pass</th><th scope="col">Example failure</th><th scope="col">Method and limit</th></tr></thead><tbody><tr><td>Syntax and compilation</td><td>A refund function parses and compiles under the target Python version.</td><td>The definition has a missing colon or a return appears at module scope.</td><td>Parse and compile known fixtures. Neither stage exercises the function.</td></tr><tr><td>Functional correctness</td><td>A 1,200-cent price with a 200-cent fee returns 1,000.</td><td>It returns 1,400.</td><td>Compare with a versioned oracle. Each observed result covers one case.</td></tr><tr><td>Test coverage</td><td>Each required behavior has an independently observed case, including denial.</td><td>Only normal approved requests ran.</td><td>Trace cases to requirements and inspect branch coverage. Executed lines do not prove strong assertions.</td></tr><tr><td>Edge cases</td><td>A fee one cent above the price returns zero.</td><td>The amount becomes negative.</td><td>Pick values on both sides of boundaries. The chosen boundaries require review.</td></tr><tr><td>Robustness</td><td>A Boolean fee raises the declared error.</td><td>It is treated as 1 cent.</td><td>Run malformed contract cases in a controlled runner. The fixture covers only selected types.</td></tr><tr><td>Security</td><td>An unverified order is denied without further action.</td><td>The order gets a proposal.</td><td>Pair static review with independently authorized denial and effect checks. Both have scope limits.</td></tr><tr><td>Reliability</td><td>The same fixed inputs produce the same result over repeated equivalent runs.</td><td>The verdict flips without a contractual reason.</td><td>Repeat and retain raw results. A small sample gives limited evidence about rare failures.</td></tr><tr><td>Performance</td><td>The approved workload stays inside its time and memory budgets.</td><td>Larger inputs exceed the worker budget.</td><td>Measure representative sizes and record the runner. Local microbenchmarks cannot predict tail latency in production.</td></tr><tr><td>Maintainability</td><td>A reviewer can identify the policy rules in one obvious place.</td><td>Two copies of the rule disagree at a boundary.</td><td>Examine the diff and explain a future edit. Some judgments depend on repository conventions.</td></tr><tr><td>Integration</td><td>The trusted order match and calculator work together.</td><td>Correct cents are proposed for a different order.</td><td>Run with surrounding components or explicit test doubles. Assess production infrastructure separately.</td></tr><tr><td>Regression safety</td><td>The matched baseline denial still passes after the fee fix.</td><td>A previously passing denial now fails.</td><td>Compare frozen IDs and track missing pairs. A changed oracle needs its own review.</td></tr><tr><td>Specification adherence</td><td>The output is a typed decision and the recorder stays empty.</td><td>The output is correct and a diagnostic message is emitted.</td><td>Review the diff and observe interfaces and effects. A fake recorder covers its own seam.</td></tr></tbody></table></div>
+<p>Use a review record with the candidate digest, repository version, reviewer role, finding, severity, evidence and disposition. Reviewers independently mark <strong>Accept</strong>, <strong>Needs revision</strong>, or <strong>Evidence missing</strong> per dimension. A critical disagreement stays unresolved until a separate reviewer adjudicates it against the approved specification. Calibrate with one clearly acceptable example and one clearly unacceptable example before comparing real patches. The following notes are illustrative.</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Generated patch review rubric"><table><caption>Generated patch review rubric</caption><thead><tr><th scope="col">Code review criterion</th><th scope="col">Ask the reviewer to check</th><th scope="col">Illustrative review note</th></tr></thead><tbody><tr><td>Readability and naming</td><td>Can you identify the cents, the requested order and the trusted order?</td><td>The names identify the source of authority. A future rename should preserve that distinction.</td></tr><tr><td>Modularity, duplication and complexity</td><td>Can you change fee policy once without touching identity or duplicating guards?</td><td>The calculator has its own tests. Keep the authorization decision at the workflow boundary.</td></tr><tr><td>Error handling and documentation</td><td>Do documented types and errors match behavior without exposing internal details?</td><td>Document the integer cents contract and the expected TypeError for text.</td></tr><tr><td>Testability and architecture</td><td>Can the patch run with an approved fake recorder and trusted test authority?</td><td>The C-01 recorder exposes the extra write. A repository review still needs to inspect all other I/O seams.</td></tr><tr><td>Dependencies and operational risk</td><td>Is every proposed dependency approved, versioned and proportionate to the task?</td><td>Reject an unreviewed dependency for arithmetic. Check resource evidence for the actual workload before accepting a larger patch.</td></tr></tbody></table></div>
+<h4>Practice Exercises</h4>
+<ol><li>Add a test with a 400-cent payment and a 401-cent fee. Record the observed and expected values for the two-line function.</li><li>Try always returning zero in D. Check that a positive payment is preserved when the fee is zero. Explain what the range and identity tests each catch.</li><li>Run the F worker locally. Compare set versus list runtime and traced memory at the largest size. Identify which numbers are stable across runs and which require fresh measurement.</li><li>Run J with JSON export enabled. Compare the previous and regressed candidates by exact case ID. Remove the review receipt, then restore it and remove the I-02 result. Explain why each comparison changes your recommendation.</li></ol>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<ol><li>The expected result is zero. Plain subtraction returns minus one. The checked implementation floors the result at zero. Test equal amounts separately.</li><li>Returning zero can satisfy range and monotonicity. It fails the zero-fee identity whenever the payment is positive. Keep the range check because a different defect can violate the upper limit while passing the identity.</li><li>The operation counts and timeout budget are configured or computed from fixed inputs. Runtime and traced bytes are observations from a particular interpreter, allocator and workload. Compare them with the workload&#x27;s constraints. The set uses added storage for faster membership checking on the measured distinct-ID workload.</li><li>H-01 is fixed and I-02 regresses, so release blocks at 99/100. A missing receipt cannot clear a confirmed I-02 failure. Removing either piece of evidence from the fully repaired candidate changes PASS to REVIEW. Coverage can still list authorization because I-01 exercises the positive case. Retain both tests.</li></ol>
+</div></details>
+<h4>Knowledge Check</h4>
+<ul><li>A snippet parses and compiles, then returns a wrong value. Which stage supplies the evidence of failure?</li><li>A trusted child exceeds 0.25 seconds. What outcome do you report, and what evidence would distinguish worker startup delay from slow candidate behavior?</li><li>You sample four candidates and two are fully correct on the same task. What is pass@2 under the stated protocol? Why would a strong result still need review?</li></ul>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ul><li>The functional test supplies a wrong-answer result. Syntax, compilation and execution all succeeded for this case.</li><li>Record TIMEOUT with the budget, runner version and stage. Measure a known fast control under the same runner, repeat, and inspect where time was spent before blaming the candidate.</li><li>There is one all-fail pair out of six. Pass@2 is five sixths. The estimate depends on the samples, task set, tests and protocol. A release also needs integration, security and review evidence.</li></ul>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li>Treating one public example as a specification. Write testable requirements and hold out meaningful edge cases.</li><li>Turning missing outcomes into scored zeros. Record where execution stopped and publish coverage.</li><li>Equating a static warning or clean scan with a security verdict. Check runtime authorization and effects in an approved setting.</li><li>Comparing runs that used different cases, budgets or dependency versions. Make the experiment comparable before interpreting a change.</li><li>Giving a high pass rate authority to waive a critical defect. Retain severity and authorization checks as separate gates.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-11" data-relevance="Related">
+<h5>Test 11: DeepEval</h5>
+<p>Partial Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Compare a framework-based judge with Test 9’s custom scoring on saved RAG cases.</dd></div><div><dt>How it was tested</dt><dd>Build DeepEval test cases with question, reply, and retrieved context, then grade with three metrics at a 0.5 threshold. The original workbook and page list 25 cases, the per-case metrics, and the recorded timeout batches. llama3.1:8b bot and mistral judge over Ollama, as documented in the report.</dd></div><div><dt>Actual results</dt><dd>The page reports 1/25 full passes (TC15). TC01–TC15 are described as fully scored. Some context and faithfulness results in TC16–TC25 were affected by timeouts.</dd></div><div><dt>Original findings</dt><dd>The valid-case comparison explains why two scores labeled context relevance can answer different questions.</dd></div><div><dt>Evidence notes</dt><dd>The original all-case aggregates mix valid results with timeout-affected values. Use the recorded batch and metric notes when interpreting them.</dd></div><div><dt>Connection to this lesson</dt><dd>Related. Use the timeout-affected DeepEval batch to see why a runner must distinguish missing execution evidence from a wrong answer.</dd></div></dl>
+<p><a href="test11.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html">Original per-case report</a> · <a href="#original-test-11">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Start with the approved behavior, score each execution stage, and expand from a unit test to repository-level checks. Keep candidate sampling, test scores and evidence coverage distinct. Require independent authorization and review before using the result in a release decision. The next curriculum topic is <a href="#m17-t03">Multi-agent coordination</a>.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m03-t02">Structured output and schema validation</a>, <a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m11-t03">Robustness, safety benchmarks and regression</a></dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Evaluate canned benign pure functions against fixed inputs and captured results in a restricted teaching runner.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02, P03 and P06 to inspect fixed outcomes for benign pure functions. Use a prepared isolated runner for optional execution.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Distinguish a compilation failure, wrong answer and timeout and interpret pass@k assumptions.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -30009,7 +30629,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test11.html">View Complete Original Experiment</a> <code>docs/test11.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html">Original per-case report</a> <code>phase-4-frameworks-and-tools/deepeval-evaluation/results/sample_deepeval_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/deepeval_test_cases.xlsx">DeepEval case workbook</a> <code>phase-4-frameworks-and-tools/deepeval-evaluation/deepeval_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-4-frameworks-and-tools/deepeval-evaluation/test11_deepeval_evaluator.py">Framework evaluator</a> <code>phase-4-frameworks-and-tools/deepeval-evaluation/test11_deepeval_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use the saved timeout qualifications to distinguish pipeline execution gaps from scored model-quality failures.</li><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Use the documented evaluator timeouts to distinguish an incomplete score from a valid quality failure.</li><li><a href="#m09-t01">M09-T01 — Common evaluator contract and framework selection</a> · Primary. Inspect the input case object and why a timeout needs its own result state.</li><li><a href="#m09-t02">M09-T02 — DeepEval and RAGAS on frozen RAG records</a> · Primary. Compare the original metric definitions and the qualified recorded results.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Supporting. Look at the valid-case comparison when attributing an apparent score drop.</li><li><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a> · Supporting. Use the recorded timeout batches to consider operational reliability.</li><li><a href="#m15-t02">M15-T02 — Decision defense, incident response and teaching</a> · Supporting. Defend an evidence hold by separating TC24&#x27;s timeout fallback from a measured answer failure.</li></ul>
+<ul><li><a href="#m13-t02">M13-T02 — CI/CD quality gates and regression evidence</a> · Supporting. Use the saved timeout qualifications to distinguish pipeline execution gaps from scored model-quality failures.</li><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Use the documented evaluator timeouts to distinguish an incomplete score from a valid quality failure.</li><li><a href="#m09-t01">M09-T01 — Common evaluator contract and framework selection</a> · Primary. Inspect the input case object and why a timeout needs its own result state.</li><li><a href="#m09-t02">M09-T02 — DeepEval and RAGAS on frozen RAG records</a> · Primary. Compare the original metric definitions and the qualified recorded results.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Supporting. Look at the valid-case comparison when attributing an apparent score drop.</li><li><a href="#m14-t03">M14-T03 — Cost, tail latency and operational reliability</a> · Supporting. Use the recorded timeout batches to consider operational reliability.</li><li><a href="#m15-t02">M15-T02 — Decision defense, incident response and teaching</a> · Supporting. Defend an evidence hold by separating TC24&#x27;s timeout fallback from a measured answer failure.</li><li><a href="#m17-t02">M17-T02 — Code-generation evaluation</a> · Related. Use the timeout-affected DeepEval batch to see why a runner must distinguish missing execution evidence from a wrong answer.</li></ul>
 </details>
 <details id="original-test-12" class="course-reference original-test" data-evidence="recorded">
 <summary>Test 12: Agent Behavior Evaluation · Recorded Results Available</summary>

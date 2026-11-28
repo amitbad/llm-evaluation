@@ -612,6 +612,11 @@
           "id": "M15-T02",
           "relevance": "Supporting",
           "connection": "Defend an evidence hold by separating TC24's timeout fallback from a measured answer failure."
+        },
+        {
+          "id": "M17-T02",
+          "relevance": "Related",
+          "connection": "Use the timeout-affected DeepEval batch to see why a runner must distinguish missing execution evidence from a wrong answer."
         }
       ]
     },

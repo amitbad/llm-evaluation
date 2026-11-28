@@ -369,6 +369,9 @@ def prose(markdown):
                 "Routing label": "Northstar intake label definitions",
                 "Evidence situation": "Missing or ambiguous intake evidence",
                 "Extraction review criterion": "Structured intake annotation rubric",
+                "Local implementation": "Observed order-list runtime and allocations",
+                "Code quality dimension": "Code-generation evaluation dimensions",
+                "Code review criterion": "Generated patch review rubric",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS

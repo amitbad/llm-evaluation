@@ -399,6 +399,16 @@ test("structured intake elective keeps navigation and progress across reading mo
   assert.equal(ui.el("m17-t01").querySelector("[data-progress]").value, "Completed");
 });
 
+test("code evaluation elective keeps navigation and progress across reading modes", () => {
+  const ui = start(lessonHash("G", "M17-T02"));
+  assert.equal(ui.el("guided-previous").href, lessonHash("G", "M17-T01"));
+  assert.equal(ui.el("guided-next").href, lessonHash("G", "M17-T03"));
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+  ui.go("#m17-t02");
+  assert.equal(ui.el("m17-t02").open, true);
+  assert.equal(ui.el("m17-t02").querySelector("[data-progress]").value, "Completed");
+});
+
 test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
@@ -544,6 +554,19 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       }
       assert.match(markup, /href="#m17-t02"/);
       assert.match(markup, /href="test12\.html"/);
+    } else if (topic.id === "M17-T02") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /Experiment A[\s\S]*Experiments B and C[\s\S]*Experiment D[\s\S]*Experiment E[\s\S]*Experiment F[\s\S]*Experiment G[\s\S]*Experiment H[\s\S]*Experiment I[\s\S]*Experiment J/);
+      assert.match(markup, /A01 PARSE_ERROR[\s\S]*A02 COMPILE_ERROR[\s\S]*A03 WRONG_ANSWER/);
+      assert.match(markup, /regressed: 99\/100 tests,.*BLOCK/);
+      assert.match(markup, /repaired: 100\/100 tests,.*PASS/);
+      assert.match(markup, /capture-missing: 99\/100 tests,.*REVIEW/);
+      assert.match(markup, /<caption>Generated patch review rubric<\/caption>/);
+      assert.equal([...markup.matchAll(/<pre><code class="language-python">/g)].length, 8);
+      for (const target of ["m03-t02", "m07-t01", "m11-t03", "m17-t03"]) {
+        assert.ok(markup.includes('href="#' + target + '"'));
+      }
+      assert.match(markup, /href="test11\.html"/);
     } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);
