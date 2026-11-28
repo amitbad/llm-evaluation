@@ -339,6 +339,22 @@ test("refresh, completion, return links and version-one backups preserve shared 
   assert.equal(resumed.el("guided-complete").textContent, "Completed");
 });
 
+test("capstone progression preserves progress across guided and complete course modes", () => {
+  const plan = data.paths.A;
+  const first = "M15-T01";
+  const second = "M15-T02";
+  assert.equal(plan.closure[plan.closure.indexOf(first) + 1], second);
+  const ui = start(lessonHash("A", first));
+  ui.el("guided-complete").dispatchEvent(new Event("click"));
+  assert.equal(ui.el("guided-next").href, lessonHash("A", second));
+  ui.go(ui.el("guided-next").href);
+  assert.equal(ui.el("guided-title").textContent, data.topics[second].title);
+  assert.equal(ui.el("guided-previous").href, lessonHash("A", first));
+  assert.equal(ui.run("progressState.current().statuses['M15-T01']"), "Completed");
+  ui.go("#m15-t02");
+  assert.equal(ui.el("m15-t02").open, true);
+});
+
 test("lesson chapters and outlines render the reading sequence and relevant disclosures", () => {
   const sources = [...html.matchAll(/<div class="topic-material lesson-reading" id="material-([^"]+)">([\s\S]*?)\n<\/div>\n    <\/div>\n  <\/div>\n<\/details>/g)];
   assert.equal(sources.length, 53);
@@ -420,6 +436,17 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       assert.match(markup, /href="#m15-t02"/);
       assert.match(markup, /href="test12\.html"/);
       assert.match(markup, /href="test13\.html"/);
+    } else if (topic.id === "M15-T02") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /Experiments A and B[\s\S]*Experiments C and D[\s\S]*Experiments E and F/);
+      assert.match(markup, /def recovery\(release, results, windows, probe=None\)/);
+      assert.match(markup, /E wording only: 4\/6 passed, coverage 6\/6, KEEP CONTAINED/);
+      assert.match(markup, /E verified rollback: 6\/6 passed, coverage 6\/6, RESTORE LIMITED/);
+      assert.match(markup, /Decision Memo and Incident Handoff[\s\S]*Score the teach-back/);
+      for (const id of ["m13-t03", "m14-t02", "m15-t01", "m12-t03", "m14-t03", "m16-t01"]) {
+        assert.ok(markup.includes('href="#' + id + '"'));
+      }
+      assert.match(markup, /href="test11\.html"/);
     } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);

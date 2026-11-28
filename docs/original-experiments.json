@@ -592,6 +592,11 @@
           "id": "M14-T03",
           "relevance": "Supporting",
           "connection": "Use the recorded timeout batches to consider operational reliability."
+        },
+        {
+          "id": "M15-T02",
+          "relevance": "Supporting",
+          "connection": "Defend an evidence hold by separating TC24's timeout fallback from a measured answer failure."
         }
       ]
     },
