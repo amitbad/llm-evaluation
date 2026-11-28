@@ -79,6 +79,7 @@ function start(hash, storage = new Map(), hosted = false) {
     "guided-material", "guided-status", "guided-progress", "guided-progress-label",
     "guided-previous", "guided-complete", "guided-next", "guided-back"]) add(id);
   const el = id => ids.get(id);
+  add("preparation-packet", {panel: el("quick")});
   const dock = new Element({hidden: true});
   add("navigator-launch", {dock});
   for (const name of ["dialog", "map", "surface", "viewport", "path",
@@ -219,6 +220,19 @@ test("academy lesson visits use distinct static addresses without remounting the
   const offline = start(initial);
   assert.equal(offline.location.pathname, "/master-curriculum.html");
   assert.equal(offline.pushes.length, 0);
+});
+
+test("the terminal preparation packet opens from a guided lesson and all five readiness rows link to it", () => {
+  const ui = start(lessonHash("F", "M14-T01"));
+  const packet = /<section id="preparation-packet"[\s\S]*?<\/section>/.exec(html)[0];
+  assert.match(packet, /class="language-python"/);
+  assert.match(packet, /503 REQUEST_ERROR/);
+  for (const id of ["P01", "P02", "P03", "P04", "P05"]) {
+    assert.ok(html.includes('<a href="#preparation-packet">' + id + '</a>'));
+  }
+  ui.go("#preparation-packet");
+  assert.equal(ui.el("quick-catalog").hidden, false);
+  assert.equal(ui.el("guided-lesson").hidden, true);
 });
 
 test("compact mode selector follows lesson links and preserves progress across modes", () => {
@@ -680,7 +694,12 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       };
       if (labs.length) {
         const [lab, body] = labs[0];
-        expectedCounts(body, 1, 2);
+        if (topic.id === "M12-T02") {
+          assert.match(body, /Run a retained-history control[\s\S]*retained-note: DENY[\s\S]*missing-source: REVIEW/);
+          expectedCounts(body, 2, 3);
+        } else {
+          expectedCounts(body, 1, 2);
+        }
         expectedCounts(markup.replace(lab, ""), 7, 14);
       } else {
         expectedCounts(markup, 7, 14);

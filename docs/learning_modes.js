@@ -124,7 +124,7 @@ const guidedLearning = (() => {
     restoreMaterial();
     active = route?.topic ? route : null;
     guided("lesson").hidden = !active;
-    if (route || ["#quick", "#paths", "#preparation"].includes(hash)) {
+    if (route || ["#quick", "#paths", "#preparation", "#preparation-packet"].includes(hash)) {
       catalog.hidden = Boolean(route);
       for (const plan of plans) plan.hidden = Boolean(active) || plan.dataset.quickPlan !== route?.path.id;
     }

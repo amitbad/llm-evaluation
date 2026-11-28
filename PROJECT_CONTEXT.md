@@ -37,6 +37,8 @@ python3 scripts/validate_static_site.py
 
 Batch 1 preserves the M18-T01 authored lesson and verifies it in all 53 locally generated topics. The public curriculum still serves an outline for M18-T01. Commit, approved deployment, browser acceptance and human teaching review remain pending. M12 now requires complete case-ID evidence for verification, holds on independently confirmed wrong-order writes, and keeps dispatch and effect coverage tied to the fixed plan. The [remediation report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_1.md) records the 19 Python regression tests, 78 Node tests and outstanding acceptance steps.
 
+Batch 2 separates M18-T01 prediction snapshots from scoring labels and binds calibration to the judge version. M12-T02 now executes a retained-history control on inert fixtures. The concepts reference explains archive comparison limits. P01–P05 link to a runnable terminal packet and M14-T01 starts with an offline replay. The [Batch 2 remediation report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_2.md) records eight focused Python tests, 19 Batch 1 Python tests and 79 Node tests. Public M18-T01 deployment, human teaching review and the novice pilot remain pending.
+
 ## Navigation and progress
 
 The homepage puts Quick Learning and Complete Course first. The homepage and curriculum share this primary order.

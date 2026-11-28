@@ -27,6 +27,7 @@ ROADMAP_SCRIPT = ROOT / "docs/learning_roadmap.js"
 MODES_SCRIPT = ROOT / "docs/learning_modes.js"
 NAVIGATOR_SCRIPT = ROOT / "docs/learning_navigator.js"
 PROGRESS_SCRIPT = ROOT / "docs/learning_progress.js"
+PREPARATION_PACKET = ROOT / "docs/preparation.md"
 READER_SCRIPT = ASSETS / "lesson-reader.js"
 STAGES = ("Beginner", "Intermediate", "Advanced", "Production", "Specialized / Expert")
 SECTIONS = ("Course overview", "Learning paths", "Repository coverage", "Teaching plan", "Detailed curriculum")
@@ -426,6 +427,10 @@ def authored_lesson(topic_id, difficulty, experiment_disclosure):
     source = ROOT / "docs/lessons" / f"{topic_id.lower()}.md"
     if not source.is_file():
         return None
+    return render_lesson(source, difficulty, experiment_disclosure)
+
+
+def render_lesson(source, difficulty, experiment_disclosure=""):
     text = source.read_text(encoding="utf-8")
     rendered = []
     folded_headings = {"Setup and run", "Worked Solutions to Practice", "Knowledge Check Answers"}
@@ -774,8 +779,13 @@ def quick_view(data, learning_paths, titles):
     learning_paths = learning_paths.replace("**Complete Learning**", "**Complete Course**").replace(
         "Use **Export graph** to share the full module or topic diagram, or choose a target or path and export its required route.",
         "Use **Download Image** for the complete module overview, complete topic detail, or the required route for a selected module or topic.")
+    learning_paths = re.sub(r"(?m)^\| (P0[1-5]) \|",
+                            r"| [\1](#preparation-packet) |", learning_paths)
     reference = prose(named_references(learning_paths, titles)).replace(
         "<h3>Preparation / Getting Started</h3>", '<h3 id="preparation" tabindex="-1">Preparation / Getting Started</h3>')
+    packet = render_lesson(PREPARATION_PACKET, "Intermediate")
+    reference = reference.replace("<h3>Paths A–G</h3>",
+        f'<section id="preparation-packet" class="academy-lesson" tabindex="-1">{packet}</section>\n<h3>Paths A–G</h3>', 1)
     return f'''<div id="quick-catalog">
   <p class="mode-tagline">Learn what you need. Skip what you don't.</p>
   <p>Choose a goal for a route with every required topic and checkpoint. Plans use the full topic material and share your progress with Complete Course.</p>
@@ -1599,7 +1609,7 @@ function followHash(focus, hash = location.hash) {
   if (target.matches(".topic, .module")) {
     if (focus) target.querySelector("summary").focus({preventScroll: true});
     target.scrollIntoView({block: "start"});
-  } else if (target.matches(".quick-plan, #preparation, #paths, #teaching, #coverage, #course-progress, #original-practical-tests, .original-test")) {
+  } else if (target.matches(".quick-plan, #preparation, #preparation-packet, #paths, #teaching, #coverage, #course-progress, #original-practical-tests, .original-test")) {
     if (focus) {
       const heading = target.querySelector("h3, summary") || target;
       if (heading.tagName !== "SUMMARY") heading.tabIndex = -1;

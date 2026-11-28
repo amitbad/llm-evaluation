@@ -96,8 +96,9 @@ test("keeps the original label and gives manual instructions when copying fails"
 
 test("generated curriculum adds buttons to executable blocks and leaves transcripts alone", () => {
   const html = read("docs/master-curriculum.html");
-  const sources = authoredLessonIds.flatMap(id =>
-    [...read("docs/lessons/" + id.toLowerCase() + ".md").matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]
+  const lessonSources = authoredLessonIds.map(id => [id, "docs/lessons/" + id.toLowerCase() + ".md"]);
+  const sources = [["PREPARATION", "docs/preparation.md"], ...lessonSources].flatMap(([id, path]) =>
+    [...read(path).matchAll(/^```(bash|python|text)\n([\s\S]*?)^```$/gm)]
       .map(match => Object.assign(match, {lessonId: id})));
   const rendered = [...html.matchAll(/<pre><code class="language-(\w+)">([\s\S]*?)<\/code><\/pre>/g)];
   const wrapped = [...html.matchAll(/<div class="lesson-code">([\s\S]*?)<\/pre>\n<\/div>/g)];
@@ -121,8 +122,8 @@ test("generated curriculum adds buttons to executable blocks and leaves transcri
       // Intermediate chapters can place the editor link directly before the block.
       assert.equal(html.slice(0, wrapper.index).endsWith(adjacentEditor), true);
     } else {
-      const terminalLab = ["M14-T01", "M14-T02", "M14-T03"].includes(source.lessonId);
-      // These monitoring labs read repository evidence and can use a local SDK and collector.
+      const terminalLab = ["PREPARATION", "M14-T01", "M14-T02", "M14-T03"].includes(source.lessonId);
+      // These local labs read files and use the terminal.
       assert.equal(markup.includes(editor), source[1] === "python" && !terminalLab);
     }
   }

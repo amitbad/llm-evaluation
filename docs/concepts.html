@@ -1273,9 +1273,8 @@
     </div>
 
     <p style="color:var(--muted); font-size:14px; margin-bottom:40px; line-height:1.7;">
-      Concepts from Phase 4 — RAGAS and DeepEval. These frameworks automate the same metrics you built by hand in Tests
-      9, but their judge prompts are calibrated differently. Understanding <em>why</em> scores differ between frameworks
-      matters more than the numbers themselves.
+      RAGAS and DeepEval can measure similar qualities with different inputs, rules and judge prompts.
+      Check what each score measures, which requests returned a valid score and which could not be evaluated.
     </p>
 
     <!-- Metric Calibration -->
@@ -1289,19 +1288,18 @@
       </div>
 
       <div class="simple">
-        Two evaluation frameworks can use the <strong>same metric name</strong> and the <strong>same judge
-          model</strong>
-        and still produce <strong>dramatically different scores</strong> — because the underlying judge prompt asks a
-        different question.
+        A shared metric name and judge model can hide different scoring rules.
+        Comparing frameworks takes matched cases and enough valid scores to explain the denominators.
       </div>
 
-      <p class="detail">In Test 9 (hand-rolled), Context Relevance averaged 84% across 25 cases. In Test 11 (DeepEval),
-        the same RAG system with the same retriever scored 24% on Context Relevance — using the same judge model
-        (mistral). The difference is calibration: what exact question the judge prompt asks, how it counts relevant
-        statements, and what "relevant" means to that prompt.</p>
+      <p class="detail">The Test 9 walkthrough reports 84% context relevance and Test 11 reports 24%.
+        The Test 11 aggregate includes timeout-affected values from later batches. These archived runs do not
+        isolate calibration. To test a scoring-rule difference, send both systems the same frozen inputs, document
+        both metric definitions and compare matched valid scores alongside error and coverage counts.</p>
 
-      <div class="why-matters">When you compare evaluation scores across frameworks, always ask: what question is the
-        judge actually asking? Calibration is the hidden variable.</div>
+      <div class="why-matters">Check whether a difference came from the rubric, input records, batch conditions or
+        missing evidence. <a href="master-curriculum.html#m09-t02">Compare framework evidence in M09-T02</a> ·
+        <a href="test11.html">Read the archived Test 11 timeout notes</a>.</div>
     </div>
 
     <!-- Framework Pass/Fail -->
@@ -1315,14 +1313,17 @@
       </div>
 
       <div class="simple">
-        DeepEval turns each metric into a <strong>binary verdict</strong> — PASS or FAIL — based on a threshold.
+        A <strong>measured score</strong> can yield PASS or FAIL under its declared threshold.
       </div>
 
-      <p class="detail">This is the "unit test for LLMs" pattern: every case either passes or it doesn't, just like a
-        software test suite. It is useful for CI/CD gates, but it also amplifies calibration sensitivity.</p>
+      <p class="detail">A scored fail means a valid score missed the threshold. An execution error, such as a timeout,
+        means the scorer did not return valid evidence. A case can also be unscorable because required context or a
+        reference is absent. Keep those states separate and report which cases were eligible for each criterion.</p>
+      <p class="detail">For example, ten applicable cases yield six passes, two scored failures, one timeout
+        and one missing reference. Report 6/8 passing among valid scores and 8/10 coverage.</p>
 
-      <div class="why-matters">When using threshold-based frameworks, always inspect per-metric pass rates separately
-        before reading the overall verdict.</div>
+      <div class="why-matters">Read both pass rate among valid scores and coverage of planned applicable cases.
+        <a href="master-curriculum.html#m09-t02">Practice measured zeros and missing evidence in M09-T02</a>.</div>
     </div>
 
     <!-- Refusal Handling -->
@@ -1336,15 +1337,15 @@
       </div>
 
       <div class="simple">
-        When a bot correctly refuses to answer an out-of-scope question, <strong>automated metrics should not score
-          it</strong>.
+        Judge each refusal against the expected behavior for that request.
       </div>
 
-      <p class="detail">A refusal is correct bot behaviour — not a failure — and running faithfulness or relevance
-        metrics on a refusal produces meaningless numbers.</p>
+      <p class="detail">An evaluator can score whether a refusal was justified and whether it protected information or
+        prevented an effect. A refusal on an allowed task is a false refusal. If a factual-answer criterion does not
+        apply to an expected refusal, mark that criterion not applicable and retain the case in the safety results.</p>
 
-      <div class="why-matters">Refusal cases require human pre-labelling in the test case definition. Failing to exclude
-        them inflates your failure rate and distorts category averages.</div>
+      <div class="why-matters">Report refusal appropriateness, ordinary utility and missing evidence separately.
+        <a href="master-curriculum.html#m11-t01">Compare permitted and required refusals in M11-T01</a>.</div>
     </div>
 
     <footer>

@@ -7,6 +7,11 @@ Last updated **2026-11-28**. The local workspace has **53/53 authored topics**. 
 - F-001 passed local authoring, generation and navigation checks. The public M18-T01 outline still needs approved deployment of the full lesson. Human teaching review and browser acceptance remain pending.
 - F-002, F-003 and F-005 passed fixture regressions. Empty retests stay READY FOR RETEST, confirmed wrong-order writes force HOLD, and missing dispatches preserve fixed planned counts. All 19 Python and 78 Node tests passed. All 56 generated files reproduced, static validation covered 85 public files and the dependency payload was unchanged. See the [remediation report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_1.md).
 
+## Final audit remediation · Batch 2
+
+- F-006, F-004, F-007 and F-008 passed local verification. Reference edits did not change prediction payloads. The checked history fixture preserved the legitimate control and routed missing provenance to REVIEW. The archived measurement caveats and terminal recovery steps are available in the local site.
+- All eight Batch 2 Python tests, 19 Batch 1 Python tests and 79 Node tests passed. The curriculum still has 53 authored topics, 18 modules and seven paths with identical dependency data. Public M18-T01 still serves an outline. Deployment, human teaching review, the terminal learner pilot and browser acceptance remain pending. See the [Batch 2 remediation report](docs/audits/final-curriculum-audit/REMEDIATION_BATCH_2.md).
+
 ## Implemented milestones
 
 | Milestone | Current state |
