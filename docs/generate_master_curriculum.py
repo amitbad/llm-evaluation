@@ -653,16 +653,36 @@ def roadmap_view(data):
     </aside>
   </div>
   <div class="road-downloads">
-    <label for="road-export">Export graph<select id="road-export">
-      <option value="module">Complete module roadmap</option>
-      <option value="selection" disabled>Selected path or target</option>
-      <option value="topic">Complete topic roadmap</option>
-    </select></label>
-    <button type="button" id="road-svg">Download SVG</button>
-    <button type="button" id="road-png">Download PNG</button>
+    <button type="button" id="road-image-open" aria-haspopup="dialog" aria-controls="road-image-dialog">Download Image</button>
     <button type="button" id="road-html">Download HTML</button>
     <output id="road-download-status" aria-live="polite"></output>
   </div>
+  <dialog id="road-image-dialog" aria-labelledby="road-image-title" aria-describedby="road-image-description">
+    <h3 id="road-image-title">Download Learning Roadmap</h3>
+    <p id="road-image-description">Choose which roadmap you want to download.</p>
+    <section aria-labelledby="road-image-complete">
+      <h4 id="road-image-complete">Complete Curriculum Roadmap</h4>
+      <p>Download the entire learning roadmap, including all 18 modules, 53 topics, and their learning connections. Choose a module overview or a separate image listing every topic.</p>
+      <div class="road-image-actions">
+        <button type="button" id="road-modules-svg" autofocus>Module overview SVG</button>
+        <button type="button" id="road-modules-png">Module overview PNG</button>
+        <button type="button" id="road-topics-svg">Topic detail SVG</button>
+        <button type="button" id="road-topics-png">Topic detail PNG</button>
+      </div>
+    </section>
+    <section aria-labelledby="road-image-selection">
+      <h4 id="road-image-selection">Selected Learning Path</h4>
+      <p>Download the selected module or topic, the preparation required to reach it, and the relevant learning connections.</p>
+      <p id="road-image-target">Select a module or topic on the roadmap first.</p>
+      <div class="road-image-actions">
+        <button type="button" id="road-selection-svg" aria-describedby="road-image-target" disabled>Selected path SVG</button>
+        <button type="button" id="road-selection-png" aria-describedby="road-image-target" disabled>Selected path PNG</button>
+      </div>
+    </section>
+    <p>SVG stays sharp when zoomed. PNG is a fixed-size image.</p>
+    <output id="road-image-status" role="status"></output>
+    <button type="button" id="road-image-cancel">Cancel</button>
+  </dialog>
 </div>'''
 
 
@@ -749,7 +769,10 @@ def quick_view(data, learning_paths, titles):
   <a class="mode-action" href="{href}" aria-label="Open {escape(path["title"])} learning plan">Open learning plan</a>
 </article>''')
         plans.append(quick_plan(path, data))
-    reference = prose(named_references(learning_paths.replace("**Complete Learning**", "**Complete Course**"), titles)).replace(
+    learning_paths = learning_paths.replace("**Complete Learning**", "**Complete Course**").replace(
+        "Use **Export graph** to share the full module or topic diagram, or choose a target or path and export its required route.",
+        "Use **Download Image** for the complete module overview, complete topic detail, or the required route for a selected module or topic.")
+    reference = prose(named_references(learning_paths, titles)).replace(
         "<h3>Preparation / Getting Started</h3>", '<h3 id="preparation" tabindex="-1">Preparation / Getting Started</h3>')
     return f'''<div id="quick-catalog">
   <p class="mode-tagline">Learn what you need. Skip what you don't.</p>
@@ -1350,6 +1373,15 @@ ROADMAP_CSS = """
 .road-route-hours { margin-left:.4rem; color:var(--muted); }
 .road-downloads { display:flex; flex-wrap:wrap; align-items:end; gap:.55rem; margin-top:.85rem; }
 .road-downloads output { flex:1 1 100%; font-size:.87rem; color:var(--muted); }
+#road-image-dialog { width:min(36rem, calc(100% - 2rem)); max-height:calc(100% - 2rem); box-sizing:border-box;
+  padding:1.2rem; overflow:auto; border:1px solid var(--line); border-radius:.85rem; background:var(--page); color:var(--text); }
+#road-image-dialog::backdrop { background:rgba(15,33,51,.62); }
+#road-image-dialog section { border-top:1px solid var(--line); margin-top:.85rem; }
+#road-image-dialog h3, #road-image-dialog h4, #road-image-dialog p { margin:.55rem 0; }
+#road-image-dialog button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+#road-image-target { font-weight:700; }
+#road-image-status:not(:empty) { display:block; margin:.55rem 0; }
+.road-image-actions { display:flex; flex-wrap:wrap; gap:.45rem; }
 #road-fullscreen-open, #road-fullscreen-close { display:inline-flex; align-items:center; gap:.35rem; min-height:2.75rem; }
 #road-fullscreen-open svg { flex:none; }
 .road-fullscreen-header { display:flex; align-items:center; justify-content:space-between; gap:1rem;

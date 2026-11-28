@@ -25,7 +25,6 @@ function setup(native, useObserver = true) {
       this.attrs = {};
       this.children = [];
       this.value = "";
-      this.options = [{}, {}, {}];
       this.clientWidth = 760;
       this.clientHeight = 420;
       this.tabIndex = 0;
@@ -43,6 +42,8 @@ function setup(native, useObserver = true) {
       return key && Object.hasOwn(this.dataset || {}, key) ? this : null;
     }
     matches(selector) { return selector === ":disabled" && this.disabled; }
+    showModal() { this.open = true; road("modules-svg").focus(); }
+    close() { this.open = false; this.dispatchEvent(new Event("close")); }
     setPointerCapture() {}
     contains(node) { return this === node; }
     getBoundingClientRect() {
@@ -86,9 +87,9 @@ function setup(native, useObserver = true) {
     return elements.get(id);
   };
   const road = id => element("road-" + id);
-  const controls = ["path", "mode", "search", "stage", "results", "focus", "optional", "export",
+  const controls = ["path", "mode", "search", "stage", "results", "focus", "optional", "image-open",
     "download-status", "details", "jump", "title", "estimate", "readiness", "graph-meta", "zoom", "clear", "zoom-in", "zoom-out",
-    "reset", "legend", "svg", "html", "png"].map(road);
+    "reset", "legend", "html"].map(road);
   const app = element("roadmap-app");
   const header = road("fullscreen-header");
   const opener = road("fullscreen-open");
@@ -111,6 +112,29 @@ function setup(native, useObserver = true) {
   header.add(closer);
   for (const control of [header, opener, viewport, ...controls]) app.add(control);
   page.getElementById = id => element(id);
+  const dialog = road("image-dialog");
+  app.add(dialog);
+  const downloads = [];
+  const rasterized = [];
+  const objects = new Map();
+  const url = {
+    createObjectURL(blob) {
+      const key = "object-" + objects.size + "-" + downloads.length;
+      objects.set(key, blob);
+      return key;
+    },
+    revokeObjectURL(key) { objects.delete(key); },
+  };
+  page.body.append = () => {};
+  page.createElement = tag => {
+    if (tag === "canvas") return {
+      getContext() { return {drawImage: (image, x, y, width, height) =>
+        rasterized.push({source: objects.get(image.src), x, y, width, height})}; },
+      toBlob: callback => callback(new Blob(["fixture"], {type: "image/png"})),
+    };
+    assert.equal(tag, "a");
+    return {click() { downloads.push({name: this.download, blob: objects.get(this.href)}); }, remove() {}};
+  };
   element("roadmap-data").textContent = data;
   header.hidden = true;
   road("mode").value = "module";
@@ -136,7 +160,16 @@ function setup(native, useObserver = true) {
   const browser = Object.assign(new EventTarget(), {
     scrollX: 4, scrollY: 310, restored: [],
     requestAnimationFrame(callback) { setImmediate(callback); },
+    setTimeout(callback) { callback(); },
     scrollTo(value) { this.restored.push(value); },
+    URL: url, Blob, document: page,
+    Image: class {
+      set src(value) {
+        this.url = value;
+        setImmediate(() => browser.failImage ? this.onerror() : this.onload());
+      }
+      get src() { return this.url; }
+    },
   });
   if (useObserver) {
     browser.ResizeObserver = class {
@@ -150,7 +183,7 @@ function setup(native, useObserver = true) {
     target.dispatchEvent(action);
     return action;
   };
-  vm.runInNewContext(source, {document: page, window: browser, Event, CustomEvent,
+  vm.runInNewContext(source, {document: page, window: browser, Event, CustomEvent, URL: url, Blob,
     LearningProgress: require("../docs/learning_progress.js")});
   event(page, "curriculum-tab", {detail: "#roadmap"});
 
@@ -161,6 +194,7 @@ function setup(native, useObserver = true) {
     return item;
   };
   return {app, header, opener, closer, viewport, search, sidebar, heading, existingInert, page, browser, road, click,
+    dialog, downloads, rasterized,
     get requests() { return requests; }, get exits() { return exits; }, nativeExit,
     listenerCount: type => listeners.get(type)?.size ?? 0,
     size: (width, height) => { viewport.clientWidth = width; viewport.clientHeight = height; },
@@ -318,30 +352,18 @@ function panelButtons(markup) {
 }
 
 test("module graph projects all authoritative topic edges without dropping direct links", () => {
-  const references = [];
-  const chapters = read("MASTER_CURRICULUM.md").split(/^##### (M\d+-T\d+) — /m);
-  for (let i = 1; i < chapters.length; i += 2) {
-    const to = chapters[i].split("-")[0];
-    for (const match of chapters[i + 1].matchAll(/^- \*\*(Mandatory|Recommended|Conditional) prerequisites\.\*\* (.*)$/gm)) {
-      const kind = match[1].toLowerCase();
-      for (const [, from] of match[2].matchAll(/\[(M\d+)-T\d+\]\(#m\d+-t\d+\)/g)) {
-        if (from !== to) references.push([from, to, kind].join("|"));
-      }
-    }
-  }
-  const expected = [...new Set(references)].sort();
-  const key = ({from, to, kind}) => [from, to, kind].join("|");
+  const expected = [...new Set(curriculumEdges("modules").map(edgeId))].sort();
   assert.equal(expected.length, 110);
   const overview = graph.graph(curriculum, {mode: "module", optional: true});
-  assert.deepEqual(plottedEdges(overview.svg).map(key).sort(), expected);
+  assert.deepEqual(plottedEdges(overview.svg).map(edgeId).sort(), expected);
   for (const id of Object.keys(curriculum.modules)) {
     const selected = graph.target(curriculum, id);
     const dependencies = graph.moduleDependencies(curriculum, id);
-    assert.deepEqual(dependencies.direct.upstream.map(key).sort(), expected.filter(edge => edge.split("|")[1] === id));
-    assert.deepEqual(dependencies.direct.downstream.map(key).sort(), expected.filter(edge => edge.startsWith(id + "|")));
+    assert.deepEqual(dependencies.direct.upstream.map(edgeId).sort(), expected.filter(edge => edge.split("|")[1] === id));
+    assert.deepEqual(dependencies.direct.downstream.map(edgeId).sort(), expected.filter(edge => edge.startsWith(id + "|")));
     const model = graph.graph(curriculum, {mode: "module", selection: selected, focus: true});
     assert.equal(model.count, 18);
-    assert.deepEqual(plottedEdges(model.svg).filter(edge => edge.kind === "mandatory").map(key).sort(),
+    assert.deepEqual(plottedEdges(model.svg).filter(edge => edge.kind === "mandatory").map(edgeId).sort(),
       expected.filter(edge => edge.endsWith("|mandatory")));
   }
 });
@@ -595,4 +617,242 @@ test("exercise-only requirements remain separate and prerequisite navigation lea
   await ui.close();
   assert.equal(ui.road("mode").value, "topic");
   assert.match(ui.viewport.markup, /aria-pressed="true" data-node="M13-T03"/);
+});
+
+function exportCards(svg) {
+  return new Map([...svg.matchAll(/<g data-export-node="([^"]+)" data-study-role="([^"]+)"><rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/g)]
+    .map(([, id, role, ...bounds]) => [id, {role, bounds: bounds.map(Number)}]));
+}
+
+function edgeId({from, to, kind}) { return [from, to, kind].join("|"); }
+
+function curriculumEdges(scope = "topics") {
+  const rows = [];
+  const chapters = read("MASTER_CURRICULUM.md").split(/^##### (M\d+-T\d+) — /m);
+  for (let i = 1; i < chapters.length; i += 2) {
+    for (const [, kind, field] of chapters[i + 1].matchAll(/^- \*\*(Mandatory|Recommended|Conditional) prerequisites\.\*\* (.*)$/gm)) {
+      for (const [, from] of field.matchAll(/\[(M\d+-T\d+)\]\(#m\d+-t\d+\)/g)) {
+        rows.push({from, to: chapters[i], kind: kind.toLowerCase()});
+      }
+    }
+  }
+  return scope === "topics" ? rows : rows.map(({from, to, kind}) => ({
+    from: from.split("-")[0], to: to.split("-")[0], kind,
+  })).filter(edge => edge.from !== edge.to);
+}
+
+test("complete image choices contain every authoritative node and dependency type", () => {
+  assert.equal(curriculumEdges().length, 183);
+  for (const [scope, count] of [["modules", 18], ["topics", 53]]) {
+    const model = graph.imageExport(curriculum, scope, "M17");
+    const moduleLevel = scope === "modules";
+    const expectedIds = Object.keys(moduleLevel ? curriculum.modules : curriculum.topics);
+    const dependencies = curriculumEdges(scope);
+    assert.equal(model.count, count);
+    assert.deepEqual([...exportCards(model.svg).keys()].sort(), expectedIds.sort());
+    assert.deepEqual(plottedEdges(model.svg).map(edgeId).sort(), [...new Set(dependencies.map(edgeId))].sort());
+    assert.match(model.svg, new RegExp('data-export-scope="' + scope + '" data-export-target=""'));
+    assert.match(model.svg, /<title>Complete Curriculum Roadmap · (Module Overview|Topic Detail)<\/title>/);
+    assert.match(model.svg, new RegExp("Curriculum revision .* · " + count + " " + scope));
+    assert.match(model.svg, /TestNeural LLM Academy[\s\S]*LLM Evaluation Engineering/);
+    assert.match(model.svg, /Mandatory[\s\S]*Recommended[\s\S]*Conditional extension/);
+    for (const stage of curriculum.stages) assert.ok(model.svg.includes(stage));
+    if (moduleLevel) assert.doesNotMatch(model.svg, /\b53 topics\b/);
+    else assert.match(model.svg, /M13-T03 → M18-T02 · required for the live rollout governance extension/);
+  }
+});
+
+test("selected exports use the exact mandatory closure of each module and topic", () => {
+  const original = curriculumEdges();
+  function closure(roots) {
+    const included = new Set(roots);
+    function visit(id) {
+      for (const {from, to, kind} of original) {
+        if (to !== id || kind !== "mandatory" || included.has(from)) continue;
+        included.add(from);
+        visit(from);
+      }
+    }
+    roots.forEach(visit);
+    return included;
+  }
+  for (const id of [...Object.keys(curriculum.modules), ...Object.keys(curriculum.topics)]) {
+    const roots = curriculum.modules[id]?.topics || [id];
+    const included = closure(roots);
+    const model = graph.imageExport(curriculum, "selection", id);
+    const cards = exportCards(model.svg);
+    assert.deepEqual([...cards.keys()].sort(), [...included].sort(), id);
+    for (const [key, card] of cards) assert.equal(card.role, roots.includes(key) ? "target" : "required", key);
+    const expected = original.filter(({from, to, kind}) =>
+      included.has(from) && included.has(to) && kind !== "recommended");
+    assert.deepEqual(plottedEdges(model.svg).map(edgeId).sort(), expected.map(edgeId).sort(), id);
+    assert.ok(model.svg.includes('data-export-target="' + id + '"'));
+    assert.equal(model.basename, "TestNeural-" + id + "-Learning-Path");
+  }
+  const m17 = graph.imageExport(curriculum, "selection", "M17");
+  const topic = graph.imageExport(curriculum, "selection", "M17-T01");
+  assert.equal(m17.count, 10);
+  assert.equal(topic.count, 5);
+  assert.doesNotMatch(topic.svg, /M17-T0[23]/);
+  assert.match(m17.svg, /M08-T01 → M10-T01 · required only for the document-retrieval tool extension/);
+  assert.ok(!exportCards(m17.svg).has("M08-T01"), "exercise-only references stay outside the mandatory route");
+  assert.throws(() => graph.imageExport(curriculum, "selection", "G"), /Select a module or topic/);
+  assert.throws(() => graph.imageExport(curriculum, "selection"), /Select a module or topic/);
+});
+
+test("export canvas encloses headings, stage labels, cards, connectors, and footer", () => {
+  for (const [scope, id] of [["modules"], ["topics"], ["selection", "M17"], ["selection", "M17-T01"],
+    ["selection", "M01-T01"], ["selection", "M18"]]) {
+    const model = graph.imageExport(curriculum, scope, id);
+    const {svg, width, height} = model;
+    assert.ok(Number.isInteger(width) && Number.isInteger(height));
+    assert.ok(svg.includes('viewBox="0 0 ' + width + " " + height + '"'));
+    const cards = exportCards(svg);
+    const footerTop = Number(/data-export-footer=""><rect x="20" y="([^"]+)"/.exec(svg)[1]);
+    const stageBottom = 188 + 34;
+    for (const {bounds: [x, y, w, h]} of cards.values()) {
+      assert.ok(x > 20 && x + w < width - 20 && y > stageBottom && y + h < footerTop);
+    }
+    for (const {from, to, attrs} of plottedEdges(svg)) {
+      const [ax, ay, aw, ah] = cards.get(from).bounds;
+      const [bx, by, bw, bh] = cards.get(to).bounds;
+      const points = / d="([^"]+)"/.exec(attrs)[1].match(/-?[\d.]+/g).map(Number);
+      const [startX, startY] = points.slice(0, 2);
+      const [endX, endY] = points.slice(-2);
+      assert.equal(startX, ax + aw);
+      assert.ok(startY > ay && startY < ay + ah);
+      assert.equal(endX, ax >= bx ? bx + bw + 3 : bx - 3);
+      assert.ok(endY > by && endY < by + bh);
+      for (let i = 0; i < points.length; i += 2) {
+        const [x, y] = points.slice(i, i + 2);
+        assert.ok(x > 8 && x < width - 8 && y > stageBottom && y < footerTop - 8);
+        if (!i) continue;
+        const [prevX, prevY] = points.slice(i - 2, i);
+        const left = Math.min(x, prevX);
+        const right = Math.max(x, prevX);
+        const top = Math.min(y, prevY);
+        const bottom = Math.max(y, prevY);
+        for (const {bounds: [cx, cy, cw, ch]} of cards.values()) {
+          assert.ok(right <= cx || left >= cx + cw || bottom <= cy || top >= cy + ch, from + " → " + to);
+        }
+      }
+    }
+    const textBaselines = [...svg.matchAll(/<text[^>]* y="(\d+)"/g)].map(match => Number(match[1]));
+    assert.ok(Math.max(...textBaselines) < height - 20);
+    const [pngWidth, pngHeight] = graph.rasterSize(width, height);
+    assert.ok(Math.abs(pngWidth / pngHeight - width / height) < .002);
+    assert.ok(pngWidth <= 4096 && pngHeight <= 4096);
+  }
+});
+
+test("image dialog shows explicit choices, waits for a choice, and restores focus", async () => {
+  assert.match(html, /<dialog id="road-image-dialog" aria-labelledby="road-image-title" aria-describedby="road-image-description">/);
+  const ui = setup("missing");
+  const open = () => ui.event(ui.road("image-open"), "click");
+  open();
+  assert.equal(ui.dialog.open, true);
+  assert.equal(ui.page.activeElement, ui.road("modules-svg"));
+  assert.equal(ui.road("selection-svg").disabled, true);
+  assert.equal(ui.road("selection-png").disabled, true);
+  assert.match(ui.road("image-target").textContent, /Select a module or topic on the roadmap first/);
+  ui.event(ui.road("selection-svg"), "click");
+  assert.equal(ui.downloads.length, 0);
+  ui.event(ui.road("image-cancel"), "click");
+  assert.equal(ui.page.activeElement, ui.road("image-open"));
+  ui.event(ui.page, "curriculum-route", {detail: "#roadmap-d"});
+  open();
+  assert.equal(ui.road("selection-svg").disabled, true);
+  assert.match(ui.road("image-target").textContent, /Quick Learning to download the named Path D plan/);
+  ui.event(ui.road("image-cancel"), "click");
+  ui.click(ui.viewport, {node: "M17"});
+  open();
+  assert.equal(ui.road("selection-svg").disabled, false);
+  assert.match(ui.road("image-target").textContent, /Selected: M17 — Specialized outputs and coordinated systems/);
+  ui.event(ui.road("selection-svg"), "click");
+  assert.equal(ui.dialog.open, false);
+  assert.equal(ui.page.activeElement, ui.road("image-open"));
+  assert.deepEqual(ui.downloads.map(download => download.name), ["TestNeural-M17-Learning-Path.svg"]);
+  assert.equal(await ui.downloads[0].blob.text(), graph.imageExport(curriculum, "selection", "M17").svg);
+});
+
+test("downloads remain byte-identical through zoom, pan, focus, optional links, detail mode, and fullscreen", async () => {
+  const ui = setup("native");
+  ui.click(ui.viewport, {node: "M17"});
+  const exportImages = async () => {
+    const camera = ui.camera();
+    const markup = ui.viewport.markup;
+    const first = ui.downloads.length;
+    for (const id of ["modules-svg", "topics-svg", "selection-svg"]) {
+      ui.event(ui.road("image-open"), "click");
+      ui.event(ui.road(id), "click");
+    }
+    assert.equal(ui.camera(), camera);
+    assert.equal(ui.viewport.markup, markup);
+    return Promise.all(ui.downloads.slice(first).map(async ({name, blob}) => [name, await blob.text()]));
+  };
+  const initial = await exportImages();
+  assert.deepEqual(initial.map(([name]) => name),
+    ["TestNeural-Complete-Curriculum-Modules.svg", "TestNeural-Complete-Curriculum-Topics.svg", "TestNeural-M17-Learning-Path.svg"]);
+  ui.event(ui.road("zoom-in"), "click");
+  ui.event(ui.viewport, "keydown", {key: "ArrowRight"});
+  ui.road("focus").checked = false;
+  ui.event(ui.road("focus"), "change");
+  ui.road("optional").checked = false;
+  ui.event(ui.road("optional"), "change");
+  ui.road("mode").value = "topic";
+  ui.event(ui.road("mode"), "change");
+  await ui.enter();
+  await ui.resize(1220, 690);
+  ui.event(ui.road("zoom-in"), "click");
+  ui.event(ui.viewport, "keydown", {key: "ArrowDown"});
+  assert.deepEqual(await exportImages(), initial);
+  assert.equal(ui.page.fullscreenElement, ui.app);
+});
+
+test("modal Escape yields to the native dialog in fallback fullscreen and returns focus to Download Image", async () => {
+  const ui = setup("missing");
+  await ui.enter();
+  ui.event(ui.road("image-open"), "click");
+  const key = ui.key("Escape", {target: {closest: selector => selector === "dialog[open]" ? ui.dialog : null}});
+  assert.equal(key.defaultPrevented, false);
+  assert.equal(ui.app.classes.has("is-fullscreen"), true);
+  // Model the native dialog close request following Escape.
+  if (!ui.event(ui.dialog, "cancel").defaultPrevented) ui.dialog.close();
+  assert.equal(ui.dialog.open, false);
+  assert.equal(ui.page.activeElement, ui.road("image-open"));
+  assert.equal(ui.downloads.length, 0);
+  ui.key("Escape");
+  assert.equal(ui.app.classes.has("is-fullscreen"), false);
+});
+
+test("PNG draws the entire image and handles failed or cancelled rasterization without downloading", async () => {
+  const ui = setup("missing");
+  const open = () => ui.event(ui.road("image-open"), "click");
+  ui.browser.failImage = true;
+  open();
+  ui.event(ui.road("topics-png"), "click");
+  assert.equal(ui.road("image-status").textContent, "Preparing PNG…");
+  assert.equal(ui.downloads.length, 0);
+  await tick();
+  assert.match(ui.road("image-status").textContent, /Could not create.*Try SVG/);
+  assert.equal(ui.dialog.open, true);
+  assert.equal(ui.road("topics-png").disabled, false);
+  assert.equal(ui.downloads.length, 0);
+  ui.browser.failImage = false;
+  ui.event(ui.road("topics-png"), "click");
+  ui.event(ui.road("image-cancel"), "click");
+  await tick();
+  assert.equal(ui.downloads.length, 0);
+  open();
+  ui.event(ui.road("topics-png"), "click");
+  await tick();
+  assert.equal(ui.road("download-status").textContent, "PNG download requested.");
+  assert.equal(ui.downloads.length, 1);
+  assert.equal(ui.downloads[0].name, "TestNeural-Complete-Curriculum-Topics.png");
+  assert.equal(ui.downloads[0].blob.type, "image/png");
+  const model = graph.imageExport(curriculum, "topics");
+  const draw = ui.rasterized.at(-1);
+  assert.deepEqual([draw.width, draw.height], graph.rasterSize(model.width, model.height));
+  assert.deepEqual([draw.x, draw.y], [0, 0]);
+  assert.equal(await draw.source.text(), model.svg);
 });

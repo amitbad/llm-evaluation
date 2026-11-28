@@ -142,8 +142,91 @@ const CurriculumRoadmap = (() => {
     };
   }
 
+  function exportRouting(links, columnOf) {
+    const tracks = new Map();
+    function nextTrack(column, side) {
+      const key = column + side;
+      const count = (tracks.get(key) || 0) + 1;
+      tracks.set(key, count);
+      return 6 + count * 4;
+    }
+    let lanes = 0;
+    const routes = new Map(links.map(edge => {
+      const from = columnOf.get(edge.from);
+      const to = columnOf.get(edge.to);
+      const out = nextTrack(from, "right");
+      return [edge, {out,
+        incoming: from === to ? out : nextTrack(to, from < to ? "left" : "right"),
+        lane: from === to ? 0 : lanes++,
+      }];
+    }));
+    return {routes, lanes, gutter: (column, side) => 16 + (tracks.get(column + side) || 0) * 4};
+  }
+
+  function exportFooter(image, width, graphBottom) {
+    const entries = [
+      image.target
+        ? "Target cards show the lessons you selected. Required cards show preparation for those lessons."
+        : "Read each arrow from preparation to the topic or module that builds on it.",
+      "Mandatory connections show required preparation. Recommended connections are optional guidance.",
+      "Conditional connections are required only under the conditions listed below.",
+    ];
+    if (image.scope === "modules") {
+      entries.push("Module arrows summarize topic connections. Use the Topics image for individual lessons and exercise conditions.");
+      entries[2] = "Conditional connections apply only to specific exercises or learning paths.";
+    }
+    if (image.target) {
+      entries.push("Optional recommendations are omitted. Exercise-only preparation outside this route is listed below when applicable.");
+    }
+    if (image.conditions.length) {
+      entries.push("Exercise conditions");
+      for (const {from, to, note} of image.conditions) entries.push(from + " → " + to + " · " + note);
+    } else if (image.scope !== "modules") {
+      entries[2] = "No exercise-only requirements apply to the topics shown.";
+    }
+    const top = graphBottom + 24;
+    let y = top + 23;
+    const text = entries.flatMap(entry => {
+      const rows = lines(entry, Math.floor((width - 76) / 9));
+      const captions = rows.map(row => {
+        const caption = '<text x="34" y="' + y + '" font-size="13" fill="#203648">' + xml(row) + '</text>';
+        y += 18;
+        return caption;
+      });
+      return captions;
+    }).join("");
+    const bottom = y + 29;
+    return {bottom, markup: '<g data-export-footer=""><rect x="20" y="' + top + '" width="' + (width - 40) +
+      '" height="' + (bottom - top - 20) + '" rx="10" fill="#edf2f8"/>' + text + '</g>'};
+  }
+
+  function imageExport(data, scope, selectionId) {
+    const selection = scope === "selection" ? target(data, selectionId) : null;
+    if (scope === "selection" && (!selection || selection.kind === "path")) {
+      throw new Error("Select a module or topic on the roadmap first.");
+    }
+    const overview = scope === "modules";
+    const topicIds = selection ? selection.closure : Object.keys(data.topics);
+    const conditions = overview ? [] : topicIds.flatMap(id => data.topics[id].conditional.map(parent => ({
+      from: parent.id, to: id, note: parent.note,
+    })));
+    const title = selection ? "Selected Learning Path · " + selection.id + " — " + selection.title :
+      "Complete Curriculum Roadmap · " + (overview ? "Module Overview" : "Topic Detail");
+    const subtitle = selection
+      ? selection.roots.length + " target " + (selection.kind === "module" ? "topics" : "topic") + " · " +
+        (topicIds.length - selection.roots.length) + " required preparation topics"
+      : overview ? Object.keys(data.modules).length + " modules · Connections summarized at module level"
+        : topicIds.length + " topics · Grouped by module and stage";
+    const model = graph(data, {mode: overview ? "module" : "topic", selection, title, exporting: true,
+      exportPath: Boolean(selection), optional: !selection, image: {scope, target: selection?.id, conditions, subtitle}});
+    const basename = selection
+      ? "TestNeural-" + selection.id.replace(/[^A-Za-z0-9-]/g, "-") + "-Learning-Path"
+      : "TestNeural-Complete-Curriculum-" + (overview ? "Modules" : "Topics");
+    return {...model, basename};
+  }
+
   function graph(data, options) {
-    const {mode, selection, focus, optional, exportPath, title, exporting} = options;
+    const {mode, selection, focus, optional, exportPath, title, exporting, image} = options;
     const markerPrefix = options.markerPrefix || "road-arrow-";
     const topicMode = mode === "topic";
     const selectedModule = !topicMode && selection?.kind === "module" ? selection.id : null;
@@ -154,8 +237,9 @@ const CurriculumRoadmap = (() => {
     const chain = new Set((selection?.closure || []).map(asNode));
     const goals = new Set((selection?.roots || []).map(asNode));
     const next = new Set((options.unlocked || []).map(asNode));
-    let links = edges(data, mode).filter(edge => edge.kind === "mandatory" || (!exportPath &&
-      (optional || (moduleFocus && (edge.from === selectedModule || edge.to === selectedModule)))));
+    let links = edges(data, mode).filter(edge => edge.kind === "mandatory" ||
+      (exportPath && image ? edge.kind === "conditional" : !exportPath &&
+        (optional || (moduleFocus && (edge.from === selectedModule || edge.to === selectedModule)))));
     const related = new Map();
     if (moduleFocus) {
       const mark = (ids, label, color) => {
@@ -198,17 +282,30 @@ const CurriculumRoadmap = (() => {
       sum + labels.get(item.id).height, 0) + (group.length - 1) * ROW_GAP));
     const geometry = spacing(Math.max(1, columns.length), rows, contentHeight,
       !topicMode && !exporting ? options.size : null);
-    const {unit, card: cardWidth, columnGap, stageSpace, rowGap, inset} = geometry;
+    const {unit, card: cardWidth, stageSpace, rowGap} = geometry;
+    const columnOf = new Map(columns.flatMap(([, group], col) => group.map(item => [item.id, col])));
+    links = links.filter(edge => columnOf.has(edge.from) && columnOf.has(edge.to));
+    const routing = image ? exportRouting(links, columnOf) : null;
+    const {inset, columnGap} = geometry;
     const step = cardWidth + columnGap;
-    const width = Math.ceil(Math.max(exporting ? 930 : 0, inset * 2 + columns.length * step - columnGap));
+    let right = inset;
+    const cardXs = columns.map((_, col) => {
+      if (!routing) return inset + col * step;
+      const x = right + routing.gutter(col, "left");
+      right = x + cardWidth + routing.gutter(col, "right");
+      return x;
+    });
+    const contentWidth = routing ? right + inset : inset * 2 + columns.length * step - columnGap;
+    const width = Math.ceil(Math.max(exporting ? 930 : 0, contentWidth));
     // Branding and the legend are HTML in the live view. Exported images carry their own header.
     const header = exporting ? 188 : 12 * unit;
     const positions = new Map();
-    let lastY = header + stageSpace;
+    const firstRow = header + stageSpace + (routing ? routing.lanes * 5 : 0);
+    let lastY = firstRow;
     const stageLabels = [];
     const groupLabels = [];
     columns.forEach(([stage, group], col) => {
-      const x = inset + col * step;
+      const x = cardXs[col] + (routing ? (width - contentWidth) / 2 : 0);
       const palette = stageColors[stage];
       stageLabels.push(
         '<rect x="' + x + '" y="' + header + '" width="' + cardWidth + '" height="' + STAGE_HEIGHT * unit +
@@ -216,7 +313,7 @@ const CurriculumRoadmap = (() => {
         '<text x="' + (x + 13 * unit) + '" y="' + (header + 22 * unit) + '" fill="' + palette.ink +
         '" font-size="' + 15 * unit + '" font-weight="700">' + xml(data.stages[stage]) + '</text>'
       );
-      let y = header + stageSpace;
+      let y = firstRow;
       let previousModule;
       group.forEach(item => {
         if (topicMode && previousModule !== item.module) {
@@ -233,15 +330,14 @@ const CurriculumRoadmap = (() => {
       lastY = Math.max(lastY, y - rowGap);
     });
 
-    links = links.filter(edge => positions.has(edge.from) && positions.has(edge.to));
     // Spread ports along each card face while keeping the original card positions.
     const offsets = new Map(links.map(edge => [edge, {}]));
-    if (!topicMode) {
+    if (!topicMode || image) {
       const ports = new Map();
       const add = (id, side, edge, end, other) => {
         const key = id + side;
         if (!ports.has(key)) ports.set(key, []);
-        ports.get(key).push({edge, end, other});
+        ports.get(key).push({id, edge, end, other});
       };
       for (const edge of links) {
         add(edge.from, "right", edge, "start", edge.to);
@@ -251,7 +347,8 @@ const CurriculumRoadmap = (() => {
       for (const group of ports.values()) {
         group.sort((a, b) => positions.get(a.other).y - positions.get(b.other).y ||
           kinds.indexOf(a.edge.kind) - kinds.indexOf(b.edge.kind));
-        const step = Math.min(8, 50 / group.length) * unit;
+        const portSpace = image ? positions.get(group[0].id).height - 18 : 50 * unit;
+        const step = Math.min(8 * unit, portSpace / group.length);
         group.forEach(({edge, end}, i) => { offsets.get(edge)[end] = (i - (group.length - 1) / 2) * step; });
       }
     }
@@ -269,7 +366,16 @@ const CurriculumRoadmap = (() => {
       const dest = sameColumn || reversed ? b.x + cardWidth + 3 * unit : b.x - 3 * unit;
       const gutterStep = columnGap / 13;
       let d;
-      if (sameColumn) {
+      if (routing) {
+        const {out, incoming, lane} = routing.routes.get(edge);
+        const exit = left + out;
+        const entry = dest + (sameColumn || reversed ? incoming : -incoming);
+        const across = header + STAGE_HEIGHT + 12 + lane * 5;
+        const points = sameColumn ? [exit, y1, exit, y2] :
+          [exit, y1, exit, across, entry, across, entry, y2];
+        d = ["M", left, y1, ...points.flatMap((point, i) => i % 2 ? [point] : ["L", point]),
+          "L", dest, y2].join(" ");
+      } else if (sameColumn) {
         const gutter = left + Math.min(inset - 3 * unit, (2 + index % 6) * gutterStep);
         const bend = Math.sign(y2 - y1) * 7 * unit;
         d = ["M", left, y1, "C", gutter, y1, gutter, y1, gutter, y1 + bend,
@@ -309,12 +415,13 @@ const CurriculumRoadmap = (() => {
           '" marker-end="url(#' + markerPrefix + marker + ')"/>'};
       }
       const required = chain.has(edge.from) && chain.has(edge.to) && edge.kind === "mandatory";
-      const relevant = !selection || required || (goals.has(edge.from) && next.has(edge.to)) ||
+      const relevant = image || !selection || required || (goals.has(edge.from) && next.has(edge.to)) ||
         (edge.kind !== "mandatory" && (goals.has(edge.from) || goals.has(edge.to) ||
           (optionalNeighbors.has(edge.from) && chain.has(edge.to))));
+      const ending = image ? '"><title>' + xml(edge.from + " → " + edge.to + " · " + style.label) + '</title></path>' : '"/>';
       return {emphasis: 0, markup: '<path' + attributes + ' d="' + d + '" fill="none" stroke="' + style.color + '" stroke-width="' + (required ? 2.6 : 1.6) * unit +
         '" opacity="' + (relevant ? (exporting ? 0.93 : 0.81) : 0.18) + '" stroke-dasharray="' + style.dash +
-        '" marker-end="url(#' + markerPrefix + edge.kind + ')"/>'};
+        '" marker-end="url(#' + markerPrefix + edge.kind + ')' + ending};
     }
 
     const connectors = links.map(line).sort((a, b) => a.emphasis - b.emphasis).map(edge => edge.markup).join("");
@@ -335,7 +442,8 @@ const CurriculumRoadmap = (() => {
       const aria = item.id + " " + item.title + ", " + roadmapDuration(item.hours) + (treatment ? ", " + treatment : "");
       const labelLines = label.map((row, i) => '<tspan x="' + (x + 14 * unit) + '" y="' +
         (y + (45 + i * 18) * unit) + '">' + xml(row) + '</tspan>').join("");
-      const card = '<g><rect x="' + x + '" y="' + y +
+      const card = (image ? '<g data-export-node="' + item.id + '" data-study-role="' +
+        (current ? "target" : prerequisite ? "required" : "curriculum") + '">' : '<g>') + '<rect x="' + x + '" y="' + y +
         '" width="' + cardWidth + '" height="' + height + '" rx="' + 10 * unit + '" fill="' + (dim ? "#f1f4f7" : palette.fill) +
         '" stroke="' + (dim ? "#8996a3" : border) + '" stroke-width="' + (current ? 3.5 : treatment ? 2.4 : 1) * unit +
         ((selectedModule ? relative?.label === "Optional link" : recommended) ? '" stroke-dasharray="6 4' : '') +
@@ -351,8 +459,9 @@ const CurriculumRoadmap = (() => {
         '" aria-pressed="' + String(current) + '" data-node="' + item.id + '"><title>' + xml(aria) + "</title>" + card + "</a>";
     }).join("");
 
+    const markerSize = image ? ' markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="7"' : ' markerWidth="6" markerHeight="6"';
     const markers = [...kinds, "downstream"].map(kind => '<marker id="' + markerPrefix + kind +
-      '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">' +
+      '" viewBox="0 0 10 10" refX="9" refY="5"' + markerSize + ' orient="auto">' +
       '<path d="M 0 0 L 10 5 L 0 10 z" fill="' + (kind === "downstream" ? downstreamColor : linkStyles[kind].color) + '"/></marker>').join("");
     const paletteLegend = data.stages.map((stage, index) => {
       const x = 30 + 167 * index;
@@ -369,15 +478,19 @@ const CurriculumRoadmap = (() => {
     }).join("");
     const heading = lines(title || "LLM Evaluation Engineering · Module overview", 78);
     const firstHeading = heading[0];
-    const subtitle = "Curriculum revision " + data.revision + " · " + (exportPath
+    const subtitle = "Curriculum revision " + data.revision + " · " + (image ? image.subtitle : exportPath
       ? selection.closure.length + " topics · " + roadmapDuration(selection.total) + " learner time · Mandatory study only"
       : shown.length + (topicMode ? " topics" : " modules") + (topicMode ? " · Topic dependency links" : " · Overview of links between modules"));
-    const height = Math.ceil(lastY + (exporting ? 28 : inset - header));
+    const footer = image ? exportFooter(image, width, lastY) : null;
+    const height = Math.ceil(footer ? footer.bottom : lastY + (exporting ? 28 : inset - header));
     const logo = data.brandIcon ? '<image href="' + xml(data.brandIcon) + '" x="30" y="12" width="35" height="35"/>' : "";
     const brand = logo + '<text x="' + (logo ? 75 : 30) +
       '" y="35" font-size="15" font-weight="700" fill="#2451a6">TestNeural LLM Academy</text>' +
       '<text x="' + (width - 30) + '" y="35" text-anchor="end" font-size="13" fill="#40596d">Developed by: Amit Baderia</text>';
-    const headerText = brand + '<text x="30" y="67" font-size="23" font-weight="700" fill="#142e45">' + xml(firstHeading) +
+    const headerText = image ? brand + '<text x="30" y="64" font-size="24" font-weight="700" fill="#142e45">' +
+      'LLM Evaluation Engineering</text><text x="30" y="87" font-size="16" font-weight="700" fill="#142e45">' +
+      xml(title) + '</text><text x="30" y="104" font-size="13" fill="#40596d">' + xml(subtitle) + "</text>" :
+      brand + '<text x="30" y="67" font-size="23" font-weight="700" fill="#142e45">' + xml(firstHeading) +
       '</text>' + (heading.length > 1 ? '<text x="30" y="89" font-size="18" font-weight="700" fill="#142e45">' +
       xml(heading.slice(1).join(" ")) + '</text>' : "") +
       '<text x="30" y="104' +
@@ -395,12 +508,13 @@ const CurriculumRoadmap = (() => {
       width, height, bounds, count: shown.length,
       svg: '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height +
         '" viewBox="0 0 ' + width + " " + height + '" role="' + (exporting ? "img" : "group") +
+        (image ? '" data-export-scope="' + image.scope + '" data-export-target="' + (selection?.id || "") : "") +
         '" aria-label="' + xml(title || "Learning dependency roadmap") +
         '" font-family="system-ui, sans-serif"><title>' + xml(title || "Learning dependency roadmap") +
         '</title><desc>Arrows point from prerequisite to dependent topic or module. ' + xml(subtitle) + '</desc><defs>' +
         markers + '</defs><rect width="100%" height="100%" fill="#f8fafc"/>' +
         (exporting ? headerText + paletteLegend + arrowLegend : "") +
-        stageLabels.join("") + groupLabels.join("") + connectors + cards + '</svg>',
+        stageLabels.join("") + groupLabels.join("") + connectors + cards + (footer?.markup || "") + '</svg>',
     };
   }
 
@@ -526,6 +640,7 @@ const CurriculumRoadmap = (() => {
     }
 
     function fullscreenKeys(event) {
+      if (event.target?.closest?.("dialog[open]")) return;
       if (event.key === "Escape" && session.mode === "fallback") {
         event.preventDefault();
         event.stopPropagation();
@@ -568,7 +683,7 @@ const CurriculumRoadmap = (() => {
     return {close, active: () => Boolean(session && session.mode !== "pending")};
   }
 
-  return {stageColors, linkStyles, xml, target, find, unlocked, available, edges, moduleDependencies, graph, rasterSize, pngBlob, saveBlob,
+  return {stageColors, linkStyles, xml, target, find, unlocked, available, edges, moduleDependencies, graph, imageExport, rasterSize, pngBlob, saveBlob,
     standaloneHTML, bindFullscreen};
 })();
 
@@ -592,7 +707,7 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
     const results = el("results");
     const focusToggle = el("focus");
     const optionalToggle = el("optional");
-    const exportMenu = el("export");
+    const imageDialog = el("image-dialog");
     const status = el("download-status");
     let selection = null;
     let visibleGraph;
@@ -726,8 +841,6 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       el("clear").hidden = !selection;
       el("jump").hidden = !selection;
       focusToggle.disabled = !selection;
-      exportMenu.options[1].disabled = !selection;
-      if (!selection && exportMenu.value === "selection") exportMenu.value = "module";
       el("title").textContent = selection ? titleFor(selection) : "Choose a target";
       const readiness = el("readiness");
       readiness.hidden = selection?.kind !== "module";
@@ -973,7 +1086,6 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
         if (origin !== "results") el("inspector").scrollTop = 0;
         el("title").focus({preventScroll: origin === "results"});
       }
-      exportMenu.value = "selection";
       if (selection.kind === "path") {
         document.dispatchEvent(new CustomEvent("curriculum-path-selected", {detail: id}));
       }
@@ -1108,42 +1220,69 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       zoom(event.deltaY < 0 ? 1.1 : 1 / 1.1, event.clientX - rect.left, event.clientY - rect.top);
     }, {passive: false});
 
-    function exportModel() {
-      const mode = exportMenu.value;
-      const picked = mode === "selection" ? selection : null;
-      const title = picked ? titleFor(picked) :
-        "LLM Evaluation Engineering · " + (mode === "topic" ? "Complete topic roadmap" : "Complete module roadmap");
-      return road.graph(data, {
-        mode: picked ? "topic" : mode, selection: picked, exporting: true, exportPath: Boolean(picked),
-        optional: optionalToggle.checked, title,
+    const imageOpen = el("image-open");
+    const imageStatus = el("image-status");
+    const imageButtons = ["modules", "topics", "selection"].flatMap(scope => ["svg", "png"].map(format =>
+      ({button: el(scope + "-" + format), scope, format})));
+    let imageTarget;
+    let imageRequest;
+
+    function setImageBusy(busy) {
+      for (const {button, scope} of imageButtons) button.disabled = busy || (scope === "selection" && !imageTarget);
+    }
+
+    imageOpen.addEventListener("click", () => {
+      if (imageDialog.open) return;
+      if (typeof imageDialog.showModal !== "function") {
+        status.textContent = "Image download requires a browser that supports dialogs.";
+        return;
+      }
+      imageRequest = null;
+      imageTarget = selection?.kind === "path" ? null : selection;
+      el("image-target").textContent = imageTarget ? "Selected: " + titleFor(imageTarget) :
+        "Select a module or topic on the roadmap first." + (selection?.kind === "path"
+          ? " Use Quick Learning to download the named Path " + selection.id + " plan." : "");
+      imageStatus.textContent = "";
+      status.textContent = "";
+      setImageBusy(false);
+      imageDialog.showModal();
+    });
+    el("image-cancel").addEventListener("click", () => imageDialog.close());
+    imageDialog.addEventListener("close", () => {
+      if (imageDialog.open) return;
+      imageRequest = null;
+      imageOpen.focus({preventScroll: true});
+    });
+    for (const {button, scope, format} of imageButtons) {
+      button.addEventListener("click", async () => {
+        if (!imageDialog.open || button.disabled || imageRequest) return;
+        const request = {};
+        imageRequest = request;
+        setImageBusy(true);
+        const label = format.toUpperCase();
+        imageStatus.textContent = "Preparing " + label + "…";
+        el("image-cancel").focus({preventScroll: true});
+        try {
+          const model = road.imageExport(data, scope, imageTarget?.id);
+          const blob = format === "png" ? await road.pngBlob(model, window)
+            : new Blob([model.svg], {type: "image/svg+xml;charset=utf-8"});
+          if (!imageDialog.open || imageRequest !== request) return;
+          road.saveBlob(blob, model.basename + "." + format);
+          status.textContent = label + " download requested.";
+          imageDialog.close();
+        } catch {
+          if (!imageDialog.open || imageRequest !== request) return;
+          imageStatus.textContent = "Could not create the " + label + " download." +
+            (format === "png" ? " Try SVG for a scalable copy." : " Please try again.");
+        } finally {
+          if (imageRequest === request) {
+            imageRequest = null;
+            setImageBusy(false);
+            if (imageDialog.open) button.focus({preventScroll: true});
+          }
+        }
       });
     }
-
-    function filename(extension) {
-      const mode = exportMenu.value;
-      const scope = mode === "selection" ? selection.id.toLowerCase() : mode;
-      return "llm-evaluation-roadmap-v" + data.revision + "-" + scope + "." + extension;
-    }
-
-    el("svg").addEventListener("click", () => {
-      const model = exportModel();
-      road.saveBlob(new Blob([model.svg], {type: "image/svg+xml;charset=utf-8"}), filename("svg"));
-      status.textContent = "SVG download requested.";
-    });
-    el("png").addEventListener("click", async () => {
-      el("png").disabled = true;
-      status.textContent = "Preparing PNG…";
-      const name = filename("png");
-      try {
-        const png = await road.pngBlob(exportModel(), window);
-        road.saveBlob(png, name);
-        status.textContent = "PNG download requested.";
-      } catch (error) {
-        status.textContent = error.message + " Try SVG for a scalable copy.";
-      } finally {
-        el("png").disabled = false;
-      }
-    });
     el("html").addEventListener("click", () => {
       const offline = road.standaloneHTML(portableCurriculum, "roadmap");
       road.saveBlob(new Blob([offline], {type: "text/html;charset=utf-8"}), "llm-evaluation-curriculum-v" + data.revision + ".html");
@@ -1179,7 +1318,6 @@ if (typeof document !== "undefined" && document.getElementById("roadmap-data")) 
       enterRoadmap();
       if (route[1] === "full") {
         modeMenu.value = "module";
-        exportMenu.value = "module";
         clearSelection();
       } else {
         choose(route[1].toUpperCase(), "journey");
