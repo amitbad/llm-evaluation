@@ -42,11 +42,10 @@
   let active = null;
   let readingVoice = "";
   let audition = "";
-  let browserVoice;
   let savedChoice = "";
   let choices = new Map();
   const locale = value => (value || "").trim().toLowerCase().replaceAll("_", "-");
-  const voiceKey = (name, lang) => name.trim().toLowerCase().replace(/[\s_-]+/g, " ") + "|" + locale(lang);
+  const voiceKey = (name, lang) => name.trim().toLowerCase().replace(/\s+/g, " ") + "|" + locale(lang);
 
   try {
     const saved = JSON.parse(window.localStorage.getItem(storageKey));
@@ -118,12 +117,28 @@
     return entries;
   }
 
+  function* sentenceEnds(text, segmenter) {
+    if (segmenter) {
+      for (const {index, segment} of segmenter.segment(text)) yield index + segment.length;
+      return;
+    }
+    // Prefer leaving a longer batch to cutting at an ambiguous period.
+    const abbreviation = /\b(?:mr|mrs|ms|dr|prof|sr|jr|st|vs|etc|e\.g|i\.e|\p{L})$/iu;
+    for (const match of text.matchAll(/([.!?]+)["”’')\]]* (?=\p{Lu}|\p{N}|["“‘(])/gu)) {
+      if (match[1] === "." && abbreviation.test(text.slice(Math.max(0, match.index - 8), match.index))) {
+        continue;
+      }
+      yield match.index + match[0].length;
+    }
+    yield text.length;
+  }
+
   function speechChunks(entries) {
-    const sentences = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en", {granularity: "sentence"}) : null;
+    const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("en", {granularity: "sentence"}) : null;
     return entries.flatMap(entry => {
       const {text} = entry;
       const limit = 1200;
-      if (!sentences || text.length <= limit) return [{entry, offset: 0, text}];
+      if (text.length <= limit) return [{entry, offset: 0, text}];
       const chunks = [];
       let start = 0;
       // The limit is a batching hint. Never interrupt a single sentence to reach it.
@@ -132,8 +147,10 @@
         if (slice) chunks.push({entry, offset: start, text: slice});
         start = end;
       }
-      for (const {index, segment} of sentences.segment(text)) {
-        if (index > start && index + segment.length - start > limit) add(index);
+      let previousEnd = 0;
+      for (const end of sentenceEnds(text, segmenter)) {
+        if (previousEnd > start && end - start > limit) add(previousEnd);
+        previousEnd = end;
       }
       add(text.length);
       return chunks;
@@ -143,7 +160,7 @@
   function showVoiceControls() {
     if (!supported) return;
     const selected = audition || readingVoice;
-    let message = choices.size ? "" : "No approved voices are available. Read Aloud uses the browser’s English voice.";
+    let message = choices.size ? "" : "No approved voices are available. Read Aloud uses the browser’s default voice for English.";
     if (choices.size && preferences.voice && !savedChoice) {
       message = "The saved voice is unavailable. New playback uses the first available approved voice.";
     }
@@ -167,7 +184,6 @@
   function updateVoices() {
     const voices = speech.getVoices();
     const english = voices.filter(voice => /^en(?:-|$)/.test(locale(voice.lang)));
-    browserVoice = english.find(voice => voice.default) || english[0];
     choices = new Map();
     const labels = new Map();
     for (const [name, lang] of approvedVoices) {
@@ -259,6 +275,12 @@
     session.view.tracking.textContent = "";
   }
 
+  function showParagraphHighlight(session, node) {
+    node.classList.add("is-being-read");
+    if (wordHighlight) window.CSS.highlights.delete(highlightName);
+    session.view.tracking.textContent = "Paragraph highlight while word timing is unavailable.";
+  }
+
   // Both arrays are ordered by offset in the normalized utterance or paragraph.
   function firstEndingAfter(ranges, offset) {
     let from = 0;
@@ -334,8 +356,7 @@
     clearHighlight(session);
     if (node) {
       session.highlight = node;
-      node.classList.add("is-being-read");
-      session.view.tracking.textContent = "Paragraph highlight while word timing is unavailable.";
+      showParagraphHighlight(session, node);
       if (!sameBlock) keepVisible(node.getBoundingClientRect?.());
     }
     const utterance = new window.SpeechSynthesisUtterance(chunk.text);
@@ -349,15 +370,24 @@
     if (node && wordHighlight) {
       let words;
       let lastWord = -1;
+      let firstZeroTime;
       utterance.onboundary = event => {
         if (!current() || session.paused || (event.name && event.name !== "word")) return;
         words ??= Array.from(chunk.text.matchAll(/\p{N}+(?:[.,]\p{N}+)+|[\p{L}\p{M}\p{N}]+(?:['’\u2010-][\p{L}\p{M}\p{N}]+)*/gu),
           match => ({start: match.index, end: match.index + match[0].length}));
         const word = wordAt(words, event.charIndex, event.charLength, chunk.text.length);
-        if (!word || word.start <= lastWord) return;
+        if (!word) return;
+        // An engine can report zero for every offset when it has no position data.
+        if (event.charIndex === 0 && Number.isFinite(event.elapsedTime) && word.start === lastWord &&
+            event.elapsedTime > firstZeroTime) {
+          if (!node.classList.contains("is-being-read")) showParagraphHighlight(session, node);
+          return;
+        }
+        if (word.start <= lastWord) return;
         const range = rangeFor(chunk.entry, chunk.offset + word.start, chunk.offset + word.end);
         if (!range) return;
-        if (lastWord < 0) {
+        if (event.charIndex === 0) firstZeroTime = event.elapsedTime;
+        if (node.classList.contains("is-being-read")) {
           node.classList.remove("is-being-read");
           session.view.tracking.textContent = "Word highlight follows speech.";
         }
@@ -397,7 +427,7 @@
     if (!queue.length) return;
     stop();
     const session = {view, startSection, queue, index: 0, paused: false, utterance: null, highlight: null,
-      voice: choices.get(readingVoice) || browserVoice};
+      voice: choices.get(readingVoice)};
     active = session;
     showState(view, "Reading.");
     speak(session);

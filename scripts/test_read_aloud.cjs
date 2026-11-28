@@ -146,7 +146,8 @@ function holder(mark) {
   return view;
 }
 
-function fixture({available = true, legacy = false, storage = new Map(), voices = [], highlights = true, boundaryRect} = {}) {
+function fixture({available = true, legacy = false, storage = new Map(), voices = [], highlights = true,
+  sentenceSegmenter = true, boundaryRect} = {}) {
   const document = node("document");
   const window = new EventTarget();
   const wide = Object.assign(new EventTarget(), {matches: true});
@@ -218,7 +219,7 @@ function fixture({available = true, legacy = false, storage = new Map(), voices 
     document.dispatchEvent(value);
   };
   function load() {
-    vm.runInNewContext(script, {document, window});
+    vm.runInNewContext(script, {document, window, ...(!sentenceSegmenter && {Intl: {}})});
   }
   const ui = view => Object.fromEntries(controls.map(key => [key, view.querySelector("[data-reading-" + key + "]")]));
   return {document, window, speaking, begin, paragraph, exercises, instruction, material, guided,
@@ -420,7 +421,7 @@ test("discloses controls on narrow screens without interrupting current narratio
   assert.equal(f.speaking.current, current);
 });
 
-test("recovers from an active speech error and uses a later system English voice", () => {
+test("recovers from an active speech error and leaves default voice selection to the browser", () => {
   const f = fixture();
   f.load();
   const {start, stop, status} = f.ui(f.complete);
@@ -435,10 +436,10 @@ test("recovers from an active speech error and uses a later system English voice
   f.speaking.dispatchEvent(new Event("voiceschanged"));
   const ui = f.ui(f.complete);
   assert(ui.voice.disabled);
-  assert.match(ui["voice-info"].textContent, /No approved voices/);
+  assert.match(ui["voice-info"].textContent, /default voice for English/);
   click(start);
-  assert.equal(f.speaking.current.voice, voice);
-  assert.equal(f.speaking.current.lang, "en-GB");
+  assert.equal(f.speaking.current.voice, undefined);
+  assert.equal(f.speaking.current.lang, "en-US");
 });
 
 test("only the seven exact approved name and locale pairs are shown in configured order", () => {
@@ -450,11 +451,12 @@ test("only the seven exact approved name and locale pairs are shown in configure
     systemVoice("karen", "EN_au", {voiceURI: "another-karen"}),
     systemVoice("Google UK English Female", "en-GB"),
     systemVoice("Daniel", "en-GB"),
-    systemVoice("Google_US-English", "EN_US"),
+    systemVoice("google  US\tEnglish", "EN_US"),
     systemVoice(" Samantha ", "En_us"),
     systemVoice("Samantha", "en-GB"),
     systemVoice("Google US English Female", "en-US"),
     systemVoice("Tessa", "en-ZA-x-custom"),
+    systemVoice("Google_US-English", "en-US", {default: true}),
   ];
   const f = fixture({voices});
   f.load();
@@ -466,6 +468,10 @@ test("only the seven exact approved name and locale pairs are shown in configure
   assert.equal(ui.voice.value, "samantha|en-us");
   click(ui.start);
   assert.equal(f.speaking.current.voice, voices[8]);
+  ui.voice.value = "google us english|en-us";
+  change(ui.voice);
+  click(ui["use-voice"]);
+  assert.equal(f.speaking.current.voice, voices[7]);
 });
 
 test("late-loading voices use the first available approval and preserve the in-flight choice", () => {
@@ -690,6 +696,20 @@ test("long paragraphs keep complete sentences, punctuation, and every word in or
   assert(f.speaking.calls.every(([action]) => action === "speak"), "no timers, cancels or resumes are needed between utterances");
 });
 
+test("without Intl.Segmenter, long passages still batch at clear sentence breaks", () => {
+  const f = fixture({sentenceSegmenter: false});
+  const sentence = "Dr. Rivera explains the approved refund policy in one complete sentence.";
+  f.paragraph.textContent = Array(40).fill(sentence).join(" ");
+  f.load();
+  click(f.ui(f.complete).start);
+  f.speaking.finish();
+  const chunks = finishAll(f.speaking).slice(0, -2);
+  assert(chunks.length > 1);
+  assert(chunks.every(text => text.startsWith(sentence) && text.endsWith(sentence) && text.length <= 1200));
+  assert.equal(chunks.join(" "), f.paragraph.textContent);
+  assert(f.speaking.calls.every(([action]) => action === "speak"));
+});
+
 test("word ranges preserve links, emphasis, inline code, repeated text and newlines", () => {
   const f = fixture();
   const link = node("a", "word");
@@ -796,6 +816,27 @@ test("absent word events, sentence-only events and missing range support use par
     assert.equal(ui.tracking.textContent, "");
     reading(f.paragraph, false);
   }
+});
+
+test("repeating zero offsets with advancing speech time fall back until usable offsets arrive", () => {
+  const f = fixture();
+  f.load();
+  const ui = f.ui(f.complete);
+  click(ui.start);
+  f.speaking.finish();
+  const utterance = f.speaking.current;
+  utterance.onboundary({name: "word", charIndex: 0, elapsedTime: 0});
+  utterance.onboundary({name: "word", charIndex: 0, elapsedTime: 0});
+  assert.equal(f.registry.get("academy-reading-word").range.start.offset, 0);
+  utterance.onboundary({name: "word", charIndex: 0, elapsedTime: 0.3});
+  reading(f.paragraph);
+  assert.equal(f.registry.size, 0);
+  assert.match(ui.tracking.textContent, /Paragraph highlight/);
+  utterance.onboundary({name: "word", charIndex: 11, elapsedTime: 0.6});
+  assert.equal(f.registry.get("academy-reading-word").range.start.offset, 11);
+  reading(f.paragraph, false);
+  click(ui.stop);
+  assert.equal(f.registry.size, 0);
 });
 
 test("only scrolls when a spoken word is outside the reading area", () => {
