@@ -407,6 +407,19 @@ test("lesson chapters and outlines render the reading sequence and relevant disc
       assert.match(markup, /langfuse-lite tree/);
       assert.match(markup, /langfuse-lite export/);
       assert.match(markup, /class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice/);
+    } else if (topic.id === "M15-T01") {
+      assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
+      assert.match(markup, /Experiment A[\s\S]*Experiments B and C[\s\S]*Experiments D and E/);
+      assert.match(markup, /class="language-python">[\s\S]*def replay\(saved\)/);
+      assert.match(markup, /D-candidate: pass=7\/8 coverage=8\/8 BLOCK/);
+      assert.match(markup, /E-repaired: pass=8\/8 coverage=8\/8 PASS/);
+      assert.match(markup, /E-missing-review: pass=7\/7 coverage=7\/8 REVIEW/);
+      assert.match(markup, /Design Review Before You Trust a Score/);
+      assert.match(markup, /<h5>Choose one track<\/h5>/);
+      assert.match(markup, /href="#m13-t02"/);
+      assert.match(markup, /href="#m15-t02"/);
+      assert.match(markup, /href="test12\.html"/);
+      assert.match(markup, /href="test13\.html"/);
     } else if (authoredLessons.has(topic.id)) {
       assert.doesNotMatch(markup, /Lesson outline\.|Module objectives/);
       assert.equal([...markup.matchAll(/<h5>Example \d\./g)].length, 3);

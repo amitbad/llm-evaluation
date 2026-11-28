@@ -679,6 +679,11 @@
           "id": "M10-T03",
           "relevance": "Primary",
           "connection": "Distinguish retry recovery from the unresolved early-stop failure."
+        },
+        {
+          "id": "M15-T01",
+          "relevance": "Supporting",
+          "connection": "Use TC10's expected sequence and saved trace to review an agent suite's independent execution checks."
         }
       ]
     },
@@ -751,6 +756,11 @@
           "id": "M18-T01",
           "relevance": "Supporting",
           "connection": "Use the separate judge and deterministic verdicts to examine evaluator robustness."
+        },
+        {
+          "id": "M15-T01",
+          "relevance": "Supporting",
+          "connection": "Review the passing TC10 judgment beside Test 12's deterministic mismatch before approving the rubric."
         }
       ]
     },
