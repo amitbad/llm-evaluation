@@ -363,6 +363,9 @@ def prose(markdown):
                 "Evidence region": "Northstar receipt and fee chart text equivalent",
                 "Evaluation stage": "Where to attribute a multimodal failure",
                 "Multimodal review criterion": "Multimodal support review rubric",
+                "Source": "Northstar starter evidence",
+                "Evidence or memory dimension": "Long-context evaluation dimensions",
+                "Memory lifecycle step": "Memory lifecycle audit",
             }.get(header[0], "Course hours by track")
             if header[0] == "Strand":
                 header[3:] = TIME_LABELS

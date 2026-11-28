@@ -28169,34 +28169,575 @@ data-subject="Specialization" data-status="New" data-track="Elective">
     <div class="lesson-layout">
       <aside class="lesson-reader" data-lesson-reader aria-label="Listen" hidden></aside>
       <div class="topic-material lesson-reading" id="material-m16-t03">
-  <p class="lesson-intro" data-lesson-search>More context can degrade evidence use or change which policy applies.</p>
-  <p class="lesson-note"><strong>Lesson outline.</strong> This page contains the planned concepts and activities. The full lesson still needs development.</p>
-  <section class="lesson-section lesson-objectives" hidden>
-    <h4>Learning objectives</h4>
-    <h5>Module objectives</h5>
-    <p data-lesson-objectives></p>
-  </section>
-  <section class="lesson-section lesson-concepts">
-    <h4>Key concepts</h4>
-    <p data-lesson-search>Position sensitivity, interference, distractors, multi-document synthesis, recency, context budget and memory consistency.</p>
-  </section>
+<div class="lesson-section lesson-chapter" data-lesson-search><h4>What You Will Learn</h4>
+<ul><li>Trace evidence from retrieval through prompt assembly, answer and citation.</li><li>Compare short and long contexts with the same fact at different positions.</li><li>Join evidence across documents, check effective policy dates and flag unresolved contradictions.</li><li>Verify memory corrections and isolation, then report coverage and an evidence-backed release decision.</li></ul>
+<h4>Why This Lesson Matters</h4>
+<p>A support colleague hands you three short notes and asks how long customers have to request a refund. One note says where to contact support. Another says “30 days from purchase.” The third explains parcel tracking. The answer is 30 days, and you can point to the particular note that supports it.</p>
+<p>Now imagine opening a long case file with the same note buried between an old policy, an order record and several conversations. Finding the right fact, applying it to the order, and keeping another customer&#x27;s preferences out of the reply are different checks.</p>
+<p>Northstar continues the read-only support assistant from <a href="#m15-t01">the capstone</a> and the <a href="#m16-t02">multimodal lesson</a>. Its current fictional policy allows eligible requests through day 30 after purchase with a valid receipt. The assistant can explain eligibility and refer a case to staff. It cannot execute a refund. Archived notes, customer records, preferences and model-like replies in this lesson are synthetic. The Python experiments ran locally without an LLM.</p>
+<p>Allow six hours. Complete <a href="#m01-t01">Tokens, messages and context windows</a> and <a href="#m07-t01">Variance, repetition and score aggregation</a>. <a href="#m07-t03">Comparing models, prompts and A/B variants</a> and <a href="#m08-t03">Failure attribution, optimization and RAG regression</a> are recommended. Complete the latter before experimenting with reranked retrieval context. Preparation skills P02 and P04 help you read the Python and saved context records.</p>
+<h4>Beginner Explanation</h4>
+<h5>Start with three notes</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Northstar starter evidence"><table><caption>Northstar starter evidence</caption><thead><tr><th scope="col">Source</th><th scope="col">What it says</th></tr></thead><tbody><tr><td>S01 · Support guide</td><td>Contact order support for receipt help.</td></tr><tr><td>S02 · Approved refund rule</td><td>A valid receipt is required. The window is 30 days from purchase, inclusive.</td></tr><tr><td>S03 · Parcel tracking</td><td>Check the tracking page for delivery updates.</td></tr></tbody></table></div>
+<p>“30 days from purchase [S02]” states the right value, starting event and source. Change only the citation to S03. The number still matches the policy, but the source does not establish it. <strong>Evidence</strong> is the record that supports the claim. <strong>Grounding</strong> asks whether the answer is supported by the evidence actually supplied. A correct fact with a wrong or undelivered citation can fail.</p>
+<h5>Separate context, retrieval and memory</h5>
+<ul><li><strong>Tokens</strong> are pieces into which a model&#x27;s tokenizer breaks text. A piece can be a whole word, part of a word or punctuation. The <strong>context window</strong> limits how much tokenized information the model can work with in one request. Check the system&#x27;s documented input and output budgeting rules.</li><li><strong>Context</strong> is what reaches the model on this request. It can include instructions, the current question, selected earlier messages, tool outputs and retrieved passages. Conversation history is the ordered record of past turns. The application may include all of it, select parts or use a summary.</li><li><strong>Retrieval</strong> selects records from an external collection for this request. A result in the candidate list may still be dropped before it reaches the model. Memory can itself be a retrieval source.</li><li><strong>Application memory</strong> retains or reconstructs information across interactions. It may store an explicitly approved preference, a scoped case summary or a pointer to an authoritative record. A retained fact does not enter the current context until the application selects it and authorizes its use.</li></ul>
+<p>A larger window can admit more documents. Extra content can also introduce similar but irrelevant passages, old rules or repeated facts. These <strong>distractors</strong> compete with the useful evidence. <strong>Interference</strong> occurs when that competing material changes what is used. Check the evidence&#x27;s delivered position and the answer. Repeat the comparison with the same material before attributing a failure to length or position.</p>
+<h5>Score each dimension separately</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Long-context evaluation dimensions"><table><caption>Long-context evaluation dimensions</caption><thead><tr><th scope="col">Evidence or memory dimension</th><th scope="col">Passing and failing behavior</th><th scope="col">Check and limitation</th></tr></thead><tbody><tr><td>Evidence retrieval</td><td>Finds the applicable policy and order record. Returning shipping notes alone fails.</td><td>Compare required IDs against candidates and delivered passages. A matching ID cannot prove the answer used its content.</td></tr><tr><td>Evidence grounding</td><td>The stated deadline and condition follow the delivered rule. The same number described as business days fails.</td><td>Verify atomic claims against supplied text. Small numeric matches miss scope and units.</td></tr><tr><td>Position sensitivity</td><td>The same correct, cited result appears with the source first, middle and last. A middle-only miss is a position effect in that controlled run.</td><td>Hold content and settings fixed within a length slice. One fixture cannot establish a model&#x27;s behavior.</td></tr><tr><td>Multi-hop reasoning</td><td>Joins the purchase date and the applicable rule for eligibility. Using the 30-day rule without the order date fails.</td><td>Label each necessary hop and the final inference. A correct outcome alone may be a guess.</td></tr><tr><td>Contradiction handling</td><td>Separates an expired rule from an active conflict, then routes overlapping authoritative rules to review. Silently combining them fails.</td><td>Record active intervals, versions and authority. A timestamp alone cannot decide authority.</td></tr><tr><td>Temporal correctness</td><td>Applies the version effective for the order&#x27;s purchase date. Using the latest upload for an older order fails.</td><td>Verify the governing event and test just before and on a boundary. This lab uses synthetic policy dates.</td></tr><tr><td>Memory accuracy</td><td>Repeats the approved saved contact preference. Hallucinating a different preference fails.</td><td>Compare a reply and its provenance with the scoped record. Correct wording cannot prove where it came from.</td></tr><tr><td>Memory freshness</td><td>Uses the saved correction. Reusing the superseded value fails.</td><td>Replay create, update, expiry and delete events in order. Active deletion says nothing about backups.</td></tr><tr><td>Memory relevance</td><td>Uses a preference for the current order. Applying a note from another order fails.</td><td>Check purpose, key and order scope. Text similarity cannot establish relevance or permission.</td></tr><tr><td>Privacy</td><td>Stays within verified account and case scope. Reading or displaying a different customer&#x27;s marker is critical here.</td><td>Inspect authorized reads, delivered payload and output. An exact marker catches this fixture only.</td></tr><tr><td>Abstention</td><td>Requests evidence when one source is missing or an active conflict remains. Guessing a policy answer fails.</td><td>Inspect what was known at the time. Missing grading evidence makes the run unscorable.</td></tr><tr><td>Citation accuracy</td><td>The cited source exists, was delivered and supports the specific claim. A fabricated ID or unrelated source fails.</td><td>Review claim-to-source links and policy applicability. A valid citation format provides no support by itself.</td></tr></tbody></table></div>
+<h4>Worked Demonstration</h4>
+<h5>Locate the first failed handoff</h5>
+<p>Suppose the final answer is “The order qualifies.” The approved policy and purchase record are two separate sources. Open the trace in this order.</p>
+<ol><li><strong>Retrieved.</strong> If the order source is absent from the candidate list, investigate search or index eligibility.</li><li><strong>Delivered.</strong> If retrieval found it but the model did not receive it, inspect context selection, access filtering or budget cuts.</li><li><strong>Used.</strong> If both records arrived and the reply misses the date or misapplies the cutoff, inspect evidence use and calculation.</li><li><strong>Remembered.</strong> If a preference is wrong, inspect the write history, the active scoped record and the actual delivered memory before naming a failure. A correction might have been dropped during storage, an outdated copy might have been delivered, or an up-to-date record might have been ignored.</li><li><strong>Cited.</strong> For every important claim, check the referenced document and whether the cited span supports the claim in this case.</li></ol>
+<p>In archived Test 9, the walkthrough records a wrong eligibility decision for TC21, the age-86 Gold Loan case, even though the relevant chunk was retrieved and the historical evaluator reported favorable relevance and faithfulness. That case separates retrieval and rule application. It is a saved RAG result. It supplies no measured position effect, long-context result or memory test for Northstar.</p>
+<h4>Hands-On Python Exercise</h4>
+<details class="lesson-disclosure lesson-supplement"><summary><h5>Setup and run</h5></summary><div class="lesson-disclosure-body">
+<p>The blocks use Python 3.10+ and the standard library. Copy one block into an empty editor and run it with its own data. The outputs were recorded from local executions. Predict a change, make it, then reset by copying the original block.</p>
+</div></details>
+<h5>Experiment A — Move one fact while controlling length</h5>
+<p>Run a small grid. Keep the question, source fact and distractor texts fixed within each length. Use five or eleven sections and place S02 first, middle or last. Equal-length padded lines let you move a fact without changing the character count. Only the context body length changes between rows marked short and long. The prompt includes the same question in each row.</p>
+<p>The deliberately limited reader scans every short section and just the first two and last two long sections. The code builds and saves each rendered prompt in <code>records</code>, then compares the answer and citation with the independent reference. Set <code>EXPORT_PROMPTS = True</code> to print the saved prompts as JSON. <code>list.insert</code> changes a position in a new list, <code>ljust</code> pads a string and <code>[:2]</code> takes the first two items. The keyword rule accepts the first inspected line containing “refund deadline.” The final pair replaces one neutral line with an unapproved near-match of the same width. This is a test of the fixture and metric.</p>
+<p>The reported <strong>lost-in-the-middle</strong> pattern describes weaker performance for evidence placed in the middle under some real model and task setups. Our reader has that limitation by construction. It can show how to detect the pattern and how to report slices. It cannot establish the behavior of a real LLM. Liu et al., Lost in the Middle</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+EXPORT_PROMPTS = False
+QUESTION = &quot;What is the approved Northstar refund deadline?&quot;
+GOLD = (&quot;S02&quot;, &quot;The approved refund deadline is 30 days from purchase.&quot;, 30)
+DECOY = (&quot;D01&quot;, &quot;The draft refund deadline example says 90 days.&quot;, 90)
+SECTION_WIDTH = 80
+
+
+def prompt_for(sections):
+    context = &quot;\n&quot;.join(f&quot;{key} {line}&quot;.ljust(SECTION_WIDTH) for key, line, _ in sections)
+    return context + &quot;\n\n&quot; + QUESTION
+
+
+def fixture_reader(sections):
+    inspected = sections if len(sections) &lt;= 5 else sections[:2] + sections[-2:]
+    return next(((days, key) for key, text, days in inspected if &quot;refund deadline&quot; in text),
+                (None, None))
+
+
+records = {}
+for count in (5, 11):
+    filler = [(f&quot;D{i:02}&quot;, &quot;Parcel tracking and support hours.&quot;, None) for i in range(1, count)]
+    for name, index in ((&quot;first&quot;, 0), (&quot;middle&quot;, count // 2), (&quot;last&quot;, count - 1)):
+        sections = list(filler)
+        sections.insert(index, GOLD)
+        prompt = prompt_for(sections)
+        days, source = fixture_reader(sections)
+        records[f&quot;{count}-{name}&quot;] = (prompt, days, source)
+        passed = (days, source) == (30, &quot;S02&quot;)
+        print(f&quot;A {count} {name}: chars={len(prompt)}, source={source}, pass={passed}&quot;)
+    if count == 11:
+        with_decoy = [DECOY] + sections[1:]
+        days, source = fixture_reader(with_decoy)
+        decoy_prompt = prompt_for(with_decoy)
+        records[&quot;11-last-decoy&quot;] = (decoy_prompt, days, source)
+        print(f&quot;A interference: same_chars={len(decoy_prompt) == len(prompt)}, &quot;
+              f&quot;days={days}, source={source}, pass={(days, source) == (30, &#x27;S02&#x27;)}&quot;)
+if EXPORT_PROMPTS:
+    print(json.dumps(records, sort_keys=True))
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">A 5 first: chars=453, source=S02, pass=True
+A 5 middle: chars=453, source=S02, pass=True
+A 5 last: chars=453, source=S02, pass=True
+A 11 first: chars=939, source=S02, pass=True
+A 11 middle: chars=939, source=None, pass=False
+A 11 last: chars=939, source=S02, pass=True
+A interference: same_chars=True, days=90, source=D01, pass=False
+</code></pre></details>
+<p>The middle long prompt contains S02 just like the other long prompts. The reader skips it, so this is an evidence-use miss inside the simulation. The decoy wins despite unchanged character length and evidence position. Replace the limited reader&#x27;s <code>inspected</code> assignment with <code>inspected = sections</code>. The middle case recovers but the first-match decoy still wins. The two failures require different fixes. In a live study, save the rendered prompts, tokenizer and model versions, output budget and decoding settings. Run matched repeats and retain uncertainty instead of treating one completion as a position effect.</p>
+<h5>Experiment B — Join two documents before deciding eligibility</h5>
+<p>The order record gives a November 10 purchase date and confirms a valid receipt. The request comes on November 28. Calculate 18 elapsed days and compare them with the policy window for that order. <strong>Multi-hop reasoning</strong> uses each necessary fact before reaching the decision. A correct decision with only one required citation still fails this check.</p>
+<p>Start with B with both records. Then remove the order and watch the reference action change to “ask-order.” The example replies are explicitly synthetic. The date arithmetic and verdict comparison run in Python. <code>date.fromisoformat</code> parses the date, subtracting dates yields a duration, and <code>&lt;=</code> includes the boundary. The last loop runs Experiment C on the same corpus.</p>
+<h5>Experiment C — Resolve the applicable version or route for review</h5>
+<p>The fictional historical policy enabled 45 days for purchases before July 1, 2026. The current one enables 30 days for purchases on or after July 1. Both editions require a valid receipt in this exercise. The effective interval includes its start and excludes its end. The jurisdiction and product conditions are fixed. In a real evaluation, confirm which event starts the applicability rule. Policy publication, purchase, delivery and request dates can differ.</p>
+<p>The policy registry stores each version, authority flag and effective interval. Exclude drafts. Two archived and current limits may differ without creating a conflict for the same purchase. In the final C case, two approved documents actually overlap for the same purchase. There is no tie-breaking rule. Return REVIEW and keep the competing IDs. A draft alone also yields REVIEW because authority is missing. No rule averages the windows or silently prefers the newest upload.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">from datetime import date
+
+OLD = (&quot;policy-v1&quot;, 45, &quot;2026-01-01&quot;, &quot;2026-07-01&quot;, True)
+CURRENT = (&quot;policy-v2&quot;, 30, &quot;2026-07-01&quot;, None, True)
+DRAFT = (&quot;policy-draft&quot;, 90, &quot;2026-07-01&quot;, None, False)
+OVERLAP = (&quot;policy-overlap&quot;, 60, &quot;2026-07-01&quot;, None, True)
+ORDER = {&quot;id&quot;: &quot;order:NS1042&quot;, &quot;purchase&quot;: &quot;2026-11-10&quot;, &quot;receipt&quot;: True}
+
+
+def applicable(policies, purchase):
+    active = [row for row in policies if row[4] and row[2] &lt;= purchase
+              and (row[3] is None or purchase &lt; row[3])]
+    return active
+
+
+def derive(order, policies, request_date):
+    if order is None:
+        return &quot;ask-order&quot;, []
+    active = applicable(policies, order[&quot;purchase&quot;])
+    if len(active) != 1:
+        return &quot;review-policy&quot;, []
+    key, days, *_ = active[0]
+    age = (date.fromisoformat(request_date) - date.fromisoformat(order[&quot;purchase&quot;])).days
+    eligible = order[&quot;receipt&quot;] and 0 &lt;= age &lt;= days
+    return (&quot;eligible-for-review&quot; if eligible else &quot;not-eligible&quot;), [order[&quot;id&quot;], key]
+
+
+policies = [OLD, CURRENT, DRAFT]
+for name, order, observed_action, observed_refs in [
+    (&quot;two sources&quot;, ORDER, &quot;eligible-for-review&quot;, [&quot;order:NS1042&quot;, &quot;policy-v2&quot;]),
+    (&quot;correct decision, one citation&quot;, ORDER, &quot;eligible-for-review&quot;, [&quot;policy-v2&quot;]),
+    (&quot;order missing, guessed&quot;, None, &quot;eligible-for-review&quot;, [&quot;policy-v2&quot;]),
+    (&quot;order missing, asked&quot;, None, &quot;ask-order&quot;, []),
+]:
+    expected = derive(order, policies, &quot;2026-11-28&quot;)
+    print(f&quot;B {name}: expected={expected[0]}, pass={(observed_action, observed_refs) == expected}&quot;)
+
+for name, purchase, versions in [
+    (&quot;before boundary&quot;, &quot;2026-06-30&quot;, policies),
+    (&quot;on boundary&quot;, &quot;2026-07-01&quot;, policies),
+    (&quot;draft only&quot;, &quot;2026-11-10&quot;, [DRAFT]),
+    (&quot;active conflict&quot;, &quot;2026-11-10&quot;, policies + [OVERLAP]),
+]:
+    active = applicable(versions, purchase)
+    record = &quot;, &quot;.join(f&quot;{key}={days} days&quot; for key, days, *_ in active)
+    verdict = &quot;resolved&quot; if len(active) == 1 else &quot;REVIEW&quot;
+    print(f&quot;C {name}: {verdict}, active={record or &#x27;none&#x27;}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">B two sources: expected=eligible-for-review, pass=True
+B correct decision, one citation: expected=eligible-for-review, pass=False
+B order missing, guessed: expected=ask-order, pass=False
+B order missing, asked: expected=ask-order, pass=True
+C before boundary: resolved, active=policy-v1=45 days
+C on boundary: resolved, active=policy-v2=30 days
+C draft only: REVIEW, active=none
+C active conflict: REVIEW, active=policy-v2=30 days, policy-overlap=60 days
+</code></pre></details>
+<p>The date strings use a consistent year-month-day format, so comparing them in order matches calendar ordering for these fixtures. <code>*_</code> collects the tuple fields the line does not use. B distinguishes a bad decision from an incomplete citation. C uses v1 the day before the boundary and v2 on July 1. Mark the draft as approved. The on-boundary case becomes REVIEW because two active policies then apply. The experiment verifies the application rule and adjudication flag. It does not establish how a model will notice contradictions without these controls.</p>
+<h5>Experiment D — Correct memory across turns</h5>
+<p>A fictional customer records “email” at turn 1 and corrects it to “chat” at turn 2. At turn 3 the customer asks, “Use my earlier preference.” The current scoped preference is chat. In this fixture an update supersedes an earlier entry even when the updated value later expires. It cannot resurrect email. The customer then deletes the preference.</p>
+<p>A <strong>memory record</strong> includes the authorized owner, case, purpose or key, originating turn, operation and expiry. The application obtains the owner from a verified session. It does not infer ownership from text in the request. <code>active_memory</code> first filters events by exact scope and effective turn. <code>max</code> selects the latest qualifying event. A delete record is a marker that blocks active use of older values. Expiry removes the value from the active view under this fixture rule.</p>
+<h5>Experiment E — Check isolation using a marked fictional value</h5>
+<p>Another customer records an invented private marker under a different account. Test both response text and the ID of any memory read for the current request. A safe answer carries no foreign marker and names no record outside the scoped set. A response can get the current customer&#x27;s preference right and still use an unauthorized memory. The two deliberately bad responses below test each surface independently.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">SCOPE = (&quot;A&quot;, &quot;NS-1042&quot;, &quot;contact&quot;)
+MARKER = &quot;[SYNTHETIC-B-PREFERENCE]&quot;
+events = [
+    {&quot;id&quot;: &quot;A1&quot;, &quot;scope&quot;: SCOPE, &quot;turn&quot;: 1, &quot;op&quot;: &quot;set&quot;, &quot;value&quot;: &quot;email&quot;, &quot;expires&quot;: 9},
+    {&quot;id&quot;: &quot;A2&quot;, &quot;scope&quot;: SCOPE, &quot;turn&quot;: 2, &quot;op&quot;: &quot;set&quot;, &quot;value&quot;: &quot;chat&quot;, &quot;expires&quot;: 4},
+    {&quot;id&quot;: &quot;B1&quot;, &quot;scope&quot;: (&quot;B&quot;, &quot;NS-2081&quot;, &quot;contact&quot;), &quot;turn&quot;: 3, &quot;op&quot;: &quot;set&quot;,
+     &quot;value&quot;: MARKER, &quot;expires&quot;: 9},
+    {&quot;id&quot;: &quot;A3&quot;, &quot;scope&quot;: SCOPE, &quot;turn&quot;: 5, &quot;op&quot;: &quot;delete&quot;, &quot;value&quot;: None, &quot;expires&quot;: None},
+]
+
+
+def active_memory(scope, turn):
+    relevant = [event for event in events if event[&quot;scope&quot;] == scope and event[&quot;turn&quot;] &lt;= turn]
+    latest = max(relevant, key=lambda event: event[&quot;turn&quot;], default=None)
+    if latest is None or latest[&quot;op&quot;] == &quot;delete&quot; or latest[&quot;expires&quot;] &lt;= turn:
+        return None
+    return latest
+
+
+for name, scope, turn in (
+    (&quot;initial&quot;, SCOPE, 1), (&quot;reference after correction&quot;, SCOPE, 3),
+    (&quot;expired at boundary&quot;, SCOPE, 4), (&quot;deleted&quot;, SCOPE, 5),
+    (&quot;different order&quot;, (&quot;A&quot;, &quot;NS-9999&quot;, &quot;contact&quot;), 3),
+):
+    record = active_memory(scope, turn)
+    print(f&quot;D {name}: {record[&#x27;value&#x27;] if record else &#x27;ask-preference&#x27;}&quot;)
+
+
+allowed = {active_memory(SCOPE, 3)[&quot;id&quot;]}
+for name, text, reads in (
+    (&quot;clean&quot;, &quot;Use chat.&quot;, [&quot;A2&quot;]),
+    (&quot;foreign read&quot;, &quot;Use chat.&quot;, [&quot;A2&quot;, &quot;B1&quot;]),
+    (&quot;foreign output&quot;, MARKER, []),
+):
+    out_of_scope = bool(set(reads) - allowed)
+    disclosed = MARKER in text
+    print(f&quot;E {name}: foreign_read={out_of_scope}, disclosure={disclosed}, &quot;
+          f&quot;critical={out_of_scope or disclosed}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">D initial: email
+D reference after correction: chat
+D expired at boundary: ask-preference
+D deleted: ask-preference
+D different order: ask-preference
+E clean: foreign_read=False, disclosure=False, critical=False
+E foreign read: foreign_read=True, disclosure=False, critical=True
+E foreign output: foreign_read=False, disclosure=True, critical=True
+</code></pre></details>
+<p>The correction takes effect immediately. The old email event remains in the synthetic timeline and is unavailable to active reads after chat supersedes it. Increase A2&#x27;s expiry to 6. The turn-4 read now returns chat and the turn-5 delete still returns no value. Actual environments need authenticated access checks, scoped indexes and controlled memory writes. This code verifies a selection rule and scripted read/output checks. It demonstrates no real customer&#x27;s behavior.</p>
+<h5>Experiment F — Pack evidence into a fixed budget</h5>
+<p>The context starts with a long shipping note. It ends with the refund limit and the order date. Try three strategies under a 100-character budget. Naive truncation takes the first 100 characters. It can cut a passage in half. Evidence-aware selection puts the two required records first. The lexical retrieval fixture ranks by shared query words and then packs whole records. It can miss synonyms or select a high-overlap distractor.</p>
+<p>The code counts the newline separators. <code>len</code> measures Python characters, without a real tokenizer. In production, record the actual model tokenizer, serialization, system instructions, tool messages and reserved response tokens. Never truncate access rules, negations or source boundaries as though they were expendable filler.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">BUDGET = 100
+QUERY = &quot;order ns1042 purchase date refund deadline&quot;
+DOCS = [
+    (&quot;shipping&quot;, &quot;shipping updates and tracking details &quot; * 4),
+    (&quot;policy&quot;, &quot;refund deadline 30 days from purchase&quot;),
+    (&quot;order&quot;, &quot;order NS1042 purchase date November 10&quot;),
+]
+NEEDED = {&quot;policy&quot;, &quot;order&quot;}
+
+
+def line(row):
+    key, text = row
+    return key + &quot;: &quot; + text
+
+
+def pack(rows):
+    kept = []
+    for row in rows:
+        proposed = &quot;\n&quot;.join([*kept, line(row)])
+        if len(proposed) &lt;= BUDGET:
+            kept.append(line(row))
+    return &quot;\n&quot;.join(kept)
+
+
+def observed_ids(context):
+    lines = set(context.splitlines())
+    return {key for key, text in DOCS if line((key, text)) in lines}
+
+
+query_words = set(QUERY.lower().split())
+ranked = sorted(DOCS, key=lambda row: -len(query_words &amp; set(row[1].lower().split())))
+for method, delivered in (
+    (&quot;naive&quot;, &quot;\n&quot;.join(map(line, DOCS))[:BUDGET]),
+    (&quot;evidence-aware&quot;, pack([row for row in DOCS if row[0] in NEEDED])),
+    (&quot;lexical retrieval&quot;, pack(ranked)),
+):
+    found = observed_ids(delivered)
+    missing = sorted(NEEDED - found)
+    print(f&quot;F {method}: chars={len(delivered)}, missing={&#x27;,&#x27;.join(missing) or &#x27;none&#x27;}, &quot;
+          f&quot;answerable={not missing}&quot;)
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">F naive: chars=100, missing=order,policy, answerable=False
+F evidence-aware: chars=91, missing=none, answerable=True
+F lexical retrieval: chars=91, missing=none, answerable=True
+</code></pre></details>
+<p>Both selection strategies keep the complete policy and order here. This evidence-aware policy knows which records the case requires, so it is an <strong>oracle control</strong>, a comparison that assumes ideal evidence selection. It shows the case can fit within the test budget. It does not implement a general-purpose retriever. Lower <code>BUDGET</code> to 60 and at least one required record is lost under every strategy. Route missing evidence to clarification, increase the actual budget if justified, or change how the context is selected. Compare document IDs and delivered text before tuning the answer. The optional reranked extension requires the RAG regression prerequisite.</p>
+<h4>Guided Engineering Lab</h4>
+<h5>Experiment G — Verify the claim against its cited source</h5>
+<p>The versioned corpus below names the order, policy editions, date ranges and synthetic memory records. A test case records the candidate and delivered context IDs, the approved expected facts, and any expected memory reads. A reply includes its action, annotated claims, source links, conflict label, observed memory reads and text. The records are fixtures, so the program can grade the structure without extracting claims from prose.</p>
+<p>For a claim to pass, the reference must exist in the registry, appear in the delivered context, support the precise value, and be the eligible source for this question. A record approved for one purchase can be stale for another. E01 supplies both sources. The controlled candidates cite an unrelated source for the right value, cite a made-up source, cite the right source for a different value, or attempt to cite a real record the model did not receive. Count those separately from a missing required claim.</p>
+<h5>Experiment H — Keep critical findings and coverage separate</h5>
+<p>Use a 12-case replay with four required slices: evidence, policy, memory and budget. Require at least two cases per slice, a complete grading record for each case, at least 75% passing in every slice, and zero critical failures. Those are teaching thresholds chosen to show how the gate works. A real release needs thresholds, scope and evidence independently approved. Known out-of-scope memory reads or delivery, and disclosure of the fixture marker, take priority. Missing evidence calls for REVIEW. A noncritical slice failure can still block on quality.</p>
+<p><code>case</code> freezes the expected claims as pairs of a value and a source. <code>grade</code> compares the values and reports why a citation fails. The dictionary&#x27;s <code>.get</code> method returns a source or <code>None</code>. Set subtraction identifies required IDs that are absent at each stage. <code>None</code> also marks missing grading or review evidence. The <code>reviewed</code> flag is a synthetic stand-in. A real review should preserve the rubric version, reviewer record and identity of the exact capture reviewed. The final loop prints the observations and decision for each variant. Set <code>EXPORT_JSON = True</code> to export the corpus, conversation turns, cases, replies and reports. Keep the harness source and report together.</p>
+<p><a href="https://www.online-python.com/" target="_blank" rel="noopener noreferrer">Open Python Editor</a></p>
+<div class="lesson-code">
+  <div class="lesson-copy-toolbar" hidden>
+    <span class="lesson-copy-status" role="status"></span>
+    <button type="button" class="lesson-copy-button">Copy Code</button>
+  </div>
+  <pre><code class="language-python">import json
+
+EXPORT_JSON = False
+MARKER = &quot;[SYNTHETIC-B-PREFERENCE]&quot;
+A = (&quot;A&quot;, &quot;NS-1042&quot;, &quot;contact&quot;)
+OTHER_ORDER = (&quot;A&quot;, &quot;NS-9999&quot;, &quot;contact&quot;)
+B = (&quot;B&quot;, &quot;NS-2081&quot;, &quot;contact&quot;)
+GATE = {&quot;slices&quot;: (&quot;evidence&quot;, &quot;policy&quot;, &quot;memory&quot;, &quot;budget&quot;),
+        &quot;minimum_cases&quot;: 2, &quot;floor_percent&quot;: 75, &quot;allow_critical&quot;: 0}
+SOURCES = {
+    &quot;policy-v1&quot;: {&quot;facts&quot;: {&quot;days&quot;: 45}, &quot;effective&quot;: [&quot;2026-01-01&quot;, &quot;2026-07-01&quot;], &quot;approved&quot;: True},
+    &quot;policy-v2&quot;: {&quot;facts&quot;: {&quot;days&quot;: 30}, &quot;effective&quot;: [&quot;2026-07-01&quot;, None], &quot;approved&quot;: True},
+    &quot;policy-overlap&quot;: {&quot;facts&quot;: {&quot;days&quot;: 60}, &quot;effective&quot;: [&quot;2026-07-01&quot;, None], &quot;approved&quot;: True},
+    &quot;order:NS1042&quot;: {&quot;facts&quot;: {&quot;purchase&quot;: &quot;2026-11-10&quot;, &quot;receipt&quot;: True}},
+    &quot;guide&quot;: {&quot;facts&quot;: {&quot;contact&quot;: &quot;order support&quot;}},
+    &quot;A1&quot;: {&quot;facts&quot;: {&quot;channel&quot;: &quot;email&quot;}, &quot;scope&quot;: A},
+    &quot;A2&quot;: {&quot;facts&quot;: {&quot;channel&quot;: &quot;chat&quot;}, &quot;scope&quot;: A},
+    &quot;B1&quot;: {&quot;facts&quot;: {&quot;channel&quot;: MARKER}, &quot;scope&quot;: B},
+}
+TURNS = [
+    (1, A, &quot;set&quot;, &quot;email&quot;, &quot;A1&quot;, 9),
+    (2, A, &quot;set&quot;, &quot;chat&quot;, &quot;A2&quot;, 4),
+    (3, B, &quot;set&quot;, MARKER, &quot;B1&quot;, 9),
+    (5, A, &quot;delete&quot;, None, &quot;A3&quot;, None),
+]
+BOTH = (&quot;policy-v2&quot;, &quot;order:NS1042&quot;)
+JOINT = {&quot;days&quot;: (30, &quot;policy-v2&quot;), &quot;purchase&quot;: (&quot;2026-11-10&quot;, &quot;order:NS1042&quot;),
+         &quot;receipt&quot;: (True, &quot;order:NS1042&quot;)}
+CURRENT = {&quot;days&quot;: (30, &quot;policy-v2&quot;)}
+HISTORICAL = {&quot;days&quot;: (45, &quot;policy-v1&quot;)}
+PREFERENCE = {&quot;channel&quot;: (&quot;chat&quot;, &quot;A2&quot;)}
+
+
+def case(key, group, question, action, expected=None, retrieved=(), delivered=(), needed=(),
+         scope=None, reads=(), conflict=False, turn=None, policy_on=None):
+    return {&quot;id&quot;: key, &quot;slice&quot;: group, &quot;question&quot;: question, &quot;action&quot;: action, &quot;expected&quot;: expected or {},
+            &quot;retrieved&quot;: retrieved, &quot;delivered&quot;: delivered, &quot;needed&quot;: needed, &quot;scope&quot;: scope,
+            &quot;reads&quot;: reads, &quot;conflict&quot;: conflict, &quot;turn&quot;: turn, &quot;policy_on&quot;: policy_on}
+
+
+CASES = [
+    case(&quot;E01&quot;, &quot;evidence&quot;, &quot;Does the recorded November purchase qualify?&quot;, &quot;eligible&quot;,
+         JOINT, BOTH + (&quot;guide&quot;,), BOTH + (&quot;guide&quot;,), BOTH, policy_on=&quot;2026-11-10&quot;),
+    case(&quot;E02&quot;, &quot;evidence&quot;, &quot;Does my order qualify?&quot;, &quot;ask-order&quot;,
+         retrieved=(&quot;policy-v2&quot;, &quot;guide&quot;), delivered=(&quot;policy-v2&quot;, &quot;guide&quot;), needed=BOTH),
+    case(&quot;E03&quot;, &quot;evidence&quot;, &quot;Does my order qualify?&quot;, &quot;ask-order&quot;,
+         retrieved=BOTH, delivered=(&quot;policy-v2&quot;,), needed=BOTH),
+    case(&quot;P01&quot;, &quot;policy&quot;, &quot;Which window governs a November order?&quot;, &quot;explain&quot;, CURRENT,
+         (&quot;policy-v1&quot;, &quot;policy-v2&quot;), (&quot;policy-v1&quot;, &quot;policy-v2&quot;), policy_on=&quot;2026-11-10&quot;),
+    case(&quot;P02&quot;, &quot;policy&quot;, &quot;Which window governed my June purchase?&quot;, &quot;explain&quot;, HISTORICAL,
+         (&quot;policy-v1&quot;, &quot;policy-v2&quot;), (&quot;policy-v1&quot;, &quot;policy-v2&quot;), policy_on=&quot;2026-06-30&quot;),
+    case(&quot;P03&quot;, &quot;policy&quot;, &quot;What if approved rules differ for my November purchase?&quot;, &quot;review-policy&quot;,
+         retrieved=(&quot;policy-v2&quot;, &quot;policy-overlap&quot;), delivered=(&quot;policy-v2&quot;, &quot;policy-overlap&quot;),
+         conflict=True, policy_on=&quot;2026-11-10&quot;),
+    case(&quot;M01&quot;, &quot;memory&quot;, &quot;Use my corrected contact choice.&quot;, &quot;use-preference&quot;, PREFERENCE,
+         (&quot;A2&quot;,), (&quot;A2&quot;,), scope=A, reads=(&quot;A2&quot;,), turn=3),
+    case(&quot;M02&quot;, &quot;memory&quot;, &quot;Use my remembered contact choice.&quot;, &quot;ask-preference&quot;, scope=A, turn=4),
+    case(&quot;M03&quot;, &quot;memory&quot;, &quot;What preference is set for this other order?&quot;, &quot;ask-preference&quot;,
+         scope=OTHER_ORDER, turn=3),
+    case(&quot;M04&quot;, &quot;memory&quot;, &quot;Use my contact choice after deletion.&quot;, &quot;ask-preference&quot;, scope=A, turn=5),
+    case(&quot;B01&quot;, &quot;budget&quot;, &quot;Does the order qualify after compact selection?&quot;, &quot;eligible&quot;, JOINT,
+         BOTH, BOTH, BOTH, policy_on=&quot;2026-11-10&quot;),
+    case(&quot;B02&quot;, &quot;budget&quot;, &quot;Does the order qualify without its cut record?&quot;, &quot;ask-order&quot;,
+         retrieved=BOTH, delivered=(&quot;policy-v2&quot;,), needed=BOTH),
+]
+
+
+def reply(action, text, claims=None, reads=(), conflict=False, reviewed=True):
+    return {&quot;action&quot;: action, &quot;text&quot;: text, &quot;claims&quot;: claims or {}, &quot;reads&quot;: reads,
+            &quot;conflict&quot;: conflict, &quot;reviewed&quot;: reviewed}
+
+
+CAPTURES = {
+    &quot;E01&quot;: reply(&quot;eligible&quot;, &quot;The November 10 order has a valid receipt and is within 30 days.&quot;, JOINT),
+    &quot;E02&quot;: reply(&quot;ask-order&quot;, &quot;Please confirm the purchase date.&quot;),
+    &quot;E03&quot;: reply(&quot;ask-order&quot;, &quot;Please confirm the purchase date.&quot;),
+    &quot;P01&quot;: reply(&quot;explain&quot;, &quot;The window is 30 days.&quot;, CURRENT),
+    &quot;P02&quot;: reply(&quot;explain&quot;, &quot;The earlier window was 45 days.&quot;, HISTORICAL),
+    &quot;P03&quot;: reply(&quot;review-policy&quot;, &quot;Two active rules disagree. I will request a policy review.&quot;, conflict=True),
+    &quot;M01&quot;: reply(&quot;use-preference&quot;, &quot;Your corrected preference is chat.&quot;, PREFERENCE, reads=(&quot;A2&quot;,)),
+    &quot;M02&quot;: reply(&quot;ask-preference&quot;, &quot;Which contact channel would you prefer?&quot;),
+    &quot;M03&quot;: reply(&quot;ask-preference&quot;, &quot;Which contact channel would you prefer for this order?&quot;),
+    &quot;M04&quot;: reply(&quot;ask-preference&quot;, &quot;Which contact channel would you prefer?&quot;),
+    &quot;B01&quot;: reply(&quot;eligible&quot;, &quot;The November 10 order has a valid receipt and is within 30 days.&quot;, JOINT),
+    &quot;B02&quot;: reply(&quot;ask-order&quot;, &quot;Please confirm the purchase date.&quot;),
+}
+
+
+def citation_errors(row, claims):
+    errors = []
+    for key, (value, source_id) in claims.items():
+        source = SOURCES.get(source_id)
+        expected = row[&quot;expected&quot;].get(key)
+        if source is None:
+            reason = &quot;unknown source&quot;
+        elif source_id not in row[&quot;delivered&quot;]:
+            reason = &quot;source not delivered&quot;
+        elif key not in source[&quot;facts&quot;] or source[&quot;facts&quot;][key] != value:
+            reason = &quot;source does not support claim&quot;
+        elif expected is None or expected[1] != source_id:
+            reason = &quot;wrong source for case&quot;
+        else:
+            continue
+        errors.append(f&quot;{key}: {reason}&quot;)
+    for key in sorted(set(row[&quot;expected&quot;]) - set(claims)):
+        errors.append(f&quot;{key}: missing required claim&quot;)
+    return errors
+
+
+def grade(row, capture):
+    needed = set(row[&quot;needed&quot;])
+    if needed - set(row[&quot;retrieved&quot;]):
+        stage = &quot;retrieval miss&quot;
+    elif needed - set(row[&quot;delivered&quot;]):
+        stage = &quot;context omission&quot;
+    else:
+        stage = &quot;no source gap recorded&quot;
+    claims = capture[&quot;claims&quot;] if capture else {}
+    reads = capture[&quot;reads&quot;] if capture else ()
+    observed_sources = set(row[&quot;delivered&quot;]) | set(reads)
+    foreign = sorted(key for key in observed_sources if &quot;scope&quot; in SOURCES.get(key, {})
+                     and SOURCES[key][&quot;scope&quot;] != row[&quot;scope&quot;])
+    critical = [&quot;out-of-scope memory &quot; + key for key in foreign]
+    if capture and (MARKER in capture[&quot;text&quot;] or any(value == MARKER for value, _ in claims.values())):
+        critical.append(&quot;private marker disclosed&quot;)
+
+    checks = {&quot;privacy&quot;: False if critical else True if capture is not None else None}
+    errors = []
+    if capture is not None:
+        errors = citation_errors(row, claims)
+        checks.update({
+            &quot;decision&quot;: capture[&quot;action&quot;] == row[&quot;action&quot;],
+            &quot;facts&quot;: {k: v for k, (v, _) in claims.items()}
+                     == {k: v for k, (v, _) in row[&quot;expected&quot;].items()},
+            &quot;citations&quot;: not errors,
+            &quot;conflict&quot;: capture[&quot;conflict&quot;] == row[&quot;conflict&quot;],
+            &quot;memory&quot;: set(reads) == set(row[&quot;reads&quot;]),
+            &quot;review_evidence&quot;: capture[&quot;reviewed&quot;],
+        })
+    complete = capture is not None and capture[&quot;reviewed&quot;] is True
+    verdict = &quot;FAIL&quot; if False in checks.values() else &quot;PASS&quot; if complete else &quot;UNSCORABLE&quot;
+    return {&quot;id&quot;: row[&quot;id&quot;], &quot;slice&quot;: row[&quot;slice&quot;], &quot;stage&quot;: stage, &quot;checks&quot;: checks,
+            &quot;citation_errors&quot;: errors, &quot;critical&quot;: critical, &quot;complete&quot;: complete, &quot;verdict&quot;: verdict}
+
+
+def counts(rows):
+    return {&quot;passed&quot;: sum(row[&quot;verdict&quot;] == &quot;PASS&quot; for row in rows),
+            &quot;scored&quot;: sum(row[&quot;verdict&quot;] != &quot;UNSCORABLE&quot; for row in rows),
+            &quot;evidenced&quot;: sum(row[&quot;complete&quot;] for row in rows),
+            &quot;planned&quot;: len(rows)}
+
+
+def score(cases, captures):
+    ids = [row[&quot;id&quot;] for row in cases]
+    if len(set(ids)) != len(ids) or set(captures) - set(ids):
+        raise ValueError(&quot;Duplicate case ID or unexpected capture&quot;)
+    details = [grade(row, captures.get(row[&quot;id&quot;])) for row in sorted(cases, key=lambda row: row[&quot;id&quot;])]
+    totals = counts(details)
+    slices = {group: counts([row for row in details if row[&quot;slice&quot;] == group]) for group in GATE[&quot;slices&quot;]}
+    critical = [row[&quot;id&quot;] for row in details if row[&quot;critical&quot;]]
+    low = [key for key, values in slices.items()
+           if 100 * values[&quot;passed&quot;] &lt; GATE[&quot;floor_percent&quot;] * values[&quot;planned&quot;]]
+    if len(critical) &gt; GATE[&quot;allow_critical&quot;]:
+        decision, reason = &quot;BLOCK&quot;, &quot;critical memory violation &quot; + &quot;, &quot;.join(critical)
+    elif (totals[&quot;evidenced&quot;] != totals[&quot;planned&quot;]
+          or any(values[&quot;planned&quot;] &lt; GATE[&quot;minimum_cases&quot;] for values in slices.values())):
+        decision, reason = &quot;REVIEW&quot;, &quot;missing review or required slice&quot;
+    elif low:
+        decision, reason = &quot;BLOCK&quot;, &quot;slice floor missed: &quot; + &quot;, &quot;.join(low)
+    else:
+        decision, reason = &quot;PASS&quot;, &quot;offline fixture gates met&quot;
+    return {&quot;overall&quot;: totals, &quot;slices&quot;: slices, &quot;cases&quot;: details,
+            &quot;critical&quot;: critical, &quot;decision&quot;: decision, &quot;reason&quot;: reason}
+
+
+def main():
+    row = next(row for row in CASES if row[&quot;id&quot;] == &quot;E01&quot;)
+    for name, source, days in (
+        (&quot;correct&quot;, &quot;policy-v2&quot;, 30),
+        (&quot;irrelevant reference&quot;, &quot;guide&quot;, 30),
+        (&quot;fabricated reference&quot;, &quot;policy-made-up&quot;, 30),
+        (&quot;unsupported value&quot;, &quot;policy-v2&quot;, 90),
+        (&quot;known but undelivered&quot;, &quot;policy-v1&quot;, 45),
+    ):
+        result = grade(row, reply(&quot;eligible&quot;, &quot;Annotated reply&quot;, dict(JOINT, days=(days, source))))
+        print(f&quot;G {name}: {result[&#x27;verdict&#x27;]}, {&#x27;, &#x27;.join(result[&#x27;citation_errors&#x27;]) or &#x27;support verified&#x27;}&quot;)
+    current_case = next(row for row in CASES if row[&quot;id&quot;] == &quot;P01&quot;)
+    stale = grade(current_case, reply(&quot;explain&quot;, &quot;The window is 45 days.&quot;, HISTORICAL))
+    print(&quot;G stale policy:&quot;, stale[&quot;verdict&quot;], &quot;, &quot;.join(stale[&quot;citation_errors&quot;]))
+
+    leak = reply(&quot;use-preference&quot;, MARKER, {&quot;channel&quot;: (MARKER, &quot;B1&quot;)}, reads=(&quot;B1&quot;,))
+    variants = {
+        &quot;repaired&quot;: CAPTURES,
+        &quot;memory leak&quot;: dict(CAPTURES, M03=leak),
+        &quot;missing review&quot;: dict(CAPTURES, M01=dict(CAPTURES[&quot;M01&quot;], reviewed=None)),
+        &quot;ignored conflict&quot;: dict(CAPTURES, P03=reply(&quot;explain&quot;, &quot;The window is 30 days.&quot;, CURRENT)),
+    }
+    reports = {name: score(CASES, captures) for name, captures in variants.items()}
+    for name, result in reports.items():
+        total = result[&quot;overall&quot;]
+        print(f&quot;H {name}: {total[&#x27;passed&#x27;]}/{total[&#x27;scored&#x27;]} pass, &quot;
+              f&quot;{total[&#x27;evidenced&#x27;]}/{total[&#x27;planned&#x27;]} evidence, {result[&#x27;decision&#x27;]} ({result[&#x27;reason&#x27;]})&quot;)
+    for record in reports[&quot;repaired&quot;][&quot;cases&quot;]:
+        if record[&quot;id&quot;] in (&quot;E02&quot;, &quot;E03&quot;):
+            print(f&quot;  {record[&#x27;id&#x27;]}: {record[&#x27;stage&#x27;]}, {record[&#x27;verdict&#x27;]}&quot;)
+    for group, total in reports[&quot;memory leak&quot;][&quot;slices&quot;].items():
+        print(f&quot;  {group}: {total[&#x27;passed&#x27;]}/{total[&#x27;planned&#x27;]} pass&quot;)
+    if EXPORT_JSON:
+        print(json.dumps({&quot;dataset&quot;: &quot;northstar-long-context-v1&quot;, &quot;evaluator&quot;: &quot;northstar-evidence-checks-v1&quot;,
+                          &quot;request_date_for_eligibility&quot;: &quot;2026-11-28&quot;,
+                          &quot;gate&quot;: GATE, &quot;sources&quot;: SOURCES, &quot;turns&quot;: TURNS, &quot;cases&quot;: CASES,
+                          &quot;captures&quot;: variants, &quot;reports&quot;: reports}, sort_keys=True, ensure_ascii=False))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+</div>
+<p>Recorded local Python output.</p>
+<details class="lesson-disclosure lesson-output"><summary>Expected output</summary><pre><code class="language-text">G correct: PASS, support verified
+G irrelevant reference: FAIL, days: source does not support claim
+G fabricated reference: FAIL, days: unknown source
+G unsupported value: FAIL, days: source does not support claim
+G known but undelivered: FAIL, days: source not delivered
+G stale policy: FAIL days: wrong source for case
+H repaired: 12/12 pass, 12/12 evidence, PASS (offline fixture gates met)
+H memory leak: 11/12 pass, 12/12 evidence, BLOCK (critical memory violation M03)
+H missing review: 11/11 pass, 11/12 evidence, REVIEW (missing review or required slice)
+H ignored conflict: 11/12 pass, 12/12 evidence, BLOCK (slice floor missed: policy)
+  E02: retrieval miss, PASS
+  E03: context omission, PASS
+  evidence: 3/3 pass
+  policy: 3/3 pass
+  memory: 3/4 pass
+  budget: 2/2 pass
+</code></pre></details>
+<h5>Explain the verdict before reading the score</h5>
+<p>The G probes fail for distinct reasons. An irrelevant supplied guide and an approved rule misquoted as 90 days both fail support. A fabricated ID does not resolve. An existing but undelivered policy offers no grounding for this response. A past policy can support a literal number and still fail applicability for a current order. E02 and E03 both safely request the missing order record. The former has a retrieval miss, while the latter has a context omission after successful retrieval.</p>
+<p>The repaired run has 12/12 with complete evidence. The memory-leak run has 11/12, with 3/4 passing in the memory slice. Exactly 75% would meet the ordinary slice floor, but the confirmed M03 violation forces BLOCK. The missing-review run has 11/11 scored and 11/12 evidence. It yields REVIEW because a required verdict cannot be reconstructed. Ignoring an active policy conflict also scores 11/12, but drops the policy slice to 2/3 and blocks on the declared quality threshold. PASS here is a recommendation on the fixtures before any release approval.</p>
+<p>Try adding the M03 leak and removing M01&#x27;s review in the same variant. A confirmed violation still blocks. The incomplete review remains visible. You can also remove a required slice with its capture records and watch the coverage gate refuse approval. These results verify the scoring procedure on saved annotations. They cannot certify unrestricted memory isolation, policy reasoning or natural-language claim extraction.</p>
+<h4>Design a Long-Context and Memory Evaluation</h4>
+<h5>Report controlled effects across slices</h5>
+<p>Use a scorecard with at least length, evidence position and task type. For A, the short slice is 3/3, the long slice without the decoy is 2/3, and the long middle cell is 0/1. The interference pair is a separate contrast. Reporting only 5/6 would hide which condition failed. Use the same prompt pairs and family IDs for each candidate. Log delivered order, exact passages, budget and output. Vary position within each fixed length before increasing length. When real token counts matter, verify them with the model&#x27;s tokenizer after serializing the context.</p>
+<p>Add matched cases for single-hop, multi-hop and conflict resolution. Keep the required evidence fixed before adding distractors. Include neutral and deceptively similar documents as separate strata. Hold out document families, including their paraphrases and adjacent versions, rather than splitting near-duplicates across training and evaluation. Compare at least one held-out counterexample per slice. Use repeated runs and paired counts to separate nondeterminism from a stable effect, following <a href="#m07-t01">Variance, repetition and score aggregation</a>. Small synthetic slices do not estimate the distribution of production failures.</p>
+<h5>Audit the memory lifecycle</h5>
+<div class="table-wrap" tabindex="0" role="region" aria-label="Memory lifecycle audit"><table><caption>Memory lifecycle audit</caption><thead><tr><th scope="col">Memory lifecycle step</th><th scope="col">What to check and keep</th></tr></thead><tbody><tr><td>Create and scope</td><td>Record the approved purpose, authenticated account, case or tenant, permitted fields, source turn and authority. Confirm the adjacent account and adjacent case are excluded even when names or wording overlap.</td></tr><tr><td>Update and correct</td><td>Check that a user correction creates the right new value and supersedes the previous one for live reads. Verify from the stored record and the next delivered context, and replay the earlier value as a negative control.</td></tr><tr><td>Resolve conflicts</td><td>Prefer an authorized correction over an older summary under a documented rule. Escalate an ambiguous owner, missing order link or contradictory trusted records. Preserve evidence of the conflict.</td></tr><tr><td>Expire</td><td>Test just before and at expiry. Check that stale copies in caches or indexes are hidden and that an earlier superseded value does not return.</td></tr><tr><td>Delete</td><td>Test that active memory, cached summaries and derived indexes stop supplying the value under the applicable deletion procedure. Check backups, exports and logs separately. Removing active memory does not establish removal elsewhere.</td></tr><tr><td>Minimize and audit</td><td>Store only what serves the approved purpose. Restrict access to raw events, record provenance and changes, and keep a minimized audit trail with retention boundaries and accountable owners.</td></tr></tbody></table></div>
+<p>To diagnose a stale answer, compare the authorized write event, active state, payload sent to the model, and the final answer. If the correction is absent from storage, inspect the write path. If the active value is correct but an older record is delivered, inspect selection or caching. If the correct record was delivered and the reply repeats the old value, inspect synthesis. When a cross-account read is confirmed, contain the affected path and use the incident workflow from <a href="#m15-t02">Decision defense, incident response and teaching</a>. Do not reproduce private values in the wider report.</p>
+<p>Real reference judgments may need an independent reviewer. Give them the evidence actually delivered, the question, order scope, effective policy and the annotated claims. Have them record separate verdicts for retrieval, availability, support, decision and privacy. Ask them to identify the first supported failure and name any alternative explanation. If evidence is unavailable, preserve uncertainty. An automated judge supplied only with the final answer cannot confirm a successful retrieval, a correctly scoped read or whether the cited source was delivered.</p>
+<h4>Practice Exercises</h4>
+<ol><li><strong>Position or interference?</strong> Run A with a reader that inspects all sections. Explain why the middle recovers while the decoy still wins. Record both outcomes.</li><li><strong>Source and authority.</strong> In G cite the real refund rule but change its number. Then use a past edition whose facts support that number on a historical purchase. Explain which check is factual support and which is applicability.</li><li><strong>Correct and isolate memory.</strong> Extend the expiry in D. Compare the expiry and deletion boundaries. Give an example where the reply text is clean but E still blocks.</li><li><strong>Separate the budget from the answer.</strong> Lower F to 60 characters. Identify the omitted record for each strategy. Then remove a review from H while keeping the confirmed leak. State the score, evidence gap and recommendation.</li></ol>
+<h4>Independent Assignment</h4>
+<p>Produce a position-by-length scorecard on a frozen Northstar slice with the same evidence first, middle and last. Include at least two lengths, one multi-document answer, one contradictory or stale rule, and one update or isolation check. Add an interference pair with an equal-length distractor and a held-out document family. Submit the prompts, delivered source IDs and order, case-level labels, source or memory provenance, versioned gates and per-slice counts. Keep synthetic and any live outcomes separate. A peer should reproduce one citation failure and one corrected memory read from the artifacts.</p>
+<p>Explain where an unsupported conclusion entered the pipeline. Add one case where required context is absent and appropriate abstention passes, and another where the grader cannot see a required review and cannot award a pass. Compare normal selection with the evidence-aware control. If you use reranked retrieval context, complete the conditional prerequisite and record the candidate ranks, reranked IDs and exact delivered prompt. Make a recommendation under the declared gate and state what would change it.</p>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Worked Solutions to Practice</h4></summary><div class="lesson-disclosure-body">
+<ol><li>Scanning every section restores the long middle result. The decoy still appears first and shares the keyword cue. Fixing coverage of positions does not fix source authority or relevance.</li><li>A delivered v2 citation for 90 days fails support. Citing v1 for its actual 45-day number on a November order fails applicability. July 1 starts v2. The past edition still applies to June orders under the fixture rule.</li><li>A2 with expiry 6 is active at turn 4, and the turn-5 delete still prevents use. An observed B1 read is a critical failure even when the public response says only “Use chat.”</li><li>The naive prefix contains no required whole records. Evidence-aware selection keeps policy and drops order, while lexical selection keeps order and drops policy for this keyword ranking. Missing M01 review with the M03 leak gives 10/11 passed among scored and 11/12 evidence. Block the known violation and retain the separate review gap.</li></ol>
+</div></details>
+<h4>Knowledge Check</h4>
+<ul><li>What evidence separates a retrieval miss from a context omission?</li><li>What must stay fixed to interpret a position comparison?</li><li>Why should an expired correction avoid restoring a prior note?</li></ul>
+<details class="lesson-disclosure lesson-supplement" data-reading-skip><summary><h4>Knowledge Check Answers</h4></summary><div class="lesson-disclosure-body">
+<ul><li>Compare required IDs against the recorded retrieval candidates and exact delivered passages. A candidate found by retrieval can still be cut before the prompt.</li><li>Within each slice, keep the question, source set, instructions, budget and model configuration fixed. Move evidence and record the delivered position. Repeat before claiming a reliable model effect.</li><li>A correction superseded the prior value. If it expires, ask the user or apply an authorized fallback unless a documented policy explicitly says otherwise.</li></ul>
+</div></details>
+<h4>Common Mistakes</h4>
+<ul><li><strong>Treat every retrieved passage as delivered.</strong> Save the final payload and budget decisions.</li><li><strong>Count well-formed citations as proof.</strong> Verify the specific claim, source and applicable version.</li><li><strong>Select a preference by recency alone.</strong> Check account, case, purpose and active status first.</li><li><strong>Approve while a known critical read remains.</strong> Keep the scope breach visible and require a verified correction.</li></ul>
+<details class="lesson-disclosure original-experiments" data-reading-skip>
+<summary>Original TestNeural Experiment</summary>
+<div class="lesson-disclosure-body"><p>Historical evidence from the original repository.</p>
+<article data-original-experiment="TEST-9" data-relevance="Supporting">
+<h5>Test 9: RAG Evaluation</h5>
+<p>Recorded Results Available</p>
+<dl class="field-list"><div><dt>What was tested</dt><dd>Evaluate retrieval, answer faithfulness, and keyword relevance on a document-backed banking assistant.</dd></div><div><dt>How it was tested</dt><dd>Retrieve three chunks and score the resulting answer along three axes. The report records retrieval candidates and case-level judgments. Local source documents and 25 cases in the saved walkthrough, including cross-document, unanswerable, and boundary questions. llama3.1:8b bot and mistral judge via Ollama. Keyword matching supplies the answer-relevance measure.</dd></div><div><dt>Actual results</dt><dd>The 25-case page reports 84% context relevance, 100% answer faithfulness, 66% answer relevance, and 83% overall.</dd></div><div><dt>Original findings</dt><dd>The walkthrough flags TC21 as an incorrect eligibility decision despite 100% context relevance and 100% faithfulness scores.</dd></div><div><dt>Evidence notes</dt><dd>The README mentions an earlier 21-case suite. The summary here uses the 25-case result page. The historical faithfulness verdict is not independently verified correctness.</dd></div><div><dt>Connection to this lesson</dt><dd>Supporting. Compare TC21&#x27;s retrieved evidence with its incorrect decision before attributing an error to context length or position.</dd></div></dl>
+<p><a href="test9.html">View Complete Original Experiment</a> · <a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html">Saved report with ranked evidence and answers</a> · <a href="#original-test-9">Evidence files and related lessons</a></p>
+</article></div></details>
+<h4>Lesson Summary and Next Step</h4>
+<p>Separate retrieval, delivery, use, citation and memory state. Use paired controls to tell a position effect from distractor interference. Let scoped evidence and critical gates drive the release recommendation. The next scheduled topic is <a href="#m17-t01">Structured extraction and classification</a>.</p></div>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Prerequisites</summary>
     <div class="lesson-disclosure-body"><dl class="field-list"><div><dt>Mandatory prerequisites</dt><dd><a href="#m01-t01">Tokens, messages and context windows</a>, <a href="#m07-t01">Variance, repetition and score aggregation</a></dd></div><div><dt>Recommended prerequisites</dt><dd><a href="#m07-t03">Comparing models, prompts and A/B variants</a>, <a href="#m08-t03">Failure attribution, optimization and RAG regression</a></dd></div><div><dt>Conditional prerequisites</dt><dd><a href="#m08-t03">Failure attribution, optimization and RAG regression</a> — required when experimenting with reranked retrieval context</dd></div></dl></div>
   </details>
-  <section class="lesson-section lesson-example">
-    <h4>Demonstrations and examples</h4>
-    <p data-lesson-search>Use saved prompts with the same evidence in different positions and label unsupported conclusions.</p>
-    <p class="lesson-note" data-lesson-search><strong>Setup and preparation.</strong> Use P02 and P04 to inspect saved context variants.</p>
-  </section>
-  <section class="lesson-section lesson-exercise">
-    <h4>Practical exercise</h4>
-    <p data-lesson-search>Report controlled position and context-length effects across slices.</p>
-  </section>
-  <section class="lesson-section lesson-checkpoint">
-    <h4>Checkpoint</h4>
-    <p>Use the exercise above to check your understanding before marking this lesson complete.</p>
-  </section>
   <details class="lesson-disclosure" data-reading-skip>
     <summary>Detailed time estimates</summary>
     <div class="lesson-disclosure-body"><dl class="time-list" aria-label="Time estimates in hours"><div><dt>Theory (hrs)</dt><dd>1h 30m</dd></div><div><dt>Guided (hrs)</dt><dd>2h</dd></div><div><dt>Experiment (hrs)</dt><dd>1h 30m</dd></div><div><dt>Exercises (hrs)</dt><dd>1h</dd></div><div><dt>Learner total (hrs)</dt><dd>6h</dd></div><div><dt>Instructor-led (hrs)</dt><dd>4h</dd></div></dl></div>
@@ -28769,7 +29310,7 @@ data-subject="Specialization" data-status="New" data-track="Elective">
 <p><a href="test9.html">View Complete Original Experiment</a> <code>docs/test9.html</code></p>
 <h4>Original evidence files</h4><ul><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html">Saved report with ranked evidence and answers</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/results/sample_rag_evaluation_report.html</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx">Original RAG case workbook</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_test_cases.xlsx</code></li><li><a href="https://github.com/amitbad/llm-evaluation/blob/02d89162dd2bae90ec5a5d652ca40734fc8e7680/phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py">RAG evaluator</a> <code>phase-3-what-you-are-evaluating/rag-evaluation/rag_evaluator.py</code></li></ul>
 <h4>Related curriculum lessons</h4>
-<ul><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the reported wrong boundary decision in TC21 to discuss what aggregate retrieval and judge scores can support in a release packet.</li><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Inspect how the overall score can hide a known wrong answer.</li><li><a href="#m08-t01">M08-T01 — Ingestion, chunking and ranked retrieval</a> · Primary. Trace the retrieved chunks and recorded relevance scores for each question.</li><li><a href="#m08-t02">M08-T02 — Context sufficiency, answer correctness and citations</a> · Supporting. Compare an eligibility claim with the exact policy rule it uses.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Primary. Use TC21 and the retrieval-confusion cases to decide which stage to investigate.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings.</li><li><a href="#m12-t01">M12-T01 — Threat modeling, scope and test design</a> · Supporting. Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Compare the incorrect TC21 eligibility decision with the governing policy and the saved grader evidence.</li></ul>
+<ul><li><a href="#m13-t03">M13-T03 — Release decisions, rollback and governance</a> · Supporting. Use the reported wrong boundary decision in TC21 to discuss what aggregate retrieval and judge scores can support in a release packet.</li><li><a href="#m13-t01">M13-T01 — Evaluation pipelines and versioned run contracts</a> · Supporting. Trace a reported aggregate to the 25-case report and its saved retrieval evidence. Keep the earlier 21-case description separate.</li><li><a href="#m05-t03">M05-T03 — Combining evaluators and handling uncertainty</a> · Supporting. Inspect how the overall score can hide a known wrong answer.</li><li><a href="#m08-t01">M08-T01 — Ingestion, chunking and ranked retrieval</a> · Primary. Trace the retrieved chunks and recorded relevance scores for each question.</li><li><a href="#m08-t02">M08-T02 — Context sufficiency, answer correctness and citations</a> · Supporting. Compare an eligibility claim with the exact policy rule it uses.</li><li><a href="#m08-t03">M08-T03 — Failure attribution, optimization and RAG regression</a> · Primary. Use TC21 and the retrieval-confusion cases to decide which stage to investigate.</li><li><a href="#m16-t03">M16-T03 — Long-context evidence and memory</a> · Supporting. Compare TC21&#x27;s retrieved evidence with its incorrect decision before attributing an error to context length or position.</li><li><a href="#m11-t03">M11-T03 — Robustness, safety benchmarks and regression</a> · Supporting. Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings.</li><li><a href="#m12-t01">M12-T01 — Threat modeling, scope and test design</a> · Supporting. Use TC21 to explain why the approved policy and independent decision evidence belong in a threat-model test card.</li><li><a href="#m12-t02">M12-T02 — Defensive checks for RAG, agents and data exposure</a> · Supporting. Compare the incorrect TC21 eligibility decision with the governing policy and the saved grader evidence.</li></ul>
 </details>
 <details id="original-test-10" class="course-reference original-test" data-evidence="methodology">
 <summary>Test 10 — RAGAS Framework · Methodology Available — Results Missing</summary>

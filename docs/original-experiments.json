@@ -490,6 +490,11 @@
           "connection": "Use TC21 and the retrieval-confusion cases to decide which stage to investigate."
         },
         {
+          "id": "M16-T03",
+          "relevance": "Supporting",
+          "connection": "Compare TC21's retrieved evidence with its incorrect decision before attributing an error to context length or position."
+        },
+        {
           "id": "M11-T03",
           "relevance": "Supporting",
           "connection": "Inspect the recorded wrong boundary decision despite favorable relevance and faithfulness ratings."
